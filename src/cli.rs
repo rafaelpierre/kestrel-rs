@@ -22,6 +22,7 @@ const SKILL_NAME: &str = "kestrelsearch";
 #[derive(Debug, Parser)]
 #[command(
     name = "kestrel",
+    version,
     about = "Kestrel Search — web search, page extraction, and relevance ranking for AI agents.",
     disable_help_subcommand = true
 )]

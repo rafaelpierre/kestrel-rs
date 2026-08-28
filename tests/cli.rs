@@ -15,6 +15,19 @@ fn help_lists_search_and_skill_commands() {
 }
 
 #[test]
+fn version_matches_package_version() {
+    Command::cargo_bin("kestrel")
+        .unwrap()
+        .arg("--version")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(concat!(
+            "kestrel ",
+            env!("CARGO_PKG_VERSION")
+        )));
+}
+
+#[test]
 fn invalid_positive_limits_are_rejected() {
     Command::cargo_bin("kestrel")
         .unwrap()

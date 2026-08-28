@@ -1,0 +1,15 @@
+[workspace]
+# This project distributes GitHub release binaries and is not published to a
+# Cargo registry. Tags are therefore the source of truth for released versions.
+git_only = true
+git_tag_name = "v{{ version }}"
+
+# Only release after the generated release PR has been reviewed and merged.
+release_always = false
+
+# cargo-dist creates the GitHub release and uploads its artifacts after the tag
+# is pushed. release-plz owns only the version bump, changelog, and tag.
+git_release_enable = false
+changelog_update = true
+pr_labels = ["release"]
+semver_check = true

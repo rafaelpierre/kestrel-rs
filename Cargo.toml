@@ -5,7 +5,9 @@ edition = "2024"
 rust-version = "1.89"
 description = "Web search, page extraction, and relevance ranking for AI agents"
 readme = "README.md"
-repository = "https://github.com/rafaelpierre/kestrelsearch.git"
+homepage = "https://github.com/rafaelpierre/kestrel-rs"
+repository = "https://github.com/rafaelpierre/kestrel-rs"
+license = "MIT"
 keywords = ["search", "scraping", "bm25", "cli", "agents"]
 categories = ["command-line-utilities", "web-programming::http-client"]
 
@@ -52,3 +54,8 @@ wiremock = "0.6"
 [profile.release]
 lto = "thin"
 strip = true
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"

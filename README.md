@@ -29,8 +29,21 @@ compatible with the Python implementation.
 
 Rust 1.89 or newer is required.
 
+Install the latest prebuilt release on an Apple Silicon Mac:
+
 ```bash
-cargo install --path .
+curl --proto '=https' --tlsv1.2 -LsSf \
+  https://github.com/rafaelpierre/kestrel-rs/releases/latest/download/kestrelsearch-installer.sh | sh
+```
+
+The installer verifies the downloaded archive. Intel Macs and Linux are not yet
+included in the release builds. To install the optional agent skill afterwards,
+run `kestrel skill install`.
+
+Alternatively, build and install from source with Cargo:
+
+```bash
+cargo install --git https://github.com/rafaelpierre/kestrel-rs --locked
 kestrel --help
 ```
 
@@ -188,6 +201,24 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all-features
 cargo build --release
 ```
+
+### Releases
+
+Releases use Conventional Commit messages to select the next semantic version:
+
+- `fix:` creates a patch release.
+- `feat:` creates a minor release.
+- `feat!:` or a `BREAKING CHANGE:` footer creates a major release.
+
+After changes reach `main`, release-plz creates or updates a release PR containing
+the version and changelog. Merging that PR creates a `vMAJOR.MINOR.PATCH` tag.
+The tag runs the generated cargo-dist workflow, which builds the Apple Silicon
+binary and publishes it, its checksum, and `kestrelsearch-installer.sh` to a
+GitHub Release.
+
+No release secret is required. The release workflow uses the repository's
+built-in `GITHUB_TOKEN` and explicitly dispatches the cargo-dist workflow at the
+new tag.
 
 Network-facing tests use local mock servers. Live provider checks are manual
 because provider markup, availability, and anti-bot behavior can change
