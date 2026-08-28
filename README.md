@@ -27,25 +27,30 @@ compatible with the Python implementation.
 
 ## Install
 
-Rust 1.89 or newer is required.
+### Apple Silicon macOS (recommended)
 
-Install the latest prebuilt release on an Apple Silicon Mac:
+Install the latest prebuilt release:
 
-```bash
+```sh
 curl --proto '=https' --tlsv1.2 -LsSf \
   https://github.com/rafaelpierre/kestrel-rs/releases/latest/download/kestrel-rs-installer.sh | sh
 ```
 
-The installer verifies the downloaded archive. Intel Macs and Linux are not yet
-included in the release builds. To install the optional agent skill afterwards,
-run `kestrel skill install`.
+The installer downloads and verifies the Apple Silicon binary from the latest
+GitHub release. Intel Macs and Linux are not currently included in release
+builds.
 
-Alternatively, build and install from source with Cargo:
+### crates.io
 
-```bash
+If Rust 1.89 or newer is installed, build and install the published crate with
+Cargo:
+
+```sh
 cargo install kestrel-rs --locked
-kestrel --help
 ```
+
+Verify either installation with `kestrel --version`. To install the optional
+agent skill afterwards, run `kestrel skill install`.
 
 ## Use the CLI
 
@@ -216,9 +221,8 @@ The tag runs the generated cargo-dist workflow, which builds the Apple Silicon
 binary and publishes it, its checksum, and `kestrel-rs-installer.sh` to a
 GitHub Release.
 
-No release secret is required. The release workflow uses the repository's
-built-in `GITHUB_TOKEN` and explicitly dispatches the cargo-dist workflow at the
-new tag.
+The workflows use repository secrets for crates.io and GitHub release
+publishing and explicitly dispatch cargo-dist at the new tag.
 
 Network-facing tests use local mock servers. Live provider checks are manual
 because provider markup, availability, and anti-bot behavior can change
