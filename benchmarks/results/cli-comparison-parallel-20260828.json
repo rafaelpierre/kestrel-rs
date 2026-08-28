@@ -1,0 +1,1973 @@
+{
+  "configuration": {
+    "python_cli": "/Users/rafaelpierre/projects/duckduckscrape/.venv/bin/kestrelsearch",
+    "rust_cli": "/Users/rafaelpierre/projects/kestrel-rs/target/release/kestrel",
+    "queries": "/Users/rafaelpierre/projects/kestrel-rs/benchmarks/queries.jsonl",
+    "trials": 5,
+    "startup_trials": 50,
+    "seed": 42,
+    "engines": [
+      "duckduckgo",
+      "bing",
+      "yahoo"
+    ],
+    "mode": "fanout"
+  },
+  "startup": {
+    "python": {
+      "samples_ms": [
+        195.2622499957215,
+        188.24704200960696,
+        194.27579100010917,
+        198.98920800187625,
+        219.86458398168907,
+        222.06545900553465,
+        209.2214169970248,
+        236.65466599049978,
+        202.71720900200307,
+        194.1583330044523,
+        191.57745901611634,
+        180.87216600542888,
+        194.48058301350102,
+        189.59441597689874,
+        195.9099580126349,
+        196.30791700910777,
+        187.37683398649096,
+        184.23108401475474,
+        177.88624999229796,
+        173.64466699655168,
+        175.71375000989065,
+        175.49008299829438,
+        176.36074998881668,
+        176.40912500792183,
+        176.98620798182674,
+        175.99533399334177,
+        174.88283300190233,
+        209.77341700927354,
+        204.76525000412948,
+        196.33570799487643,
+        188.11620899941772,
+        178.88891699840315,
+        180.72145798942074,
+        176.58683299669065,
+        179.52304100617766,
+        176.34120798902586,
+        178.3384590235073,
+        177.12454198044725,
+        177.4946249788627,
+        177.6582500024233,
+        182.15787500957958,
+        179.32062500040047,
+        179.7112499771174,
+        184.23375001293607,
+        178.8186249905266,
+        177.06795799313113,
+        183.09895897982642,
+        195.3134169743862,
+        191.48504099575803,
+        187.93250000453554
+      ],
+      "mean": 188.11966585810296,
+      "p50": 183.66502149729058,
+      "p95": 219.86458398168907,
+      "min": 173.64466699655168,
+      "max": 236.65466599049978
+    },
+    "rust": {
+      "samples_ms": [
+        5.3895410092081875,
+        4.420500015839934,
+        5.6714999955147505,
+        6.313749996479601,
+        6.033832993125543,
+        5.646042001899332,
+        6.470624997746199,
+        5.33637500484474,
+        6.112583010690287,
+        5.764166999142617,
+        5.142082984093577,
+        4.612750024534762,
+        5.284125014441088,
+        4.300333996070549,
+        5.450333992484957,
+        4.627459013136104,
+        6.540457980008796,
+        4.874791979091242,
+        5.366333003621548,
+        3.9989170036278665,
+        5.334874993423,
+        4.074208001838997,
+        5.3453750151675195,
+        4.447667015483603,
+        5.5031669908203185,
+        4.236665990902111,
+        5.17712501459755,
+        4.44512499962002,
+        6.417208001948893,
+        5.129708995809779,
+        5.520832986803725,
+        4.40962499123998,
+        4.966542008332908,
+        4.274249979062006,
+        5.495542020071298,
+        6.287750002229586,
+        5.497499980265275,
+        4.463791003217921,
+        5.2976250008214265,
+        4.616874997736886,
+        5.509207985596731,
+        4.410917026689276,
+        5.334042012691498,
+        4.489540995564312,
+        5.281707999529317,
+        4.520499991485849,
+        5.431624973425642,
+        4.094541975064203,
+        5.56125000002794,
+        4.86945899319835
+      ],
+      "mean": 5.156015019165352,
+      "p50": 5.290875007631257,
+      "p95": 6.417208001948893,
+      "min": 3.9989170036278665,
+      "max": 6.540457980008796
+    }
+  },
+  "runs": [
+    {
+      "implementation": "python",
+      "task_id": "standards-trace-context",
+      "query": "OpenTelemetry traceparent header W3C trace context official documentation",
+      "trial": 1,
+      "run_id": "98cfce93605840798a5ac962869ef674",
+      "elapsed_ms": 2446.3857499940787,
+      "timings_ms": {
+        "search": 1462,
+        "fetch": 779,
+        "rank": 1
+      },
+      "process_coordination_ms": 204.38574999407865,
+      "result_count": 5,
+      "returned_chars": 6511,
+      "urls": [
+        "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+        "https://uptrace.dev/opentelemetry/context-propagation",
+        "https://opentelemetry.io/docs/concepts/context-propagation/",
+        "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+        "https://w3c.github.io/trace-context/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "standards-trace-context",
+      "query": "OpenTelemetry traceparent header W3C trace context official documentation",
+      "trial": 1,
+      "run_id": "943921c8195c40c4a537ea45cdc06400",
+      "elapsed_ms": 1820.4823749838397,
+      "timings_ms": {
+        "fetch": 741,
+        "rank": 1,
+        "search": 1070
+      },
+      "process_coordination_ms": 8.48237498383969,
+      "result_count": 5,
+      "returned_chars": 6511,
+      "urls": [
+        "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+        "https://uptrace.dev/opentelemetry/context-propagation",
+        "https://opentelemetry.io/docs/concepts/context-propagation/",
+        "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+        "https://w3c.github.io/trace-context/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "practical-github-oidc",
+      "query": "GitHub Actions OpenID Connect id-token write permission official docs",
+      "trial": 1,
+      "run_id": "7137e7addebb4eec83164de73727c671",
+      "elapsed_ms": 2167.3287500161678,
+      "timings_ms": {
+        "search": 733,
+        "fetch": 1230,
+        "rank": 1
+      },
+      "process_coordination_ms": 203.32875001616776,
+      "result_count": 5,
+      "returned_chars": 7200,
+      "urls": [
+        "https://docs.github.com/en/actions/concepts/security/openid-connect",
+        "https://github.blog/changelog/2023-06-15-github-actions-securing-openid-connect-oidc-token-permissions-in-reusable-workflows/",
+        "https://docs.github.com/en/actions/reference/security/oidc",
+        "https://github.com/github/docs/issues/14626",
+        "https://github.com/github"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "practical-github-oidc",
+      "query": "GitHub Actions OpenID Connect id-token write permission official docs",
+      "trial": 1,
+      "run_id": "4f63853ffcf64121ad63534d8cd3c731",
+      "elapsed_ms": 2009.3875419988763,
+      "timings_ms": {
+        "fetch": 1217,
+        "rank": 3,
+        "search": 775
+      },
+      "process_coordination_ms": 14.387541998876259,
+      "result_count": 5,
+      "returned_chars": 6429,
+      "urls": [
+        "https://docs.github.com/en/actions/concepts/security/openid-connect",
+        "https://github.blog/changelog/2023-06-15-github-actions-securing-openid-connect-oidc-token-permissions-in-reusable-workflows/",
+        "https://docs.github.com/en/actions/reference/security/oidc",
+        "https://github.com/",
+        "https://github.com/github/docs/issues/14626"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "technical-investigation-httpx",
+      "query": "HTTPX async client reuse connection pooling official documentation",
+      "trial": 1,
+      "run_id": "a79a76ded291408faa36b16e6696ed4a",
+      "elapsed_ms": 2009.3845830124337,
+      "timings_ms": {
+        "search": 924,
+        "fetch": 858,
+        "rank": 3
+      },
+      "process_coordination_ms": 224.38458301243372,
+      "result_count": 5,
+      "returned_chars": 10295,
+      "urls": [
+        "https://github.com/encode/httpx/blob/master/docs/async.md",
+        "https://www.python-httpx.org/async/",
+        "https://www.python-httpx.org/advanced/clients/",
+        "https://github.com/encode/httpx/blob/master/docs/advanced/clients.md",
+        "https://www.encode.io/httpnext/clients/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "technical-investigation-httpx",
+      "query": "HTTPX async client reuse connection pooling official documentation",
+      "trial": 1,
+      "run_id": "352c81d3dbd54a5eaa4e1b3b1b4dfaf7",
+      "elapsed_ms": 1752.4937500129454,
+      "timings_ms": {
+        "fetch": 721,
+        "rank": 0,
+        "search": 1021
+      },
+      "process_coordination_ms": 10.493750012945384,
+      "result_count": 5,
+      "returned_chars": 10295,
+      "urls": [
+        "https://github.com/encode/httpx/blob/master/docs/async.md",
+        "https://www.python-httpx.org/async/",
+        "https://www.python-httpx.org/advanced/clients/",
+        "https://github.com/encode/httpx/blob/master/docs/advanced/clients.md",
+        "https://www.encode.io/httpnext/clients/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "release-workflow-semantic-release",
+      "query": "python semantic release conventional commits versioning documentation",
+      "trial": 1,
+      "run_id": "9d45e8e7d1e6487a9c883967f35e17cc",
+      "elapsed_ms": 2525.88724999805,
+      "timings_ms": {
+        "search": 802,
+        "fetch": 1518,
+        "rank": 2
+      },
+      "process_coordination_ms": 203.8872499980498,
+      "result_count": 5,
+      "returned_chars": 8936,
+      "urls": [
+        "https://www.pythonskillset.com/code-samples/automate-semantic-versioning-conventional-commits-python/",
+        "https://github.com/python-semantic-release/python-semantic-release",
+        "https://pypi.org/project/commitizen/",
+        "https://pypi.org/project/python-semantic-release/",
+        "https://packaging.python.org/en/latest/discussions/versioning/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "release-workflow-semantic-release",
+      "query": "python semantic release conventional commits versioning documentation",
+      "trial": 1,
+      "run_id": "31cef204c3ca4908b86d6b268897578b",
+      "elapsed_ms": 2756.549707992235,
+      "timings_ms": {
+        "fetch": 1646,
+        "rank": 2,
+        "search": 1096
+      },
+      "process_coordination_ms": 12.549707992235199,
+      "result_count": 5,
+      "returned_chars": 8973,
+      "urls": [
+        "https://www.pythonskillset.com/code-samples/automate-semantic-versioning-conventional-commits-python/",
+        "https://bluebook.nightmode.dev/docs/python-package-versioning-semantic-release",
+        "https://github.com/python-semantic-release/python-semantic-release",
+        "https://pypi.org/project/python-semantic-release/",
+        "https://python-semantic-release.readthedocs.io/en/latest/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "security-pypi-trusted-publishing",
+      "query": "PyPI trusted publisher pending publisher GitHub Actions official docs",
+      "trial": 1,
+      "run_id": "818286969f41407895e1966c58934539",
+      "elapsed_ms": 1433.5500419838354,
+      "timings_ms": {
+        "search": 809,
+        "fetch": 413,
+        "rank": 1
+      },
+      "process_coordination_ms": 210.5500419838354,
+      "result_count": 5,
+      "returned_chars": 10460,
+      "urls": [
+        "https://docs.pypi.org/trusted-publishers/using-a-publisher/",
+        "https://docs.pypi.org/trusted-publishers/",
+        "https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-pypi",
+        "https://pydevtools.com/handbook/how-to/how-to-publish-to-pypi-with-trusted-publishing/",
+        "https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "security-pypi-trusted-publishing",
+      "query": "PyPI trusted publisher pending publisher GitHub Actions official docs",
+      "trial": 1,
+      "run_id": "badd3e8ddbdd4ffc9f741723b209209a",
+      "elapsed_ms": 1383.0952499993145,
+      "timings_ms": {
+        "fetch": 493,
+        "rank": 1,
+        "search": 875
+      },
+      "process_coordination_ms": 14.095249999314547,
+      "result_count": 5,
+      "returned_chars": 6724,
+      "urls": [
+        "https://pulseagent.dev/docs/operations/pypi-trusted-publishing",
+        "https://github.com/pypi/warehouse/blob/main/docs/user/trusted-publishers/adding-a-publisher.md",
+        "https://docs.pypi.org/trusted-publishers/using-a-publisher/",
+        "https://github.com/pypi/warehouse/blob/main/docs/user/trusted-publishers/using-a-publisher.md",
+        "https://docs.pypi.org/trusted-publishers/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "source-reconciliation-python-status",
+      "query": "Python supported versions official devguide current release official documentation",
+      "trial": 1,
+      "run_id": "288b1d9a21ed4e53976600a477fb6fd0",
+      "elapsed_ms": 1757.3170420073438,
+      "timings_ms": {
+        "search": 702,
+        "fetch": 857,
+        "rank": 1
+      },
+      "process_coordination_ms": 197.31704200734384,
+      "result_count": 5,
+      "returned_chars": 7231,
+      "urls": [
+        "https://devguide.python.org/versions/",
+        "https://docs.cloud.google.com/python/docs/supported-python-versions",
+        "https://github.com/python/devguide",
+        "https://docs.python.org/",
+        "https://endoflife.date/python"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "source-reconciliation-python-status",
+      "query": "Python supported versions official devguide current release official documentation",
+      "trial": 1,
+      "run_id": "3f4e476d6204450a847c5214dd592a39",
+      "elapsed_ms": 1839.1966670169495,
+      "timings_ms": {
+        "fetch": 997,
+        "rank": 1,
+        "search": 833
+      },
+      "process_coordination_ms": 8.196667016949505,
+      "result_count": 5,
+      "returned_chars": 5976,
+      "urls": [
+        "https://github.com/python/devguide",
+        "https://docs.python.org/",
+        "https://docs.cloud.google.com/python/docs/supported-python-versions",
+        "https://www.python.org/doc/",
+        "https://test.python.org/doc/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "freshness-python-release",
+      "query": "latest stable Python release official documentation what's new",
+      "trial": 1,
+      "run_id": "cf3825152b9d47adb51016194d4391d3",
+      "elapsed_ms": 1866.340125008719,
+      "timings_ms": {
+        "search": 934,
+        "fetch": 701,
+        "rank": 2
+      },
+      "process_coordination_ms": 229.34012500871904,
+      "result_count": 4,
+      "returned_chars": 7653,
+      "urls": [
+        "https://docs.python.org/3/whatsnew/index.html",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://devguide.python.org/versions/",
+        "https://releasebytes.com/python"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "freshness-python-release",
+      "query": "latest stable Python release official documentation what's new",
+      "trial": 1,
+      "run_id": "b8da7d857e0841cc8064c39c4b6090e5",
+      "elapsed_ms": 2694.8561249882914,
+      "timings_ms": {
+        "fetch": 1769,
+        "rank": 3,
+        "search": 909
+      },
+      "process_coordination_ms": 13.856124988291413,
+      "result_count": 5,
+      "returned_chars": 9364,
+      "urls": [
+        "https://docs.python.org/3/whatsnew/index.html",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://www.python.org/doc/",
+        "https://test.python.org/downloads/latest/prerelease/",
+        "https://www.python.org/downloads/latest/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "multi-hop-template-strings",
+      "query": "Python template strings PEP official documentation Python 3.14",
+      "trial": 1,
+      "run_id": "6305ae9d8bca4b7d8133d13897f73d63",
+      "elapsed_ms": 1842.788665991975,
+      "timings_ms": {
+        "search": 1014,
+        "fetch": 591,
+        "rank": 1
+      },
+      "process_coordination_ms": 236.788665991975,
+      "result_count": 5,
+      "returned_chars": 9618,
+      "urls": [
+        "https://gdevops.frama.io/python/versions/3.14.0/template-strings/template-strings.html",
+        "https://docs.python.org/",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://peps.python.org/pep-0750/",
+        "https://docs.python.org/3/library/string.templatelib.html"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "multi-hop-template-strings",
+      "query": "Python template strings PEP official documentation Python 3.14",
+      "trial": 1,
+      "run_id": "72a346ec65e744fabe31fc057bcae4e1",
+      "elapsed_ms": 1612.7515000116546,
+      "timings_ms": {
+        "fetch": 685,
+        "rank": 1,
+        "search": 908
+      },
+      "process_coordination_ms": 18.75150001165457,
+      "result_count": 5,
+      "returned_chars": 9614,
+      "urls": [
+        "https://docs.python.org/",
+        "https://gdevops.frama.io/python/versions/3.14.0/template-strings/template-strings.html",
+        "https://www.python.org/downloads/release/python-3143/",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://peps.python.org/pep-0750/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "standards-trace-context",
+      "query": "OpenTelemetry traceparent header W3C trace context official documentation",
+      "trial": 2,
+      "run_id": "6dc4e58ed1c4499d9112fe1213a85dbf",
+      "elapsed_ms": 2124.1332909849007,
+      "timings_ms": {
+        "search": 1158,
+        "fetch": 765,
+        "rank": 1
+      },
+      "process_coordination_ms": 200.13329098490067,
+      "result_count": 5,
+      "returned_chars": 6511,
+      "urls": [
+        "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+        "https://uptrace.dev/opentelemetry/context-propagation",
+        "https://opentelemetry.io/docs/concepts/context-propagation/",
+        "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+        "https://w3c.github.io/trace-context/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "standards-trace-context",
+      "query": "OpenTelemetry traceparent header W3C trace context official documentation",
+      "trial": 2,
+      "run_id": "228b8ab119fd47dd91095ac094de1cf2",
+      "elapsed_ms": 1528.4911249764264,
+      "timings_ms": {
+        "fetch": 622,
+        "rank": 0,
+        "search": 898
+      },
+      "process_coordination_ms": 8.491124976426363,
+      "result_count": 5,
+      "returned_chars": 6511,
+      "urls": [
+        "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+        "https://uptrace.dev/opentelemetry/context-propagation",
+        "https://opentelemetry.io/docs/concepts/context-propagation/",
+        "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+        "https://w3c.github.io/trace-context/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "release-workflow-semantic-release",
+      "query": "python semantic release conventional commits versioning documentation",
+      "trial": 2,
+      "run_id": "b2f62e2044f94e06b36b90ff2ab02cab",
+      "elapsed_ms": 2511.5705000062007,
+      "timings_ms": {
+        "search": 763,
+        "fetch": 1535,
+        "rank": 2
+      },
+      "process_coordination_ms": 211.57050000620075,
+      "result_count": 5,
+      "returned_chars": 8936,
+      "urls": [
+        "https://www.pythonskillset.com/code-samples/automate-semantic-versioning-conventional-commits-python/",
+        "https://github.com/python-semantic-release/python-semantic-release",
+        "https://pypi.org/project/commitizen/",
+        "https://pypi.org/project/python-semantic-release/",
+        "https://packaging.python.org/en/latest/discussions/versioning/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "release-workflow-semantic-release",
+      "query": "python semantic release conventional commits versioning documentation",
+      "trial": 2,
+      "run_id": "db99ba0b21fb4567a90bb91494958b52",
+      "elapsed_ms": 2354.1359580121934,
+      "timings_ms": {
+        "fetch": 1502,
+        "rank": 4,
+        "search": 834
+      },
+      "process_coordination_ms": 14.135958012193441,
+      "result_count": 5,
+      "returned_chars": 8973,
+      "urls": [
+        "https://www.pythonskillset.com/code-samples/automate-semantic-versioning-conventional-commits-python/",
+        "https://bluebook.nightmode.dev/docs/python-package-versioning-semantic-release",
+        "https://github.com/python-semantic-release/python-semantic-release",
+        "https://pypi.org/project/python-semantic-release/",
+        "https://python-semantic-release.readthedocs.io/en/latest/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "security-pypi-trusted-publishing",
+      "query": "PyPI trusted publisher pending publisher GitHub Actions official docs",
+      "trial": 2,
+      "run_id": "da5a9b6255f1499a975cb5b0e66e9eba",
+      "elapsed_ms": 2131.030875025317,
+      "timings_ms": {
+        "search": 914,
+        "fetch": 1001,
+        "rank": 2
+      },
+      "process_coordination_ms": 214.03087502531707,
+      "result_count": 5,
+      "returned_chars": 8812,
+      "urls": [
+        "https://docs.pypi.org/trusted-publishers/using-a-publisher/",
+        "https://github.com/pypi/warehouse/blob/main/docs/user/trusted-publishers/using-a-publisher.md",
+        "https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-pypi",
+        "https://pydevtools.com/handbook/how-to/how-to-publish-to-pypi-with-trusted-publishing/",
+        "https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "security-pypi-trusted-publishing",
+      "query": "PyPI trusted publisher pending publisher GitHub Actions official docs",
+      "trial": 2,
+      "run_id": "7bb0ef4bd4e542b39daee271bdc76412",
+      "elapsed_ms": 1159.5620409934781,
+      "timings_ms": {
+        "fetch": 345,
+        "rank": 1,
+        "search": 804
+      },
+      "process_coordination_ms": 9.56204099347815,
+      "result_count": 5,
+      "returned_chars": 8431,
+      "urls": [
+        "https://github.com/pypi/warehouse/blob/main/docs/user/trusted-publishers/adding-a-publisher.md",
+        "https://pulseagent.dev/docs/operations/pypi-trusted-publishing",
+        "https://docs.pypi.org/trusted-publishers/using-a-publisher/",
+        "https://docs.pypi.org/trusted-publishers/",
+        "https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-pypi"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "freshness-python-release",
+      "query": "latest stable Python release official documentation what's new",
+      "trial": 2,
+      "run_id": "240e9be940d64d31b8fbbf2cb95b7932",
+      "elapsed_ms": 1907.1170000243,
+      "timings_ms": {
+        "search": 1030,
+        "fetch": 646,
+        "rank": 2
+      },
+      "process_coordination_ms": 229.11700002430007,
+      "result_count": 4,
+      "returned_chars": 7653,
+      "urls": [
+        "https://docs.python.org/3/whatsnew/index.html",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://devguide.python.org/versions/",
+        "https://releasebytes.com/python"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "freshness-python-release",
+      "query": "latest stable Python release official documentation what's new",
+      "trial": 2,
+      "run_id": "553ca1afd87a4da49f80f32a8c1765a0",
+      "elapsed_ms": 2821.093540987931,
+      "timings_ms": {
+        "fetch": 1970,
+        "rank": 3,
+        "search": 834
+      },
+      "process_coordination_ms": 14.093540987931192,
+      "result_count": 5,
+      "returned_chars": 9725,
+      "urls": [
+        "https://docs.python.org/3/whatsnew/index.html",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://www.python.org/downloads/release/python-3140/",
+        "https://www.python.org/downloads/latest/",
+        "https://devguide.python.org/versions/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "practical-github-oidc",
+      "query": "GitHub Actions OpenID Connect id-token write permission official docs",
+      "trial": 2,
+      "run_id": "f23cd3917fe04ce08fb4dae92f52f740",
+      "elapsed_ms": 1791.638166992925,
+      "timings_ms": {
+        "search": 839,
+        "fetch": 681,
+        "rank": 2
+      },
+      "process_coordination_ms": 269.6381669929251,
+      "result_count": 5,
+      "returned_chars": 7200,
+      "urls": [
+        "https://docs.github.com/en/actions/concepts/security/openid-connect",
+        "https://github.blog/changelog/2023-06-15-github-actions-securing-openid-connect-oidc-token-permissions-in-reusable-workflows/",
+        "https://docs.github.com/en/actions/reference/security/oidc",
+        "https://github.com/github/docs/issues/14626",
+        "https://github.com/github"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "practical-github-oidc",
+      "query": "GitHub Actions OpenID Connect id-token write permission official docs",
+      "trial": 2,
+      "run_id": "fa4e7fb2d56a450fbd684cf09f027068",
+      "elapsed_ms": 1546.1610839993227,
+      "timings_ms": {
+        "fetch": 671,
+        "rank": 0,
+        "search": 853
+      },
+      "process_coordination_ms": 22.161083999322727,
+      "result_count": 5,
+      "returned_chars": 6429,
+      "urls": [
+        "https://docs.github.com/en/actions/concepts/security/openid-connect",
+        "https://github.blog/changelog/2023-06-15-github-actions-securing-openid-connect-oidc-token-permissions-in-reusable-workflows/",
+        "https://docs.github.com/en/actions/reference/security/oidc",
+        "https://github.com/",
+        "https://github.com/github/docs/issues/14626"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "technical-investigation-httpx",
+      "query": "HTTPX async client reuse connection pooling official documentation",
+      "trial": 2,
+      "run_id": "5a27bd7c7e8140a5b501e0e1a3c9ddab",
+      "elapsed_ms": 1814.8194169916678,
+      "timings_ms": {
+        "search": 847,
+        "fetch": 726,
+        "rank": 2
+      },
+      "process_coordination_ms": 239.81941699166782,
+      "result_count": 5,
+      "returned_chars": 10295,
+      "urls": [
+        "https://github.com/encode/httpx/blob/master/docs/async.md",
+        "https://www.python-httpx.org/async/",
+        "https://www.python-httpx.org/advanced/clients/",
+        "https://github.com/encode/httpx/blob/master/docs/advanced/clients.md",
+        "https://www.encode.io/httpnext/clients/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "technical-investigation-httpx",
+      "query": "HTTPX async client reuse connection pooling official documentation",
+      "trial": 2,
+      "run_id": "3934dd397d6546a28f6fcfa70f5f10a1",
+      "elapsed_ms": 1556.5180410048924,
+      "timings_ms": {
+        "fetch": 660,
+        "rank": 1,
+        "search": 883
+      },
+      "process_coordination_ms": 12.518041004892439,
+      "result_count": 5,
+      "returned_chars": 10025,
+      "urls": [
+        "https://github.com/encode/httpx/blob/master/docs/async.md",
+        "https://www.python-httpx.org/async/",
+        "https://www.python-httpx.org/advanced/clients/",
+        "https://www.encode.io/httpnext/clients/",
+        "https://honeyryderchuck.gitlab.io/httpx/wiki/Connection-Pools"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "source-reconciliation-python-status",
+      "query": "Python supported versions official devguide current release official documentation",
+      "trial": 2,
+      "run_id": "423ec2978abe41488b26d740dc51049d",
+      "elapsed_ms": 2000.5037089867983,
+      "timings_ms": {
+        "search": 1082,
+        "fetch": 719,
+        "rank": 1
+      },
+      "process_coordination_ms": 198.5037089867983,
+      "result_count": 5,
+      "returned_chars": 5900,
+      "urls": [
+        "https://docs.cloud.google.com/python/docs/supported-python-versions",
+        "https://github.com/python/devguide",
+        "https://devguide.python.org/versions/",
+        "https://docs.python.org/",
+        "https://github.com/python/devguide/blob/main/versions.rst"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "source-reconciliation-python-status",
+      "query": "Python supported versions official devguide current release official documentation",
+      "trial": 2,
+      "run_id": "602970e8e6124dd381300ceb9d72d24c",
+      "elapsed_ms": 2836.6646250069607,
+      "timings_ms": {
+        "fetch": 1248,
+        "rank": 3,
+        "search": 1566
+      },
+      "process_coordination_ms": 19.664625006960705,
+      "result_count": 5,
+      "returned_chars": 5976,
+      "urls": [
+        "https://github.com/python/devguide",
+        "https://docs.python.org/",
+        "https://docs.cloud.google.com/python/docs/supported-python-versions",
+        "https://www.python.org/doc/",
+        "https://test.python.org/doc/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "multi-hop-template-strings",
+      "query": "Python template strings PEP official documentation Python 3.14",
+      "trial": 2,
+      "run_id": "b16600ec152c40858d34b76515347749",
+      "elapsed_ms": 1619.9942919774912,
+      "timings_ms": {
+        "search": 809,
+        "fetch": 584,
+        "rank": 1
+      },
+      "process_coordination_ms": 225.99429197749123,
+      "result_count": 5,
+      "returned_chars": 9618,
+      "urls": [
+        "https://gdevops.frama.io/python/versions/3.14.0/template-strings/template-strings.html",
+        "https://docs.python.org/",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://peps.python.org/pep-0750/",
+        "https://docs.python.org/3/library/string.templatelib.html"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "multi-hop-template-strings",
+      "query": "Python template strings PEP official documentation Python 3.14",
+      "trial": 2,
+      "run_id": "b96a2292b3de4e168c6ee948a8d7fb5f",
+      "elapsed_ms": 3005.666499986546,
+      "timings_ms": {
+        "fetch": 2137,
+        "rank": 4,
+        "search": 838
+      },
+      "process_coordination_ms": 26.666499986546114,
+      "result_count": 5,
+      "returned_chars": 8802,
+      "urls": [
+        "https://python.plainenglish.io/interpreting-python3-14-a654efe7fa90",
+        "https://docs.python.org/",
+        "https://gdevops.frama.io/python/versions/3.14.0/template-strings/template-strings.html",
+        "https://www.python.org/downloads/release/python-3143/",
+        "https://docs.python.org/3/whatsnew/3.14.html"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "standards-trace-context",
+      "query": "OpenTelemetry traceparent header W3C trace context official documentation",
+      "trial": 3,
+      "run_id": "f58a0c638a874fbc97c831e76336888b",
+      "elapsed_ms": 1808.1745830131695,
+      "timings_ms": {
+        "search": 1140,
+        "fetch": 452,
+        "rank": 1
+      },
+      "process_coordination_ms": 215.17458301316947,
+      "result_count": 5,
+      "returned_chars": 6511,
+      "urls": [
+        "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+        "https://uptrace.dev/opentelemetry/context-propagation",
+        "https://opentelemetry.io/docs/concepts/context-propagation/",
+        "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+        "https://w3c.github.io/trace-context/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "standards-trace-context",
+      "query": "OpenTelemetry traceparent header W3C trace context official documentation",
+      "trial": 3,
+      "run_id": "da7671abb1cb4e1cbb21d76bb69d6732",
+      "elapsed_ms": 1544.8402920155786,
+      "timings_ms": {
+        "fetch": 562,
+        "rank": 0,
+        "search": 962
+      },
+      "process_coordination_ms": 20.840292015578598,
+      "result_count": 5,
+      "returned_chars": 6511,
+      "urls": [
+        "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+        "https://uptrace.dev/opentelemetry/context-propagation",
+        "https://opentelemetry.io/docs/concepts/context-propagation/",
+        "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+        "https://w3c.github.io/trace-context/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "source-reconciliation-python-status",
+      "query": "Python supported versions official devguide current release official documentation",
+      "trial": 3,
+      "run_id": "87427ba225e141238323fffaaf3d87aa",
+      "elapsed_ms": 1695.3090410097502,
+      "timings_ms": {
+        "search": 846,
+        "fetch": 648,
+        "rank": 1
+      },
+      "process_coordination_ms": 200.30904100975022,
+      "result_count": 5,
+      "returned_chars": 5900,
+      "urls": [
+        "https://docs.cloud.google.com/python/docs/supported-python-versions",
+        "https://github.com/python/devguide",
+        "https://devguide.python.org/versions/",
+        "https://docs.python.org/",
+        "https://github.com/python/devguide/blob/main/versions.rst"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "source-reconciliation-python-status",
+      "query": "Python supported versions official devguide current release official documentation",
+      "trial": 3,
+      "run_id": "f5ee9875fe704b4eaaaa9634b112b232",
+      "elapsed_ms": 1570.9282080060802,
+      "timings_ms": {
+        "fetch": 711,
+        "rank": 1,
+        "search": 851
+      },
+      "process_coordination_ms": 7.92820800608024,
+      "result_count": 5,
+      "returned_chars": 6335,
+      "urls": [
+        "https://github.com/python/devguide",
+        "https://docs.python.org/",
+        "https://docs.cloud.google.com/python/docs/supported-python-versions",
+        "https://devguide.python.org/versions/",
+        "https://www.python.org/doc/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "security-pypi-trusted-publishing",
+      "query": "PyPI trusted publisher pending publisher GitHub Actions official docs",
+      "trial": 3,
+      "run_id": "8abeeb383f67435a8f6f5c89a84bc956",
+      "elapsed_ms": 1356.1277919798158,
+      "timings_ms": {
+        "search": 747,
+        "fetch": 412,
+        "rank": 1
+      },
+      "process_coordination_ms": 196.1277919798158,
+      "result_count": 5,
+      "returned_chars": 7612,
+      "urls": [
+        "https://docs.pypi.org/trusted-publishers/using-a-publisher/",
+        "https://github.com/pypi/warehouse/blob/main/docs/user/trusted-publishers/using-a-publisher.md",
+        "https://github.com/pypi/warehouse/blob/main/docs/user/trusted-publishers/adding-a-publisher.md",
+        "https://pydevtools.com/handbook/how-to/how-to-publish-to-pypi-with-trusted-publishing/",
+        "https://docs.pypi.org/trusted-publishers/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "security-pypi-trusted-publishing",
+      "query": "PyPI trusted publisher pending publisher GitHub Actions official docs",
+      "trial": 3,
+      "run_id": "e956180c40a34555b205b7ee980d71e8",
+      "elapsed_ms": 1313.0456249928102,
+      "timings_ms": {
+        "fetch": 423,
+        "rank": 1,
+        "search": 879
+      },
+      "process_coordination_ms": 10.04562499281019,
+      "result_count": 5,
+      "returned_chars": 8417,
+      "urls": [
+        "https://pulseagent.dev/docs/operations/pypi-trusted-publishing",
+        "https://docs.pypi.org/trusted-publishers/using-a-publisher/",
+        "https://github.com/pypi/warehouse/blob/main/docs/user/trusted-publishers/adding-a-publisher.md",
+        "https://pydevtools.com/handbook/how-to/how-to-publish-to-pypi-with-trusted-publishing/",
+        "https://docs.pypi.org/trusted-publishers/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "practical-github-oidc",
+      "query": "GitHub Actions OpenID Connect id-token write permission official docs",
+      "trial": 3,
+      "run_id": "bdac76134498422386e1cfa53e67210e",
+      "elapsed_ms": 1627.4774580087978,
+      "timings_ms": {
+        "search": 735,
+        "fetch": 668,
+        "rank": 3
+      },
+      "process_coordination_ms": 221.47745800879784,
+      "result_count": 5,
+      "returned_chars": 7200,
+      "urls": [
+        "https://docs.github.com/en/actions/concepts/security/openid-connect",
+        "https://github.blog/changelog/2023-06-15-github-actions-securing-openid-connect-oidc-token-permissions-in-reusable-workflows/",
+        "https://docs.github.com/en/actions/reference/security/oidc",
+        "https://github.com/github/docs/issues/14626",
+        "https://github.com/github"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "practical-github-oidc",
+      "query": "GitHub Actions OpenID Connect id-token write permission official docs",
+      "trial": 3,
+      "run_id": "f1b7ce74b923447db74b8388a0fa6054",
+      "elapsed_ms": 1514.3142079759855,
+      "timings_ms": {
+        "fetch": 627,
+        "rank": 3,
+        "search": 871
+      },
+      "process_coordination_ms": 13.314207975985482,
+      "result_count": 5,
+      "returned_chars": 6429,
+      "urls": [
+        "https://docs.github.com/en/actions/concepts/security/openid-connect",
+        "https://github.blog/changelog/2023-06-15-github-actions-securing-openid-connect-oidc-token-permissions-in-reusable-workflows/",
+        "https://docs.github.com/en/actions/reference/security/oidc",
+        "https://github.com/",
+        "https://github.com/github/docs/issues/14626"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "multi-hop-template-strings",
+      "query": "Python template strings PEP official documentation Python 3.14",
+      "trial": 3,
+      "run_id": "aa72b4554ea1487a8e206b41f8edfcc6",
+      "elapsed_ms": 1862.2949580021668,
+      "timings_ms": {
+        "search": 1020,
+        "fetch": 637,
+        "rank": 1
+      },
+      "process_coordination_ms": 204.29495800216682,
+      "result_count": 5,
+      "returned_chars": 9594,
+      "urls": [
+        "https://docs.python.org/",
+        "https://gdevops.frama.io/python/versions/3.14.0/template-strings/template-strings.html",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://peps.python.org/pep-0750/",
+        "https://peps.python.org/pep-0501/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "multi-hop-template-strings",
+      "query": "Python template strings PEP official documentation Python 3.14",
+      "trial": 3,
+      "run_id": "2bc6d776f31a42c78bff8204bc0f661f",
+      "elapsed_ms": 1922.9745829943568,
+      "timings_ms": {
+        "fetch": 760,
+        "rank": 1,
+        "search": 1153
+      },
+      "process_coordination_ms": 8.974582994356751,
+      "result_count": 5,
+      "returned_chars": 9614,
+      "urls": [
+        "https://docs.python.org/",
+        "https://gdevops.frama.io/python/versions/3.14.0/template-strings/template-strings.html",
+        "https://www.python.org/downloads/release/python-3143/",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://peps.python.org/pep-0750/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "technical-investigation-httpx",
+      "query": "HTTPX async client reuse connection pooling official documentation",
+      "trial": 3,
+      "run_id": "e3d20235addc47a4967e04bb6c553dea",
+      "elapsed_ms": 1752.201541006798,
+      "timings_ms": {
+        "search": 802,
+        "fetch": 726,
+        "rank": 2
+      },
+      "process_coordination_ms": 222.20154100679792,
+      "result_count": 5,
+      "returned_chars": 10025,
+      "urls": [
+        "https://github.com/encode/httpx/blob/master/docs/async.md",
+        "https://www.python-httpx.org/async/",
+        "https://www.python-httpx.org/advanced/clients/",
+        "https://www.encode.io/httpnext/clients/",
+        "https://honeyryderchuck.gitlab.io/httpx/wiki/Connection-Pools"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "technical-investigation-httpx",
+      "query": "HTTPX async client reuse connection pooling official documentation",
+      "trial": 3,
+      "run_id": "971de40b632540f7944b9d29bc0d075e",
+      "elapsed_ms": 1345.4619999974966,
+      "timings_ms": {
+        "fetch": 533,
+        "rank": 1,
+        "search": 802
+      },
+      "process_coordination_ms": 9.461999997496605,
+      "result_count": 5,
+      "returned_chars": 10299,
+      "urls": [
+        "https://fixdevs.com/blog/httpx-not-working/",
+        "https://github.com/encode/httpx/blob/master/docs/async.md",
+        "https://www.python-httpx.org/async/",
+        "https://www.python-httpx.org/advanced/clients/",
+        "https://github.com/encode/httpx/blob/master/docs/advanced/clients.md"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "release-workflow-semantic-release",
+      "query": "python semantic release conventional commits versioning documentation",
+      "trial": 3,
+      "run_id": "f89a407613f1403bac0a4572bb7b73b0",
+      "elapsed_ms": 3018.9395420020446,
+      "timings_ms": {
+        "search": 1273,
+        "fetch": 1531,
+        "rank": 2
+      },
+      "process_coordination_ms": 212.93954200204462,
+      "result_count": 5,
+      "returned_chars": 8936,
+      "urls": [
+        "https://www.pythonskillset.com/code-samples/automate-semantic-versioning-conventional-commits-python/",
+        "https://github.com/python-semantic-release/python-semantic-release",
+        "https://pypi.org/project/commitizen/",
+        "https://pypi.org/project/python-semantic-release/",
+        "https://packaging.python.org/en/latest/discussions/versioning/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "release-workflow-semantic-release",
+      "query": "python semantic release conventional commits versioning documentation",
+      "trial": 3,
+      "run_id": "c0932a63ee204ca1976ea816d8ce8823",
+      "elapsed_ms": 2622.1865830011666,
+      "timings_ms": {
+        "fetch": 1456,
+        "rank": 3,
+        "search": 1148
+      },
+      "process_coordination_ms": 15.186583001166582,
+      "result_count": 5,
+      "returned_chars": 8973,
+      "urls": [
+        "https://www.pythonskillset.com/code-samples/automate-semantic-versioning-conventional-commits-python/",
+        "https://bluebook.nightmode.dev/docs/python-package-versioning-semantic-release",
+        "https://github.com/python-semantic-release/python-semantic-release",
+        "https://pypi.org/project/python-semantic-release/",
+        "https://python-semantic-release.readthedocs.io/en/latest/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "freshness-python-release",
+      "query": "latest stable Python release official documentation what's new",
+      "trial": 3,
+      "run_id": "0e156e85ca5049cb9bb60ea41a2d2253",
+      "elapsed_ms": 1378.3366669958923,
+      "timings_ms": {
+        "search": 800,
+        "fetch": 381,
+        "rank": 1
+      },
+      "process_coordination_ms": 196.3366669958923,
+      "result_count": 4,
+      "returned_chars": 7653,
+      "urls": [
+        "https://docs.python.org/3/whatsnew/index.html",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://devguide.python.org/versions/",
+        "https://releasebytes.com/python"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "freshness-python-release",
+      "query": "latest stable Python release official documentation what's new",
+      "trial": 3,
+      "run_id": "ba768f4332fe444aaa9e3004c14a2ac8",
+      "elapsed_ms": 1825.6771249871235,
+      "timings_ms": {
+        "fetch": 849,
+        "rank": 5,
+        "search": 957
+      },
+      "process_coordination_ms": 14.677124987123534,
+      "result_count": 5,
+      "returned_chars": 9364,
+      "urls": [
+        "https://docs.python.org/3/whatsnew/index.html",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://www.python.org/doc/",
+        "https://test.python.org/downloads/latest/prerelease/",
+        "https://www.python.org/downloads/latest/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "security-pypi-trusted-publishing",
+      "query": "PyPI trusted publisher pending publisher GitHub Actions official docs",
+      "trial": 4,
+      "run_id": "9af3ccb4ba054b55806d4bc50d8b32e6",
+      "elapsed_ms": 1527.8541669831611,
+      "timings_ms": {
+        "search": 985,
+        "fetch": 326,
+        "rank": 1
+      },
+      "process_coordination_ms": 215.85416698316112,
+      "result_count": 5,
+      "returned_chars": 8812,
+      "urls": [
+        "https://docs.pypi.org/trusted-publishers/using-a-publisher/",
+        "https://github.com/pypi/warehouse/blob/main/docs/user/trusted-publishers/using-a-publisher.md",
+        "https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-pypi",
+        "https://pydevtools.com/handbook/how-to/how-to-publish-to-pypi-with-trusted-publishing/",
+        "https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "security-pypi-trusted-publishing",
+      "query": "PyPI trusted publisher pending publisher GitHub Actions official docs",
+      "trial": 4,
+      "run_id": "0e9facccd7ad4bf2a8c3b4ebc7d5b3e3",
+      "elapsed_ms": 1269.7257920226548,
+      "timings_ms": {
+        "fetch": 343,
+        "rank": 1,
+        "search": 905
+      },
+      "process_coordination_ms": 20.725792022654787,
+      "result_count": 5,
+      "returned_chars": 8417,
+      "urls": [
+        "https://pulseagent.dev/docs/operations/pypi-trusted-publishing",
+        "https://docs.pypi.org/trusted-publishers/using-a-publisher/",
+        "https://github.com/pypi/warehouse/blob/main/docs/user/trusted-publishers/adding-a-publisher.md",
+        "https://pydevtools.com/handbook/how-to/how-to-publish-to-pypi-with-trusted-publishing/",
+        "https://docs.pypi.org/trusted-publishers/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "multi-hop-template-strings",
+      "query": "Python template strings PEP official documentation Python 3.14",
+      "trial": 4,
+      "run_id": "7c833e847e9b45b499ba3e3bc8fd68aa",
+      "elapsed_ms": 1800.5965829943307,
+      "timings_ms": {
+        "search": 943,
+        "fetch": 650,
+        "rank": 1
+      },
+      "process_coordination_ms": 206.59658299433067,
+      "result_count": 5,
+      "returned_chars": 9594,
+      "urls": [
+        "https://docs.python.org/",
+        "https://gdevops.frama.io/python/versions/3.14.0/template-strings/template-strings.html",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://peps.python.org/pep-0750/",
+        "https://peps.python.org/pep-0501/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "multi-hop-template-strings",
+      "query": "Python template strings PEP official documentation Python 3.14",
+      "trial": 4,
+      "run_id": "82190343f37841f9ac66602a74df1f6a",
+      "elapsed_ms": 1651.194083999144,
+      "timings_ms": {
+        "fetch": 679,
+        "rank": 1,
+        "search": 963
+      },
+      "process_coordination_ms": 8.194083999143913,
+      "result_count": 5,
+      "returned_chars": 9614,
+      "urls": [
+        "https://docs.python.org/",
+        "https://gdevops.frama.io/python/versions/3.14.0/template-strings/template-strings.html",
+        "https://www.python.org/downloads/release/python-3143/",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://peps.python.org/pep-0750/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "freshness-python-release",
+      "query": "latest stable Python release official documentation what's new",
+      "trial": 4,
+      "run_id": "36c71d5ea88945709df84978da8e5948",
+      "elapsed_ms": 1675.184583000373,
+      "timings_ms": {
+        "search": 815,
+        "fetch": 636,
+        "rank": 2
+      },
+      "process_coordination_ms": 222.1845830003731,
+      "result_count": 4,
+      "returned_chars": 7653,
+      "urls": [
+        "https://docs.python.org/3/whatsnew/index.html",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://devguide.python.org/versions/",
+        "https://releasebytes.com/python"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "freshness-python-release",
+      "query": "latest stable Python release official documentation what's new",
+      "trial": 4,
+      "run_id": "51d92b0ebb2d47ca999ab8b34eaa9cca",
+      "elapsed_ms": 1608.61450000084,
+      "timings_ms": {
+        "fetch": 691,
+        "rank": 4,
+        "search": 900
+      },
+      "process_coordination_ms": 13.614500000840053,
+      "result_count": 5,
+      "returned_chars": 9725,
+      "urls": [
+        "https://docs.python.org/3/whatsnew/index.html",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://www.python.org/downloads/release/python-3140/",
+        "https://www.python.org/downloads/latest/",
+        "https://devguide.python.org/versions/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "release-workflow-semantic-release",
+      "query": "python semantic release conventional commits versioning documentation",
+      "trial": 4,
+      "run_id": "972cd81ab7f84952a93b6a25ef02357b",
+      "elapsed_ms": 2597.9244590271264,
+      "timings_ms": {
+        "search": 857,
+        "fetch": 1526,
+        "rank": 2
+      },
+      "process_coordination_ms": 212.92445902712643,
+      "result_count": 5,
+      "returned_chars": 8936,
+      "urls": [
+        "https://www.pythonskillset.com/code-samples/automate-semantic-versioning-conventional-commits-python/",
+        "https://github.com/python-semantic-release/python-semantic-release",
+        "https://pypi.org/project/commitizen/",
+        "https://pypi.org/project/python-semantic-release/",
+        "https://packaging.python.org/en/latest/discussions/versioning/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "release-workflow-semantic-release",
+      "query": "python semantic release conventional commits versioning documentation",
+      "trial": 4,
+      "run_id": "d042f1132cf14e81addb2fc79709bfe0",
+      "elapsed_ms": 2318.92562500434,
+      "timings_ms": {
+        "fetch": 1499,
+        "rank": 4,
+        "search": 802
+      },
+      "process_coordination_ms": 13.925625004339963,
+      "result_count": 5,
+      "returned_chars": 8973,
+      "urls": [
+        "https://www.pythonskillset.com/code-samples/automate-semantic-versioning-conventional-commits-python/",
+        "https://bluebook.nightmode.dev/docs/python-package-versioning-semantic-release",
+        "https://github.com/python-semantic-release/python-semantic-release",
+        "https://pypi.org/project/python-semantic-release/",
+        "https://python-semantic-release.readthedocs.io/en/latest/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "practical-github-oidc",
+      "query": "GitHub Actions OpenID Connect id-token write permission official docs",
+      "trial": 4,
+      "run_id": "d9469a68a197481f9ad9560515f16993",
+      "elapsed_ms": 1629.8672500124667,
+      "timings_ms": {
+        "search": 781,
+        "fetch": 622,
+        "rank": 2
+      },
+      "process_coordination_ms": 224.86725001246668,
+      "result_count": 5,
+      "returned_chars": 7200,
+      "urls": [
+        "https://docs.github.com/en/actions/concepts/security/openid-connect",
+        "https://github.blog/changelog/2023-06-15-github-actions-securing-openid-connect-oidc-token-permissions-in-reusable-workflows/",
+        "https://docs.github.com/en/actions/reference/security/oidc",
+        "https://github.com/github/docs/issues/14626",
+        "https://github.com/github"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "practical-github-oidc",
+      "query": "GitHub Actions OpenID Connect id-token write permission official docs",
+      "trial": 4,
+      "run_id": "701d5b0896a740d4812ff89605bc5ef0",
+      "elapsed_ms": 1480.393042002106,
+      "timings_ms": {
+        "fetch": 566,
+        "rank": 1,
+        "search": 904
+      },
+      "process_coordination_ms": 9.393042002106085,
+      "result_count": 5,
+      "returned_chars": 6429,
+      "urls": [
+        "https://docs.github.com/en/actions/concepts/security/openid-connect",
+        "https://github.blog/changelog/2023-06-15-github-actions-securing-openid-connect-oidc-token-permissions-in-reusable-workflows/",
+        "https://docs.github.com/en/actions/reference/security/oidc",
+        "https://github.com/",
+        "https://github.com/github/docs/issues/14626"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "technical-investigation-httpx",
+      "query": "HTTPX async client reuse connection pooling official documentation",
+      "trial": 4,
+      "run_id": "ca619a3632d347cda16a7e5bc8ef52e1",
+      "elapsed_ms": 1570.684666017769,
+      "timings_ms": {
+        "search": 787,
+        "fetch": 571,
+        "rank": 1
+      },
+      "process_coordination_ms": 211.6846660177689,
+      "result_count": 5,
+      "returned_chars": 10025,
+      "urls": [
+        "https://github.com/encode/httpx/blob/master/docs/async.md",
+        "https://www.python-httpx.org/async/",
+        "https://www.python-httpx.org/advanced/clients/",
+        "https://www.encode.io/httpnext/clients/",
+        "https://honeyryderchuck.gitlab.io/httpx/wiki/Connection-Pools"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "technical-investigation-httpx",
+      "query": "HTTPX async client reuse connection pooling official documentation",
+      "trial": 4,
+      "run_id": "a8794c4e7a904c859ca93ae4179db649",
+      "elapsed_ms": 1452.4329169944394,
+      "timings_ms": {
+        "fetch": 547,
+        "rank": 1,
+        "search": 892
+      },
+      "process_coordination_ms": 12.432916994439438,
+      "result_count": 5,
+      "returned_chars": 10299,
+      "urls": [
+        "https://fixdevs.com/blog/httpx-not-working/",
+        "https://github.com/encode/httpx/blob/master/docs/async.md",
+        "https://www.python-httpx.org/async/",
+        "https://www.python-httpx.org/advanced/clients/",
+        "https://github.com/encode/httpx/blob/master/docs/advanced/clients.md"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "source-reconciliation-python-status",
+      "query": "Python supported versions official devguide current release official documentation",
+      "trial": 4,
+      "run_id": "155255eb16cc4b21a86c9b09668288e9",
+      "elapsed_ms": 1616.3838749926072,
+      "timings_ms": {
+        "search": 769,
+        "fetch": 646,
+        "rank": 1
+      },
+      "process_coordination_ms": 200.38387499260716,
+      "result_count": 5,
+      "returned_chars": 5900,
+      "urls": [
+        "https://docs.cloud.google.com/python/docs/supported-python-versions",
+        "https://github.com/python/devguide",
+        "https://devguide.python.org/versions/",
+        "https://docs.python.org/",
+        "https://github.com/python/devguide/blob/main/versions.rst"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "source-reconciliation-python-status",
+      "query": "Python supported versions official devguide current release official documentation",
+      "trial": 4,
+      "run_id": "a7a2de5dc7ad4becb355903e7611497e",
+      "elapsed_ms": 2234.974874998443,
+      "timings_ms": {
+        "fetch": 1338,
+        "rank": 3,
+        "search": 878
+      },
+      "process_coordination_ms": 15.974874998442829,
+      "result_count": 5,
+      "returned_chars": 5976,
+      "urls": [
+        "https://github.com/python/devguide",
+        "https://docs.python.org/",
+        "https://docs.cloud.google.com/python/docs/supported-python-versions",
+        "https://www.python.org/doc/",
+        "https://test.python.org/doc/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "standards-trace-context",
+      "query": "OpenTelemetry traceparent header W3C trace context official documentation",
+      "trial": 4,
+      "run_id": "7119022d358741ae91a4c26346fd5185",
+      "elapsed_ms": 1710.1219159958418,
+      "timings_ms": {
+        "search": 890,
+        "fetch": 594,
+        "rank": 1
+      },
+      "process_coordination_ms": 225.12191599584185,
+      "result_count": 5,
+      "returned_chars": 6511,
+      "urls": [
+        "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+        "https://uptrace.dev/opentelemetry/context-propagation",
+        "https://opentelemetry.io/docs/concepts/context-propagation/",
+        "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+        "https://w3c.github.io/trace-context/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "standards-trace-context",
+      "query": "OpenTelemetry traceparent header W3C trace context official documentation",
+      "trial": 4,
+      "run_id": "e307c5dd42d44255bf5eeec10789a5e9",
+      "elapsed_ms": 1482.794500014279,
+      "timings_ms": {
+        "fetch": 615,
+        "rank": 0,
+        "search": 845
+      },
+      "process_coordination_ms": 22.794500014279038,
+      "result_count": 5,
+      "returned_chars": 6511,
+      "urls": [
+        "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+        "https://uptrace.dev/opentelemetry/context-propagation",
+        "https://opentelemetry.io/docs/concepts/context-propagation/",
+        "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+        "https://w3c.github.io/trace-context/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "source-reconciliation-python-status",
+      "query": "Python supported versions official devguide current release official documentation",
+      "trial": 5,
+      "run_id": "626732bf27d34fa19cef5495f43733d0",
+      "elapsed_ms": 2039.2770000034943,
+      "timings_ms": {
+        "search": 688,
+        "fetch": 1142,
+        "rank": 2
+      },
+      "process_coordination_ms": 207.27700000349432,
+      "result_count": 5,
+      "returned_chars": 5900,
+      "urls": [
+        "https://docs.cloud.google.com/python/docs/supported-python-versions",
+        "https://github.com/python/devguide",
+        "https://devguide.python.org/versions/",
+        "https://docs.python.org/",
+        "https://github.com/python/devguide/blob/main/versions.rst"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "source-reconciliation-python-status",
+      "query": "Python supported versions official devguide current release official documentation",
+      "trial": 5,
+      "run_id": "bc15077139604def9719405c439904a7",
+      "elapsed_ms": 2484.6539580030367,
+      "timings_ms": {
+        "fetch": 1406,
+        "rank": 4,
+        "search": 1061
+      },
+      "process_coordination_ms": 13.653958003036678,
+      "result_count": 5,
+      "returned_chars": 6335,
+      "urls": [
+        "https://github.com/python/devguide",
+        "https://docs.python.org/",
+        "https://docs.cloud.google.com/python/docs/supported-python-versions",
+        "https://devguide.python.org/versions/",
+        "https://www.python.org/doc/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "security-pypi-trusted-publishing",
+      "query": "PyPI trusted publisher pending publisher GitHub Actions official docs",
+      "trial": 5,
+      "run_id": "c67d7041a6444babb72e98fde80d33af",
+      "elapsed_ms": 1250.1446660025977,
+      "timings_ms": {
+        "search": 690,
+        "fetch": 344,
+        "rank": 1
+      },
+      "process_coordination_ms": 215.14466600259766,
+      "result_count": 5,
+      "returned_chars": 9402,
+      "urls": [
+        "https://docs.pypi.org/trusted-publishers/using-a-publisher/",
+        "https://pydevtools.com/handbook/how-to/how-to-publish-to-pypi-with-trusted-publishing/",
+        "https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/",
+        "https://docs.github.com/en/actions/how-tos/secure-your-work/security-harden-deployments/oidc-in-pypi",
+        "https://github.com/pypi/warehouse/blob/main/docs/user/trusted-publishers/adding-a-publisher.md"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "security-pypi-trusted-publishing",
+      "query": "PyPI trusted publisher pending publisher GitHub Actions official docs",
+      "trial": 5,
+      "run_id": "6d304adabde84bc3bb5a7e52a0684d50",
+      "elapsed_ms": 1238.6430419865064,
+      "timings_ms": {
+        "fetch": 307,
+        "rank": 0,
+        "search": 910
+      },
+      "process_coordination_ms": 21.643041986506432,
+      "result_count": 5,
+      "returned_chars": 8417,
+      "urls": [
+        "https://pulseagent.dev/docs/operations/pypi-trusted-publishing",
+        "https://docs.pypi.org/trusted-publishers/using-a-publisher/",
+        "https://github.com/pypi/warehouse/blob/main/docs/user/trusted-publishers/adding-a-publisher.md",
+        "https://pydevtools.com/handbook/how-to/how-to-publish-to-pypi-with-trusted-publishing/",
+        "https://docs.pypi.org/trusted-publishers/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "release-workflow-semantic-release",
+      "query": "python semantic release conventional commits versioning documentation",
+      "trial": 5,
+      "run_id": "4962b1935f124b6fb971e64402a055ba",
+      "elapsed_ms": 2790.6296250002924,
+      "timings_ms": {
+        "search": 954,
+        "fetch": 1627,
+        "rank": 2
+      },
+      "process_coordination_ms": 207.62962500029244,
+      "result_count": 5,
+      "returned_chars": 8936,
+      "urls": [
+        "https://www.pythonskillset.com/code-samples/automate-semantic-versioning-conventional-commits-python/",
+        "https://github.com/python-semantic-release/python-semantic-release",
+        "https://pypi.org/project/commitizen/",
+        "https://pypi.org/project/python-semantic-release/",
+        "https://packaging.python.org/en/latest/discussions/versioning/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "release-workflow-semantic-release",
+      "query": "python semantic release conventional commits versioning documentation",
+      "trial": 5,
+      "run_id": "3145f71c73394beb9f832a15551e057c",
+      "elapsed_ms": 2559.7009580233134,
+      "timings_ms": {
+        "fetch": 1500,
+        "rank": 4,
+        "search": 1043
+      },
+      "process_coordination_ms": 12.700958023313433,
+      "result_count": 5,
+      "returned_chars": 8973,
+      "urls": [
+        "https://www.pythonskillset.com/code-samples/automate-semantic-versioning-conventional-commits-python/",
+        "https://bluebook.nightmode.dev/docs/python-package-versioning-semantic-release",
+        "https://github.com/python-semantic-release/python-semantic-release",
+        "https://pypi.org/project/python-semantic-release/",
+        "https://python-semantic-release.readthedocs.io/en/latest/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "standards-trace-context",
+      "query": "OpenTelemetry traceparent header W3C trace context official documentation",
+      "trial": 5,
+      "run_id": "8c139aecf75d4f97bca0095918133c53",
+      "elapsed_ms": 1876.0452499845996,
+      "timings_ms": {
+        "search": 1009,
+        "fetch": 665,
+        "rank": 1
+      },
+      "process_coordination_ms": 201.04524998459965,
+      "result_count": 5,
+      "returned_chars": 6511,
+      "urls": [
+        "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+        "https://uptrace.dev/opentelemetry/context-propagation",
+        "https://opentelemetry.io/docs/concepts/context-propagation/",
+        "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+        "https://w3c.github.io/trace-context/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "standards-trace-context",
+      "query": "OpenTelemetry traceparent header W3C trace context official documentation",
+      "trial": 5,
+      "run_id": "6fb465d6539142d3ba55e50f20545d3a",
+      "elapsed_ms": 1930.1932090020273,
+      "timings_ms": {
+        "fetch": 718,
+        "rank": 0,
+        "search": 1202
+      },
+      "process_coordination_ms": 10.193209002027288,
+      "result_count": 5,
+      "returned_chars": 6511,
+      "urls": [
+        "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+        "https://uptrace.dev/opentelemetry/context-propagation",
+        "https://opentelemetry.io/docs/concepts/context-propagation/",
+        "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+        "https://w3c.github.io/trace-context/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "multi-hop-template-strings",
+      "query": "Python template strings PEP official documentation Python 3.14",
+      "trial": 5,
+      "run_id": "3fcec1febdf541ceb2150cc2c37a13b5",
+      "elapsed_ms": 1509.2040420277044,
+      "timings_ms": {
+        "search": 728,
+        "fetch": 580,
+        "rank": 1
+      },
+      "process_coordination_ms": 200.20404202770442,
+      "result_count": 5,
+      "returned_chars": 9618,
+      "urls": [
+        "https://gdevops.frama.io/python/versions/3.14.0/template-strings/template-strings.html",
+        "https://docs.python.org/",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://peps.python.org/pep-0750/",
+        "https://docs.python.org/3/library/string.templatelib.html"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "multi-hop-template-strings",
+      "query": "Python template strings PEP official documentation Python 3.14",
+      "trial": 5,
+      "run_id": "c8b4efed179b458389a8eac40f015806",
+      "elapsed_ms": 2413.15345899784,
+      "timings_ms": {
+        "fetch": 1540,
+        "rank": 5,
+        "search": 853
+      },
+      "process_coordination_ms": 15.153458997840062,
+      "result_count": 5,
+      "returned_chars": 8802,
+      "urls": [
+        "https://python.plainenglish.io/interpreting-python3-14-a654efe7fa90",
+        "https://docs.python.org/",
+        "https://gdevops.frama.io/python/versions/3.14.0/template-strings/template-strings.html",
+        "https://www.python.org/downloads/release/python-3143/",
+        "https://docs.python.org/3/whatsnew/3.14.html"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "freshness-python-release",
+      "query": "latest stable Python release official documentation what's new",
+      "trial": 5,
+      "run_id": "de4d10be15b1482b8f826636011754a5",
+      "elapsed_ms": 1651.4159580110572,
+      "timings_ms": {
+        "search": 749,
+        "fetch": 643,
+        "rank": 2
+      },
+      "process_coordination_ms": 257.4159580110572,
+      "result_count": 4,
+      "returned_chars": 7653,
+      "urls": [
+        "https://docs.python.org/3/whatsnew/index.html",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://devguide.python.org/versions/",
+        "https://releasebytes.com/python"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "freshness-python-release",
+      "query": "latest stable Python release official documentation what's new",
+      "trial": 5,
+      "run_id": "442f91141dd343189812660680812f72",
+      "elapsed_ms": 1424.1769170039333,
+      "timings_ms": {
+        "fetch": 507,
+        "rank": 1,
+        "search": 895
+      },
+      "process_coordination_ms": 21.17691700393334,
+      "result_count": 5,
+      "returned_chars": 9364,
+      "urls": [
+        "https://docs.python.org/3/whatsnew/index.html",
+        "https://docs.python.org/3/whatsnew/3.14.html",
+        "https://www.python.org/doc/",
+        "https://test.python.org/downloads/latest/prerelease/",
+        "https://www.python.org/downloads/latest/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "technical-investigation-httpx",
+      "query": "HTTPX async client reuse connection pooling official documentation",
+      "trial": 5,
+      "run_id": "9ac7415f28a64bd8a0e54e447d75f367",
+      "elapsed_ms": 1756.3319170149043,
+      "timings_ms": {
+        "search": 790,
+        "fetch": 747,
+        "rank": 2
+      },
+      "process_coordination_ms": 217.33191701490432,
+      "result_count": 5,
+      "returned_chars": 10295,
+      "urls": [
+        "https://github.com/encode/httpx/blob/master/docs/async.md",
+        "https://www.python-httpx.org/async/",
+        "https://www.python-httpx.org/advanced/clients/",
+        "https://github.com/encode/httpx/blob/master/docs/advanced/clients.md",
+        "https://www.encode.io/httpnext/clients/"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "technical-investigation-httpx",
+      "query": "HTTPX async client reuse connection pooling official documentation",
+      "trial": 5,
+      "run_id": "be1d466d3fb249feaad44b2f1f445866",
+      "elapsed_ms": 1657.9539999947883,
+      "timings_ms": {
+        "fetch": 717,
+        "rank": 3,
+        "search": 923
+      },
+      "process_coordination_ms": 14.953999994788319,
+      "result_count": 5,
+      "returned_chars": 10295,
+      "urls": [
+        "https://github.com/encode/httpx/blob/master/docs/async.md",
+        "https://www.python-httpx.org/async/",
+        "https://www.python-httpx.org/advanced/clients/",
+        "https://github.com/encode/httpx/blob/master/docs/advanced/clients.md",
+        "https://www.encode.io/httpnext/clients/"
+      ]
+    },
+    {
+      "implementation": "python",
+      "task_id": "practical-github-oidc",
+      "query": "GitHub Actions OpenID Connect id-token write permission official docs",
+      "trial": 5,
+      "run_id": "95a7defdd5b34b3fa24ed94c33ff23c3",
+      "elapsed_ms": 1677.0005830039736,
+      "timings_ms": {
+        "search": 683,
+        "fetch": 759,
+        "rank": 3
+      },
+      "process_coordination_ms": 232.0005830039736,
+      "result_count": 5,
+      "returned_chars": 7200,
+      "urls": [
+        "https://docs.github.com/en/actions/concepts/security/openid-connect",
+        "https://github.blog/changelog/2023-06-15-github-actions-securing-openid-connect-oidc-token-permissions-in-reusable-workflows/",
+        "https://docs.github.com/en/actions/reference/security/oidc",
+        "https://github.com/github/docs/issues/14626",
+        "https://github.com/github"
+      ]
+    },
+    {
+      "implementation": "rust",
+      "task_id": "practical-github-oidc",
+      "query": "GitHub Actions OpenID Connect id-token write permission official docs",
+      "trial": 5,
+      "run_id": "8e1767dfa9d74aecbc7d7310085fd4ee",
+      "elapsed_ms": 1618.8047920004465,
+      "timings_ms": {
+        "fetch": 653,
+        "rank": 2,
+        "search": 948
+      },
+      "process_coordination_ms": 15.804792000446469,
+      "result_count": 5,
+      "returned_chars": 6429,
+      "urls": [
+        "https://docs.github.com/en/actions/concepts/security/openid-connect",
+        "https://github.blog/changelog/2023-06-15-github-actions-securing-openid-connect-oidc-token-permissions-in-reusable-workflows/",
+        "https://docs.github.com/en/actions/reference/security/oidc",
+        "https://github.com/",
+        "https://github.com/github/docs/issues/14626"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+[package]
+name = "kestrelsearch"
+version = "1.1.0"
+edition = "2024"
+rust-version = "1.89"
+description = "Web search, page extraction, and relevance ranking for AI agents"
+readme = "README.md"
+repository = "https://github.com/rafaelpierre/kestrelsearch.git"
+keywords = ["search", "scraping", "bm25", "cli", "agents"]
+categories = ["command-line-utilities", "web-programming::http-client"]
+
+[lib]
+name = "kestrelsearch"
+path = "src/lib.rs"
+
+[[bin]]
+name = "kestrel"
+path = "src/main.rs"
+
+[dependencies]
+async-trait = "0.1"
+base64 = "0.22"
+chrono = { version = "0.4", features = ["clock", "serde"] }
+clap = { version = "4.6", features = ["derive"] }
+encoding_rs = "0.8"
+futures-util = "0.3"
+home = "0.5"
+html-escape = "0.2"
+mime = "0.3"
+once_cell = "1"
+primp = { version = "2", default-features = false, features = ["query", "charset", "gzip", "brotli", "zstd", "deflate", "system-proxy"] }
+rand = "0.10"
+regex = "1"
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "http2", "charset", "form", "query", "stream", "gzip", "brotli", "zstd", "deflate", "system-proxy"] }
+scraper = "0.27"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+thiserror = "2"
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time", "fs"] }
+toml_edit = "0.25"
+url = "2"
+uuid = { version = "1", features = ["v4"] }
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+serial_test = "3"
+tempfile = "3"
+wiremock = "0.6"
+
+[profile.release]
+lto = "thin"
+strip = true

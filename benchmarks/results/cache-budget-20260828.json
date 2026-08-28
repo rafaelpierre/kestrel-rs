@@ -1,0 +1,211 @@
+[
+  {
+    "label": "cache-cold",
+    "elapsed_ms": 3558.407124975929,
+    "timings_ms": {
+      "fetch": 1895,
+      "initialize": 139,
+      "rank": 1,
+      "search": 997
+    },
+    "returned_chars": 6511,
+    "fetched": 5,
+    "urls": [
+      "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+      "https://uptrace.dev/opentelemetry/context-propagation",
+      "https://opentelemetry.io/docs/concepts/context-propagation/",
+      "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+      "https://w3c.github.io/trace-context/"
+    ]
+  },
+  {
+    "label": "cache-warm",
+    "elapsed_ms": 1456.5727089939173,
+    "timings_ms": {
+      "fetch": 655,
+      "initialize": 123,
+      "rank": 4,
+      "search": 655
+    },
+    "returned_chars": 6511,
+    "fetched": 5,
+    "urls": [
+      "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+      "https://uptrace.dev/opentelemetry/context-propagation",
+      "https://opentelemetry.io/docs/concepts/context-propagation/",
+      "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+      "https://w3c.github.io/trace-context/"
+    ]
+  },
+  {
+    "label": "cache-warm",
+    "elapsed_ms": 1711.9523330184165,
+    "timings_ms": {
+      "fetch": 483,
+      "initialize": 131,
+      "rank": 2,
+      "search": 1075
+    },
+    "returned_chars": 6511,
+    "fetched": 5,
+    "urls": [
+      "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+      "https://uptrace.dev/opentelemetry/context-propagation",
+      "https://opentelemetry.io/docs/concepts/context-propagation/",
+      "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+      "https://w3c.github.io/trace-context/"
+    ]
+  },
+  {
+    "label": "cache-warm",
+    "elapsed_ms": 1426.2389579962473,
+    "timings_ms": {
+      "fetch": 509,
+      "initialize": 126,
+      "rank": 2,
+      "search": 758
+    },
+    "returned_chars": 6511,
+    "fetched": 5,
+    "urls": [
+      "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+      "https://uptrace.dev/opentelemetry/context-propagation",
+      "https://opentelemetry.io/docs/concepts/context-propagation/",
+      "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+      "https://w3c.github.io/trace-context/"
+    ]
+  },
+  {
+    "label": "cache-warm",
+    "elapsed_ms": 1473.8416250038426,
+    "timings_ms": {
+      "fetch": 452,
+      "initialize": 125,
+      "rank": 1,
+      "search": 875
+    },
+    "returned_chars": 6511,
+    "fetched": 5,
+    "urls": [
+      "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+      "https://uptrace.dev/opentelemetry/context-propagation",
+      "https://opentelemetry.io/docs/concepts/context-propagation/",
+      "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+      "https://w3c.github.io/trace-context/"
+    ]
+  },
+  {
+    "label": "cache-warm",
+    "elapsed_ms": 1451.044333021855,
+    "timings_ms": {
+      "fetch": 479,
+      "initialize": 133,
+      "rank": 2,
+      "search": 815
+    },
+    "returned_chars": 6511,
+    "fetched": 5,
+    "urls": [
+      "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+      "https://uptrace.dev/opentelemetry/context-propagation",
+      "https://opentelemetry.io/docs/concepts/context-propagation/",
+      "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+      "https://w3c.github.io/trace-context/"
+    ]
+  },
+  {
+    "label": "budget-500ms",
+    "elapsed_ms": 1361.610958003439,
+    "timings_ms": {
+      "fetch": 501,
+      "initialize": 126,
+      "rank": 2,
+      "search": 709
+    },
+    "returned_chars": 8530,
+    "fetched": 5,
+    "urls": [
+      "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+      "https://opentelemetry.io/docs/concepts/context-propagation/",
+      "https://uptrace.dev/opentelemetry/context-propagation",
+      "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+      "https://opentelemetry.io/docs/zero-code/obi/distributed-traces/"
+    ]
+  },
+  {
+    "label": "budget-500ms",
+    "elapsed_ms": 1829.1479999898002,
+    "timings_ms": {
+      "fetch": 501,
+      "initialize": 128,
+      "rank": 4,
+      "search": 1165
+    },
+    "returned_chars": 8445,
+    "fetched": 5,
+    "urls": [
+      "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+      "https://opentelemetry.io/docs/concepts/context-propagation/",
+      "https://uptrace.dev/opentelemetry/context-propagation",
+      "https://w3c.github.io/trace-context/",
+      "https://opentelemetry.io/docs/zero-code/obi/distributed-traces/"
+    ]
+  },
+  {
+    "label": "budget-500ms",
+    "elapsed_ms": 1434.6757500024978,
+    "timings_ms": {
+      "fetch": 493,
+      "initialize": 128,
+      "rank": 2,
+      "search": 784
+    },
+    "returned_chars": 6511,
+    "fetched": 5,
+    "urls": [
+      "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+      "https://uptrace.dev/opentelemetry/context-propagation",
+      "https://opentelemetry.io/docs/concepts/context-propagation/",
+      "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+      "https://w3c.github.io/trace-context/"
+    ]
+  },
+  {
+    "label": "budget-500ms",
+    "elapsed_ms": 1574.4748339930084,
+    "timings_ms": {
+      "fetch": 501,
+      "initialize": 126,
+      "rank": 3,
+      "search": 922
+    },
+    "returned_chars": 8530,
+    "fetched": 5,
+    "urls": [
+      "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+      "https://opentelemetry.io/docs/concepts/context-propagation/",
+      "https://uptrace.dev/opentelemetry/context-propagation",
+      "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+      "https://opentelemetry.io/docs/zero-code/obi/distributed-traces/"
+    ]
+  },
+  {
+    "label": "budget-500ms",
+    "elapsed_ms": 1250.8876660140231,
+    "timings_ms": {
+      "fetch": 501,
+      "initialize": 135,
+      "rank": 3,
+      "search": 582
+    },
+    "returned_chars": 6511,
+    "fetched": 5,
+    "urls": [
+      "https://martinuke0.github.io/posts/2026-05-30-mastering-opentelemetry-context-propagation-implementation-header-standards-and-distributed-trace-continuity-across-microservices/",
+      "https://uptrace.dev/opentelemetry/context-propagation",
+      "https://opentelemetry.io/docs/concepts/context-propagation/",
+      "https://deepwiki.com/open-telemetry/opentelemetry-dotnet/8.1-w3c-trace-context-and-propagators",
+      "https://w3c.github.io/trace-context/"
+    ]
+  }
+]

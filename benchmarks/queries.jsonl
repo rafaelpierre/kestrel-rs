@@ -1,0 +1,8 @@
+{"id":"freshness-python-release","query":"latest stable Python release official documentation what's new"}
+{"id":"multi-hop-template-strings","query":"Python template strings PEP official documentation Python 3.14"}
+{"id":"security-pypi-trusted-publishing","query":"PyPI trusted publisher pending publisher GitHub Actions official docs"}
+{"id":"standards-trace-context","query":"OpenTelemetry traceparent header W3C trace context official documentation"}
+{"id":"practical-github-oidc","query":"GitHub Actions OpenID Connect id-token write permission official docs"}
+{"id":"source-reconciliation-python-status","query":"Python supported versions official devguide current release official documentation"}
+{"id":"technical-investigation-httpx","query":"HTTPX async client reuse connection pooling official documentation"}
+{"id":"release-workflow-semantic-release","query":"python semantic release conventional commits versioning documentation"}
