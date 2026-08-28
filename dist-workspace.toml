@@ -7,6 +7,9 @@ members = ["cargo:."]
 cargo-dist-version = "0.32.0"
 # CI backends to support
 ci = "github"
+# Release tags created with GITHUB_TOKEN are handed to this workflow through an
+# explicit workflow dispatch, avoiding the need for a personal access token.
+dispatch-releases = true
 # The installers to generate for each app
 installers = ["shell"]
 # Target platforms to build apps for (Rust target-triple syntax)

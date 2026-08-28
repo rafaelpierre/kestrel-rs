@@ -35,7 +35,7 @@ jobs:
           RELEASES: ${{ steps.release-plz.outputs.releases }}
         run: |
           jq -r '.[].tag' <<<"$RELEASES" | while IFS= read -r tag; do
-            gh workflow run release.yml --ref "$tag"
+            gh workflow run release.yml --ref "$tag" -f tag="$tag"
           done
 
   release-pr:
