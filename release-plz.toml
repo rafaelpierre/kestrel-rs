@@ -1,12 +1,12 @@
 [workspace]
-# This project distributes GitHub release binaries and is not published to a
-# Cargo registry. Tags are therefore the source of truth for released versions.
-git_only = true
+# crates.io is the source of truth for published package versions.
+publish = true
 git_tag_name = "v{{ version }}"
-publish = false
 
 # Only release after the generated release PR has been reviewed and merged.
 release_always = false
+# Only product fixes/features prepare a release; maintenance-only commits do not.
+release_commits = '^(feat|fix)(\([^)]*\))?!?:'
 
 # cargo-dist creates the GitHub release and uploads its artifacts after the tag
 # is pushed. release-plz owns only the version bump, changelog, and tag.

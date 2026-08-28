@@ -43,7 +43,7 @@ run `kestrel skill install`.
 Alternatively, build and install from source with Cargo:
 
 ```bash
-cargo install --git https://github.com/rafaelpierre/kestrel-rs --locked
+cargo install kestrel-rs --locked
 kestrel --help
 ```
 
