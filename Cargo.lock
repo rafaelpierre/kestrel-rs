@@ -1173,8 +1173,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "kestrelsearch"
-version = "1.1.0"
+name = "kestrel-rs"
+version = "1.1.1"
 dependencies = [
  "assert_cmd",
  "async-trait",

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1](https://github.com/rafaelpierre/kestrel-rs/releases/tag/v1.1.1) - 2026-08-28
+
+### Fixed
+
+- publish the Cargo package under the `kestrel-rs` crate name
+
 ## [1.1.0](https://github.com/rafaelpierre/kestrel-rs/releases/tag/v1.1.0) - 2026-08-28
 
 ### Added

@@ -33,7 +33,7 @@ Install the latest prebuilt release on an Apple Silicon Mac:
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf \
-  https://github.com/rafaelpierre/kestrel-rs/releases/latest/download/kestrelsearch-installer.sh | sh
+  https://github.com/rafaelpierre/kestrel-rs/releases/latest/download/kestrel-rs-installer.sh | sh
 ```
 
 The installer verifies the downloaded archive. Intel Macs and Linux are not yet
@@ -213,7 +213,7 @@ Releases use Conventional Commit messages to select the next semantic version:
 After changes reach `main`, release-plz creates or updates a release PR containing
 the version and changelog. Merging that PR creates a `vMAJOR.MINOR.PATCH` tag.
 The tag runs the generated cargo-dist workflow, which builds the Apple Silicon
-binary and publishes it, its checksum, and `kestrelsearch-installer.sh` to a
+binary and publishes it, its checksum, and `kestrel-rs-installer.sh` to a
 GitHub Release.
 
 No release secret is required. The release workflow uses the repository's
