@@ -3,6 +3,7 @@
 # Cargo registry. Tags are therefore the source of truth for released versions.
 git_only = true
 git_tag_name = "v{{ version }}"
+publish = false
 
 # Only release after the generated release PR has been reviewed and merged.
 release_always = false

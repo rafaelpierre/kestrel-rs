@@ -20,3 +20,8 @@ install-path = "CARGO_HOME"
 hosting = "github"
 # Whether to install an updater program
 install-updater = false
+
+[dist.github-custom-runners]
+# Keep release planning, installer generation, and publication on the same
+# Apple Silicon macOS runner family as the binary build.
+global = "macos-14"
