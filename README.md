@@ -52,6 +52,39 @@ cargo install kestrel-rs --locked
 Verify either installation with `kestrel --version`. To install the optional
 agent skill afterwards, run `kestrel skill install`.
 
+These methods install for the current user, normally in `~/.cargo/bin` (or
+`$CARGO_HOME/bin` when configured). Once that directory is on `PATH`, you can
+run `kestrel` from any directory. The shell installer attempts to configure
+`PATH`; follow its printed instructions to activate it in your current shell.
+For a standard Cargo installation, sh/bash/zsh users can run
+`. "$HOME/.cargo/env"`.
+
+### Install a manually downloaded binary (macOS/Linux)
+
+If you downloaded and extracted a release archive, run the executable from
+the extracted directory:
+
+```sh
+./kestrel install                   # Current user: ~/.local/bin/kestrel
+sudo ./kestrel install --system     # All users: /usr/local/bin/kestrel
+./kestrel install --dir ~/bin        # Custom destination
+```
+
+Choose one of these installation scopes. The command copies the running binary,
+creates the destination directory if needed, and prints shell-specific `PATH`
+instructions. It does not edit shell configuration. For an all-user installation,
+each user's `PATH` must include `/usr/local/bin`.
+
+Running the installed copy's `install` command with the same destination is a
+no-op. Other existing files and symlinks are never overwritten. Update
+package-managed installations with their package manager; to replace a manual
+installation, remove the old copy first. The command also reports another
+`kestrel` executable taking precedence on `PATH`.
+
+`install` copies a binary you already have; it does not download releases or
+add support for another platform. Prebuilt releases currently support Apple
+Silicon macOS only. Linux users can build from source with Cargo.
+
 ## Use the CLI
 
 The default command searches DuckDuckGo, falling back to Bing and then Yahoo on

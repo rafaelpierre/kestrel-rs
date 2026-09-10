@@ -33,6 +33,8 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
+    /// Install this executable for the current user or all users (macOS/Linux).
+    Install(crate::install::InstallArgs),
     /// Search one or more engines and return ranked results.
     Search(Box<SearchArgs>),
     /// Fetch a URL directly and extract its page text without searching.
@@ -221,6 +223,13 @@ enum InstallScope {
 
 pub async fn run() -> ExitCode {
     match Cli::parse().command {
+        Commands::Install(arguments) => match crate::install::run(arguments) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(error) => {
+                eprintln!("[kestrel] {error}");
+                ExitCode::FAILURE
+            }
+        },
         Commands::Search(arguments) => run_search(*arguments).await,
         Commands::Fetch(arguments) => run_fetch(arguments).await,
         Commands::Skill { command } => match run_skill(command) {
