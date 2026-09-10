@@ -54,7 +54,8 @@ agent skill afterwards, run `kestrel skill install`.
 
 ## Use the CLI
 
-The default command searches DuckDuckGo, fetches up to three times `--top-k`
+The default command searches DuckDuckGo, falling back to Bing and then Yahoo on
+provider errors (including bot challenges), and fetches up to three times `--top-k`
 candidates, extracts up to 2,000 characters per page, ranks them with BM25, and
 returns the best five results:
 
@@ -62,7 +63,25 @@ returns the best five results:
 kestrel search "python dataclasses"
 ```
 
+To read a known page directly, use `fetch` instead of a `site:<full-url>` search:
+
+```bash
+kestrel fetch "https://www.rust-lang.org/learn"
+kestrel fetch "https://www.rust-lang.org/learn" --output json --content-limit 40000
+```
+
+`fetch <URL>` extracts one HTTP/HTTPS page without search or ranking. It defaults
+to 20,000 characters, a 10-second timeout, and a 2 MB response limit (adjust with
+`--content-limit`, `--timeout`, and `--max-response-bytes`). JSON output is an
+object with `url` and `content` fields. Failed requests, unsupported content such
+as PDFs, and empty extractions exit unsuccessfully with an error on stderr.
+The extractor does not render JavaScript.
+
 Common variants:
+
+`--mode fanout` searches all three providers concurrently by default. Use
+`--engine` to select specific providers or set their fallback order. For example,
+`kestrel search "test" --engine bing --no-fetch` searches only Bing.
 
 ```bash
 # Machine-readable results

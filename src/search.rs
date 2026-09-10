@@ -455,7 +455,7 @@ async fn search_duckduckgo(
     })
     .await?;
     Ok(ProviderResponse {
-        results: parse_duckduckgo_results(&text),
+        results: parse_duckduckgo_response(&text)?,
         retries,
     })
 }
@@ -716,6 +716,29 @@ pub(crate) fn canonical_url(value: &str) -> String {
     url.to_string()
 }
 
+fn parse_duckduckgo_response(html: &str) -> Result<Vec<SearchResult>, KestrelError> {
+    let document = Html::parse_document(html);
+    if document
+        .select(&selector(
+            "form#challenge-form, form[action*='anomaly.js'], .anomaly-modal",
+        ))
+        .next()
+        .is_some()
+    {
+        return Err(KestrelError::Search(
+            "DuckDuckGo returned a bot challenge; try --engine bing or --engine yahoo".into(),
+        ));
+    }
+    let results = parse_duckduckgo_results(html);
+    if results.is_empty() && document.select(&selector(".no-results")).next().is_none() {
+        return Err(KestrelError::Search(
+            "DuckDuckGo returned an unrecognized search page; try --engine bing or --engine yahoo"
+                .into(),
+        ));
+    }
+    Ok(results)
+}
+
 fn parse_duckduckgo_results(html: &str) -> Vec<SearchResult> {
     let document = Html::parse_document(html);
     let item = selector("div.result.results_links.results_links_deep.web-result");
@@ -908,10 +931,52 @@ mod tests {
 
     #[test]
     fn parses_duckduckgo() {
-        let results = parse_duckduckgo_results(DDG);
+        let results = parse_duckduckgo_response(DDG).unwrap();
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].title, "Example");
         assert_eq!(results[0].snippet, "A useful result");
+    }
+
+    #[test]
+    fn duckduckgo_distinguishes_empty_results_from_unrecognized_pages() {
+        assert!(
+            parse_duckduckgo_response(r#"<div class="no-results">No results found.</div>"#)
+                .unwrap()
+                .is_empty()
+        );
+        assert!(
+            parse_duckduckgo_response("<html><body>Service unavailable</body></html>")
+                .unwrap_err()
+                .to_string()
+                .contains("unrecognized search page")
+        );
+    }
+
+    #[tokio::test]
+    async fn duckduckgo_challenge_is_an_error_even_with_success_http_status() {
+        use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+
+        for status in [200, 202] {
+            let server = MockServer::start().await;
+            Mock::given(method("POST"))
+                .respond_with(ResponseTemplate::new(status).set_body_string(
+                    r#"<form id="challenge-form" action="//duckduckgo.com/anomaly.js"><div class="anomaly-modal">Please confirm you are human</div></form>"#,
+                ))
+                .expect(1)
+                .mount(&server)
+                .await;
+            let client = reqwest::Client::new();
+            let (html, retries) =
+                request_standard_with_retries(&client, Engine::Duckduckgo, "test", || {
+                    client.post(server.uri())
+                })
+                .await
+                .unwrap();
+            assert_eq!(retries, 0);
+            let error = parse_duckduckgo_response(&html).unwrap_err();
+            assert!(error.to_string().contains("bot challenge"));
+            assert!(error.to_string().contains("--engine bing"));
+        }
     }
 
     #[test]

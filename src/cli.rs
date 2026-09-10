@@ -35,6 +35,8 @@ struct Cli {
 enum Commands {
     /// Search one or more engines and return ranked results.
     Search(Box<SearchArgs>),
+    /// Fetch a URL directly and extract its page text without searching.
+    Fetch(FetchArgs),
     /// Manage the Kestrel agent skill (SKILL.md).
     Skill {
         #[command(subcommand)]
@@ -52,7 +54,7 @@ struct SearchArgs {
     additional_queries: Vec<String>,
 
     /// Search engine. Repeat to set fanout engines or fallback order.
-    #[arg(short = 'e', long = "engine", default_value = "duckduckgo", action = ArgAction::Append)]
+    #[arg(short = 'e', long = "engine", default_values = ["duckduckgo", "bing", "yahoo"], action = ArgAction::Append)]
     engines: Vec<Engine>,
 
     /// Use engines in order on failure, or run every engine/query pair.
@@ -144,6 +146,37 @@ struct SearchArgs {
     output: Output,
 }
 
+#[derive(Debug, clap::Args)]
+struct FetchArgs {
+    /// Full HTTP or HTTPS URL of the page to read.
+    #[arg(value_parser = page_url)]
+    url: String,
+
+    /// Maximum characters to extract from the page.
+    #[arg(long, default_value_t = 20_000, value_parser = positive_usize, value_name = "CHARS")]
+    content_limit: usize,
+
+    /// Maximum response body accepted.
+    #[arg(long, default_value_t = DEFAULT_MAX_RESPONSE_BYTES, value_parser = positive_usize, value_name = "BYTES")]
+    max_response_bytes: usize,
+
+    /// HTTP timeout in seconds.
+    #[arg(long, default_value_t = 10.0, value_parser = positive_f64, value_name = "SECS")]
+    timeout: f64,
+
+    /// Output format. JSON returns an object with url and content fields.
+    #[arg(long, default_value = "text")]
+    output: Output,
+}
+
+fn page_url(value: &str) -> Result<String, String> {
+    let parsed = url::Url::parse(value).map_err(|_| "expected a full HTTP or HTTPS URL")?;
+    if !matches!(parsed.scheme(), "http" | "https") || parsed.host_str().is_none() {
+        return Err("expected a full HTTP or HTTPS URL".into());
+    }
+    Ok(value.to_owned())
+}
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq, ValueEnum)]
 #[clap(rename_all = "lower")]
 enum Output {
@@ -189,6 +222,7 @@ enum InstallScope {
 pub async fn run() -> ExitCode {
     match Cli::parse().command {
         Commands::Search(arguments) => run_search(*arguments).await,
+        Commands::Fetch(arguments) => run_fetch(arguments).await,
         Commands::Skill { command } => match run_skill(command) {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => {
@@ -197,6 +231,52 @@ pub async fn run() -> ExitCode {
             }
         },
     }
+}
+
+async fn run_fetch(arguments: FetchArgs) -> ExitCode {
+    let options = FetchOptions {
+        timeout: Duration::from_secs_f64(arguments.timeout),
+        content_limit: arguments.content_limit,
+        max_response_bytes: arguments.max_response_bytes,
+        ..FetchOptions::default()
+    };
+    eprintln!("[kestrel] Fetching {}...", arguments.url);
+    let report =
+        match kestrelsearch::fetch_all_detailed(std::slice::from_ref(&arguments.url), &options)
+            .await
+        {
+            Ok(report) => report,
+            Err(error) => {
+                eprintln!("[kestrel] Fetch failed: {error}");
+                return ExitCode::FAILURE;
+            }
+        };
+    let Some(content) = report.contents.into_iter().next().flatten() else {
+        use kestrelsearch::FetchOutcome;
+        let reason = match report.pages.first().map(|page| page.outcome) {
+            Some(FetchOutcome::UnsupportedContentType) => {
+                "unsupported content type (expected HTML or text)"
+            }
+            Some(FetchOutcome::ResponseTooLarge) => "response exceeds --max-response-bytes",
+            Some(FetchOutcome::RequestFailed) => "HTTP request failed or timed out",
+            _ => "no extractable page text",
+        };
+        eprintln!("[kestrel] Fetch failed for {}: {reason}", arguments.url);
+        return ExitCode::FAILURE;
+    };
+    let content = format!("Source: {}\n\n{content}", arguments.url);
+    match arguments.output {
+        Output::Text => println!("{content}"),
+        Output::Json => println!(
+            "{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "url": arguments.url,
+                "content": content,
+            }))
+            .expect("strings serialize to JSON")
+        ),
+    }
+    ExitCode::SUCCESS
 }
 
 async fn run_search(arguments: SearchArgs) -> ExitCode {
@@ -671,6 +751,27 @@ mod tests {
     use super::*;
 
     #[test]
+    fn search_defaults_match_library_and_explicit_engines_replace_defaults() {
+        for extra in [vec![], vec!["--mode", "fanout"]] {
+            let cli = Cli::try_parse_from(["kestrel", "search", "test"].into_iter().chain(extra))
+                .unwrap();
+            let Commands::Search(args) = cli.command else {
+                panic!("expected search");
+            };
+            assert_eq!(args.engines, SearchOptions::default().engines);
+            assert_eq!(args.engines.len(), 3);
+        }
+        let cli = Cli::try_parse_from([
+            "kestrel", "search", "test", "--engine", "yahoo", "--engine", "bing",
+        ])
+        .unwrap();
+        let Commands::Search(args) = cli.command else {
+            panic!("expected search");
+        };
+        assert_eq!(args.engines, [Engine::Yahoo, Engine::Bing]);
+    }
+
+    #[test]
     fn target_groups_match_agent_layout() {
         let targets = skill_targets(AgentChoice::All, InstallScope::Project).unwrap();
         assert_eq!(
@@ -696,5 +797,10 @@ mod tests {
         assert!(skill.contains("--time-filter"));
         assert!(skill.contains("--max-response-bytes"));
         assert!(skill.contains("Codex"));
+        assert!(skill.contains("## `fetch` subcommand"));
+        assert!(skill.contains("kestrel fetch"));
+        assert!(skill.contains("Do not use `search \"site:<full-url-to-page>\"`"));
+        assert!(skill.contains("## Fetch output"));
+        assert!(skill.contains("20000"));
     }
 }

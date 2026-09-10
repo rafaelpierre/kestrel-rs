@@ -134,7 +134,7 @@ pub struct SearchOptions {
 impl Default for SearchOptions {
     fn default() -> Self {
         Self {
-            engines: vec![Engine::Duckduckgo],
+            engines: vec![Engine::Duckduckgo, Engine::Bing, Engine::Yahoo],
             mode: SearchMode::Fallback,
             region: String::new(),
             time_filter: TimeFilter::Any,
