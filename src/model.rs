@@ -12,6 +12,12 @@ pub enum Engine {
     Duckduckgo,
     Bing,
     Yahoo,
+    Dogpile,
+    Ecosia,
+    Swisscows,
+    Yep,
+    Qwant,
+    Mojeek,
 }
 
 impl Engine {
@@ -20,6 +26,12 @@ impl Engine {
             Self::Duckduckgo => "duckduckgo",
             Self::Bing => "bing",
             Self::Yahoo => "yahoo",
+            Self::Dogpile => "dogpile",
+            Self::Ecosia => "ecosia",
+            Self::Swisscows => "swisscows",
+            Self::Yep => "yep",
+            Self::Qwant => "qwant",
+            Self::Mojeek => "mojeek",
         }
     }
 }
@@ -129,6 +141,8 @@ pub struct SearchOptions {
     pub max_concurrency: usize,
     /// Stop fanout after this many providers per query return non-empty results.
     pub provider_quorum: Option<usize>,
+    /// Total search budget including queueing and retries; disabled by default.
+    pub search_budget: Option<Duration>,
 }
 
 impl Default for SearchOptions {
@@ -140,6 +154,7 @@ impl Default for SearchOptions {
             time_filter: TimeFilter::Any,
             max_concurrency: 5,
             provider_quorum: None,
+            search_budget: None,
         }
     }
 }
@@ -216,6 +231,14 @@ pub struct ProviderSearchDiagnostic {
     pub result_count: usize,
     pub retries: usize,
     pub success: bool,
+    #[serde(default)]
+    pub outcome: String,
+    #[serde(default)]
+    pub error: Option<String>,
+    #[serde(default)]
+    pub raw_result_count: usize,
+    #[serde(default)]
+    pub filtered_count: usize,
 }
 
 /// Search results plus the provider requests that produced them.

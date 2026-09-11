@@ -2,6 +2,7 @@
 
 use std::collections::{HashMap, HashSet};
 use std::future::Future;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -17,8 +18,15 @@ use crate::model::{
     SourceOccurrence, TimeFilter,
 };
 
+tokio::task_local! {
+    static PROVIDER_ATTEMPTS: Arc<AtomicUsize>;
+}
+
+fn record_attempt(attempt: usize) {
+    let _ = PROVIDER_ATTEMPTS.try_with(|count| count.store(attempt, Ordering::Relaxed));
+}
+
 const SEARCH_TIMEOUT: Duration = Duration::from_secs(15);
-const SEARCH_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 #[derive(Debug, Error)]
 pub enum KestrelError {
@@ -38,6 +46,7 @@ pub enum KestrelError {
     NestedRuntime,
 }
 
+#[derive(Clone)]
 pub(crate) struct SearchClients {
     standard: reqwest::Client,
     yahoo: Option<primp::Client>,
@@ -45,25 +54,18 @@ pub(crate) struct SearchClients {
 
 impl SearchClients {
     pub(crate) fn new(engines: &[Engine]) -> Result<Self, KestrelError> {
-        let standard = reqwest::Client::builder()
-            .user_agent(SEARCH_USER_AGENT)
-            .default_headers({
-                let mut headers = reqwest::header::HeaderMap::new();
-                headers.insert(
-                    reqwest::header::ACCEPT_LANGUAGE,
-                    reqwest::header::HeaderValue::from_static("en-US,en;q=0.9"),
-                );
-                headers
-            })
+        let profile = crate::http_client::BrowserProfile::random();
+        let standard = crate::http_client::standard_builder(profile)
             .timeout(SEARCH_TIMEOUT)
-            .redirect(reqwest::redirect::Policy::limited(10))
             .build()?;
         let yahoo = engines.contains(&Engine::Yahoo).then(|| {
-            primp::Client::builder()
-                .impersonate(primp::Impersonate::ChromeV146)
+            let mut client = crate::http_client::impersonated_builder(profile)
                 .timeout(SEARCH_TIMEOUT)
-                .build()
+                .build()?;
+            *client.headers_mut() = profile.headers();
+            Ok::<_, primp::Error>(client)
         });
+        crate::benchmarking::capture_headers("search", &profile.headers());
         Ok(Self {
             standard,
             yahoo: yahoo.transpose()?,
@@ -97,6 +99,7 @@ pub(crate) async fn search_with_clients(
 struct ProviderResponse {
     results: Vec<SearchResult>,
     retries: usize,
+    raw_result_count: usize,
 }
 
 /// Blocking compatibility wrapper for callers outside an async runtime.
@@ -163,6 +166,9 @@ async fn search_many_with_clients_detailed(
 ) -> Result<SearchReport, KestrelError> {
     let semaphore = Arc::new(Semaphore::new(options.max_concurrency));
     let diagnostics = Arc::new(Mutex::new(Vec::new()));
+    let deadline = options
+        .search_budget
+        .map(|budget| tokio::time::Instant::now() + budget);
 
     let (outcomes, cancelled) = match options.mode {
         SearchMode::Fanout => {
@@ -176,6 +182,7 @@ async fn search_many_with_clients_detailed(
                     &options.region,
                     options.time_filter,
                     options.provider_quorum,
+                    deadline,
                 )
             });
             let query_outcomes = join_all(jobs).await;
@@ -198,6 +205,7 @@ async fn search_many_with_clients_detailed(
                     Arc::clone(&diagnostics),
                     &options.region,
                     options.time_filter,
+                    deadline,
                 )
             });
             (join_all(jobs).await, 0)
@@ -225,6 +233,7 @@ async fn run_fanout_query(
     region: &str,
     time_filter: TimeFilter,
     provider_quorum: Option<usize>,
+    deadline: Option<tokio::time::Instant>,
 ) -> (Vec<Result<Vec<SearchResult>, KestrelError>>, usize) {
     let pending = FuturesUnordered::new();
     for (index, engine) in engines.iter().copied().enumerate() {
@@ -241,12 +250,34 @@ async fn run_fanout_query(
                     diagnostics,
                     region,
                     time_filter,
+                    deadline,
                 )
                 .await,
             )
         });
     }
-    collect_fanout(pending, provider_quorum).await
+    let outcome = collect_fanout(pending, provider_quorum).await;
+    let mut entries = diagnostics.lock().expect("diagnostic lock");
+    for engine in engines {
+        if !entries
+            .iter()
+            .any(|entry| entry.engine == *engine && entry.query == query)
+        {
+            entries.push(ProviderSearchDiagnostic {
+                engine: *engine,
+                query: query.to_owned(),
+                elapsed_ms: 0,
+                result_count: 0,
+                retries: 0,
+                success: false,
+                outcome: "cancelled_before_start".into(),
+                error: None,
+                raw_result_count: 0,
+                filtered_count: 0,
+            });
+        }
+    }
+    outcome
 }
 
 async fn collect_fanout<F>(
@@ -310,6 +341,11 @@ fn validate_request(
             "max_concurrency must be at least 1".into(),
         ));
     }
+    if options.search_budget.is_some_and(|budget| budget.is_zero()) {
+        return Err(KestrelError::InvalidRequest(
+            "search budget must be greater than zero".into(),
+        ));
+    }
     if let Some(quorum) = options.provider_quorum {
         if options.mode != SearchMode::Fanout {
             return Err(KestrelError::InvalidRequest(
@@ -326,6 +362,7 @@ fn validate_request(
     Ok((clean_queries, clean_engines))
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn run_one(
     query: &str,
     engine: Engine,
@@ -334,26 +371,99 @@ async fn run_one(
     diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
     region: &str,
     time_filter: TimeFilter,
+    deadline: Option<tokio::time::Instant>,
 ) -> Result<Vec<SearchResult>, KestrelError> {
-    let _permit = semaphore.acquire().await.expect("semaphore remains open");
     let started = Instant::now();
-    let outcome = run_provider(query, engine, region, time_filter, clients).await;
-    diagnostics
-        .lock()
-        .expect("search diagnostic lock is not poisoned")
-        .push(ProviderSearchDiagnostic {
+    let index = {
+        let mut entries = diagnostics.lock().expect("diagnostic lock");
+        let index = entries.len();
+        entries.push(ProviderSearchDiagnostic {
             engine,
             query: query.to_owned(),
-            elapsed_ms: elapsed_millis(started),
-            result_count: outcome
-                .as_ref()
-                .map_or(0, |response| response.results.len()),
-            retries: outcome.as_ref().map_or(0, |response| response.retries),
-            success: outcome.is_ok(),
+            elapsed_ms: 0,
+            result_count: 0,
+            retries: 0,
+            success: false,
+            outcome: "cancelled_quorum".into(),
+            error: None,
+            raw_result_count: 0,
+            filtered_count: 0,
         });
+        index
+    };
+    // Also records elapsed time when a quorum drops this future mid-request.
+    let _timer = DiagnosticTimer {
+        diagnostics: Arc::clone(&diagnostics),
+        index,
+        started,
+    };
+    let attempts = Arc::new(AtomicUsize::new(0));
+    let job = PROVIDER_ATTEMPTS.scope(Arc::clone(&attempts), async {
+        let _permit = semaphore.acquire().await.expect("semaphore remains open");
+        run_provider(query, engine, region, time_filter, clients).await
+    });
+    let outcome = match deadline {
+        Some(deadline) => tokio::time::timeout_at(deadline, job)
+            .await
+            .unwrap_or_else(|_| Err(KestrelError::Search("search deadline exceeded".into()))),
+        None => job.await,
+    };
+    {
+        let mut entries = diagnostics.lock().expect("diagnostic lock");
+        let entry = &mut entries[index];
+        entry.success = outcome.is_ok();
+        entry.retries = attempts.load(Ordering::Relaxed).saturating_sub(1);
+        match &outcome {
+            Ok(response) => {
+                entry.result_count = response.results.len();
+                entry.raw_result_count = response.raw_result_count;
+                entry.filtered_count = response.raw_result_count - response.results.len();
+                entry.retries = response.retries;
+                entry.outcome = if response.results.is_empty() {
+                    if entry.filtered_count > 0 {
+                        "filtered_empty"
+                    } else {
+                        "empty"
+                    }
+                } else {
+                    "results"
+                }
+                .into();
+            }
+            Err(error) => {
+                let message = error.to_string();
+                entry.outcome = if message.contains("deadline exceeded") {
+                    "deadline"
+                } else if message.contains("bot challenge") {
+                    "challenge"
+                } else if message.contains("unrecognized search page") {
+                    "unrecognized"
+                } else {
+                    "request_error"
+                }
+                .into();
+                entry.error = Some(message);
+            }
+        }
+    }
     outcome.map(|response| with_provenance(response.results, engine, query))
 }
 
+struct DiagnosticTimer {
+    diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
+    index: usize,
+    started: Instant,
+}
+impl Drop for DiagnosticTimer {
+    fn drop(&mut self) {
+        if let Ok(mut entries) = self.diagnostics.lock() {
+            entries[self.index].elapsed_ms = elapsed_millis(self.started);
+            crate::benchmarking::capture_provider_diagnostic(&entries[self.index]);
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
 async fn run_with_fallback(
     query: &str,
     engines: &[Engine],
@@ -362,31 +472,48 @@ async fn run_with_fallback(
     diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
     region: &str,
     time_filter: TimeFilter,
+    deadline: Option<tokio::time::Instant>,
 ) -> Result<Vec<SearchResult>, KestrelError> {
-    let mut errors = Vec::new();
-    for (index, engine) in engines.iter().enumerate() {
-        match run_one(
+    collect_fallback(query, engines, |engine| {
+        run_one(
             query,
-            *engine,
+            engine,
             clients,
             Arc::clone(&semaphore),
             Arc::clone(&diagnostics),
             region,
             time_filter,
+            deadline,
         )
-        .await
-        {
-            Ok(results) => return Ok(results),
+    })
+    .await
+}
+
+async fn collect_fallback<F, Fut>(
+    query: &str,
+    engines: &[Engine],
+    mut run: F,
+) -> Result<Vec<SearchResult>, KestrelError>
+where
+    F: FnMut(Engine) -> Fut,
+    Fut: Future<Output = Result<Vec<SearchResult>, KestrelError>>,
+{
+    let mut errors = Vec::new();
+    let mut had_empty = false;
+    for engine in engines {
+        match run(*engine).await {
+            Ok(results) if !results.is_empty() => return Ok(results),
+            Ok(_) => {
+                had_empty = true;
+            }
             Err(error) => {
+                crate::log_event!("search_fallback", "query" => query, "failed_engine" => engine.as_str(), "error" => error.to_string());
                 errors.push(error.to_string());
-                crate::log_event!(
-                    "search_fallback",
-                    "query" => query,
-                    "failed_engine" => engine.as_str(),
-                    "next_engine" => engines.get(index + 1).map_or("", |next| next.as_str()),
-                );
             }
         }
+    }
+    if had_empty {
+        return Ok(Vec::new());
     }
     Err(KestrelError::Search(format!(
         "All engines failed for query {query:?}: {}",
@@ -405,7 +532,7 @@ async fn run_provider(
     time_filter: TimeFilter,
     clients: &SearchClients,
 ) -> Result<ProviderResponse, KestrelError> {
-    let result = match engine {
+    let mut result = match engine {
         Engine::Duckduckgo => {
             search_duckduckgo(query, region, time_filter, &clients.standard).await
         }
@@ -419,7 +546,17 @@ async fn run_provider(
             )
             .await
         }
+        _ => search_additional(query, engine, region, time_filter, &clients.standard).await,
     };
+    if let Ok(response) = &mut result {
+        response.raw_result_count = response.results.len();
+        for (index, result) in response.results.iter_mut().enumerate() {
+            result.engine_rank = Some(index + 1);
+        }
+        response
+            .results
+            .retain(|result| result_allowed(query, &result.url));
+    }
     if let Err(error) = &result {
         crate::log_event!(
             "search_failed",
@@ -435,6 +572,27 @@ async fn run_provider(
         crate::log_event!("search_no_results", "engine" => engine.as_str(), "query" => query);
     }
     result
+}
+
+async fn search_additional(
+    query: &str,
+    engine: Engine,
+    region: &str,
+    time_filter: TimeFilter,
+    client: &reqwest::Client,
+) -> Result<ProviderResponse, KestrelError> {
+    // Validate before entering retry machinery; builders below cannot fail validation.
+    let _ = crate::providers::request(client, engine, query, region, time_filter)?;
+    let (text, retries) = request_standard_with_retries(client, engine, query, || {
+        crate::providers::request(client, engine, query, region, time_filter)
+            .expect("validated provider request")
+    })
+    .await?;
+    Ok(ProviderResponse {
+        results: crate::providers::parse(engine, &text)?,
+        retries,
+        raw_result_count: 0,
+    })
 }
 
 async fn search_duckduckgo(
@@ -457,6 +615,7 @@ async fn search_duckduckgo(
     Ok(ProviderResponse {
         results: parse_duckduckgo_response(&text)?,
         retries,
+        raw_result_count: 0,
     })
 }
 
@@ -487,8 +646,9 @@ async fn search_bing(
     })
     .await?;
     Ok(ProviderResponse {
-        results: parse_bing_results(&text),
+        results: parse_provider_response(Engine::Bing, &text)?,
         retries,
+        raw_result_count: 0,
     })
 }
 
@@ -507,6 +667,7 @@ async fn search_yahoo(
     }
     let mut last_error = None;
     for attempt in 1..=3 {
+        record_attempt(attempt);
         match client
             .get("https://search.yahoo.com/search")
             .query(&params)
@@ -515,9 +676,23 @@ async fn search_yahoo(
             .await
         {
             Ok(response) if response.status().is_success() => {
+                let status = response.status().as_u16();
+                let final_url = response.url().to_string();
+                let http_version = format!("{:?}", response.version());
+                let html = response.text().await?;
+                crate::benchmarking::capture_provider(
+                    Engine::Yahoo,
+                    query,
+                    &final_url,
+                    status,
+                    &http_version,
+                    attempt,
+                    &html,
+                );
                 return Ok(ProviderResponse {
-                    results: parse_yahoo_results(&response.text().await?),
+                    results: parse_provider_response(Engine::Yahoo, &html)?,
                     retries: attempt - 1,
+                    raw_result_count: 0,
                 });
             }
             Ok(response) => {
@@ -553,19 +728,45 @@ where
 {
     let mut last_error = None;
     for attempt in 1..=3 {
+        record_attempt(attempt);
         match build().send().await {
             Ok(response) => {
                 let status = response.status();
                 if status.is_success() {
-                    return Ok((response.text().await?, attempt - 1));
+                    let final_url = response.url().to_string();
+                    let http_version = format!("{:?}", response.version());
+                    let html = response.text().await?;
+                    crate::benchmarking::capture_provider(
+                        engine,
+                        query,
+                        &final_url,
+                        status.as_u16(),
+                        &http_version,
+                        attempt,
+                        &html,
+                    );
+                    return Ok((html, attempt - 1));
                 }
                 let retryable =
                     status.as_u16() == 408 || status.as_u16() == 429 || status.is_server_error();
-                let error = response.error_for_status().expect_err("non-success status");
+                let final_url = response.url().to_string();
+                let http_version = format!("{:?}", response.version());
+                let html = response.text().await.unwrap_or_default();
+                crate::benchmarking::capture_provider(
+                    engine,
+                    query,
+                    &final_url,
+                    status.as_u16(),
+                    &http_version,
+                    attempt,
+                    &html,
+                );
+                let error =
+                    KestrelError::Search(format!("{engine} returned HTTP {}", status.as_u16()));
                 if !retryable || attempt == 3 {
-                    return Err(error.into());
+                    return Err(error);
                 }
-                last_error = Some(error.into());
+                last_error = Some(error);
             }
             Err(error) => {
                 let retryable = error.is_timeout() || error.is_connect() || error.is_request();
@@ -607,7 +808,7 @@ fn with_provenance(results: Vec<SearchResult>, engine: Engine, query: &str) -> V
         .into_iter()
         .enumerate()
         .map(|(index, mut result)| {
-            let rank = index + 1;
+            let rank = result.engine_rank.unwrap_or(index + 1);
             result.engine = Some(engine);
             result.query = Some(query.to_owned());
             result.engine_rank = Some(rank);
@@ -714,6 +915,112 @@ pub(crate) fn canonical_url(value: &str) -> String {
         &trimmed_path
     });
     url.to_string()
+}
+
+/// Split at whitespace outside quoted phrases, preserving all query characters.
+pub(crate) fn query_tokens(query: &str) -> Vec<String> {
+    let mut tokens = Vec::new();
+    let mut token = String::new();
+    let mut quoted = false;
+    for c in query.chars() {
+        if c == '"' {
+            quoted = !quoted;
+        }
+        if c.is_whitespace() && !quoted {
+            if !token.is_empty() {
+                tokens.push(std::mem::take(&mut token));
+            }
+        } else {
+            token.push(c);
+        }
+    }
+    if !token.is_empty() {
+        tokens.push(token);
+    }
+    tokens
+}
+
+/// Extract only unambiguous, standalone positive hostname restrictions.
+/// Compound boolean expressions, quoted operators and path filters remain upstream.
+pub(crate) fn site_domain(query: &str) -> Option<String> {
+    let terms = query_tokens(query);
+    if query.contains(['(', ')', '|'])
+        || terms
+            .iter()
+            .any(|t| t.eq_ignore_ascii_case("OR") || t.eq_ignore_ascii_case("NOT"))
+    {
+        return None;
+    }
+    let sites: Vec<_> = terms
+        .iter()
+        .filter_map(|token| {
+            token
+                .get(..5)
+                .filter(|prefix| prefix.eq_ignore_ascii_case("site:"))
+                .map(|_| &token[5..])
+        })
+        .collect();
+    if sites.len() != 1 {
+        return None;
+    }
+    let domain = sites[0].trim_end_matches('.').to_ascii_lowercase();
+    if !domain.contains('.')
+        || !domain.split('.').all(|label| {
+            !label.is_empty()
+                && !label.starts_with('-')
+                && !label.ends_with('-')
+                && label.chars().all(|c| c.is_ascii_alphanumeric() || c == '-')
+        })
+    {
+        return None;
+    }
+    Some(domain)
+}
+
+fn result_allowed(query: &str, value: &str) -> bool {
+    let Ok(url) = Url::parse(value) else {
+        return false;
+    };
+    if !matches!(url.scheme(), "http" | "https") {
+        return false;
+    }
+    let Some(host) = url.host_str() else {
+        return false;
+    };
+    let host = host.trim_end_matches('.');
+    site_domain(query).is_none_or(|domain| host == domain || host.ends_with(&format!(".{domain}")))
+}
+
+fn parse_provider_response(engine: Engine, html: &str) -> Result<Vec<SearchResult>, KestrelError> {
+    let document = Html::parse_document(html);
+    if document
+        .select(&selector(
+            "#b_captcha, #captcha, form[action*='captcha'], .g-recaptcha",
+        ))
+        .next()
+        .is_some()
+    {
+        return Err(KestrelError::Search(format!(
+            "{engine} returned a bot challenge"
+        )));
+    }
+    let results = match engine {
+        Engine::Bing => parse_bing_results(html),
+        Engine::Yahoo => parse_yahoo_results(html),
+        Engine::Duckduckgo => return parse_duckduckgo_response(html),
+        _ => return crate::providers::parse(engine, html),
+    };
+    let empty_marker = match engine {
+        Engine::Bing => "li.b_no, .b_no",
+        Engine::Yahoo => ".msgNoResults, .no-results",
+        _ => unreachable!(),
+    };
+    if results.is_empty() && document.select(&selector(empty_marker)).next().is_none() {
+        return Err(KestrelError::Search(format!(
+            "{engine} returned an unrecognized search page"
+        )));
+    }
+    Ok(results)
 }
 
 fn parse_duckduckgo_response(html: &str) -> Result<Vec<SearchResult>, KestrelError> {
@@ -1143,5 +1450,112 @@ mod tests {
             .to_string()
             .contains("Every search failed")
         );
+    }
+    #[test]
+    fn site_restrictions_respect_host_boundaries_and_query_syntax() {
+        let query = "site:Postgresql.org \"EXPLAIN ANALYZE\" BUFFERS";
+        assert!(result_allowed(
+            query,
+            "https://www.postgresql.org/docs/current/sql-explain.html"
+        ));
+        for url in [
+            "https://postgresql.org.evil.test/",
+            "https://evilpostgresql.org/",
+            "https://evil.test/postgresql.org",
+            "javascript:alert(1)",
+        ] {
+            assert!(!result_allowed(query, url));
+        }
+        for query in [
+            "NOT site:postgresql.org explain",
+            "site:postgresql.org OR site:example.org",
+            "\"site:postgresql.org\" explain",
+            "-site:postgresql.org",
+            "site:postgresql.org/docs explain",
+        ] {
+            assert_eq!(site_domain(query), None);
+        }
+        assert_ne!(
+            canonical_url("https://postgresql.org/docs/16/sql-explain.html"),
+            canonical_url("https://postgresql.org/docs/17/sql-explain.html")
+        );
+    }
+
+    #[tokio::test]
+    async fn fallback_continues_after_empty_or_failed_provider() {
+        let mut calls = Vec::new();
+        let results = collect_fallback(
+            "query",
+            &[Engine::Bing, Engine::Duckduckgo, Engine::Yahoo],
+            |engine| {
+                calls.push(engine);
+                std::future::ready(match engine {
+                    Engine::Bing => Ok(Vec::new()),
+                    Engine::Duckduckgo => Err(KestrelError::Search("challenge".into())),
+                    _ => Ok(vec![SearchResult::parsed(
+                        "useful".into(),
+                        "https://example.org".into(),
+                        String::new(),
+                        String::new(),
+                    )]),
+                })
+            },
+        )
+        .await
+        .unwrap();
+        assert_eq!(calls.len(), 3);
+        assert_eq!(results.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn deadline_includes_provider_queue_and_records_reason() {
+        let clients = SearchClients::new(&[Engine::Bing]).unwrap();
+        let diagnostics = Arc::new(Mutex::new(Vec::new()));
+        let result = run_one(
+            "query",
+            Engine::Bing,
+            &clients,
+            Arc::new(Semaphore::new(0)),
+            Arc::clone(&diagnostics),
+            "",
+            TimeFilter::Any,
+            Some(tokio::time::Instant::now() + Duration::from_millis(5)),
+        )
+        .await;
+        assert!(result.is_err());
+        let entries = diagnostics.lock().unwrap();
+        assert_eq!(entries[0].outcome, "deadline");
+        assert!(!entries[0].success);
+    }
+
+    #[test]
+    fn additional_html_parsers_reject_shells_and_accept_explicit_empty() {
+        for engine in [Engine::Bing, Engine::Yahoo] {
+            assert!(parse_provider_response(engine, "<html><nav>Home</nav></html>").is_err());
+            assert!(parse_provider_response(engine, "<form id='captcha'></form>").is_err());
+        }
+        assert!(
+            parse_provider_response(Engine::Bing, "<li class='b_no'>No results</li>")
+                .unwrap()
+                .is_empty()
+        );
+        assert!(
+            parse_provider_response(Engine::Yahoo, "<div class='msgNoResults'>No results</div>")
+                .unwrap()
+                .is_empty()
+        );
+    }
+    #[test]
+    fn filtering_preserves_original_provider_rank() {
+        let mut retained = SearchResult::parsed(
+            "Docs".into(),
+            "https://postgresql.org/docs/".into(),
+            String::new(),
+            String::new(),
+        );
+        retained.engine_rank = Some(4);
+        let results = with_provenance(vec![retained], Engine::Bing, "site:postgresql.org explain");
+        assert_eq!(results[0].engine_rank, Some(4));
+        assert_eq!(results[0].sources[0].rank, 4);
     }
 }

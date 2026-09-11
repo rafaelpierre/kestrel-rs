@@ -1,0 +1,39 @@
+{
+  "candidate_counts": {
+    "after_search": 0
+  },
+  "candidates": [],
+  "diagnostics": {
+    "fetch": null,
+    "provider_cancellations": 0,
+    "providers": [
+      {
+        "elapsed_ms": 326,
+        "engine": "bing",
+        "error": null,
+        "filtered_count": 10,
+        "outcome": "filtered_empty",
+        "query": "site:postgresql.org EXPLAIN ANALYZE BUFFERS",
+        "raw_result_count": 10,
+        "result_count": 0,
+        "retries": 0,
+        "success": true
+      }
+    ]
+  },
+  "engines": [
+    "bing"
+  ],
+  "mode": "fallback",
+  "queries": [
+    "site:postgresql.org EXPLAIN ANALYZE BUFFERS"
+  ],
+  "query": "site:postgresql.org EXPLAIN ANALYZE BUFFERS",
+  "results": [],
+  "returned_chars": 0,
+  "run_id": "run",
+  "timings_ms": {
+    "initialize": 152,
+    "search": 326
+  }
+}

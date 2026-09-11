@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T21:02:02.627884+00:00",
+  "engine": "bing",
+  "final_url": "https://www.bing.com/search?q=Python+asyncio+TaskGroup+exception+handling+ExceptionGroup",
+  "html_file": "bing-bf15126392484c39ad6405f3bdac1605.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "Python asyncio TaskGroup exception handling ExceptionGroup"
+}

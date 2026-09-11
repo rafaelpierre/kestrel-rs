@@ -17,6 +17,115 @@ pub fn tokenize(text: &str) -> Vec<String> {
         .collect()
 }
 
+static EVIDENCE_TOKEN_RE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?u)\b(?:\d+(?:\.\d+)+|\w+(?:-\w+)*)\b").expect("valid evidence tokenizer")
+});
+
+fn evidence_tokens(text: &str) -> Vec<String> {
+    EVIDENCE_TOKEN_RE
+        .find_iter(&text.to_lowercase())
+        .map(|m| m.as_str().to_owned())
+        .collect()
+}
+
+/// Experimental policies; legacy content-only BM25 remains the default.
+#[derive(Clone, Copy, Debug, clap::ValueEnum)]
+pub enum RankingPolicy {
+    Provider,
+    Snippet,
+    Body,
+    Hybrid,
+    Rrf,
+}
+
+/// Rank without discarding candidates in snippet/hybrid modes. Scores stay internal;
+/// the public bm25_score field retains its content-only meaning.
+pub fn rank_with_policy(
+    results: Vec<SearchResult>,
+    queries: &[String],
+    policy: RankingPolicy,
+) -> Vec<SearchResult> {
+    if matches!(policy, RankingPolicy::Provider) {
+        return results;
+    }
+    if matches!(policy, RankingPolicy::Body) {
+        return rank_results_by_query(results, queries);
+    }
+    let mut groups: Vec<Vec<SearchResult>> = vec![Vec::new(); queries.len() + 1];
+    for result in results {
+        let index = queries
+            .iter()
+            .position(|q| Some(q.as_str()) == result.query.as_deref())
+            .unwrap_or(queries.len());
+        groups[index].push(result);
+    }
+    for (index, group) in groups.iter_mut().enumerate() {
+        let query = queries
+            .get(index)
+            .cloned()
+            .unwrap_or_else(|| queries.join(" "));
+        let terms = evidence_tokens(
+            &query
+                .split_whitespace()
+                .filter(|term| !term.contains(':'))
+                .collect::<Vec<_>>()
+                .join(" "),
+        );
+        let documents: Vec<_> = group
+            .iter()
+            .map(|r| {
+                let body = if matches!(policy, RankingPolicy::Hybrid) {
+                    let body = r.content.as_deref().unwrap_or_default();
+                    body.strip_prefix("Source: ")
+                        .and_then(|_| body.split_once("\n\n").map(|(_, text)| text))
+                        .unwrap_or(body)
+                } else {
+                    ""
+                };
+                evidence_tokens(&format!("{} {} {} {}", r.title, r.title, r.snippet, body))
+            })
+            .collect();
+        let scores = positive_bm25_scores(&documents, &terms);
+        let mut scored: Vec<_> = group.drain(..).zip(scores).collect();
+        if matches!(policy, RankingPolicy::Rrf) {
+            for (result, score) in &mut scored {
+                let mut seen = HashSet::new();
+                *score = result
+                    .sources
+                    .iter()
+                    .filter(|source| source.query == query && seen.insert(source.engine))
+                    .map(|source| 1.0 / (60.0 + source.rank as f64))
+                    .sum();
+            }
+        }
+        scored.sort_by(|a, b| b.1.total_cmp(&a.1));
+        *group = scored.into_iter().map(|(result, _)| result).collect();
+    }
+    interleave(groups)
+}
+
+fn positive_bm25_scores(corpus: &[Vec<String>], query: &[String]) -> Vec<f64> {
+    if corpus.is_empty() {
+        return Vec::new();
+    }
+    let average =
+        (corpus.iter().map(Vec::len).sum::<usize>() as f64 / corpus.len() as f64).max(1.0);
+    corpus
+        .iter()
+        .map(|document| {
+            query
+                .iter()
+                .map(|term| {
+                    let tf = document.iter().filter(|t| *t == term).count() as f64;
+                    let df = corpus.iter().filter(|d| d.contains(term)).count() as f64;
+                    let idf = (1.0 + (corpus.len() as f64 - df + 0.5) / (df + 0.5)).ln();
+                    idf * tf * 2.5 / (tf + 1.5 * (0.25 + 0.75 * document.len() as f64 / average))
+                })
+                .sum()
+        })
+        .collect()
+}
+
 /// Rank fetched results with rank_bm25's BM25Okapi defaults.
 pub fn rank_results(mut results: Vec<SearchResult>, query: &str) -> Vec<SearchResult> {
     if results.is_empty() {
@@ -354,5 +463,58 @@ mod tests {
         assert_eq!(ranked[1].engine, Some(Engine::Duckduckgo));
         assert_eq!(ranked[2].title, "Alpha low");
         assert!(ranked.iter().all(|result| result.bm25_score.is_none()));
+    }
+    #[test]
+    fn hybrid_retains_failed_fetches_and_ignores_source_prefix() {
+        let mut relevant = result("Rust E0382 moved value", Some("E0382"), None);
+        relevant.snippet = "How to fix ownership errors".into();
+        let irrelevant = result(
+            "Radio",
+            Some("E0382"),
+            Some("Source: https://example.org/E0382\n\nMusic and radio"),
+        );
+        let ranked = rank_with_policy(
+            vec![irrelevant, relevant],
+            &["E0382".into()],
+            RankingPolicy::Hybrid,
+        );
+        assert_eq!(ranked.len(), 2);
+        assert_eq!(ranked[0].title, "Rust E0382 moved value");
+        assert!(ranked.iter().all(|r| r.bm25_score.is_none()));
+    }
+
+    #[test]
+    fn hybrid_single_document_and_ties_are_retained() {
+        let input = vec![
+            result("one", Some("absent"), None),
+            result("two", Some("absent"), None),
+        ];
+        let ranked = rank_with_policy(input, &["absent".into()], RankingPolicy::Hybrid);
+        assert_eq!(
+            ranked.iter().map(|r| r.title.as_str()).collect::<Vec<_>>(),
+            ["one", "two"]
+        );
+        assert_eq!(
+            rank_with_policy(
+                vec![result("rust", Some("rust"), Some("rust"))],
+                &["rust".into()],
+                RankingPolicy::Hybrid
+            )
+            .len(),
+            1
+        );
+    }
+    #[test]
+    fn experimental_tokens_preserve_versions_and_identifiers() {
+        assert_eq!(
+            evidence_tokens("Tempo 3.0 TRAPPIST-1 E0382 foo_bar"),
+            ["tempo", "3.0", "trappist-1", "e0382", "foo_bar"]
+        );
+        let input = vec![
+            result("Tempo 2.0 release notes", Some("Tempo 3.0"), None),
+            result("Tempo 3.0 release notes", Some("Tempo 3.0"), None),
+        ];
+        let ranked = rank_with_policy(input, &["Tempo 3.0".into()], RankingPolicy::Snippet);
+        assert_eq!(ranked[0].title, "Tempo 3.0 release notes");
     }
 }

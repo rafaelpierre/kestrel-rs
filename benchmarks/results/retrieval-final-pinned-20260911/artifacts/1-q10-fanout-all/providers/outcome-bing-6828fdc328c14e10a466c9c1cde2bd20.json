@@ -1,0 +1,12 @@
+{
+  "engine": "bing",
+  "query": "London Science Museum opening hours",
+  "elapsed_ms": 728,
+  "result_count": 7,
+  "retries": 0,
+  "success": true,
+  "outcome": "results",
+  "error": null,
+  "raw_result_count": 7,
+  "filtered_count": 0
+}

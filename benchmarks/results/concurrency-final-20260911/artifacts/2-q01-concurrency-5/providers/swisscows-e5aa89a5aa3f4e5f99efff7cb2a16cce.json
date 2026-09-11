@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T21:09:19.737121+00:00",
+  "engine": "swisscows",
+  "final_url": "https://api.swisscows.com/v5/web/search?freshness=All&itemsCount=20&locale=en-US&offset=0&query=What+is+the+capital+of+Australia%3F&spellcheck=false",
+  "html_file": "swisscows-e5aa89a5aa3f4e5f99efff7cb2a16cce.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "What is the capital of Australia?"
+}

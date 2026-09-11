@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T21:09:52.311980+00:00",
+  "engine": "swisscows",
+  "final_url": "https://api.swisscows.com/v5/web/search?freshness=All&itemsCount=20&locale=en-US&offset=0&query=why+is+the+sky+blue+Rayleigh+scattering&spellcheck=false",
+  "html_file": "swisscows-24441c24105848908cfb3136c6de67c0.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "why is the sky blue Rayleigh scattering"
+}

@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T20:51:50.190776+00:00",
+  "engine": "swisscows",
+  "final_url": "https://api.swisscows.com/v5/web/search?freshness=All&itemsCount=20&locale=en-US&offset=0&query=Grafana+Tempo+3.0+release+notes+breaking+changes&spellcheck=false",
+  "html_file": "swisscows-8b168dcbe41842c1a2a29111bae0f661.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "Grafana Tempo 3.0 release notes breaking changes"
+}

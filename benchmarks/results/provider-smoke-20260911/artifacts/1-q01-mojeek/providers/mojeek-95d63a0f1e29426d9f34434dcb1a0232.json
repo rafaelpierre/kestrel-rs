@@ -1,0 +1,9 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T20:43:20.146699+00:00",
+  "engine": "mojeek",
+  "final_url": "https://www.mojeek.com/search?q=What+is+the+capital+of+Australia%3F",
+  "html_file": "mojeek-95d63a0f1e29426d9f34434dcb1a0232.html",
+  "http_status": 200,
+  "query": "What is the capital of Australia?"
+}

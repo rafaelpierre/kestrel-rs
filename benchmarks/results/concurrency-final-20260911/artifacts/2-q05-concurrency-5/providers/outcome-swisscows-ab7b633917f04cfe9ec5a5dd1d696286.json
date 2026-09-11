@@ -1,0 +1,12 @@
+{
+  "engine": "swisscows",
+  "query": "site:grafana.com Tempo TraceQL parent child spans",
+  "elapsed_ms": 272,
+  "result_count": 20,
+  "retries": 0,
+  "success": true,
+  "outcome": "results",
+  "error": null,
+  "raw_result_count": 20,
+  "filtered_count": 0
+}

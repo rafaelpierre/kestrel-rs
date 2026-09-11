@@ -1,0 +1,56 @@
+{
+  "dogpile": {
+    "runs": 1,
+    "median_seconds": 0.40303737501380965,
+    "p95_seconds": 0.40303737501380965,
+    "errors": 1,
+    "empty": 1,
+    "returned_slots": 0,
+    "expected_slots": 5
+  },
+  "ecosia": {
+    "runs": 1,
+    "median_seconds": 0.3165590830030851,
+    "p95_seconds": 0.3165590830030851,
+    "errors": 1,
+    "empty": 1,
+    "returned_slots": 0,
+    "expected_slots": 5
+  },
+  "swisscows": {
+    "runs": 1,
+    "median_seconds": 1.3212879589991644,
+    "p95_seconds": 1.3212879589991644,
+    "errors": 0,
+    "empty": 0,
+    "returned_slots": 5,
+    "expected_slots": 5
+  },
+  "yep": {
+    "runs": 1,
+    "median_seconds": 1.626663582981564,
+    "p95_seconds": 1.626663582981564,
+    "errors": 0,
+    "empty": 1,
+    "returned_slots": 0,
+    "expected_slots": 5
+  },
+  "qwant": {
+    "runs": 1,
+    "median_seconds": 0.41184720798628405,
+    "p95_seconds": 0.41184720798628405,
+    "errors": 1,
+    "empty": 1,
+    "returned_slots": 0,
+    "expected_slots": 5
+  },
+  "mojeek": {
+    "runs": 1,
+    "median_seconds": 0.2878743339970242,
+    "p95_seconds": 0.2878743339970242,
+    "errors": 1,
+    "empty": 1,
+    "returned_slots": 0,
+    "expected_slots": 5
+  }
+}

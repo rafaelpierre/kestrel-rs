@@ -1,0 +1,256 @@
+{
+  "candidate_counts": {
+    "after_candidate_selection": 5,
+    "after_ranking": 5,
+    "after_search": 5,
+    "returned": 5,
+    "with_content": 0
+  },
+  "candidates": [
+    {
+      "content": null,
+      "display_url": "https://www. sciencemuseum .org.uk › visit",
+      "engine": "bing",
+      "engine_rank": 1,
+      "query": "London Science Museum opening hours",
+      "snippet": "The museum is open daily from 10.00–18.00 (except for 24–26 December when the museum is closed). Last entry is 17.15. You are …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "London Science Museum opening hours",
+          "rank": 1
+        }
+      ],
+      "title": "Visit | Science Museum, London",
+      "url": "https://www.sciencemuseum.org.uk/visit"
+    },
+    {
+      "content": null,
+      "display_url": "https://which museum .co.uk › museum › opening - hours",
+      "engine": "bing",
+      "engine_rank": 2,
+      "query": "London Science Museum opening hours",
+      "snippet": "View the opening hours of Science Museum in London and plan your visit today.",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "London Science Museum opening hours",
+          "rank": 2
+        }
+      ],
+      "title": "Opening Hours - Science Museum (London)",
+      "url": "https://whichmuseum.co.uk/museum/science-museum-london-4545/opening-hours"
+    },
+    {
+      "content": null,
+      "display_url": "https://www. sciencemuseum .org.uk › home",
+      "engine": "bing",
+      "engine_rank": 3,
+      "query": "London Science Museum opening hours",
+      "snippet": "Book your free admission tickets for the Science Museum in London now and find answers to frequently asked questions. Our …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "London Science Museum opening hours",
+          "rank": 3
+        }
+      ],
+      "title": "Home | Science Museum",
+      "url": "https://www.sciencemuseum.org.uk/home"
+    },
+    {
+      "content": null,
+      "display_url": "https://www.wonderful museums .com › ... › london - science - museum - openi …",
+      "engine": "bing",
+      "engine_rank": 4,
+      "query": "London Science Museum opening hours",
+      "snippet": "Aug 24, 2025 · London Science Museum opening times are generally from 10:00 AM to 6:00 PM, typically operating Wednesday …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "London Science Museum opening hours",
+          "rank": 4
+        }
+      ],
+      "title": "London Science Museum Opening Times: Your Essential Guide to …",
+      "url": "https://www.wonderfulmuseums.com/museum/london-science-museum-opening-times/"
+    },
+    {
+      "content": null,
+      "display_url": "https://www. opening - hours -uk.co.uk › opening - hours › science - museum - l …",
+      "engine": "bing",
+      "engine_rank": 5,
+      "query": "London Science Museum opening hours",
+      "snippet": "Detailed opening hours and other information including address, phone number and website for Science Museum, London, SW7 2DD",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "London Science Museum opening hours",
+          "rank": 5
+        }
+      ],
+      "title": "Science Museum, London Opening Hours",
+      "url": "https://www.opening-hours-uk.co.uk/opening-hours/science-museum-london"
+    }
+  ],
+  "diagnostics": {
+    "fetch": null,
+    "provider_cancellations": 2,
+    "providers": [
+      {
+        "elapsed_ms": 671,
+        "engine": "duckduckgo",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "cancelled_quorum",
+        "query": "London Science Museum opening hours",
+        "raw_result_count": 0,
+        "result_count": 0,
+        "retries": 0,
+        "success": false
+      },
+      {
+        "elapsed_ms": 670,
+        "engine": "bing",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "results",
+        "query": "London Science Museum opening hours",
+        "raw_result_count": 5,
+        "result_count": 5,
+        "retries": 0,
+        "success": true
+      },
+      {
+        "elapsed_ms": 670,
+        "engine": "yahoo",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "cancelled_quorum",
+        "query": "London Science Museum opening hours",
+        "raw_result_count": 0,
+        "result_count": 0,
+        "retries": 0,
+        "success": false
+      }
+    ]
+  },
+  "engines": [
+    "duckduckgo",
+    "bing",
+    "yahoo"
+  ],
+  "mode": "fanout",
+  "queries": [
+    "London Science Museum opening hours"
+  ],
+  "query": "London Science Museum opening hours",
+  "results": [
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 1,
+      "query": "London Science Museum opening hours",
+      "rank": 1,
+      "snippet": "The museum is open daily from 10.00–18.00 (except for 24–26 December when the museum is closed). Last entry is 17.15. You are …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "London Science Museum opening hours",
+          "rank": 1
+        }
+      ],
+      "title": "Visit | Science Museum, London",
+      "url": "https://www.sciencemuseum.org.uk/visit"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 2,
+      "query": "London Science Museum opening hours",
+      "rank": 2,
+      "snippet": "View the opening hours of Science Museum in London and plan your visit today.",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "London Science Museum opening hours",
+          "rank": 2
+        }
+      ],
+      "title": "Opening Hours - Science Museum (London)",
+      "url": "https://whichmuseum.co.uk/museum/science-museum-london-4545/opening-hours"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 3,
+      "query": "London Science Museum opening hours",
+      "rank": 3,
+      "snippet": "Book your free admission tickets for the Science Museum in London now and find answers to frequently asked questions. Our …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "London Science Museum opening hours",
+          "rank": 3
+        }
+      ],
+      "title": "Home | Science Museum",
+      "url": "https://www.sciencemuseum.org.uk/home"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 4,
+      "query": "London Science Museum opening hours",
+      "rank": 4,
+      "snippet": "Aug 24, 2025 · London Science Museum opening times are generally from 10:00 AM to 6:00 PM, typically operating Wednesday …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "London Science Museum opening hours",
+          "rank": 4
+        }
+      ],
+      "title": "London Science Museum Opening Times: Your Essential Guide to …",
+      "url": "https://www.wonderfulmuseums.com/museum/london-science-museum-opening-times/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 5,
+      "query": "London Science Museum opening hours",
+      "rank": 5,
+      "snippet": "Detailed opening hours and other information including address, phone number and website for Science Museum, London, SW7 2DD",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "London Science Museum opening hours",
+          "rank": 5
+        }
+      ],
+      "title": "Science Museum, London Opening Hours",
+      "url": "https://www.opening-hours-uk.co.uk/opening-hours/science-museum-london"
+    }
+  ],
+  "returned_chars": 0,
+  "run_id": "run",
+  "timings_ms": {
+    "initialize": 139,
+    "search": 671
+  }
+}

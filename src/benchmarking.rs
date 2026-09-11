@@ -18,6 +18,8 @@ pub struct ArtifactDiagnostics<'a> {
     pub providers: &'a [ProviderSearchDiagnostic],
     pub provider_cancellations: usize,
     pub fetch: Option<&'a FetchReport>,
+    pub candidates: &'a [SearchResult],
+    pub candidate_counts: Option<&'a BTreeMap<String, usize>>,
 }
 
 /// Write an artifact only when both benchmark environment variables are present.
@@ -48,6 +50,8 @@ pub fn write_artifact(
         diagnostics.providers,
         diagnostics.provider_cancellations,
         diagnostics.fetch,
+        diagnostics.candidates,
+        diagnostics.candidate_counts,
     )
     .map(Some)
 }
@@ -65,6 +69,8 @@ fn write_artifact_to(
     providers: &[ProviderSearchDiagnostic],
     provider_cancellations: usize,
     fetch: Option<&FetchReport>,
+    candidates: &[SearchResult],
+    candidate_counts: Option<&BTreeMap<String, usize>>,
 ) -> io::Result<PathBuf> {
     let rendered_results: Vec<Value> = results
         .iter()
@@ -114,6 +120,8 @@ fn write_artifact_to(
     });
     let artifact = json!({
         "run_id": run_id,
+        "candidates": candidates,
+        "candidate_counts": candidate_counts,
         "query": query,
         "queries": queries,
         "engines": engines,
@@ -131,6 +139,86 @@ fn write_artifact_to(
     let target = directory.join(format!("{run_id}-{}.json", uuid::Uuid::new_v4().simple()));
     fs::write(&target, serde_json::to_vec_pretty(&artifact)?)?;
     Ok(target)
+}
+
+/// Opt-in raw provider capture; normal output never includes response HTML.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn capture_provider(
+    engine: Engine,
+    query: &str,
+    url: &str,
+    status: u16,
+    http_version: &str,
+    attempt: usize,
+    html: &str,
+) {
+    let Ok(directory) = std::env::var("KESTRELSEARCH_PROVIDER_TRACE_DIR") else {
+        return;
+    };
+    let directory = Path::new(&directory);
+    let id = format!("{}-{}", engine, uuid::Uuid::new_v4().simple());
+    let write = || -> io::Result<()> {
+        fs::create_dir_all(directory)?;
+        fs::write(directory.join(format!("{id}.html")), html)?;
+        fs::write(
+            directory.join(format!("{id}.json")),
+            serde_json::to_vec_pretty(&json!({
+                "engine": engine, "query": query, "final_url": url, "http_status": status, "http_version": http_version,
+                "attempt": attempt, "html_file": format!("{id}.html"),
+                "captured_at": chrono::Utc::now().to_rfc3339(),
+            }))?,
+        )
+    };
+    if let Err(error) = write() {
+        eprintln!("[kestrel] Provider trace failed: {error}");
+    }
+}
+
+/// Record only generated browser headers, never credentials or response cookies.
+pub(crate) fn capture_headers(client: &str, headers: &reqwest::header::HeaderMap) {
+    let Ok(directory) = std::env::var("KESTRELSEARCH_PROVIDER_TRACE_DIR") else {
+        return;
+    };
+    let directory = Path::new(&directory);
+    let values: BTreeMap<_, _> = headers
+        .iter()
+        .filter_map(|(name, value)| value.to_str().ok().map(|value| (name.as_str(), value)))
+        .collect();
+    let write = || -> io::Result<()> {
+        fs::create_dir_all(directory)?;
+        fs::write(
+            directory.join(format!(
+                "headers-{client}-{}.json",
+                uuid::Uuid::new_v4().simple()
+            )),
+            serde_json::to_vec_pretty(&json!({"client": client, "headers": values}))?,
+        )
+    };
+    if let Err(error) = write() {
+        eprintln!("[kestrel] Header trace failed: {error}");
+    }
+}
+
+/// Preserve diagnostics even when all providers fail and no SearchReport is returned.
+pub(crate) fn capture_provider_diagnostic(diagnostic: &ProviderSearchDiagnostic) {
+    let Ok(directory) = std::env::var("KESTRELSEARCH_PROVIDER_TRACE_DIR") else {
+        return;
+    };
+    let directory = Path::new(&directory);
+    let write = || -> io::Result<()> {
+        fs::create_dir_all(directory)?;
+        fs::write(
+            directory.join(format!(
+                "outcome-{}-{}.json",
+                diagnostic.engine,
+                uuid::Uuid::new_v4().simple()
+            )),
+            serde_json::to_vec_pretty(diagnostic)?,
+        )
+    };
+    if let Err(error) = write() {
+        eprintln!("[kestrel] Diagnostic trace failed: {error}");
+    }
 }
 
 #[cfg(test)]
@@ -159,6 +247,8 @@ mod tests {
             SearchMode::Fallback,
             &[],
             0,
+            None,
+            &[],
             None,
         )
         .unwrap();

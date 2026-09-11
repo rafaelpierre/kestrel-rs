@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T21:08:53.088062+00:00",
+  "engine": "swisscows",
+  "final_url": "https://api.swisscows.com/v5/web/search?freshness=All&itemsCount=20&locale=en-US&offset=0&query=Python+asyncio+TaskGroup+exception+handling+ExceptionGroup&spellcheck=false",
+  "html_file": "swisscows-188a2acf05fa45a4a646ca987db586a9.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "Python asyncio TaskGroup exception handling ExceptionGroup"
+}

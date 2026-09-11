@@ -1,0 +1,12 @@
+{
+  "engine": "swisscows",
+  "query": "site:postgresql.org EXPLAIN ANALYZE BUFFERS",
+  "elapsed_ms": 1435,
+  "result_count": 20,
+  "retries": 0,
+  "success": true,
+  "outcome": "results",
+  "error": null,
+  "raw_result_count": 20,
+  "filtered_count": 0
+}

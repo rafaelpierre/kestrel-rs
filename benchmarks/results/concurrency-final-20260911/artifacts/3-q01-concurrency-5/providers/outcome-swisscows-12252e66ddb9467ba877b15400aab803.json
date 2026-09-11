@@ -1,0 +1,12 @@
+{
+  "engine": "swisscows",
+  "query": "What is the capital of Australia?",
+  "elapsed_ms": 218,
+  "result_count": 12,
+  "retries": 0,
+  "success": true,
+  "outcome": "results",
+  "error": null,
+  "raw_result_count": 12,
+  "filtered_count": 0
+}

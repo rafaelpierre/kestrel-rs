@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T20:51:39.763488+00:00",
+  "engine": "swisscows",
+  "final_url": "https://api.swisscows.com/v5/web/search?freshness=All&itemsCount=20&locale=en-US&offset=0&query=site%3Apostgresql.org+EXPLAIN+ANALYZE+BUFFERS&spellcheck=false",
+  "html_file": "swisscows-7a7bb931993e48fc9f74a0469ae420c6.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "site:postgresql.org EXPLAIN ANALYZE BUFFERS"
+}

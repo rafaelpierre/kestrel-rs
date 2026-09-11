@@ -1,0 +1,355 @@
+{
+  "assessment": "Single assistant, non-blind relevance review of displayed titles/URLs/snippets. Scores do not establish factual accuracy. New judgments do not revise historical scores. Publication date for the Max Planck TRAPPIST-1 b article was checked against the primary page (December 16, 2024).",
+  "judgments": [
+    {
+      "query_id": "q01",
+      "url": "https://en.wikipedia.org/wiki/Canberra",
+      "title": "Canberra - Wikipedia",
+      "score": 2,
+      "reason": "Excerpt explicitly names Canberra as the capital."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.australia.com/en-us/places/australian-capital-territory.html",
+      "title": "Australian Capital Territory: Places to visit and things to do - Tourism Australia",
+      "score": 2,
+      "reason": "Excerpt explicitly names Canberra as the capital."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://youtooproject.com/en/blog/australia-en/capital-of-australia-canberra/",
+      "title": "What is the capital of Australia? If you thought it was Sydney, keep on reading",
+      "score": 2,
+      "reason": "Excerpt explicitly names Canberra as the capital."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.britannica.com/question/What-is-the-capital-of-Australia",
+      "title": "What is the capital of Australia? | Britannica",
+      "score": 2,
+      "reason": "Excerpt explicitly names Canberra as the capital."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.ebsco.com/research-starters/geography-and-cartography/canberra-australia",
+      "title": "Canberra, Australia | Geography and Cartography | Research Starters | EBSCOhost",
+      "score": 2,
+      "reason": "Excerpt explicitly names Canberra as the capital."
+    },
+    {
+      "query_id": "q02",
+      "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/atmos/blusky.html",
+      "title": "Blue Sky and Rayleigh Scattering",
+      "score": 2,
+      "reason": "Title and excerpt explain atmospheric Rayleigh scattering and sky color."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://en.wikipedia.org/wiki/Rayleigh_scattering",
+      "title": "Rayleigh scattering - Wikipedia",
+      "score": 2,
+      "reason": "Title and excerpt explain atmospheric Rayleigh scattering and sky color."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://www.rmg.co.uk/stories/space-astronomy/why-sky-blue",
+      "title": "Why is the sky blue? | Royal Observatory",
+      "score": 2,
+      "reason": "Title and excerpt explain atmospheric Rayleigh scattering and sky color."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://www.reddit.com/r/explainlikeimfive/comments/lyhooz/eli5how_does_rayleigh_scattering_make_the_sky/",
+      "title": "r/explainlikeimfive on Reddit: ELI5:HOW does Rayleigh scattering make the sky red/blue/whatever?",
+      "score": 2,
+      "reason": "Title and excerpt explain atmospheric Rayleigh scattering and sky color."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://www.ebsco.com/research-starters/chemistry/rayleigh-scattering",
+      "title": "Rayleigh scattering | Chemistry | Research Starters | EBSCOhost",
+      "score": 2,
+      "reason": "Title and excerpt explain atmospheric Rayleigh scattering and sky color."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://stackoverflow.com/questions/75250788/how-to-prevent-python3-11-taskgroup-from-canceling-all-the-tasks",
+      "title": "python - How to prevent python3.11 TaskGroup from canceling all the tasks - Stack Overflow",
+      "score": 2,
+      "reason": "Discusses TaskGroup cancellation and exception handling."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://runebook.dev/en/docs/python/library/asyncio-task/task-groups",
+      "title": "Task Group Trouble: Exception Handling in Python Asyncio (3.11+)",
+      "score": 2,
+      "reason": "Describes TaskGroup exceptions and except*."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://speakerdeck.com/jrfk/asyncio-evolved-enhanced-exception-handling-with-taskgroup-in-python-3-dot-11-europython-2023",
+      "title": "Asyncio Evolved: Enhanced Exception Handling with TaskGroup in Python 3.11(EuroPython 2023) - Speaker Deck",
+      "score": 2,
+      "reason": "Shows except* handling of ExceptionGroup from TaskGroup."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://docs.python.org/3/library/asyncio-task.html",
+      "title": "Coroutines and tasks \u2014 Python 3.14.7 documentation",
+      "score": 2,
+      "reason": "Official documentation describes grouped exceptions and cancellation."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://runebook.dev/en/docs/python/library/asyncio-task/asyncio.TaskGroup.create_task",
+      "title": "python - Common async TaskGroup Pitfalls and Solutions",
+      "score": 2,
+      "reason": "TaskGroup exception behavior and pitfalls directly address the query."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/docs/9.1/sql-explain.html",
+      "title": "PostgreSQL: Documentation: 9.1: EXPLAIN",
+      "score": 1,
+      "reason": "Older general EXPLAIN reference; excerpt does not show ANALYZE or BUFFERS."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/docs/current/using-explain.html",
+      "title": "PostgreSQL: Documentation: 18: 14.1. Using EXPLAIN",
+      "score": 2,
+      "reason": "Official usage documentation explains BUFFERS."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/docs/current/sql-explain.html",
+      "title": "PostgreSQL: Documentation: 18: EXPLAIN",
+      "score": 2,
+      "reason": "Official reference directly connects ANALYZE and buffer information."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/docs/9.5/sql-explain.html",
+      "title": "PostgreSQL: Documentation: 9.5: EXPLAIN",
+      "score": 1,
+      "reason": "Older general EXPLAIN reference; excerpt does not show requested options."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/docs/9.6/using-explain.html",
+      "title": "PostgreSQL: Documentation: 9.6: Using EXPLAIN",
+      "score": 2,
+      "reason": "Excerpt includes EXPLAIN (ANALYZE, BUFFERS) example; version is old but query did not specify a version."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/construct-traceql-queries/",
+      "title": "Construct a TraceQL query | Grafana Tempo documentation",
+      "score": 2,
+      "reason": "TraceQL childCount directly addresses child spans."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://grafana.com/docs/tempo/latest/introduction/trace-structure/",
+      "title": "Trace structure | Grafana Tempo documentation",
+      "score": 1,
+      "reason": "Explains parent/child trace structure without TraceQL querying."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/",
+      "title": "TraceQL | Grafana Tempo documentation",
+      "score": 1,
+      "reason": "General TraceQL overview does not show the requested relationship query."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/trace-structure/",
+      "title": "Learn about trace structure and TraceQL | Grafana Tempo documentation",
+      "score": 1,
+      "reason": "Trace structure overview rather than parent/child query syntax."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://grafana.com/blog/grafana-tempo-2-8-release-memory-improvements-new-traceql-features-and-more/",
+      "title": "Grafana Tempo 2.8 release: memory improvements, new TraceQL features, and more | Grafana Labs",
+      "score": 2,
+      "reason": "Describes span:parentID for finding child spans."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-advanced",
+      "title": "Advanced Configuration | ChatGPT Learn",
+      "score": 2,
+      "reason": "Codex advanced configuration includes OpenTelemetry configuration."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-reference",
+      "title": "Configuration Reference | ChatGPT Learn",
+      "score": 2,
+      "reason": "Explicit otel.trace_exporter reference."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-sample",
+      "title": "Sample Configuration | ChatGPT Learn",
+      "score": 2,
+      "reason": "Explicit trace_exporter configuration example."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-reference.md",
+      "title": "Configuration Reference",
+      "score": 2,
+      "reason": "Explicit otel.trace_exporter reference; duplicate format is a usability issue."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://learn.chatgpt.com/docs/agent-approvals-security",
+      "title": "Agent approvals & security | ChatGPT Learn",
+      "score": 1,
+      "reason": "General telemetry/security discussion without trace-exporter configuration."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://www.reddit.com/r/rust/comments/yg9sez/need_help_errore0382_borrow_of_moved_value_new_to/",
+      "title": "r/rust on Reddit: Need help : error[E0382]: borrow of moved value ( New to Rust )",
+      "score": 1,
+      "reason": "Relevant E0382 help thread but excerpt provides no moved-value remedy."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://oneuptime.com/blog/post/2026-01-25-fix-use-of-moved-value-rust/view",
+      "title": "How to Fix 'Use of moved value' Errors in Rust",
+      "score": 2,
+      "reason": "Fix-focused moved-value guide with ownership example."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://stackoverflow.com/questions/64612490/how-to-solve-e0382-use-of-moved-value-in-a-for-loop",
+      "title": "rust - How to solve [E0382]: use of moved value in a for loop? - Stack Overflow",
+      "score": 2,
+      "reason": "Specific moved-value loop error and solution question."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://adhdecode.com/debugging/rust/error-e0382-use-of-moved-value-after-move/",
+      "title": "Rust Error E0382: Use of Moved Value - Why Your Rust Code Is Panicking | ADHDecode",
+      "score": 1,
+      "reason": "Misleading panicking title and excerpt without the requested remedy."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://github.com/rust-lang/rust/issues/39070",
+      "title": "error E0382 use of moved value could be improved \u00b7 Issue #39070 \u00b7 rust-lang/rust",
+      "score": 1,
+      "reason": "Compiler diagnostic improvement discussion rather than direct fix guidance."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://www.sciencedaily.com/releases/2025/09/250930034237.htm",
+      "title": "Webb spots first hints of atmosphere on a potentially habitable world | ScienceDaily",
+      "score": 0,
+      "reason": "Displayed evidence does not identify the requested planet b."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://www.universetoday.com/articles/new-results-from-the-jwst-suggest-that-trappist-1e-could-have-a-methane-atmosphere",
+      "title": "New Results from the JWST Suggest that TRAPPIST-1e Might Have a Methane Atmosphere, Though Caution is Advised - Universe Today",
+      "score": 0,
+      "reason": "Wrong planet: TRAPPIST-1e."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://www.mpg.de/23867891/trappist-1-b-atmosphere",
+      "title": "Does the exoplanet Trappist-1 b have an atmosphere after all? | Max-Planck-Gesellschaft",
+      "score": 1,
+      "reason": "Correct planet and topic, but this is the historical 2024 observation article, not 2025."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://news.mit.edu/2025/study-finds-habitable-zone-planet-unlikely-have-venus-or-mars-like-atmosphere-0908",
+      "title": "Study finds exoplanet TRAPPIST-1e is unlikely to have a Venus- or Mars-like atmosphere | MIT News | Massachusetts Institute of Technology",
+      "score": 0,
+      "reason": "Wrong planet: TRAPPIST-1e."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://www.sciencedaily.com/releases/2024/12/241216130034.htm",
+      "title": "Does the exoplanet Trappist-1 b have an atmosphere after all? | ScienceDaily",
+      "score": 1,
+      "reason": "Correct planet and topic but explicit 2024 date mismatch."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://grafana.com/docs/tempo/latest/release-notes/v3-0/",
+      "title": "Version 3.0 release notes | Grafana Tempo documentation",
+      "score": 2,
+      "reason": "Version 3.0 release notes describe specific breaking changes."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://grafana.com/blog/tempo-3-0-release-all-the-latest-features/",
+      "title": "Tempo 3.0 release: a new architecture for scale and lower TCO, TraceQL metrics GA, and more | Grafana Labs",
+      "score": 2,
+      "reason": "Release article describes removed components and upgrade requirements."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://github.com/grafana/tempo/releases",
+      "title": "Releases \u00b7 grafana/tempo",
+      "score": 2,
+      "reason": "Release listing excerpt explicitly describes 3.0 breaking changes."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://grafana.com/docs/tempo/latest/release-notes/",
+      "title": "Release notes | Grafana Tempo documentation",
+      "score": 1,
+      "reason": "General release-note index without 3.0 specifics in excerpt."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://github.com/grafana/tempo/discussions/6073",
+      "title": "Tempo 3.0 \u00b7 grafana/tempo \u00b7 Discussion #6073",
+      "score": 1,
+      "reason": "Upcoming release discussion rather than final release notes."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.sciencemuseum.org.uk/visit",
+      "title": "Visit | Science Museum, London",
+      "score": 2,
+      "reason": "Official visitor page gives opening hours."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://whichmuseum.com/museum/science-museum-london-4545/opening-hours",
+      "title": "Opening Hours - Science Museum (London) - WhichMuseum",
+      "score": 2,
+      "reason": "Dedicated opening-hours result."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.sciencemuseum.org.uk/see-and-do/welcome",
+      "title": "Welcome | Science Museum",
+      "score": 1,
+      "reason": "Generic welcome page, no opening hours in displayed evidence."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.wonderfulmuseums.com/museum/london-science-museum-opening-times/",
+      "title": "London Science Museum Opening Times: Your Essential Guide to Planning an Unforgettable Visit - Wonderful Museums",
+      "score": 2,
+      "reason": "Opening-times guide with hours in excerpt; accuracy not independently verified."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://whichmuseum.com/museum/science-museum-london-48415/opening-hours",
+      "title": "Opening Hours - Science Museum London (London) - WhichMuseum",
+      "score": 2,
+      "reason": "Dedicated opening-hours result."
+    }
+  ]
+}

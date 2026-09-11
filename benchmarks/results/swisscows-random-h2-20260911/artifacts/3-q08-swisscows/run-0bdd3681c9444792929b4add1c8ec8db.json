@@ -1,0 +1,298 @@
+{
+  "candidate_counts": {
+    "after_candidate_selection": 9,
+    "after_ranking": 9,
+    "after_search": 9,
+    "returned": 5,
+    "with_content": 0
+  },
+  "candidates": [
+    {
+      "content": null,
+      "display_url": "www.sciencedaily.com",
+      "engine": "swisscows",
+      "engine_rank": 1,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "snippet": "31, 2025  Astronomers using the James Webb Space Telescope have uncovered a planet-forming disk shockingly rich in carbon dioxide but nearly devoid of water , upending traditional theories of planetary ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 1
+        }
+      ],
+      "title": "Webb spots first hints of atmosphere on a potentially habitable world | ScienceDaily",
+      "url": "https://www.sciencedaily.com/releases/2025/09/250930034237.htm"
+    },
+    {
+      "content": null,
+      "display_url": "www.universetoday.com",
+      "engine": "swisscows",
+      "engine_rank": 2,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "snippet": "This would not only reveal the presence of an atmosphere but also identify the chemical compounds present (including potential biosignatures such as oxygen, water, carbon dioxide, and methane). The team observed TRAPPIST-1e during four transits, the results of which are described in their first paper.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 2
+        }
+      ],
+      "title": "New Results from the JWST Suggest that TRAPPIST-1e Might Have a Methane Atmosphere, Though Caution is Advised - Universe Today",
+      "url": "https://www.universetoday.com/articles/new-results-from-the-jwst-suggest-that-trappist-1e-could-have-a-methane-atmosphere"
+    },
+    {
+      "content": null,
+      "display_url": "www.mpg.de",
+      "engine": "swisscows",
+      "engine_rank": 3,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "snippet": "New observations with the James Webb Space Telescope no longer rule out the presence of an atmosphere around the Earth-sized rocky planet . However, a geologically active planet also explains the data.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 3
+        }
+      ],
+      "title": "Does the exoplanet Trappist-1 b have an atmosphere after all? | Max-Planck-Gesellschaft",
+      "url": "https://www.mpg.de/23867891/trappist-1-b-atmosphere"
+    },
+    {
+      "content": null,
+      "display_url": "news.mit.edu",
+      "engine": "swisscows",
+      "engine_rank": 4,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "snippet": "“With our initial observations, we have showcased the gains made with JWST. Our follow-up program will help us to further refine our understanding of one of our best habitable-zone planets,” says Glidden. ... Paper: \"JWST-TST DREAMS: Secondary Atmosphere Constraints for the Habitable Zone Planet TRAPPIST-1 e\" Using the James Webb Telescope, researchers at MIT and elsewhere are studying the potential presence of “an Earth-like atmosphere on an exoplanet for the first time,” reports Jacopo Prisco for CNN.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 4
+        }
+      ],
+      "title": "Study finds exoplanet TRAPPIST-1e is unlikely to have a Venus- or Mars-like atmosphere | MIT News | Massachusetts Institute of Technology",
+      "url": "https://news.mit.edu/2025/study-finds-habitable-zone-planet-unlikely-have-venus-or-mars-like-atmosphere-0908"
+    },
+    {
+      "content": null,
+      "display_url": "www.sciencedaily.com",
+      "engine": "swisscows",
+      "engine_rank": 5,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "snippet": "Recent measurements with the James Webb Space Telescope (JWST) cast doubt on the current understanding of the exoplanet Trappist-1 b's nature. Until now, it was assumed to be a dark rocky planet without an atmosphere, shaped by a billion-year-long cosmic impact of radiation and meteorites.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 5
+        }
+      ],
+      "title": "Does the exoplanet Trappist-1 b have an atmosphere after all? | ScienceDaily",
+      "url": "https://www.sciencedaily.com/releases/2024/12/241216130034.htm"
+    },
+    {
+      "content": null,
+      "display_url": "www.sciencedaily.com",
+      "engine": "swisscows",
+      "engine_rank": 6,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "snippet": "Aug. 14, 2025  NASA’s James Webb Space Telescope has detected strong evidence for a giant planet orbiting Alpha Centauri A, the nearest Sun-like star to Earth. Located just 4 light-years away, this possible ... Does the Exoplanet Trappist-1 B Have an Atmosphere After All?",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 6
+        }
+      ],
+      "title": "A nearby Earth-size planet just got much more mysterious | ScienceDaily",
+      "url": "https://www.sciencedaily.com/releases/2025/12/251211100625.htm"
+    },
+    {
+      "content": null,
+      "display_url": "news.umich.edu",
+      "engine": "swisscows",
+      "engine_rank": 7,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "snippet": "Astronomers obtained new data from ... to its star. These new observations offer insights into how its star can affect observations of exoplanets in the habitable zone of cool stars ....",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 7
+        }
+      ],
+      "title": "JWST’s first spectrum of a TRAPPIST-1 planet | University of Michigan News",
+      "url": "https://news.umich.edu/jwsts-first-spectrum-of-a-trappist-1-planet/"
+    },
+    {
+      "content": null,
+      "display_url": "www.physics.ox.ac.uk",
+      "engine": "swisscows",
+      "engine_rank": 8,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "snippet": "Each TRAPPIST-1 planet has previously been observed both from space and from the ground, and these data confidently rejected cloud-free, hydrogen-rich atmospheres ; yet, the observations could not constrain the presence of secondary atmospheres, ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 8
+        }
+      ],
+      "title": "JWST atmosphere reconnaissance of TRAPPIST-1 b | University of Oxford Department of Physics",
+      "url": "https://www.physics.ox.ac.uk/news/jwst-atmosphere-reconnaissance-trappist-1-b"
+    },
+    {
+      "content": null,
+      "display_url": "fys.kuleuven.be",
+      "engine": "swisscows",
+      "engine_rank": 9,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "snippet": "Exoplanet Trappist-1b was until ... hint at different scenarios, with possible geological activity such as volcanism or the presence of hazy atmosphere composed of carbon dioxide ....",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 9
+        }
+      ],
+      "title": "An atmosphere for exoplanet Trappist-1 b? It's complicated. — Institute of Astronomy",
+      "url": "https://fys.kuleuven.be/ster/news/2024/jwst-reveals-new-insights-in-nature-of-exoplanet-trappest-1-b"
+    }
+  ],
+  "diagnostics": {
+    "fetch": null,
+    "provider_cancellations": 0,
+    "providers": [
+      {
+        "elapsed_ms": 220,
+        "engine": "swisscows",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "results",
+        "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+        "raw_result_count": 9,
+        "result_count": 9,
+        "retries": 0,
+        "success": true
+      }
+    ]
+  },
+  "engines": [
+    "swisscows"
+  ],
+  "mode": "fallback",
+  "queries": [
+    "James Webb TRAPPIST-1 b atmosphere observations 2025"
+  ],
+  "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+  "results": [
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 1,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "rank": 1,
+      "snippet": "31, 2025  Astronomers using the James Webb Space Telescope have uncovered a planet-forming disk shockingly rich in carbon dioxide but nearly devoid of water , upending traditional theories of planetary ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 1
+        }
+      ],
+      "title": "Webb spots first hints of atmosphere on a potentially habitable world | ScienceDaily",
+      "url": "https://www.sciencedaily.com/releases/2025/09/250930034237.htm"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 2,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "rank": 2,
+      "snippet": "This would not only reveal the presence of an atmosphere but also identify the chemical compounds present (including potential biosignatures such as oxygen, water, carbon dioxide, and methane). The team observed TRAPPIST-1e during four transits, the results of which are described in their first paper.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 2
+        }
+      ],
+      "title": "New Results from the JWST Suggest that TRAPPIST-1e Might Have a Methane Atmosphere, Though Caution is Advised - Universe Today",
+      "url": "https://www.universetoday.com/articles/new-results-from-the-jwst-suggest-that-trappist-1e-could-have-a-methane-atmosphere"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 3,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "rank": 3,
+      "snippet": "New observations with the James Webb Space Telescope no longer rule out the presence of an atmosphere around the Earth-sized rocky planet . However, a geologically active planet also explains the data.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 3
+        }
+      ],
+      "title": "Does the exoplanet Trappist-1 b have an atmosphere after all? | Max-Planck-Gesellschaft",
+      "url": "https://www.mpg.de/23867891/trappist-1-b-atmosphere"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 4,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "rank": 4,
+      "snippet": "“With our initial observations, we have showcased the gains made with JWST. Our follow-up program will help us to further refine our understanding of one of our best habitable-zone planets,” says Glidden. ... Paper: \"JWST-TST DREAMS: Secondary Atmosphere Constraints for the Habitable Zone Planet TRAPPIST-1 e\" Using the James Webb Telescope, researchers at MIT and elsewhere are studying the potential presence of “an Earth-like atmosphere on an exoplanet for the first time,” reports Jacopo Prisco for CNN.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 4
+        }
+      ],
+      "title": "Study finds exoplanet TRAPPIST-1e is unlikely to have a Venus- or Mars-like atmosphere | MIT News | Massachusetts Institute of Technology",
+      "url": "https://news.mit.edu/2025/study-finds-habitable-zone-planet-unlikely-have-venus-or-mars-like-atmosphere-0908"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 5,
+      "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+      "rank": 5,
+      "snippet": "Recent measurements with the James Webb Space Telescope (JWST) cast doubt on the current understanding of the exoplanet Trappist-1 b's nature. Until now, it was assumed to be a dark rocky planet without an atmosphere, shaped by a billion-year-long cosmic impact of radiation and meteorites.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+          "rank": 5
+        }
+      ],
+      "title": "Does the exoplanet Trappist-1 b have an atmosphere after all? | ScienceDaily",
+      "url": "https://www.sciencedaily.com/releases/2024/12/241216130034.htm"
+    }
+  ],
+  "returned_chars": 0,
+  "run_id": "run",
+  "timings_ms": {
+    "initialize": 132,
+    "search": 220
+  }
+}

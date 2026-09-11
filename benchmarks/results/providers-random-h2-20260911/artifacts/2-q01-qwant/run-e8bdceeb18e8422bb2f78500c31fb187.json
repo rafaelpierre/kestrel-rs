@@ -1,0 +1,315 @@
+{
+  "candidate_counts": {
+    "after_candidate_selection": 10,
+    "after_ranking": 10,
+    "after_search": 10,
+    "returned": 5,
+    "with_content": 0
+  },
+  "candidates": [
+    {
+      "content": null,
+      "display_url": "en.wikipedia.org",
+      "engine": "qwant",
+      "engine_rank": 1,
+      "query": "What is the capital of Australia?",
+      "snippet": "As Australia's capital, Canberra is the most important centre for much of Australia's political reportage and thus all the major media, including the Australian Broadcasting Corporation, the commercial television networks, and the metropolitan newspapers maintain local bureaus.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 1
+        }
+      ],
+      "title": "Canberra - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Canberra"
+    },
+    {
+      "content": null,
+      "display_url": "www.mappr.co",
+      "engine": "qwant",
+      "engine_rank": 2,
+      "query": "What is the capital of Australia?",
+      "snippet": "Learn why Canberra is the capital of Australia, how it was founded, and what features make it unique. Explore its location, population, climate, economy, and attractions on a map.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 2
+        }
+      ],
+      "title": "What is the Capital of Australia? - Mappr",
+      "url": "https://www.mappr.co/capital-cities/australia/"
+    },
+    {
+      "content": null,
+      "display_url": "www.britannica.com",
+      "engine": "qwant",
+      "engine_rank": 3,
+      "query": "What is the capital of Australia?",
+      "snippet": "Canberra, federal capital of the Commonwealth of Australia. It occupies part of the Australian Capital Territory, in southern Australia, and is about 150 miles (240 km) southwest of Sydney. Canberra lies astride the Molonglo River, which is a tributary of the Murrumbidgee River.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 3
+        }
+      ],
+      "title": "Canberra | History, Map, Population, Climate, & Facts | Britannica",
+      "url": "https://www.britannica.com/place/Canberra"
+    },
+    {
+      "content": null,
+      "display_url": "www.britannica.com",
+      "engine": "qwant",
+      "engine_rank": 4,
+      "query": "What is the capital of Australia?",
+      "snippet": "Australia is the smallest continent and one of the largest countries on Earth, lying between the Pacific and Indian oceans in the Southern Hemisphere. Its capital city is Canberra, and its most important economic and cultural centers are Sydney and Melbourne.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 4
+        }
+      ],
+      "title": "Australia | History, Cities, Population, Capital, Map, & Facts | Britannica",
+      "url": "https://www.britannica.com/place/Australia"
+    },
+    {
+      "content": null,
+      "display_url": "en.wikipedia.org",
+      "engine": "qwant",
+      "engine_rank": 5,
+      "query": "What is the capital of Australia?",
+      "snippet": "The capital of Australia is Canberra, which is also the seat of the national government. The web page lists the eight capital cities of the states and territories, their populations, and their establishment dates.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 5
+        }
+      ],
+      "title": "List of Australian capital cities - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/List_of_Australian_capital_cities"
+    },
+    {
+      "content": null,
+      "display_url": "www.mapsofworld.com",
+      "engine": "qwant",
+      "engine_rank": 6,
+      "query": "What is the capital of Australia?",
+      "snippet": "Capital of Australia – Canberra Canberra is the capital city of Australia. The city is famous for its organized layout and lots of open space. Important places like Parliament House and the Australian War Memorial are there. Canberra has modern buildings, parks, and cool things to do which makes it a mixture of history, nature, and modern life. Canberra has a diverse 2023 estimated ...",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 6
+        }
+      ],
+      "title": "What is the Capital of Australia?",
+      "url": "https://www.mapsofworld.com/answers/world/what-is-the-capital-of-australia/"
+    },
+    {
+      "content": null,
+      "display_url": "www.insideaustraliatravel.com",
+      "engine": "qwant",
+      "engine_rank": 7,
+      "query": "What is the capital of Australia?",
+      "snippet": "The capital city of Australia is Canberra, not Sydney or Melbourne. Canberra is located in the Australian Capital Territory, inland from the east coast and surrounded by New South Wales.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 7
+        }
+      ],
+      "title": "What Is the Capital City of Australia?",
+      "url": "https://www.insideaustraliatravel.com/faqs/australia-capital-city"
+    },
+    {
+      "content": null,
+      "display_url": "www.worldatlas.com",
+      "engine": "qwant",
+      "engine_rank": 8,
+      "query": "What is the capital of Australia?",
+      "snippet": "The city is located between Australia’s largest cities Melbourne (northwest) and Sydney (southwest) and 150km from the Pacific Ocean. History Of The Capital City Of Australia Canberra was selected as the capital city of Australia as a compromise between the warring town of Melbourne and Sydney.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 8
+        }
+      ],
+      "title": "What Is The Capital Of Australia? - WorldAtlas",
+      "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-australia.html"
+    },
+    {
+      "content": null,
+      "display_url": "www.jagranjosh.com",
+      "engine": "qwant",
+      "engine_rank": 9,
+      "query": "What is the capital of Australia?",
+      "snippet": "Discover why Canberra is the capital of Australia, explore its population, history, and iconic attractions, and learn what makes this planned city unique.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 9
+        }
+      ],
+      "title": "What is the Capital of Australia? - Jagran Josh",
+      "url": "https://www.jagranjosh.com/general-knowledge/capital-of-australia-1820003355-1"
+    },
+    {
+      "content": null,
+      "display_url": "www.countryaah.com",
+      "engine": "qwant",
+      "engine_rank": 10,
+      "query": "What is the capital of Australia?",
+      "snippet": "Canberra, the capital city of Australia, is located in the southeastern part of the country, in the Australian Capital Territory (ACT). Unlike many national capitals, Canberra was specifically chosen and designed to be the country’s capital, rather than being an existing city.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 10
+        }
+      ],
+      "title": "What is the Capital of Australia? Canberra – Countryaah.com",
+      "url": "https://www.countryaah.com/australia-faqs/"
+    }
+  ],
+  "diagnostics": {
+    "fetch": null,
+    "provider_cancellations": 0,
+    "providers": [
+      {
+        "elapsed_ms": 830,
+        "engine": "qwant",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "results",
+        "query": "What is the capital of Australia?",
+        "raw_result_count": 10,
+        "result_count": 10,
+        "retries": 0,
+        "success": true
+      }
+    ]
+  },
+  "engines": [
+    "qwant"
+  ],
+  "mode": "fallback",
+  "queries": [
+    "What is the capital of Australia?"
+  ],
+  "query": "What is the capital of Australia?",
+  "results": [
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "qwant",
+      "engine_rank": 1,
+      "query": "What is the capital of Australia?",
+      "rank": 1,
+      "snippet": "As Australia's capital, Canberra is the most important centre for much of Australia's political reportage and thus all the major media, including the Australian Broadcasting Corporation, the commercial television networks, and the metropolitan newspapers maintain local bureaus.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 1
+        }
+      ],
+      "title": "Canberra - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Canberra"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "qwant",
+      "engine_rank": 2,
+      "query": "What is the capital of Australia?",
+      "rank": 2,
+      "snippet": "Learn why Canberra is the capital of Australia, how it was founded, and what features make it unique. Explore its location, population, climate, economy, and attractions on a map.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 2
+        }
+      ],
+      "title": "What is the Capital of Australia? - Mappr",
+      "url": "https://www.mappr.co/capital-cities/australia/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "qwant",
+      "engine_rank": 3,
+      "query": "What is the capital of Australia?",
+      "rank": 3,
+      "snippet": "Canberra, federal capital of the Commonwealth of Australia. It occupies part of the Australian Capital Territory, in southern Australia, and is about 150 miles (240 km) southwest of Sydney. Canberra lies astride the Molonglo River, which is a tributary of the Murrumbidgee River.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 3
+        }
+      ],
+      "title": "Canberra | History, Map, Population, Climate, & Facts | Britannica",
+      "url": "https://www.britannica.com/place/Canberra"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "qwant",
+      "engine_rank": 4,
+      "query": "What is the capital of Australia?",
+      "rank": 4,
+      "snippet": "Australia is the smallest continent and one of the largest countries on Earth, lying between the Pacific and Indian oceans in the Southern Hemisphere. Its capital city is Canberra, and its most important economic and cultural centers are Sydney and Melbourne.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 4
+        }
+      ],
+      "title": "Australia | History, Cities, Population, Capital, Map, & Facts | Britannica",
+      "url": "https://www.britannica.com/place/Australia"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "qwant",
+      "engine_rank": 5,
+      "query": "What is the capital of Australia?",
+      "rank": 5,
+      "snippet": "The capital of Australia is Canberra, which is also the seat of the national government. The web page lists the eight capital cities of the states and territories, their populations, and their establishment dates.",
+      "sources": [
+        {
+          "engine": "qwant",
+          "query": "What is the capital of Australia?",
+          "rank": 5
+        }
+      ],
+      "title": "List of Australian capital cities - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/List_of_Australian_capital_cities"
+    }
+  ],
+  "returned_chars": 0,
+  "run_id": "run",
+  "timings_ms": {
+    "initialize": 132,
+    "search": 830
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "engine": "swisscows",
+  "query": "London Science Museum opening hours",
+  "elapsed_ms": 1066,
+  "result_count": 15,
+  "retries": 0,
+  "success": true,
+  "outcome": "results",
+  "error": null,
+  "raw_result_count": 15,
+  "filtered_count": 0
+}

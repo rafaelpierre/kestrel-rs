@@ -1,0 +1,535 @@
+[
+  {
+    "id": "coding-01",
+    "expected_release": "tokio-1.53.1",
+    "repository": "tokio-rs/tokio",
+    "required_facts": [
+      "Release tag: tokio-1.53.1",
+      "- signal: restore MSRV by removing `OnceLock::wait` from the Windows handler ([#8300])"
+    ],
+    "gold_urls": [
+      "https://github.com/tokio-rs/tokio/releases/tag/tokio-1.53.1",
+      "https://github.com/tokio-rs/tokio/pull/8300"
+    ],
+    "supporting_passage": "- signal: restore MSRV by removing `OnceLock::wait` from the Windows handler ([#8300])",
+    "source_published_at": "2026-07-20T17:06:31Z",
+    "snapshot": "sources/tokio-rs--tokio.json",
+    "snapshot_sha256": "771669a9581e4c7647b85dd83f9ca6cc373cdf739d609979750f53337d4d8b48",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-02",
+    "expected_release": "tokio-1.53.1",
+    "repository": "tokio-rs/tokio",
+    "required_facts": [
+      "Release tag: tokio-1.53.1",
+      "- time: fix alt timer cancellation and insertion race ([#8252])"
+    ],
+    "gold_urls": [
+      "https://github.com/tokio-rs/tokio/releases/tag/tokio-1.53.1",
+      "https://github.com/tokio-rs/tokio/pull/8252"
+    ],
+    "supporting_passage": "- time: fix alt timer cancellation and insertion race ([#8252])",
+    "source_published_at": "2026-07-20T17:06:31Z",
+    "snapshot": "sources/tokio-rs--tokio.json",
+    "snapshot_sha256": "771669a9581e4c7647b85dd83f9ca6cc373cdf739d609979750f53337d4d8b48",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-03",
+    "expected_release": "v1.0.229",
+    "repository": "serde-rs/serde",
+    "required_facts": [
+      "Release tag: v1.0.229",
+      "- Update to syn 3"
+    ],
+    "gold_urls": [
+      "https://github.com/serde-rs/serde/releases/tag/v1.0.229"
+    ],
+    "supporting_passage": "- Update to syn 3",
+    "source_published_at": "2026-07-18T23:05:36Z",
+    "snapshot": "sources/serde-rs--serde.json",
+    "snapshot_sha256": "086f0a531e0393f10501d501d8f1417a270b58f2894e3ea38405a18a479d4bf7",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-04",
+    "expected_release": "v4.6.6",
+    "repository": "clap-rs/clap",
+    "required_facts": [
+      "Release tag: v4.6.6",
+      "- Add `Command::get_overridden_usage`"
+    ],
+    "gold_urls": [
+      "https://github.com/clap-rs/clap/releases/tag/v4.6.6"
+    ],
+    "supporting_passage": "- Add `Command::get_overridden_usage`",
+    "source_published_at": "2026-08-06T14:03:45Z",
+    "snapshot": "sources/clap-rs--clap.json",
+    "snapshot_sha256": "c968a61c36966441ca3af3a3cbdd4296cbc6cf61c40cd52bd86c22bd87adbaad",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-05",
+    "expected_release": "v4.6.5",
+    "repository": "clap-rs/clap",
+    "required_facts": [
+      "Release tag: v4.6.5",
+      "- *(help)* Correctly mark which `value_names` are optional with `num_args`"
+    ],
+    "gold_urls": [
+      "https://github.com/clap-rs/clap/releases/tag/v4.6.5"
+    ],
+    "supporting_passage": "- *(help)* Correctly mark which `value_names` are optional with `num_args`",
+    "source_published_at": "2026-07-31T17:30:34Z",
+    "snapshot": "sources/clap-rs--clap.json",
+    "snapshot_sha256": "c968a61c36966441ca3af3a3cbdd4296cbc6cf61c40cd52bd86c22bd87adbaad",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-06",
+    "expected_release": "v1.11.1",
+    "repository": "hyperium/hyper",
+    "required_facts": [
+      "Release tag: v1.11.1",
+      "* **http1:**"
+    ],
+    "gold_urls": [
+      "https://github.com/hyperium/hyper/releases/tag/v1.11.1"
+    ],
+    "supporting_passage": "* **http1:**",
+    "source_published_at": "2026-08-28T12:24:08Z",
+    "snapshot": "sources/hyperium--hyper.json",
+    "snapshot_sha256": "ae4eb83fc56ee5cad1833a0a7b870938dfe6a319fa00d8830b00b5a9899ced0d",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-07",
+    "expected_release": "v1.11.1",
+    "repository": "hyperium/hyper",
+    "required_facts": [
+      "Release tag: v1.11.1",
+      "* detect TE: trailers caselessly and with other values (#4152) ([72fcf545](https://github.com/hyperium/hyper/commit/72fcf545c9b4a261f31d89bafd3019a2d4e9e1d7))"
+    ],
+    "gold_urls": [
+      "https://github.com/hyperium/hyper/releases/tag/v1.11.1",
+      "https://github.com/hyperium/hyper/pull/4152"
+    ],
+    "supporting_passage": "* detect TE: trailers caselessly and with other values (#4152) ([72fcf545](https://github.com/hyperium/hyper/commit/72fcf545c9b4a261f31d89bafd3019a2d4e9e1d7))",
+    "source_published_at": "2026-08-28T12:24:08Z",
+    "snapshot": "sources/hyperium--hyper.json",
+    "snapshot_sha256": "ae4eb83fc56ee5cad1833a0a7b870938dfe6a319fa00d8830b00b5a9899ced0d",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-08",
+    "expected_release": "v0.13.5",
+    "repository": "seanmonstar/reqwest",
+    "required_facts": [
+      "Release tag: v0.13.5",
+      "- Add `Error::is_dns()` to identify errors caused by DNS resolution failures."
+    ],
+    "gold_urls": [
+      "https://github.com/seanmonstar/reqwest/releases/tag/v0.13.5"
+    ],
+    "supporting_passage": "- Add `Error::is_dns()` to identify errors caused by DNS resolution failures.",
+    "source_published_at": "2026-09-08T20:57:58Z",
+    "snapshot": "sources/seanmonstar--reqwest.json",
+    "snapshot_sha256": "39d364fcb426a305559e5ebabe0fe620fc6c8f0c2c7a6204a9e3605c5baaad57",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-09",
+    "expected_release": "v0.13.5",
+    "repository": "seanmonstar/reqwest",
+    "required_facts": [
+      "Release tag: v0.13.5",
+      "- Add `ClientBuilder::http1_max_headers(usize)` to configure the maximum number of headers accepted in an HTTP/1 response (default 100)."
+    ],
+    "gold_urls": [
+      "https://github.com/seanmonstar/reqwest/releases/tag/v0.13.5"
+    ],
+    "supporting_passage": "- Add `ClientBuilder::http1_max_headers(usize)` to configure the maximum number of headers accepted in an HTTP/1 response (default 100).",
+    "source_published_at": "2026-09-08T20:57:58Z",
+    "snapshot": "sources/seanmonstar--reqwest.json",
+    "snapshot_sha256": "39d364fcb426a305559e5ebabe0fe620fc6c8f0c2c7a6204a9e3605c5baaad57",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-10",
+    "expected_release": "v0.13.5",
+    "repository": "seanmonstar/reqwest",
+    "required_facts": [
+      "Release tag: v0.13.5",
+      "- Add TLS version to `TlsInfo` extension."
+    ],
+    "gold_urls": [
+      "https://github.com/seanmonstar/reqwest/releases/tag/v0.13.5"
+    ],
+    "supporting_passage": "- Add TLS version to `TlsInfo` extension.",
+    "source_published_at": "2026-09-08T20:57:58Z",
+    "snapshot": "sources/seanmonstar--reqwest.json",
+    "snapshot_sha256": "39d364fcb426a305559e5ebabe0fe620fc6c8f0c2c7a6204a9e3605c5baaad57",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-11",
+    "expected_release": "0.16.7",
+    "repository": "astral-sh/ruff",
+    "required_facts": [
+      "Release tag: 0.16.7",
+      "- \\[`ruff`\\] Add rule for default values on method receivers (`RUF077`) ([#26700](https://github.com/astral-sh/ruff/pull/26700))"
+    ],
+    "gold_urls": [
+      "https://github.com/astral-sh/ruff/releases/tag/0.16.7",
+      "https://github.com/astral-sh/ruff/pull/26700"
+    ],
+    "supporting_passage": "- \\[`ruff`\\] Add rule for default values on method receivers (`RUF077`) ([#26700](https://github.com/astral-sh/ruff/pull/26700))",
+    "source_published_at": "2026-09-10T18:05:06Z",
+    "snapshot": "sources/astral-sh--ruff.json",
+    "snapshot_sha256": "f6219c34fc3a1fa9d032971dc001e6d3b3c80cce4a4815b073b27aa3ef4635bc",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-12",
+    "expected_release": "0.16.7",
+    "repository": "astral-sh/ruff",
+    "required_facts": [
+      "Release tag: 0.16.7",
+      "- \\[`ruff`\\] Recognize `re.prefixmatch` (`RUF039`, `RUF055`) ([#28311](https://github.com/astral-sh/ruff/pull/28311))"
+    ],
+    "gold_urls": [
+      "https://github.com/astral-sh/ruff/releases/tag/0.16.7",
+      "https://github.com/astral-sh/ruff/pull/28311"
+    ],
+    "supporting_passage": "- \\[`ruff`\\] Recognize `re.prefixmatch` (`RUF039`, `RUF055`) ([#28311](https://github.com/astral-sh/ruff/pull/28311))",
+    "source_published_at": "2026-09-10T18:05:06Z",
+    "snapshot": "sources/astral-sh--ruff.json",
+    "snapshot_sha256": "f6219c34fc3a1fa9d032971dc001e6d3b3c80cce4a4815b073b27aa3ef4635bc",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-13",
+    "expected_release": "0.16.7",
+    "repository": "astral-sh/ruff",
+    "required_facts": [
+      "Release tag: 0.16.7",
+      "- Alternate nested quotes inside format spec interpolations ([#28259](https://github.com/astral-sh/ruff/pull/28259))"
+    ],
+    "gold_urls": [
+      "https://github.com/astral-sh/ruff/releases/tag/0.16.7",
+      "https://github.com/astral-sh/ruff/pull/28259"
+    ],
+    "supporting_passage": "- Alternate nested quotes inside format spec interpolations ([#28259](https://github.com/astral-sh/ruff/pull/28259))",
+    "source_published_at": "2026-09-10T18:05:06Z",
+    "snapshot": "sources/astral-sh--ruff.json",
+    "snapshot_sha256": "f6219c34fc3a1fa9d032971dc001e6d3b3c80cce4a4815b073b27aa3ef4635bc",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-14",
+    "expected_release": "0.16.7",
+    "repository": "astral-sh/ruff",
+    "required_facts": [
+      "Release tag: 0.16.7",
+      "- \\[`flake8-implicit-str-concat`\\] Mark fix unsafe when it creates a docstring (`ISC003`) ([#27981](https://github.com/astral-sh/ruff/pull/27981))"
+    ],
+    "gold_urls": [
+      "https://github.com/astral-sh/ruff/releases/tag/0.16.7",
+      "https://github.com/astral-sh/ruff/pull/27981"
+    ],
+    "supporting_passage": "- \\[`flake8-implicit-str-concat`\\] Mark fix unsafe when it creates a docstring (`ISC003`) ([#27981](https://github.com/astral-sh/ruff/pull/27981))",
+    "source_published_at": "2026-09-10T18:05:06Z",
+    "snapshot": "sources/astral-sh--ruff.json",
+    "snapshot_sha256": "f6219c34fc3a1fa9d032971dc001e6d3b3c80cce4a4815b073b27aa3ef4635bc",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-15",
+    "expected_release": "0.16.7",
+    "repository": "astral-sh/ruff",
+    "required_facts": [
+      "Release tag: 0.16.7",
+      "- \\[`flake8-tidy-imports`\\] Skip fixes for multi-member imports (`TID254`) ([#26584](https://github.com/astral-sh/ruff/pull/26584))"
+    ],
+    "gold_urls": [
+      "https://github.com/astral-sh/ruff/releases/tag/0.16.7",
+      "https://github.com/astral-sh/ruff/pull/26584"
+    ],
+    "supporting_passage": "- \\[`flake8-tidy-imports`\\] Skip fixes for multi-member imports (`TID254`) ([#26584](https://github.com/astral-sh/ruff/pull/26584))",
+    "source_published_at": "2026-09-10T18:05:06Z",
+    "snapshot": "sources/astral-sh--ruff.json",
+    "snapshot_sha256": "f6219c34fc3a1fa9d032971dc001e6d3b3c80cce4a4815b073b27aa3ef4635bc",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-16",
+    "expected_release": "0.16.7",
+    "repository": "astral-sh/ruff",
+    "required_facts": [
+      "Release tag: 0.16.7",
+      "- \\[`pylint`\\] Gate `ImportCycleError` on Python 3.15 (`PLW0133`) ([#28310](https://github.com/astral-sh/ruff/pull/28310))"
+    ],
+    "gold_urls": [
+      "https://github.com/astral-sh/ruff/releases/tag/0.16.7",
+      "https://github.com/astral-sh/ruff/pull/28310"
+    ],
+    "supporting_passage": "- \\[`pylint`\\] Gate `ImportCycleError` on Python 3.15 (`PLW0133`) ([#28310](https://github.com/astral-sh/ruff/pull/28310))",
+    "source_published_at": "2026-09-10T18:05:06Z",
+    "snapshot": "sources/astral-sh--ruff.json",
+    "snapshot_sha256": "f6219c34fc3a1fa9d032971dc001e6d3b3c80cce4a4815b073b27aa3ef4635bc",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-17",
+    "expected_release": "0.12.13",
+    "repository": "astral-sh/uv",
+    "required_facts": [
+      "Release tag: 0.12.13",
+      "- Add GraalPy 3.13.0 ([#21431](https://github.com/astral-sh/uv/pull/21431))"
+    ],
+    "gold_urls": [
+      "https://github.com/astral-sh/uv/releases/tag/0.12.13",
+      "https://github.com/astral-sh/uv/pull/21431"
+    ],
+    "supporting_passage": "- Add GraalPy 3.13.0 ([#21431](https://github.com/astral-sh/uv/pull/21431))",
+    "source_published_at": "2026-09-10T19:27:24Z",
+    "snapshot": "sources/astral-sh--uv.json",
+    "snapshot_sha256": "39efe8107a25ee8f2096a53160848048e6f5a2c001ed2e7e8f9214995adf3515",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-18",
+    "expected_release": "0.12.13",
+    "repository": "astral-sh/uv",
+    "required_facts": [
+      "Release tag: 0.12.13",
+      "- Verify hashes when downloading PEP 658 metadata sidecars ([#21563](https://github.com/astral-sh/uv/pull/21563))"
+    ],
+    "gold_urls": [
+      "https://github.com/astral-sh/uv/releases/tag/0.12.13",
+      "https://github.com/astral-sh/uv/pull/21563"
+    ],
+    "supporting_passage": "- Verify hashes when downloading PEP 658 metadata sidecars ([#21563](https://github.com/astral-sh/uv/pull/21563))",
+    "source_published_at": "2026-09-10T19:27:24Z",
+    "snapshot": "sources/astral-sh--uv.json",
+    "snapshot_sha256": "39efe8107a25ee8f2096a53160848048e6f5a2c001ed2e7e8f9214995adf3515",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-19",
+    "expected_release": "0.12.13",
+    "repository": "astral-sh/uv",
+    "required_facts": [
+      "Release tag: 0.12.13",
+      "- Respect `ty` exclusions when `uv check` automatically selects members of a virtual workspace ([#21555](https://github.com/astral-sh/uv/pull/21555))"
+    ],
+    "gold_urls": [
+      "https://github.com/astral-sh/uv/releases/tag/0.12.13",
+      "https://github.com/astral-sh/uv/pull/21555"
+    ],
+    "supporting_passage": "- Respect `ty` exclusions when `uv check` automatically selects members of a virtual workspace ([#21555](https://github.com/astral-sh/uv/pull/21555))",
+    "source_published_at": "2026-09-10T19:27:24Z",
+    "snapshot": "sources/astral-sh--uv.json",
+    "snapshot_sha256": "39efe8107a25ee8f2096a53160848048e6f5a2c001ed2e7e8f9214995adf3515",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-20",
+    "expected_release": "0.12.13",
+    "repository": "astral-sh/uv",
+    "required_facts": [
+      "Release tag: 0.12.13",
+      "- Avoid full wheel downloads during resolution by reusing supported hashes from direct URL fragments when metadata is available separately ([#21279](https://github.com/astral-sh/uv/pull/21279))"
+    ],
+    "gold_urls": [
+      "https://github.com/astral-sh/uv/releases/tag/0.12.13",
+      "https://github.com/astral-sh/uv/pull/21279"
+    ],
+    "supporting_passage": "- Avoid full wheel downloads during resolution by reusing supported hashes from direct URL fragments when metadata is available separately ([#21279](https://github.com/astral-sh/uv/pull/21279))",
+    "source_published_at": "2026-09-10T19:27:24Z",
+    "snapshot": "sources/astral-sh--uv.json",
+    "snapshot_sha256": "39efe8107a25ee8f2096a53160848048e6f5a2c001ed2e7e8f9214995adf3515",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-21",
+    "expected_release": "0.12.13",
+    "repository": "astral-sh/uv",
+    "required_facts": [
+      "Release tag: 0.12.13",
+      "- Edit Windows entry-point launcher resources in memory to support Nano Server and reduce antivirus contention ([#18713](https://github.com/astral-sh/uv/pull/18713))"
+    ],
+    "gold_urls": [
+      "https://github.com/astral-sh/uv/releases/tag/0.12.13",
+      "https://github.com/astral-sh/uv/pull/18713"
+    ],
+    "supporting_passage": "- Edit Windows entry-point launcher resources in memory to support Nano Server and reduce antivirus contention ([#18713](https://github.com/astral-sh/uv/pull/18713))",
+    "source_published_at": "2026-09-10T19:27:24Z",
+    "snapshot": "sources/astral-sh--uv.json",
+    "snapshot_sha256": "39efe8107a25ee8f2096a53160848048e6f5a2c001ed2e7e8f9214995adf3515",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-22",
+    "expected_release": "0.12.13",
+    "repository": "astral-sh/uv",
+    "required_facts": [
+      "Release tag: 0.12.13",
+      "- Prefer `core-metadata` over legacy aliases in JSON index responses ([#21563](https://github.com/astral-sh/uv/pull/21563))"
+    ],
+    "gold_urls": [
+      "https://github.com/astral-sh/uv/releases/tag/0.12.13",
+      "https://github.com/astral-sh/uv/pull/21563"
+    ],
+    "supporting_passage": "- Prefer `core-metadata` over legacy aliases in JSON index responses ([#21563](https://github.com/astral-sh/uv/pull/21563))",
+    "source_published_at": "2026-09-10T19:27:24Z",
+    "snapshot": "sources/astral-sh--uv.json",
+    "snapshot_sha256": "39efe8107a25ee8f2096a53160848048e6f5a2c001ed2e7e8f9214995adf3515",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-23",
+    "expected_release": "v2.13.5",
+    "repository": "pydantic/pydantic",
+    "required_facts": [
+      "Release tag: v2.13.5",
+      "* Allow reuse of validators when plugins are set by @Viicos in [#13535](https://github.com/pydantic/pydantic/pull/13535)"
+    ],
+    "gold_urls": [
+      "https://github.com/pydantic/pydantic/releases/tag/v2.13.5",
+      "https://github.com/pydantic/pydantic/pull/13535"
+    ],
+    "supporting_passage": "* Allow reuse of validators when plugins are set by @Viicos in [#13535](https://github.com/pydantic/pydantic/pull/13535)",
+    "source_published_at": "2026-08-28T14:06:45Z",
+    "snapshot": "sources/pydantic--pydantic.json",
+    "snapshot_sha256": "eaedfab27992a01d254a1b0de90ab78f94c37fb48d59b0dfee0fd364652b568d",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-24",
+    "expected_release": "v2.13.5",
+    "repository": "pydantic/pydantic",
+    "required_facts": [
+      "Release tag: v2.13.5",
+      "* Fix missing GC traversal on some `pydantic-core` struct fields by @Viicos in [#13624](https://github.com/pydantic/pydantic/pull/13624)"
+    ],
+    "gold_urls": [
+      "https://github.com/pydantic/pydantic/releases/tag/v2.13.5",
+      "https://github.com/pydantic/pydantic/pull/13624"
+    ],
+    "supporting_passage": "* Fix missing GC traversal on some `pydantic-core` struct fields by @Viicos in [#13624](https://github.com/pydantic/pydantic/pull/13624)",
+    "source_published_at": "2026-08-28T14:06:45Z",
+    "snapshot": "sources/pydantic--pydantic.json",
+    "snapshot_sha256": "eaedfab27992a01d254a1b0de90ab78f94c37fb48d59b0dfee0fd364652b568d",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-25",
+    "expected_release": "v2.13.5",
+    "repository": "pydantic/pydantic",
+    "required_facts": [
+      "Release tag: v2.13.5",
+      "* Fix missing GC traversal in `pydantic-core` for `GeneralFieldsSerializer` by @Viicos in [#13629](https://github.com/pydantic/pydantic/pull/13629)"
+    ],
+    "gold_urls": [
+      "https://github.com/pydantic/pydantic/releases/tag/v2.13.5",
+      "https://github.com/pydantic/pydantic/pull/13629"
+    ],
+    "supporting_passage": "* Fix missing GC traversal in `pydantic-core` for `GeneralFieldsSerializer` by @Viicos in [#13629](https://github.com/pydantic/pydantic/pull/13629)",
+    "source_published_at": "2026-08-28T14:06:45Z",
+    "snapshot": "sources/pydantic--pydantic.json",
+    "snapshot_sha256": "eaedfab27992a01d254a1b0de90ab78f94c37fb48d59b0dfee0fd364652b568d",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-26",
+    "expected_release": "v2.13.5",
+    "repository": "pydantic/pydantic",
+    "required_facts": [
+      "Release tag: v2.13.5",
+      "* Count validated model fields once in smart unions by @tamird in [#13731](https://github.com/pydantic/pydantic/pull/13731)"
+    ],
+    "gold_urls": [
+      "https://github.com/pydantic/pydantic/releases/tag/v2.13.5",
+      "https://github.com/pydantic/pydantic/pull/13731"
+    ],
+    "supporting_passage": "* Count validated model fields once in smart unions by @tamird in [#13731](https://github.com/pydantic/pydantic/pull/13731)",
+    "source_published_at": "2026-08-28T14:06:45Z",
+    "snapshot": "sources/pydantic--pydantic.json",
+    "snapshot_sha256": "eaedfab27992a01d254a1b0de90ab78f94c37fb48d59b0dfee0fd364652b568d",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-27",
+    "expected_release": "9.1.1",
+    "repository": "pytest-dev/pytest",
+    "required_facts": [
+      "Release tag: 9.1.1",
+      "- [\\#14220](https://github.com/pytest-dev/pytest/issues/14220): Fixed a logic bug in `pytest.RaisesGroup` which would might cause it to display incorrect \"It matches <span class=\"title-ref\">FooError()</span> which was paired with <span class=\"title-ref\">BarError</span>\" messages."
+    ],
+    "gold_urls": [
+      "https://github.com/pytest-dev/pytest/releases/tag/9.1.1",
+      "https://github.com/pytest-dev/pytest/issues/14220"
+    ],
+    "supporting_passage": "- [\\#14220](https://github.com/pytest-dev/pytest/issues/14220): Fixed a logic bug in `pytest.RaisesGroup` which would might cause it to display incorrect \"It matches <span class=\"title-ref\">FooError()</span> which was paired with <span class=\"title-ref\">BarError</span>\" messages.",
+    "source_published_at": "2026-06-19T10:58:55Z",
+    "snapshot": "sources/pytest-dev--pytest.json",
+    "snapshot_sha256": "2143fa10cfaf1beeaadc4ce307b3f3b35ff0477c24920f53630c94474516a7f6",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-28",
+    "expected_release": "9.1.1",
+    "repository": "pytest-dev/pytest",
+    "required_facts": [
+      "Release tag: 9.1.1",
+      "- [\\#14591](https://github.com/pytest-dev/pytest/issues/14591): Fixed a regression in pytest 9.1.0 which caused overriding a parametrized fixture with an indirect <span class=\"title-ref\">@pytest.mark.parametrize</span> to fail with \"duplicate parametrization of '\\<fixture name\\>'\"."
+    ],
+    "gold_urls": [
+      "https://github.com/pytest-dev/pytest/releases/tag/9.1.1",
+      "https://github.com/pytest-dev/pytest/issues/14591"
+    ],
+    "supporting_passage": "- [\\#14591](https://github.com/pytest-dev/pytest/issues/14591): Fixed a regression in pytest 9.1.0 which caused overriding a parametrized fixture with an indirect <span class=\"title-ref\">@pytest.mark.parametrize</span> to fail with \"duplicate parametrization of '\\<fixture name\\>'\".",
+    "source_published_at": "2026-06-19T10:58:55Z",
+    "snapshot": "sources/pytest-dev--pytest.json",
+    "snapshot_sha256": "2143fa10cfaf1beeaadc4ce307b3f3b35ff0477c24920f53630c94474516a7f6",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-29",
+    "expected_release": "9.1.1",
+    "repository": "pytest-dev/pytest",
+    "required_facts": [
+      "Release tag: 9.1.1",
+      "- [\\#14606](https://github.com/pytest-dev/pytest/issues/14606): Fixed `list-item` typing errors from mypy in `@pytest.mark.parametrize <pytest.mark.parametrize ref>` `argvalues` parameter."
+    ],
+    "gold_urls": [
+      "https://github.com/pytest-dev/pytest/releases/tag/9.1.1",
+      "https://github.com/pytest-dev/pytest/issues/14606"
+    ],
+    "supporting_passage": "- [\\#14606](https://github.com/pytest-dev/pytest/issues/14606): Fixed `list-item` typing errors from mypy in `@pytest.mark.parametrize <pytest.mark.parametrize ref>` `argvalues` parameter.",
+    "source_published_at": "2026-06-19T10:58:55Z",
+    "snapshot": "sources/pytest-dev--pytest.json",
+    "snapshot_sha256": "2143fa10cfaf1beeaadc4ce307b3f3b35ff0477c24920f53630c94474516a7f6",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  },
+  {
+    "id": "coding-30",
+    "expected_release": "9.1.1",
+    "repository": "pytest-dev/pytest",
+    "required_facts": [
+      "Release tag: 9.1.1",
+      "- [\\#14608](https://github.com/pytest-dev/pytest/issues/14608): Fixed a regression in pytest 9.1.0 where `conftest.py` files located in `<invocation dir>/test*` were no longer loaded as initial conftests when invoked without arguments."
+    ],
+    "gold_urls": [
+      "https://github.com/pytest-dev/pytest/releases/tag/9.1.1",
+      "https://github.com/pytest-dev/pytest/issues/14608"
+    ],
+    "supporting_passage": "- [\\#14608](https://github.com/pytest-dev/pytest/issues/14608): Fixed a regression in pytest 9.1.0 where `conftest.py` files located in `<invocation dir>/test*` were no longer loaded as initial conftests when invoked without arguments.",
+    "source_published_at": "2026-06-19T10:58:55Z",
+    "snapshot": "sources/pytest-dev--pytest.json",
+    "snapshot_sha256": "2143fa10cfaf1beeaadc4ce307b3f3b35ff0477c24920f53630c94474516a7f6",
+    "assessment": "Release membership and change summary verified against captured publisher release notes. Linked PR execution and discoverability remain to be checked."
+  }
+]

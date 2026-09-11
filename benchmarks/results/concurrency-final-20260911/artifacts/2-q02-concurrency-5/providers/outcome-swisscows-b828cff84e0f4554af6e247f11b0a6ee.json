@@ -1,0 +1,12 @@
+{
+  "engine": "swisscows",
+  "query": "why is the sky blue Rayleigh scattering",
+  "elapsed_ms": 420,
+  "result_count": 15,
+  "retries": 0,
+  "success": true,
+  "outcome": "results",
+  "error": null,
+  "raw_result_count": 15,
+  "filtered_count": 0
+}

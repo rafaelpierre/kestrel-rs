@@ -1,0 +1,43 @@
+{
+  "url": "https://swisscows.com/en/web?query=site%3Apostgresql.org%20EXPLAIN%20ANALYZE%20BUFFERS",
+  "final_url": "https://swisscows.com/en/web?query=site%3Apostgresql.org%20EXPLAIN%20ANALYZE%20BUFFERS",
+  "status": 200,
+  "bytes": 87704,
+  "title": [
+    "Web pages for site:postgresql.org EXPLAIN ANALYZE BUFFERS - Swisscows"
+  ],
+  "scripts": [
+    "/_next/static/chunks/fd9d1056-89c0f99a3d186efc.js",
+    "/_next/static/chunks/7023-2f8e61ce3adaba13.js",
+    "/_next/static/chunks/main-app-55bbd77d79f9187f.js",
+    "/_next/static/chunks/954-222083c926941630.js",
+    "/_next/static/chunks/7334-9f5e9011c1a846c6.js",
+    "/_next/static/chunks/8182-5183445762eec17e.js",
+    "/_next/static/chunks/8087-bd5d941582c7b5f7.js",
+    "/_next/static/chunks/8472-0f34890707ce5918.js",
+    "/_next/static/chunks/348-a3e0e6086eac7fde.js",
+    "/_next/static/chunks/3975-958de7042ac08051.js",
+    "/_next/static/chunks/3956-62a51ef033ee2d87.js",
+    "/_next/static/chunks/8545-0b5d789835f76630.js",
+    "/_next/static/chunks/3267-038b167464ed6e2f.js",
+    "/_next/static/chunks/4423-dc4ced32ac6b17b1.js",
+    "/_next/static/chunks/8954-745681fe69d9cede.js",
+    "/_next/static/chunks/7805-383c9d2f7dc36240.js",
+    "/_next/static/chunks/9417-19ca0822f49cf952.js",
+    "/_next/static/chunks/7230-2b145bff102d256b.js",
+    "/_next/static/chunks/app/%5Blocale%5D/(search)/web/page-1a6bdd54bbe2cebb.js",
+    "/_next/static/chunks/8173-9bad74de05d1d328.js",
+    "/_next/static/chunks/235-1b2e07bcdad6e8cd.js",
+    "/_next/static/chunks/5170-124c3d99b5f0bba2.js",
+    "/_next/static/chunks/706-5774afa962f31203.js",
+    "/_next/static/chunks/app/%5Blocale%5D/(search)/layout-eda144448c18628a.js",
+    "/_next/static/chunks/270-1b060857bcdda998.js",
+    "/_next/static/chunks/732-3c0a32b6fa90a0e5.js",
+    "/_next/static/chunks/app/%5Blocale%5D/layout-7ef76980fe4f6042.js",
+    "/_next/static/chunks/2801-56ddc4ddb52ff8c7.js",
+    "/_next/static/chunks/app/%5Blocale%5D/error-095d4028d8124747.js",
+    "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+    "/_next/static/chunks/webpack-18ad7969a56b87c4.js"
+  ],
+  "headings": []
+}

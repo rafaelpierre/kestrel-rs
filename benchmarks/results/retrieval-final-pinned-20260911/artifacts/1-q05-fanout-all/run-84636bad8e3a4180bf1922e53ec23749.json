@@ -1,0 +1,65 @@
+{
+  "candidate_counts": {
+    "after_search": 0
+  },
+  "candidates": [],
+  "diagnostics": {
+    "fetch": null,
+    "provider_cancellations": 0,
+    "providers": [
+      {
+        "elapsed_ms": 3002,
+        "engine": "duckduckgo",
+        "error": "search deadline exceeded",
+        "filtered_count": 0,
+        "outcome": "deadline",
+        "query": "site:grafana.com Tempo TraceQL parent child spans",
+        "raw_result_count": 0,
+        "result_count": 0,
+        "retries": 0,
+        "success": false
+      },
+      {
+        "elapsed_ms": 432,
+        "engine": "bing",
+        "error": null,
+        "filtered_count": 10,
+        "outcome": "filtered_empty",
+        "query": "site:grafana.com Tempo TraceQL parent child spans",
+        "raw_result_count": 10,
+        "result_count": 0,
+        "retries": 0,
+        "success": true
+      },
+      {
+        "elapsed_ms": 2036,
+        "engine": "yahoo",
+        "error": "Yahoo returned HTTP 500",
+        "filtered_count": 0,
+        "outcome": "request_error",
+        "query": "site:grafana.com Tempo TraceQL parent child spans",
+        "raw_result_count": 0,
+        "result_count": 0,
+        "retries": 0,
+        "success": false
+      }
+    ]
+  },
+  "engines": [
+    "duckduckgo",
+    "bing",
+    "yahoo"
+  ],
+  "mode": "fanout",
+  "queries": [
+    "site:grafana.com Tempo TraceQL parent child spans"
+  ],
+  "query": "site:grafana.com Tempo TraceQL parent child spans",
+  "results": [],
+  "returned_chars": 0,
+  "run_id": "run",
+  "timings_ms": {
+    "initialize": 140,
+    "search": 3004
+  }
+}

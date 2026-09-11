@@ -1,0 +1,55 @@
+[
+  {
+    "id": "q01",
+    "query": "What is the capital of Australia?",
+    "intent": "Find Canberra as Australia's capital."
+  },
+  {
+    "id": "q02",
+    "query": "why is the sky blue Rayleigh scattering",
+    "intent": "Explain blue sky through Rayleigh scattering."
+  },
+  {
+    "id": "q03",
+    "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+    "intent": "Find TaskGroup exception propagation and ExceptionGroup handling."
+  },
+  {
+    "id": "q04",
+    "query": "site:postgresql.org EXPLAIN ANALYZE BUFFERS",
+    "domain": "postgresql.org",
+    "intent": "Official PostgreSQL documentation for EXPLAIN ANALYZE and BUFFERS."
+  },
+  {
+    "id": "q05",
+    "query": "site:grafana.com Tempo TraceQL parent child spans",
+    "domain": "grafana.com",
+    "intent": "Grafana documentation for TraceQL parent-child structural queries."
+  },
+  {
+    "id": "q06",
+    "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+    "domain": "learn.chatgpt.com",
+    "intent": "Official Codex configuration documentation for OTel trace_exporter."
+  },
+  {
+    "id": "q07",
+    "query": "Rust E0382 use of moved value how to fix",
+    "intent": "Explain and fix Rust's use-of-moved-value error E0382."
+  },
+  {
+    "id": "q08",
+    "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+    "intent": "Find 2025-era JWST findings about TRAPPIST-1 b's atmosphere."
+  },
+  {
+    "id": "q09",
+    "query": "Grafana Tempo 3.0 release notes breaking changes",
+    "intent": "Find Tempo 3.0 release notes and migration/breaking changes."
+  },
+  {
+    "id": "q10",
+    "query": "London Science Museum opening hours",
+    "intent": "Find opening hours for the Science Museum in London, preferably official."
+  }
+]

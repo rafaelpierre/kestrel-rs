@@ -1,0 +1,12 @@
+{
+  "engine": "duckduckgo",
+  "query": "Rust E0382 use of moved value how to fix",
+  "elapsed_ms": 3001,
+  "result_count": 0,
+  "retries": 0,
+  "success": false,
+  "outcome": "deadline",
+  "error": "search deadline exceeded",
+  "raw_result_count": 0,
+  "filtered_count": 0
+}

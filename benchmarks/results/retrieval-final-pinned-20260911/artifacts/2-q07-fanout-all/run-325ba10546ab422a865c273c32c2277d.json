@@ -1,0 +1,341 @@
+{
+  "candidate_counts": {
+    "after_candidate_selection": 10,
+    "after_ranking": 10,
+    "after_search": 10,
+    "returned": 5,
+    "with_content": 0
+  },
+  "candidates": [
+    {
+      "content": null,
+      "display_url": "https://www. rust faq.org › en",
+      "engine": "bing",
+      "engine_rank": 1,
+      "query": "Rust E0382 use of moved value how to fix",
+      "snippet": "Apr 17, 2026 · Stop the E0382 borrow checker error. Learn how to fix 'value used after move' by cloning or borrowing your data to …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 1
+        }
+      ],
+      "title": "How to fix Rust E0382 value used after being moved",
+      "url": "https://www.rustfaq.org/en/how-to-fix-rust-e0382-value-used-after-being-moved/"
+    },
+    {
+      "content": null,
+      "display_url": "https://www. rust faq.org › en",
+      "engine": "bing",
+      "engine_rank": 2,
+      "query": "Rust E0382 use of moved value how to fix",
+      "snippet": "Apr 17, 2026 · Stop Rust E0382 errors immediately. Learn how to fix 'use of moved value' by cloning or using references. Master Rust …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 2
+        }
+      ],
+      "title": "Error E0382 : \" use of moved value \" — How to Fix — Rust FAQ",
+      "url": "https://www.rustfaq.org/en/error-e0382-use-of-moved-value-how-to-fix/"
+    },
+    {
+      "content": null,
+      "display_url": "https://learning rust .org › guides",
+      "engine": "bing",
+      "engine_rank": 3,
+      "query": "Rust E0382 use of moved value how to fix",
+      "snippet": "Understand why Rust reports E0382 after a move, then fix ownership with borrowing, cloning, or a deliberate ownership transfer.",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 3
+        }
+      ],
+      "title": "Fix Rust E0382 : use of moved value - LearningRust.org",
+      "url": "https://learningrust.org/guides/fix-rust-e0382"
+    },
+    {
+      "content": null,
+      "display_url": "https://doc. rust -lang.org › error_codes",
+      "engine": "bing",
+      "engine_rank": 4,
+      "query": "Rust E0382 use of moved value how to fix",
+      "snippet": "Since MyStruct is a type that is not marked Copy, the data gets moved out of x when we set y. This is fundamental to Rust’s ownership …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 4
+        }
+      ],
+      "title": "E0382 - Error codes index - Learn Rust",
+      "url": "https://doc.rust-lang.org/error_codes/E0382.html"
+    },
+    {
+      "content": null,
+      "display_url": "https://jsondevtools.org › errors",
+      "engine": "bing",
+      "engine_rank": 5,
+      "query": "Rust E0382 use of moved value how to fix",
+      "snippet": "error [E0382]: borrow of moved value — why Rust's ownership rules reject using a value after it moved, and how to fix it with borrows, …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 5
+        }
+      ],
+      "title": "error[ E0382 ]: borrow of moved value ( Rust ) — Fix - JSON Dev Tools",
+      "url": "https://jsondevtools.org/errors/rust-borrow-of-moved-value-e0382.html"
+    },
+    {
+      "content": null,
+      "display_url": "https://www.slingacademy.com › article",
+      "engine": "bing",
+      "engine_rank": 6,
+      "query": "Rust E0382 use of moved value how to fix",
+      "snippet": "Jan 6, 2025 · In Rust, values have an owner, and when a value is moved, its ownership is transferred to another variable. Once …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 6
+        }
+      ],
+      "title": "E0382 in Rust : Use of Moved Value Error - Sling Academy",
+      "url": "https://www.slingacademy.com/article/e0382-in-rust-use-of-moved-value-error/"
+    },
+    {
+      "content": null,
+      "display_url": "https://onlyerrorcodes.com › programming › rust",
+      "engine": "bing",
+      "engine_rank": 7,
+      "query": "Rust E0382 use of moved value how to fix",
+      "snippet": "After the move, the original variable is no longer valid and cannot be used. Fix it by cloning the value, borrowing it with a reference, or …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 7
+        }
+      ],
+      "title": "Rust Error E0382 — Use of Moved Value | OnlyErrorCodes",
+      "url": "https://onlyerrorcodes.com/programming/rust/e0382-use-of-moved-value/"
+    },
+    {
+      "content": null,
+      "display_url": "https:// stackoverflow.com › questions",
+      "engine": "bing",
+      "engine_rank": 8,
+      "query": "Rust E0382 use of moved value how to fix",
+      "snippet": "Oct 30, 2020 · If you have an owned value (nd), and you iterate over it, and then you iterate over it again, you will get an error because it …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 8
+        }
+      ],
+      "title": "How to solve [E0382]: use of moved value in a for loop?",
+      "url": "https://stackoverflow.com/questions/64612490/how-to-solve-e0382-use-of-moved-value-in-a-for-loop"
+    },
+    {
+      "content": null,
+      "display_url": "https://www.latchkey.dev › learn › rust",
+      "engine": "bing",
+      "engine_rank": 9,
+      "query": "Rust E0382 use of moved value how to fix",
+      "snippet": "Fix Rust \"error [E0382]: borrow of moved value\" in CI - ownership moved out of a value and you used it again. Clone or borrow to satisfy …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 9
+        }
+      ],
+      "title": "Rust \"error [ E0382 ]: borrow of moved value \" in CI",
+      "url": "https://www.latchkey.dev/learn/rust/rust-e0382-borrow-of-moved-value"
+    },
+    {
+      "content": null,
+      "display_url": "https://blog.path-finder.jp › troubleshooting",
+      "engine": "bing",
+      "engine_rank": 10,
+      "query": "Rust E0382 use of moved value how to fix",
+      "snippet": "Jul 29, 2026 · A beginner-friendly guide to Rust's error [E0382]: borrow of moved value. Learn why moved values cause this error and …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 10
+        }
+      ],
+      "title": "How to Fix Rust `error [ E0382 ]: borrow of moved value ` (Ownership ...",
+      "url": "https://blog.path-finder.jp/troubleshooting/how-to-fix-rust-errore0382-borrow-of-moved-value-ownership-explained/"
+    }
+  ],
+  "diagnostics": {
+    "fetch": null,
+    "provider_cancellations": 0,
+    "providers": [
+      {
+        "elapsed_ms": 3001,
+        "engine": "duckduckgo",
+        "error": "search deadline exceeded",
+        "filtered_count": 0,
+        "outcome": "deadline",
+        "query": "Rust E0382 use of moved value how to fix",
+        "raw_result_count": 0,
+        "result_count": 0,
+        "retries": 0,
+        "success": false
+      },
+      {
+        "elapsed_ms": 333,
+        "engine": "bing",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "results",
+        "query": "Rust E0382 use of moved value how to fix",
+        "raw_result_count": 10,
+        "result_count": 10,
+        "retries": 0,
+        "success": true
+      },
+      {
+        "elapsed_ms": 2163,
+        "engine": "yahoo",
+        "error": "Yahoo returned HTTP 500",
+        "filtered_count": 0,
+        "outcome": "request_error",
+        "query": "Rust E0382 use of moved value how to fix",
+        "raw_result_count": 0,
+        "result_count": 0,
+        "retries": 0,
+        "success": false
+      }
+    ]
+  },
+  "engines": [
+    "duckduckgo",
+    "bing",
+    "yahoo"
+  ],
+  "mode": "fanout",
+  "queries": [
+    "Rust E0382 use of moved value how to fix"
+  ],
+  "query": "Rust E0382 use of moved value how to fix",
+  "results": [
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 1,
+      "query": "Rust E0382 use of moved value how to fix",
+      "rank": 1,
+      "snippet": "Apr 17, 2026 · Stop the E0382 borrow checker error. Learn how to fix 'value used after move' by cloning or borrowing your data to …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 1
+        }
+      ],
+      "title": "How to fix Rust E0382 value used after being moved",
+      "url": "https://www.rustfaq.org/en/how-to-fix-rust-e0382-value-used-after-being-moved/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 2,
+      "query": "Rust E0382 use of moved value how to fix",
+      "rank": 2,
+      "snippet": "Apr 17, 2026 · Stop Rust E0382 errors immediately. Learn how to fix 'use of moved value' by cloning or using references. Master Rust …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 2
+        }
+      ],
+      "title": "Error E0382 : \" use of moved value \" — How to Fix — Rust FAQ",
+      "url": "https://www.rustfaq.org/en/error-e0382-use-of-moved-value-how-to-fix/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 3,
+      "query": "Rust E0382 use of moved value how to fix",
+      "rank": 3,
+      "snippet": "Understand why Rust reports E0382 after a move, then fix ownership with borrowing, cloning, or a deliberate ownership transfer.",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 3
+        }
+      ],
+      "title": "Fix Rust E0382 : use of moved value - LearningRust.org",
+      "url": "https://learningrust.org/guides/fix-rust-e0382"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 4,
+      "query": "Rust E0382 use of moved value how to fix",
+      "rank": 4,
+      "snippet": "Since MyStruct is a type that is not marked Copy, the data gets moved out of x when we set y. This is fundamental to Rust’s ownership …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 4
+        }
+      ],
+      "title": "E0382 - Error codes index - Learn Rust",
+      "url": "https://doc.rust-lang.org/error_codes/E0382.html"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 5,
+      "query": "Rust E0382 use of moved value how to fix",
+      "rank": 5,
+      "snippet": "error [E0382]: borrow of moved value — why Rust's ownership rules reject using a value after it moved, and how to fix it with borrows, …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Rust E0382 use of moved value how to fix",
+          "rank": 5
+        }
+      ],
+      "title": "error[ E0382 ]: borrow of moved value ( Rust ) — Fix - JSON Dev Tools",
+      "url": "https://jsondevtools.org/errors/rust-borrow-of-moved-value-e0382.html"
+    }
+  ],
+  "returned_chars": 0,
+  "run_id": "run",
+  "timings_ms": {
+    "initialize": 144,
+    "search": 3003
+  }
+}

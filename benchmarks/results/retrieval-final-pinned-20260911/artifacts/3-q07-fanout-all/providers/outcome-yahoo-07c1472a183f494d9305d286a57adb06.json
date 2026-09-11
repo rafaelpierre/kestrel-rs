@@ -1,0 +1,12 @@
+{
+  "engine": "yahoo",
+  "query": "Rust E0382 use of moved value how to fix",
+  "elapsed_ms": 1610,
+  "result_count": 0,
+  "retries": 0,
+  "success": false,
+  "outcome": "request_error",
+  "error": "Yahoo request failed: error sending request for url (https://search.yahoo.com/search?p=Rust+E0382+use+of+moved+value+how+to+fix&ei=UTF-8)",
+  "raw_result_count": 0,
+  "filtered_count": 0
+}

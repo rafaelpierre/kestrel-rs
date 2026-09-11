@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "type": "WebPage",
+      "thumbnail": {
+        "url": "https://www.postgresql.org/media/img/about/press/elephant.png"
+      },
+      "inLanguage": "en",
+      "lastReviewed": "2016-10-27T13:32:07+00:00",
+      "identifier": "5e231550-7593-4157-9f1d-877b32d0ba9a",
+      "name": "PostgreSQL: Documentation: 9.1: EXPLAIN",
+      "description": "EXPLAIN [ ( option [, ...] ) ] ... { TEXT | XML | JSON | YAML } This command <strong>displays the execution plan that the PostgreSQL planner generates for the supplied statement</strong>....",
+      "url": "https://www.postgresql.org/docs/9.1/sql-explain.html"
+    },
+    {
+      "type": "WebPage",
+      "thumbnail": {
+        "url": "https://www.postgresql.org/media/img/about/press/elephant.png"
+      },
+      "inLanguage": "en",
+      "lastReviewed": "2026-08-13T12:52:54+00:00",
+      "identifier": "88142fc0-a745-4070-a02d-2da4231aad2e",
+      "name": "PostgreSQL: Documentation: 18: 14.1. Using EXPLAIN",
+      "description": "EXPLAIN has a BUFFERS option which <strong>provides additional detail about I/O operations performed during the planning and execution of the given query</strong>. The buffer numbers displayed show the count of the non-distinct buffers hit, read, dirtied, and ...",
+      "url": "https://www.postgresql.org/docs/current/using-explain.html"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "engine": "swisscows",
+  "query": "Rust E0382 use of moved value how to fix",
+  "elapsed_ms": 280,
+  "result_count": 11,
+  "retries": 0,
+  "success": true,
+  "outcome": "results",
+  "error": null,
+  "raw_result_count": 11,
+  "filtered_count": 0
+}

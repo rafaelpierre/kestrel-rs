@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T21:00:11.946460+00:00",
+  "engine": "bing",
+  "final_url": "https://www.bing.com/search?q=site%3Agrafana.com+Tempo+TraceQL+parent+child+spans",
+  "html_file": "bing-3507944e6fc64b15959ed8c7107c7298.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "site:grafana.com Tempo TraceQL parent child spans"
+}

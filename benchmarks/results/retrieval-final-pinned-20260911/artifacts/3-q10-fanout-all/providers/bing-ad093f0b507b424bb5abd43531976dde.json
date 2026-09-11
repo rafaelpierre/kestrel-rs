@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T21:05:46.721575+00:00",
+  "engine": "bing",
+  "final_url": "https://www.bing.com/search?q=London+Science+Museum+opening+hours",
+  "html_file": "bing-ad093f0b507b424bb5abd43531976dde.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "London Science Museum opening hours"
+}

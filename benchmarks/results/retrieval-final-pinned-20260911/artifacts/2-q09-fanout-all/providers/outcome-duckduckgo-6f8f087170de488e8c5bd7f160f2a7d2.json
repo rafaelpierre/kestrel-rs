@@ -1,0 +1,12 @@
+{
+  "engine": "duckduckgo",
+  "query": "Grafana Tempo 3.0 release notes breaking changes",
+  "elapsed_ms": 3005,
+  "result_count": 0,
+  "retries": 0,
+  "success": false,
+  "outcome": "deadline",
+  "error": "search deadline exceeded",
+  "raw_result_count": 0,
+  "filtered_count": 0
+}

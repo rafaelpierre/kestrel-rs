@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T21:10:11.680122+00:00",
+  "engine": "swisscows",
+  "final_url": "https://api.swisscows.com/v5/web/search?freshness=All&itemsCount=20&locale=en-US&offset=0&query=James+Webb+TRAPPIST-1+b+atmosphere+observations+2025&spellcheck=false",
+  "html_file": "swisscows-eedbe0605d134aaa864a3c3729c56cb4.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "James Webb TRAPPIST-1 b atmosphere observations 2025"
+}

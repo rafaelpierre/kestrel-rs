@@ -1,0 +1,12 @@
+{
+  "engine": "bing",
+  "query": "why is the sky blue Rayleigh scattering",
+  "elapsed_ms": 841,
+  "result_count": 10,
+  "retries": 0,
+  "success": true,
+  "outcome": "results",
+  "error": null,
+  "raw_result_count": 10,
+  "filtered_count": 0
+}

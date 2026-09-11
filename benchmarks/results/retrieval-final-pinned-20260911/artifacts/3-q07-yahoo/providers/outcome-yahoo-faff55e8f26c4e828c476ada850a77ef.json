@@ -1,0 +1,12 @@
+{
+  "engine": "yahoo",
+  "query": "Rust E0382 use of moved value how to fix",
+  "elapsed_ms": 1930,
+  "result_count": 0,
+  "retries": 0,
+  "success": false,
+  "outcome": "request_error",
+  "error": "Yahoo returned HTTP 500",
+  "raw_result_count": 0,
+  "filtered_count": 0
+}

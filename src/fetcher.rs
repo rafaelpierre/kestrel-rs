@@ -31,11 +31,6 @@ const CLUTTER_PATTERNS: &[&str] = &[
     "nav",
     "breadcrumb",
 ];
-const USER_AGENTS: &[&str] = &[
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Mozilla/5.0 (X11; Linux x86_64; rv:133.0) Gecko/20100101 Firefox/133.0",
-];
 
 static WHITESPACE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\s+").expect("valid whitespace regex"));
 static NOISE: Lazy<Vec<Regex>> = Lazy::new(|| {
@@ -93,12 +88,9 @@ pub async fn fetch_all_detailed(
 }
 
 pub(crate) fn build_client() -> Result<reqwest::Client, KestrelError> {
-    let user_agent = USER_AGENTS[rand::random::<u64>() as usize % USER_AGENTS.len()];
-    Ok(reqwest::Client::builder()
-        .user_agent(user_agent)
-        .http2_adaptive_window(true)
-        .redirect(reqwest::redirect::Policy::limited(10))
-        .build()?)
+    let profile = crate::http_client::BrowserProfile::random();
+    crate::benchmarking::capture_headers("fetch", &profile.headers());
+    Ok(crate::http_client::standard_builder(profile).build()?)
 }
 
 pub(crate) async fn fetch_all_reusing_client(

@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T20:56:09.107566+00:00",
+  "engine": "bing",
+  "final_url": "https://www.bing.com/search?q=Grafana+Tempo+3.0+release+notes+breaking+changes",
+  "html_file": "bing-331da3570c2d463dbaeaa4a88ad56e57.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "Grafana Tempo 3.0 release notes breaking changes"
+}

@@ -16,6 +16,7 @@ use crate::search::{
 };
 
 /// A reusable Kestrel client that retains HTTP connection pools across calls.
+#[derive(Clone)]
 pub struct KestrelClient {
     search: SearchClients,
     fetch: reqwest::Client,

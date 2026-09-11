@@ -280,3 +280,9 @@ publishing and explicitly dispatch cargo-dist at the new tag.
 Network-facing tests use local mock servers. Live provider checks are manual
 because provider markup, availability, and anti-bot behavior can change
 independently of the crate.
+
+### Experimental providers and latency controls
+
+Opt-in adapters now include Dogpile, Ecosia, Swisscows, Yep, Qwant and Mojeek.
+See [provider contracts, query syntax, randomized headers and pooled HTTP/2 transport](docs/search-providers.md)
+and the [quality/latency benchmark workflow](benchmarks/README.md).

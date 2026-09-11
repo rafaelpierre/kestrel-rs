@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T20:51:56.805417+00:00",
+  "engine": "ecosia",
+  "final_url": "https://www.ecosia.org/search?q=What+is+the+capital+of+Australia%3F",
+  "html_file": "ecosia-f8c47f0be9704cfba9cc5461465265ce.html",
+  "http_status": 403,
+  "http_version": "HTTP/2.0",
+  "query": "What is the capital of Australia?"
+}

@@ -71,6 +71,10 @@ struct SearchArgs {
     #[arg(long, value_parser = positive_usize, value_name = "N")]
     provider_quorum: Option<usize>,
 
+    /// Total search seconds, including provider queueing and retries.
+    #[arg(long, value_parser = positive_f64, value_name = "SECS")]
+    search_budget: Option<f64>,
+
     /// Number of top results to return.
     #[arg(short = 'k', long, default_value_t = 5, value_parser = positive_usize, value_name = "N")]
     top_k: usize,
@@ -98,6 +102,10 @@ struct SearchArgs {
     /// Keep provider ordering instead of applying BM25 ranking.
     #[arg(long, conflicts_with = "rank")]
     no_rank: bool,
+
+    /// Experimental final ordering (body requires page fetching).
+    #[arg(long, value_enum, conflicts_with = "no_rank")]
+    ranking_policy: Option<kestrelsearch::ranking::RankingPolicy>,
 
     /// Provider region code (for example us-en or uk-en).
     #[arg(long, default_value = "", value_name = "CODE")]
@@ -289,6 +297,15 @@ async fn run_fetch(arguments: FetchArgs) -> ExitCode {
 }
 
 async fn run_search(arguments: SearchArgs) -> ExitCode {
+    if arguments.no_fetch
+        && matches!(
+            arguments.ranking_policy,
+            Some(kestrelsearch::ranking::RankingPolicy::Body)
+        )
+    {
+        eprintln!("[kestrel] --ranking-policy body requires fetching");
+        return ExitCode::FAILURE;
+    }
     let mut queries = vec![arguments.query.clone()];
     queries.extend(arguments.additional_queries.clone());
     let query_label = queries.join(" | ");
@@ -311,6 +328,7 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
         time_filter: arguments.time_filter,
         max_concurrency: arguments.search_concurrency,
         provider_quorum: arguments.provider_quorum,
+        search_budget: arguments.search_budget.map(Duration::from_secs_f64),
     };
     let mut timings = BTreeMap::new();
     let initialize_started = Instant::now();
@@ -333,11 +351,10 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
     let provider_diagnostics = search_report.providers;
     let provider_cancellations = search_report.cancelled;
     let mut results = search_report.results;
+    let mut candidate_counts = BTreeMap::from([("after_search".into(), results.len())]);
     timings.insert("search".into(), elapsed_millis(started));
     if provider_cancellations > 0 {
-        eprintln!(
-            "[kestrel] Provider quorum reached; cancelled {provider_cancellations} straggler(s)."
-        );
+        eprintln!("[kestrel] Search stopped; cancelled {provider_cancellations} straggler(s).");
     }
 
     if results.is_empty() {
@@ -351,6 +368,8 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
                 providers: &provider_diagnostics,
                 provider_cancellations,
                 fetch: None,
+                candidates: &results,
+                candidate_counts: Some(&candidate_counts),
             },
         );
         eprintln!("[kestrel] No results found.");
@@ -395,14 +414,26 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
         timings.insert("fetch".into(), elapsed_millis(fetch_started));
     }
 
-    if should_fetch && should_rank {
+    candidate_counts.insert("after_candidate_selection".into(), results.len());
+    candidate_counts.insert(
+        "with_content".into(),
+        results.iter().filter(|r| r.content.is_some()).count(),
+    );
+    let candidates = results.clone();
+    if let Some(policy) = arguments.ranking_policy {
+        let rank_started = Instant::now();
+        results = kestrelsearch::ranking::rank_with_policy(results, &queries, policy);
+        timings.insert("rank".into(), elapsed_millis(rank_started));
+    } else if should_fetch && should_rank {
         eprintln!("[kestrel] Ranking with BM25...");
         let rank_started = Instant::now();
         results = rank_results_by_query(results, &queries);
         timings.insert("rank".into(), elapsed_millis(rank_started));
     }
 
+    candidate_counts.insert("after_ranking".into(), results.len());
     results.truncate(arguments.top_k);
+    candidate_counts.insert("returned".into(), results.len());
     write_benchmark_artifact(
         &query_label,
         &results,
@@ -413,6 +444,8 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             providers: &provider_diagnostics,
             provider_cancellations,
             fetch: fetch_diagnostics.as_ref(),
+            candidates: &candidates,
+            candidate_counts: Some(&candidate_counts),
         },
     );
     eprintln!("[kestrel] Returning top {} results.", results.len());

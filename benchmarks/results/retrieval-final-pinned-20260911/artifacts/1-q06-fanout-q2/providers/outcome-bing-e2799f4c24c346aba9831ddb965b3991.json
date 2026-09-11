@@ -1,0 +1,12 @@
+{
+  "engine": "bing",
+  "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+  "elapsed_ms": 287,
+  "result_count": 1,
+  "retries": 0,
+  "success": true,
+  "outcome": "results",
+  "error": null,
+  "raw_result_count": 10,
+  "filtered_count": 9
+}

@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T20:55:32.621486+00:00",
+  "engine": "bing",
+  "final_url": "https://www.bing.com/search?q=site%3Alearn.chatgpt.com+Codex+otel+trace_exporter",
+  "html_file": "bing-4cc800e159e1419ba9590e82eb2ad7a7.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "site:learn.chatgpt.com Codex otel trace_exporter"
+}

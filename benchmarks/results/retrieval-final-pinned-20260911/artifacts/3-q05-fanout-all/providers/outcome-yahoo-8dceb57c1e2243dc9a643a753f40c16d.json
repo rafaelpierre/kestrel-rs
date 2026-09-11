@@ -1,0 +1,12 @@
+{
+  "engine": "yahoo",
+  "query": "site:grafana.com Tempo TraceQL parent child spans",
+  "elapsed_ms": 1719,
+  "result_count": 0,
+  "retries": 0,
+  "success": false,
+  "outcome": "request_error",
+  "error": "Yahoo returned HTTP 500",
+  "raw_result_count": 0,
+  "filtered_count": 0
+}
