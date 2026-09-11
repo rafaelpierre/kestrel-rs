@@ -187,12 +187,16 @@ pub struct PageFetchDiagnostic {
     pub url: String,
     pub outcome: FetchOutcome,
     pub queue_ms: u64,
+    /// Send until response headers, including internal queueing and cold setup.
     pub request_ms: u64,
     pub download_ms: u64,
     pub parse_queue_ms: u64,
     pub parse_ms: u64,
     pub total_ms: u64,
     pub response_bytes: usize,
+    /// Negotiated protocol; absent for cache hits or failures before headers.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub http_version: Option<String>,
 }
 
 impl PageFetchDiagnostic {
@@ -200,6 +204,7 @@ impl PageFetchDiagnostic {
         Self {
             url,
             outcome: FetchOutcome::CacheHit,
+            http_version: None,
             queue_ms: 0,
             request_ms: 0,
             download_ms: 0,

@@ -48,18 +48,26 @@ pub enum KestrelError {
 
 #[derive(Clone)]
 pub(crate) struct SearchClients {
-    standard: reqwest::Client,
-    yahoo: Option<primp::Client>,
+    pub(crate) standard: reqwest::Client,
+    pub(crate) yahoo: Option<primp::Client>,
 }
 
 impl SearchClients {
     pub(crate) fn new(engines: &[Engine]) -> Result<Self, KestrelError> {
+        Self::with_transport(engines, &crate::TransportOptions::default())
+    }
+
+    pub(crate) fn with_transport(
+        engines: &[Engine],
+        transport: &crate::TransportOptions,
+    ) -> Result<Self, KestrelError> {
+        transport.validate()?;
         let profile = crate::http_client::BrowserProfile::random();
-        let standard = crate::http_client::standard_builder(profile)
+        let standard = crate::http_client::standard_builder(profile, transport)
             .timeout(SEARCH_TIMEOUT)
             .build()?;
         let yahoo = engines.contains(&Engine::Yahoo).then(|| {
-            let mut client = crate::http_client::impersonated_builder(profile)
+            let mut client = crate::http_client::impersonated_builder(profile, transport)
                 .timeout(SEARCH_TIMEOUT)
                 .build()?;
             *client.headers_mut() = profile.headers();

@@ -281,6 +281,12 @@ Network-facing tests use local mock servers. Live provider checks are manual
 because provider markup, availability, and anti-bot behavior can change
 independently of the crate.
 
+### HTTP/2 connection tuning
+
+Retain and clone `KestrelClient` to reuse connections across calls. Shared transport
+settings, opt-in origin warm-up, DNS caching, protocol diagnostics and a cold/warm
+benchmark are described in [HTTP/2 transport tuning](docs/http2.md).
+
 ### Experimental providers and latency controls
 
 Opt-in adapters now include Dogpile, Ecosia, Swisscows, Yep, Qwant and Mojeek.

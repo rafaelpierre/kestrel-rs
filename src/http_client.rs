@@ -1,14 +1,10 @@
 //! Random browser headers and consistent connection-pool policy.
 
+#[cfg(test)]
 use std::time::Duration;
 
 use primp::{Impersonate, ImpersonateOS};
 use reqwest::header::{HeaderMap, HeaderValue};
-
-const POOL_IDLE: Duration = Duration::from_secs(90);
-const KEEP_ALIVE: Duration = Duration::from_secs(30);
-const KEEP_ALIVE_TIMEOUT: Duration = Duration::from_secs(10);
-const MAX_IDLE_PER_HOST: usize = 10;
 
 /// Choose coherent browser/OS profiles rather than randomizing individual fields.
 #[derive(Clone, Copy, Debug)]
@@ -48,30 +44,20 @@ impl BrowserProfile {
     }
 }
 
-pub(crate) fn standard_builder(profile: BrowserProfile) -> reqwest::ClientBuilder {
-    // rustls + the http2 feature negotiate h2 via ALPN, with HTTP/1.1 fallback.
-    reqwest::Client::builder()
+pub(crate) fn standard_builder(
+    profile: BrowserProfile,
+    transport: &crate::TransportOptions,
+) -> reqwest::ClientBuilder {
+    transport
+        .standard_builder()
         .default_headers(profile.headers())
-        .pool_idle_timeout(POOL_IDLE)
-        .pool_max_idle_per_host(MAX_IDLE_PER_HOST)
-        .tcp_keepalive(KEEP_ALIVE)
-        .http2_adaptive_window(true)
-        .http2_keep_alive_interval(KEEP_ALIVE)
-        .http2_keep_alive_timeout(KEEP_ALIVE_TIMEOUT)
-        .http2_keep_alive_while_idle(false)
-        .redirect(reqwest::redirect::Policy::limited(10))
 }
 
-pub(crate) fn impersonated_builder(profile: BrowserProfile) -> primp::ClientBuilder {
-    primp::Client::builder()
-        .impersonate(profile.browser)
-        .impersonate_os(profile.os)
-        .pool_idle_timeout(POOL_IDLE)
-        .pool_max_idle_per_host(MAX_IDLE_PER_HOST)
-        .tcp_keepalive(KEEP_ALIVE)
-        .http2_keep_alive_interval(KEEP_ALIVE)
-        .http2_keep_alive_timeout(KEEP_ALIVE_TIMEOUT)
-        .http2_keep_alive_while_idle(false)
+pub(crate) fn impersonated_builder(
+    profile: BrowserProfile,
+    transport: &crate::TransportOptions,
+) -> primp::ClientBuilder {
+    transport.impersonated_builder(profile)
 }
 
 #[cfg(test)]
@@ -127,7 +113,9 @@ mod tests {
             .await;
         let profile = BrowserProfile::random();
         let expected = profile.headers();
-        let client = standard_builder(profile).build().unwrap();
+        let client = standard_builder(profile, &crate::TransportOptions::default())
+            .build()
+            .unwrap();
         for _ in 0..2 {
             client
                 .get(server.uri())
@@ -181,11 +169,14 @@ mod tests {
             }
         });
         // Cleartext prior knowledge is test-only; production uses ALPN with H1 fallback.
-        let client = standard_builder(BrowserProfile::random())
-            .no_proxy()
-            .http2_prior_knowledge()
-            .build()
-            .unwrap();
+        let client = standard_builder(
+            BrowserProfile::random(),
+            &crate::TransportOptions::default(),
+        )
+        .no_proxy()
+        .http2_prior_knowledge()
+        .build()
+        .unwrap();
         let url = format!("http://{address}/");
         let first = client.get(&url).send().await.unwrap();
         assert_eq!(first.version(), reqwest::Version::HTTP_2);
@@ -197,11 +188,14 @@ mod tests {
             assert_eq!(response.text().await.unwrap(), "ok");
         }
         assert_eq!(connections.load(Ordering::SeqCst), 1);
-        let yahoo = impersonated_builder(BrowserProfile::random())
-            .no_proxy()
-            .http2_prior_knowledge()
-            .build()
-            .unwrap();
+        let yahoo = impersonated_builder(
+            BrowserProfile::random(),
+            &crate::TransportOptions::default(),
+        )
+        .no_proxy()
+        .http2_prior_knowledge()
+        .build()
+        .unwrap();
         for client in [yahoo.clone(), yahoo.clone()] {
             let response = client.get(&url).send().await.unwrap();
             assert_eq!(response.version(), primp::Version::HTTP_2);
@@ -251,10 +245,13 @@ mod tests {
             }
             (sockets, served)
         });
-        let client = standard_builder(BrowserProfile::random())
-            .no_proxy()
-            .build()
-            .unwrap();
+        let client = standard_builder(
+            BrowserProfile::random(),
+            &crate::TransportOptions::default(),
+        )
+        .no_proxy()
+        .build()
+        .unwrap();
         for _ in 0..2 {
             let response = client
                 .get(format!("http://{address}/"))

@@ -68,9 +68,10 @@ Provider-specific Origin, Referer, JSON Accept and content type take precedence.
 Yahoo also uses the selected browser's TLS and HTTP/2 impersonation profile.
 
 Search and fetch clients negotiate HTTP/2 through TLS ALPN and permit HTTP/1.1
-fallback. Pools retain up to 10 idle connections per host for 90 seconds. TCP
-keep-alive is 30 seconds; HTTP/2 active-connection pings use a 30-second interval
-and 10-second timeout. Idle HTTP/2 connections are not pinged indefinitely.
+fallback. The shared transport policy retains up to two idle connections per host
+for five minutes, uses bounded receive windows and caches DNS answers. TCP
+keepalive is 60 seconds; HTTP/2 PING is opt-in. See [HTTP/2 tuning](http2.md)
+for configurable settings, warm-up and diagnostics.
 Connection/Keep-Alive headers are omitted because HTTP/2 forbids them.
 
 `KestrelClient` and its clones share their existing connection pools. Use it for

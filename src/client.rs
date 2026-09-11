@@ -6,7 +6,7 @@ use futures_util::future::join_all;
 
 use crate::cache::PageCache;
 use crate::fetcher::{
-    build_client, fetch_all_reusing_client, fetch_all_reusing_client_with_budget,
+    build_client_with_transport, fetch_all_reusing_client, fetch_all_reusing_client_with_budget,
     fetch_all_reusing_client_with_diagnostics,
 };
 use crate::model::{Engine, FetchOptions, FetchReport, SearchOptions, SearchResult, TimeFilter};
@@ -18,16 +18,25 @@ use crate::search::{
 /// A reusable Kestrel client that retains HTTP connection pools across calls.
 #[derive(Clone)]
 pub struct KestrelClient {
-    search: SearchClients,
-    fetch: reqwest::Client,
+    pub(crate) search: SearchClients,
+    pub(crate) fetch: reqwest::Client,
 }
 
 impl KestrelClient {
     /// Build clients for every supported provider and page fetching.
     pub fn new() -> Result<Self, KestrelError> {
+        Self::with_transport(crate::TransportOptions::default())
+    }
+
+    /// Build retained pools with an explicit transport policy. Clones share the pools.
+    pub fn with_transport(transport: crate::TransportOptions) -> Result<Self, KestrelError> {
+        transport.validate()?;
         Ok(Self {
-            search: SearchClients::new(&[Engine::Duckduckgo, Engine::Bing, Engine::Yahoo])?,
-            fetch: build_client()?,
+            search: SearchClients::with_transport(
+                &[Engine::Duckduckgo, Engine::Bing, Engine::Yahoo],
+                &transport,
+            )?,
+            fetch: build_client_with_transport(&transport)?,
         })
     }
 
