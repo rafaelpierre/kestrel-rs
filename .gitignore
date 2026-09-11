@@ -5,3 +5,7 @@
 *.profraw
 lcov.info
 
+
+# Local executable snapshots used to keep benchmark batches reproducible.
+benchmarks/results/**/.binary/
+benchmarks/__pycache__/

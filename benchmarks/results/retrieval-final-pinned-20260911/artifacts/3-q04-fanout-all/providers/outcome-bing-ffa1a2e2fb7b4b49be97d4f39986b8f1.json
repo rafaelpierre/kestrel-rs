@@ -1,0 +1,12 @@
+{
+  "engine": "bing",
+  "query": "site:postgresql.org EXPLAIN ANALYZE BUFFERS",
+  "elapsed_ms": 375,
+  "result_count": 0,
+  "retries": 0,
+  "success": true,
+  "outcome": "filtered_empty",
+  "error": null,
+  "raw_result_count": 10,
+  "filtered_count": 10
+}

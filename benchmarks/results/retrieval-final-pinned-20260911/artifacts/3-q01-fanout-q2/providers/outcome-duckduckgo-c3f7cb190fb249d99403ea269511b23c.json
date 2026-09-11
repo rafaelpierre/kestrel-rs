@@ -1,0 +1,12 @@
+{
+  "engine": "duckduckgo",
+  "query": "What is the capital of Australia?",
+  "elapsed_ms": 3002,
+  "result_count": 0,
+  "retries": 0,
+  "success": false,
+  "outcome": "deadline",
+  "error": "search deadline exceeded",
+  "raw_result_count": 0,
+  "filtered_count": 0
+}

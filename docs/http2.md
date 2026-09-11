@@ -30,7 +30,7 @@ let shared = client.clone();
 Warm-up is opt-in and performs HEAD requests. Fetch URLs are deduplicated by
 scheme/host/port and reduced to `/`; credentials, paths and queries are discarded.
 Search warm-up uses the actual provider origin (including Yahoo's impersonated
-pool). Up to four requests run concurrently, each with its own timeout. Results
+pool and the API origins for Swisscows, Yep and Qwant). Up to four requests run concurrently, each with its own timeout. Results
 preserve origin order and include status, protocol, elapsed time and any error.
 Normal redirects apply, so a redirect may warm a different final origin. A HEAD
 405 still establishes a transport; an origin may close it afterward. Warm-up is

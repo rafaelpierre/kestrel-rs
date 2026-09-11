@@ -1,0 +1,341 @@
+{
+  "candidate_counts": {
+    "after_candidate_selection": 10,
+    "after_ranking": 10,
+    "after_search": 10,
+    "returned": 5,
+    "with_content": 0
+  },
+  "candidates": [
+    {
+      "content": null,
+      "display_url": "https://en.wikipedia.org › wiki › Canberra",
+      "engine": "bing",
+      "engine_rank": 1,
+      "query": "What is the capital of Australia?",
+      "snippet": "The word \"Canberra\" is derived from the Ngunnawal language of a local Ngunnawal or Ngambri clan who resided in the area and were referred to by the early British colonists as either the Canberry, Kanberri or Nganbra tribe. Joshua John Moore, th…",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 1
+        }
+      ],
+      "title": "Canberra - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Canberra"
+    },
+    {
+      "content": null,
+      "display_url": "https://en.wikipedia.org › wiki › List_of_Australian_capit…",
+      "engine": "bing",
+      "engine_rank": 2,
+      "query": "What is the capital of Australia?",
+      "snippet": "",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 2
+        }
+      ],
+      "title": "List of Australian capital cities - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/List_of_Australian_capital_cities"
+    },
+    {
+      "content": null,
+      "display_url": "https://www.britannica.com › place › Canberra",
+      "engine": "bing",
+      "engine_rank": 3,
+      "query": "What is the capital of Australia?",
+      "snippet": "",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 3
+        }
+      ],
+      "title": "Canberra | History, Map, Population, Climate, & Facts",
+      "url": "https://www.britannica.com/place/Canberra"
+    },
+    {
+      "content": null,
+      "display_url": "https://www.mappr.co › capital-cities › australia",
+      "engine": "bing",
+      "engine_rank": 4,
+      "query": "What is the capital of Australia?",
+      "snippet": "Learn why Canberra is the capital of Australia, how it was founded, and what features make it unique. Explore its location, …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 4
+        }
+      ],
+      "title": "What is the Capital of Australia? - Mappr",
+      "url": "https://www.mappr.co/capital-cities/australia/"
+    },
+    {
+      "content": null,
+      "display_url": "https://www.britannica.com › place › Australia",
+      "engine": "bing",
+      "engine_rank": 5,
+      "query": "What is the capital of Australia?",
+      "snippet": "20 hours ago · Australia is the smallest continent and one of the largest countries on Earth, lying between the Pacific and Indian …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 5
+        }
+      ],
+      "title": "Australia | History, Cities, Population, Capital, Map, & Facts | Britannica",
+      "url": "https://www.britannica.com/place/Australia"
+    },
+    {
+      "content": null,
+      "display_url": "https://www.insideaustraliatravel.com › faqs › australia-capital-city",
+      "engine": "bing",
+      "engine_rank": 6,
+      "query": "What is the capital of Australia?",
+      "snippet": "9 Jun 2026 · The capital city of Australia is Canberra, not Sydney or Melbourne. Canberra is located in the Australian Capital …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 6
+        }
+      ],
+      "title": "What Is the Capital City of Australia?",
+      "url": "https://www.insideaustraliatravel.com/faqs/australia-capital-city"
+    },
+    {
+      "content": null,
+      "display_url": "https://www.worldatlas.com › articles › what-is-the-capital-of-australia.html",
+      "engine": "bing",
+      "engine_rank": 7,
+      "query": "What is the capital of Australia?",
+      "snippet": "27 Jun 2018 · Canberra was selected as the capital city of Australia as a compromise between the warring town of Melbourne and …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 7
+        }
+      ],
+      "title": "What Is The Capital Of Australia? - WorldAtlas",
+      "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-australia.html"
+    },
+    {
+      "content": null,
+      "display_url": "https://www.mapsofworld.com › answers › world › what-is-the-capital-of-aust…",
+      "engine": "bing",
+      "engine_rank": 8,
+      "query": "What is the capital of Australia?",
+      "snippet": "22 Apr 2024 · Canberra is located in the southeast part of Australia, in its own special area called the Australian Capital Territory. It is …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 8
+        }
+      ],
+      "title": "What is the Capital of Australia? | Capital City of Australia",
+      "url": "https://www.mapsofworld.com/answers/world/what-is-the-capital-of-australia/"
+    },
+    {
+      "content": null,
+      "display_url": "https://www.jagranjosh.com › general-knowledge",
+      "engine": "bing",
+      "engine_rank": 9,
+      "query": "What is the capital of Australia?",
+      "snippet": "15 Oct 2025 · What is the Capital of Australia? Canberra is the capital city and is located in the Australian Capital Territory in …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 9
+        }
+      ],
+      "title": "What is the Capital of Australia? - Jagran Josh",
+      "url": "https://www.jagranjosh.com/general-knowledge/capital-of-australia-1820003355-1"
+    },
+    {
+      "content": null,
+      "display_url": "https://www.countryaah.com › australia-faqs",
+      "engine": "bing",
+      "engine_rank": 10,
+      "query": "What is the capital of Australia?",
+      "snippet": "2 Jun 2019 · Canberra, the capital city of Australia, is located in the southeastern part of the country, in the Australian Capital …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 10
+        }
+      ],
+      "title": "What is the Capital of Australia? Canberra – Countryaah.com",
+      "url": "https://www.countryaah.com/australia-faqs/"
+    }
+  ],
+  "diagnostics": {
+    "fetch": null,
+    "provider_cancellations": 0,
+    "providers": [
+      {
+        "elapsed_ms": 3000,
+        "engine": "duckduckgo",
+        "error": "search deadline exceeded",
+        "filtered_count": 0,
+        "outcome": "deadline",
+        "query": "What is the capital of Australia?",
+        "raw_result_count": 0,
+        "result_count": 0,
+        "retries": 0,
+        "success": false
+      },
+      {
+        "elapsed_ms": 889,
+        "engine": "bing",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "results",
+        "query": "What is the capital of Australia?",
+        "raw_result_count": 10,
+        "result_count": 10,
+        "retries": 0,
+        "success": true
+      },
+      {
+        "elapsed_ms": 1722,
+        "engine": "yahoo",
+        "error": "Yahoo returned HTTP 500",
+        "filtered_count": 0,
+        "outcome": "request_error",
+        "query": "What is the capital of Australia?",
+        "raw_result_count": 0,
+        "result_count": 0,
+        "retries": 0,
+        "success": false
+      }
+    ]
+  },
+  "engines": [
+    "duckduckgo",
+    "bing",
+    "yahoo"
+  ],
+  "mode": "fanout",
+  "queries": [
+    "What is the capital of Australia?"
+  ],
+  "query": "What is the capital of Australia?",
+  "results": [
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 1,
+      "query": "What is the capital of Australia?",
+      "rank": 1,
+      "snippet": "The word \"Canberra\" is derived from the Ngunnawal language of a local Ngunnawal or Ngambri clan who resided in the area and were referred to by the early British colonists as either the Canberry, Kanberri or Nganbra tribe. Joshua John Moore, th…",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 1
+        }
+      ],
+      "title": "Canberra - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Canberra"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 2,
+      "query": "What is the capital of Australia?",
+      "rank": 2,
+      "snippet": "",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 2
+        }
+      ],
+      "title": "List of Australian capital cities - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/List_of_Australian_capital_cities"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 3,
+      "query": "What is the capital of Australia?",
+      "rank": 3,
+      "snippet": "",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 3
+        }
+      ],
+      "title": "Canberra | History, Map, Population, Climate, & Facts",
+      "url": "https://www.britannica.com/place/Canberra"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 4,
+      "query": "What is the capital of Australia?",
+      "rank": 4,
+      "snippet": "Learn why Canberra is the capital of Australia, how it was founded, and what features make it unique. Explore its location, …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 4
+        }
+      ],
+      "title": "What is the Capital of Australia? - Mappr",
+      "url": "https://www.mappr.co/capital-cities/australia/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 5,
+      "query": "What is the capital of Australia?",
+      "rank": 5,
+      "snippet": "20 hours ago · Australia is the smallest continent and one of the largest countries on Earth, lying between the Pacific and Indian …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "What is the capital of Australia?",
+          "rank": 5
+        }
+      ],
+      "title": "Australia | History, Cities, Population, Capital, Map, & Facts | Britannica",
+      "url": "https://www.britannica.com/place/Australia"
+    }
+  ],
+  "returned_chars": 0,
+  "run_id": "run",
+  "timings_ms": {
+    "initialize": 136,
+    "search": 3005
+  }
+}

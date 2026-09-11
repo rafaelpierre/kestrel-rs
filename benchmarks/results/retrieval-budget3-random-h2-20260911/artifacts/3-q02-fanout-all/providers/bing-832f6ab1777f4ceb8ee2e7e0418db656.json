@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T20:56:50.033993+00:00",
+  "engine": "bing",
+  "final_url": "https://www.bing.com/search?q=why+is+the+sky+blue+Rayleigh+scattering",
+  "html_file": "bing-832f6ab1777f4ceb8ee2e7e0418db656.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "why is the sky blue Rayleigh scattering"
+}

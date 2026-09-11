@@ -1,0 +1,443 @@
+{
+  "candidate_counts": {
+    "after_candidate_selection": 10,
+    "after_ranking": 10,
+    "after_search": 10,
+    "returned": 5,
+    "with_content": 8
+  },
+  "candidates": [
+    {
+      "content": null,
+      "display_url": "stackoverflow.com",
+      "engine": "swisscows",
+      "engine_rank": 1,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "2023-02-25T01:32:31.417Z+00:00 ... Save this answer. ... Show activity on this post. A workaround is to handle the exceptions within the tasks . If you do so, all the remaining scheduled tasks continue execution.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 1
+        }
+      ],
+      "title": "python - How to prevent python3.11 TaskGroup from canceling all the tasks - Stack Overflow",
+      "url": "https://stackoverflow.com/questions/75250788/how-to-prevent-python3-11-taskgroup-from-canceling-all-the-tasks"
+    },
+    {
+      "content": "Source: https://runebook.dev/en/docs/python/library/asyncio-task/task-groups\n\nTask Group Trouble: Exception Handling in Python Asyncio (3.11+) asyncio.TaskGroupis a great addition to Python'sasynciolibrary. It's an asynchronous context manager that provides a reliable way to start a group of related tasks and wait for them all to finish. The key feature is structured concurrency, meaning tasks created within the group are implicitly awaited when theasync withblock exits, which helps prevent tasks from being \"orphaned\" or silently lost. Here's a basic example Task Groups are designed to be safer, but there are still a few things that can trip you up! A core feature of Task Groups is that if any task raises an unhandled exception, the Task Group will automatically Cancel all other running tasks in the group. Wait for all remaining tasks (including the cancelled ones) to finish. Exit theasync withblock by raising an ExceptionGroup (if multiple tasks failed or were cancelled and didn't handleCancelledError) or the original exception (if only one failed and it was the first to complete). Since Python 3.11, the official way to handle multiple exceptions concurrently is usingexcept*. TroubleIf you don't use the newexcept*syntax (available in Python 3.11+), or you just use a standardexcept Exception, you might not be catching theExceptionGroupcorrectly. SolutionAlways use atry/except*block outside theasync withstatement to handle the potentialExceptionGroupthat wraps any task exceptions. When an exception forces the Task Group to cancel other tasks, those tasks receive anasyncio.CancelledError. If your worker coroutine catches all exceptions (except Exception:or a bareexcept:) and doesn't re-raiseCancelledError, the Task Group might not realize the task was cancelled, leading to unexpected behavior. TroubleA worker that is cancelled but suppresses theCancelledErrormight keep the Task Group waiting or lead to unclear state. SolutionWhen writing worker coroutines, be careful not to swallowCancelledErrorif you want cancellation to proceed normally. Uset",
+      "display_url": "runebook.dev",
+      "engine": "swisscows",
+      "engine_rank": 2,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "Exit the async with block by raising ... Since Python 3.11, the official way to handle multiple exceptions concurrently is using except* ....",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 2
+        }
+      ],
+      "title": "Task Group Trouble: Exception Handling in Python Asyncio (3.11+)",
+      "url": "https://runebook.dev/en/docs/python/library/asyncio-task/task-groups"
+    },
+    {
+      "content": "Source: https://speakerdeck.com/jrfk/asyncio-evolved-enhanced-exception-handling-with-taskgroup-in-python-3-dot-11-europython-2023\n\nAsyncio Evolved: Enhanced Exception Handling with TaskGroup in Python 3.11(EuroPython 2023) Junya Fukuda More Decks by Junya Fukuda Other Decks in Technology Featured Transcript In Python 3.11, asyncio.TaskGroup() and asyncio timeout context managers were added. Additionally, get_event_loop() was deprecated in 3.10, and loop objects were further obscured, making the already less intimidating asyncio even less scary. I will discuss the basic usage of asyncio in Python 3.11, which has become simpler and more flexible, focusing on exception and cancellation handling. I hope that this will be helpful for those who choose asyncio when writing web applications using ASGI frameworks or Python scripts where asynchronous I/O is useful. Session:https://ep2023.europython.eu/session/asyncio-evolved-enhanced-exception-handling-with-taskgroup-in-python-311Twitter:https://twitter.com/JunyaFff Asyncio Evolved: Enhanced Exception Handling with TaskGroup in Python 3.11Junya Fukuda EuroPython 2023 Who am I? 👤 •book •Python Practical Recipes •Expert PythonProgramming - Fourth Edition •Written by Tarek Ziadé, Michał Jaworski Here is today's code •Junya Fukudaʢ@JunyaFffʣcalled “Jun” not “Junior” •Photos 📷 Tweets 🐦 👍 •Software Engineer at Groove X, inc. asyncio's new features and New \"Hello-ish world\" Today's Goal •Focus on exception handling and cancellation. •Introducing thenew API asyncio.TaskGroup. •Writing asyncio code in a \"reliable\" and \"safe\" way •The new standard \"Hello-ish world\" Why are we talking about thisʁ There are two mainreasons. Motivation (why are we talking about this?) •There are twomain reasons. async def main(): print(f\"{time.ctime()} Hello!\") await asyncio.sleep(1.0) print(f\"{time.ctime()} GoodBye!\") loop= asyncio.get_event_loop() task = loop.create_task(main()) loop.run_until_complete(task) pending = asyncio.all_tasks(loop=loop) for task in pending: task.cancel() group = asyncio.gather(*pending, return_exceptions=True) loop.run_until_complete(group) loop.close() M",
+      "display_url": "speakerdeck.com",
+      "engine": "swisscows",
+      "engine_rank": 3,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "= tg.create_task(coro_success()) task2 = tg.create_task(coro_value_err()) task3 = tg.create_task(coro_type_err()) results = [task1.result(), task2.result(), task3.result()] except* ValueError as err: print(f\"{err=}\") except* TypeError as err: print(f\"{err=}\") $ python311 3_asyncio_taskgroup_except.py err=ExceptionGroup('unhandled errors in a TaskGroup', [ValueError()]) err=ExceptionGroup('unhandled errors in a TaskGroup', [TypeError()]) $ python311 Two Exception are captured.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 3
+        }
+      ],
+      "title": "Asyncio Evolved: Enhanced Exception Handling with TaskGroup in Python 3.11(EuroPython 2023) - Speaker Deck",
+      "url": "https://speakerdeck.com/jrfk/asyncio-evolved-enhanced-exception-handling-with-taskgroup-in-python-3-dot-11-europython-2023"
+    },
+    {
+      "content": "Source: https://docs.python.org/3/library/asyncio-task.html\n\nCoroutines and tasks¶ Coroutines¶ Awaitables¶ Creating tasks¶ Task cancellation¶ Task groups¶ Sleeping¶ Running tasks concurrently¶ Eager task factory¶ Shielding from cancellation¶ Timeouts¶ Waiting primitives¶ Introspection¶ Task object¶ This section outlines high-level asyncio APIs to work with coroutines and Tasks. Source code:Lib/asyncio/coroutines.py Coroutinesdeclared with the async/await syntax is the preferred way of writing asyncio applications. For example, the following snippet of code prints “hello”, waits 1 second, and then prints “world”: Note that simply calling a coroutine will not schedule it to be executed: To actually run a coroutine, asyncio provides the following mechanisms: Theasyncio.run()function to run the top-level entry point “main()” function (see the above example.) Awaiting on a coroutine. The following snippet of code will print “hello” after waiting for 1 second, and then print “world” after waiting foranother2 seconds: Theasyncio.create_task()function to run coroutines concurrently as asyncioTasks. Let’s modify the above example and run twosay_aftercoroutinesconcurrently: Note that expected output now shows that the snippet runs 1 second faster than before: Theasyncio.TaskGroupclass provides a more modern alternative tocreate_task(). Using this API, the last example becomes: The timing and output should be the same as for the previous version. We say that an object is anawaitableobject if it can be used in anawaitexpression. Many asyncio APIs are designed to accept awaitables. There are three main types ofawaitableobjects:coroutines,Tasks, andFutures. Python coroutines areawaitablesand therefore can be awaited from other coroutines: Tasksare used to schedule coroutinesconcurrently. When a coroutine is wrapped into aTaskwith functions likeasyncio.create_task()the coroutine is automatically scheduled to run soon: AFutureis a speciallow-levelawaitable object that represents aneventual resultof an asynchronous operation. When a Future ob",
+      "display_url": "docs.python.org",
+      "engine": "swisscows",
+      "engine_rank": 4,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "If the body of the async with statement ... one of the tasks failed: the remaining tasks are cancelled and then waited for, and non-cancellation exceptions are grouped into an exception group and raised ....",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 4
+        }
+      ],
+      "title": "Coroutines and tasks — Python 3.14.7 documentation",
+      "url": "https://docs.python.org/3/library/asyncio-task.html"
+    },
+    {
+      "content": "Source: https://runebook.dev/en/docs/python/library/asyncio-task/asyncio.TaskGroup.create_task\n\nCommon async TaskGroup Pitfalls and Solutions Theasyncio.TaskGroup(introduced in Python 3.11) is a modern, structured way to manage groups of asynchronous tasks. Think of it as a supervisor for a set of related jobs. When you usetask_group.create_task(coroutine) It takes an awaitable (usually a coroutine function call) and schedules it to run concurrently. It immediately returns anasyncio.Taskobject. Crucially, the TaskGroup waits for all tasks created within it to complete before theasync withblock exits. If any task raises an exception, the TaskGroup cancels all other running tasks and then re-raises the exception (or multiple exceptions wrapped in anExceptionGroup). This is the key to structured concurrency—it makes sure you don't leave \"orphaned\" tasks running if one fails. Here's how you'd typically use it Even with a structured tool likeTaskGroup, a few common issues pop up The ProblemTrying to use tasks without wrapping them in theasync with asyncio.TaskGroup()context manager, or forgetting theasynckeyword for the surrounding function. The Fix (and Why it Works)You must useasync with asyncio.TaskGroup() as tg: .... Theasync withensures the crucial cleanup and exception handling happens when the block exits. The ProblemExpectingcreate_task()to return the result of the coroutine. It doesn't! It returns the Task object. The FixTo get the result, you need to call.result()on the task object after theasync withblock has completed. Trying to call.result()inside the block will often raise anInvalidStateErrorbecause the task isn't finished yet. The ProblemWhen one task fails, the whole group shuts down. If you have clean-up logic in your tasks, you need to handleasyncio.CancelledError. The FixWrap the task's body in atry...finallyblock. Thefinallyblock runs even if the task is cancelled, allowing for necessary resource cleanup. BeforeTaskGroup(Python < 3.11), people often used these methods, which you might still see in older code. When to useWhen you need to run seve",
+      "display_url": "runebook.dev",
+      "engine": "swisscows",
+      "engine_rank": 5,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "Crucially, the TaskGroup waits for all tasks created within it to complete before the async with block exits. If any task raises an exception, the TaskGroup cancels all other running tasks and then re-raises the exception (or multiple exceptions ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 5
+        }
+      ],
+      "title": "python - Common async TaskGroup Pitfalls and Solutions",
+      "url": "https://runebook.dev/en/docs/python/library/asyncio-task/asyncio.TaskGroup.create_task"
+    },
+    {
+      "content": "Source: https://ep2023.europython.eu/session/asyncio-evolved-enhanced-exception-handling-with-taskgroup-in-python-311/\n\nAbstract Description The speaker With the release of Python 3.11 in October 2022, PEP 654 \"Exception Groups and except\" was accepted, and asyncio.TaskGroup() was added. This enhancement of exception and cancellation handling has allowed asyncio to evolve more flexibly, addressing the existing issues with asyncio APIs, such as insufficient cancellation and exception handling in asyncio.gather. In this talk, I would like to discuss the problems of existing asyncio APIs and how the newly introduced asyncio.TaskGroup() solves these issues. Attendees will learn about the improved way of handling exceptions and cancellations using asyncio.TaskGroup(), enabling them to write more efficient and robust asynchronous code with Python 3.11. In Python 3.11, asyncio.TaskGroup() and asyncio timeout context managers were added. Additionally, get_event_loop() was deprecated in 3.10, and loop objects were further obscured, making the already less intimidating asyncio even less scary. I will discuss the basic usage of asyncio in Python 3.11, which has become simpler and more flexible, focusing on exception and cancellation handling. I hope that this will be helpful for those who choose asyncio when writing web applications using ASGI frameworks or Python scripts where asynchronous I/O is useful. Develops \"LOVOT\", a family-like robot that promotes the ability to love, at GROOVE X, Inc. He has spoken at PyCon JP, DjangoCongress JP, and other events. As a community activity, he participates in the management of GeekLab Nagano. Co-author of \"Python Practical Recipes (2022 Gijutsu Hyoron Co., Ltd.)\". Translation of \"Expert Python Programming - Fourth Edition\". Likes beer, camping, and asyncio. Twitter account is @JunyaFff. Understand the limitations of the existing asyncio APIs, specifically regarding cancellation and exception handling in asyncio.gather. Learn how Python 3.11's asyncio.TaskGroup() overcomes these limitations and improves exception and cancellation handling. Apply the new ",
+      "display_url": "ep2023.europython.eu",
+      "engine": "swisscows",
+      "engine_rank": 6,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "With the release of Python 3.11 in October 2022, PEP 654 \"Exception Groups and except\" was accepted, and asyncio. TaskGroup() was added . This enhancement of exception and cancellation handling has allowed asyncio to evolve more flexibly, addressing ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 6
+        }
+      ],
+      "title": "Asyncio Evolved: Enhanced Exception Handling with TaskGroup in Python 3.11 | July 17th-23rd 2023 | Prague, Czech Republic & Remote",
+      "url": "https://ep2023.europython.eu/session/asyncio-evolved-enhanced-exception-handling-with-taskgroup-in-python-311/"
+    },
+    {
+      "content": null,
+      "display_url": "billypoon.com",
+      "engine": "swisscows",
+      "engine_rank": 7,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "import asyncio import random async def fetch_data(name): delay = random.uniform(0.5, 2.0) await asyncio.sleep(delay) if delay > 1.5: raise ValueError(f\"{name} took too long!\") print(f\"{name} done after {delay:.2f}s\") async def main(): async with asyncio.TaskGroup() as tg: tg.create_task(fetch_data(\"Task A\")) tg.create_task(fetch_data(\"Task B\")) tg.create_task(fetch_data(\"Task C\")) asyncio.run(main()) ... The async with block defines a safe region where tasks live. If any task fails, the TaskGroup cancels all remaining tasks and waits for them. When the block exits, all tasks are finished or properly cleaned up. If at least one task raises an exception, the TaskGroup raises an ExceptionGroup that contains all non-cancellation exceptions after all tasks have finished.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 7
+        }
+      ],
+      "title": "Structured Concurrency in Python with TaskGroup: Writing Async Code That Doesn’t Break — Billy Poon",
+      "url": "https://billypoon.com/insights/structured-concurrency-in-python-with-taskgroup-writing-async-code-that-doesn-t-break"
+    },
+    {
+      "content": "Source: https://www.stanza.dev/courses/python/error-handling/python-exception-groups\n\nCode Examples When multiple concurrent tasks fail at the same time, a singleexceptclause is not enough. Exception Groups, introduced in Python 3.11, bundle multiple exceptions into one and provideexcept*to handle each type independently. This is essential for modern async Python. Async task groups (asyncio.TaskGroup) raiseExceptionGroupwhen multiple tasks fail concurrently. Withoutexcept*, you would need to manually iterate over the group's exceptions. This pattern also applies to parallel HTTP requests, batch database operations, and any scenario where multiple independent operations can each fail. Concurrent operations can raise multiple exceptions at once: ExceptionGroup: A container that holds multiple exceptions, raised when several failures occur simultaneously. except*: A handler that matches exceptions within a group by type, potentially running multiple handlers. Re-raising unmatched exceptions: Any exceptions in the group not matched by anexcept*clause are automatically re-raised in a new group. except*can match multiple times (one per exception type) Unmatched exceptions are re-raised in a new group Cannot mixexceptandexcept*in the sametry Mixingexceptandexcept*in the sametryblock-- Python does not allow it. If any handler usesexcept*, all handlers in that block must useexcept*. Assumingexcept*catches only one exception-- The variable bound byexcept* ValueError as egcontains anExceptionGroupwith potentially multipleValueErrorinstances. Always iterateeg.exceptions. Forgetting that unmatched exceptions re-raise-- If yourexcept*clauses do not cover all types in the group, the remaining exceptions propagate automatically. This is intentional but can surprise you if you expected full coverage. Useasyncio.TaskGroupinstead ofgather(return_exceptions=True)-- TaskGroup raisesExceptionGroupon failure, making it easy to handle errors per type withexcept*. Handle each exception type separately-- Write oneexcept*clause per type rather than catching a broad base class,",
+      "display_url": "www.stanza.dev",
+      "engine": "swisscows",
+      "engine_rank": 8,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "Re-raising unmatched exceptions: Any exceptions in the group not matched by an except* clause are automatically re-raised in a new group. Async task groups (asyncio.TaskGroup) raise ExceptionGroup when multiple tasks fail concurrently .",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 8
+        }
+      ],
+      "title": "Exception Groups (Python 3.11+) - Python Fundamentals: Modern 3.14 Edition | Stanza",
+      "url": "https://www.stanza.dev/courses/python/error-handling/python-exception-groups"
+    },
+    {
+      "content": "Source: https://runebook.dev/en/docs/python/library/asyncio-task/asyncio.TaskGroup\n\nStructured Concurrency in Python 3.11+: Switching from asyncio.gather to TaskGroup Theasyncio.TaskGroupis a great feature introduced in Python 3.11 that makes managing groups of concurrent tasks much safer and easier than previous methods likeasyncio.gather(). Think of anasyncio.TaskGroupas a container for multiple asynchronous tasks . When you use it, all the tasks within the group are executed concurrently. The key benefits are Structured ConcurrencyIt uses theasync withstatement, ensuring that all tasks created within the block are completed before the block exits. This means you don't have dangling tasks. Error HandlingIf any task in the group raises an exception, theTaskGroupimmediately cancels the remaining tasks and then raises anExceptionGroupthat aggregates all the exceptions. This predictable behavior is a big improvement over earlier methods. Here's how you use it WhileTaskGroupis safer, there are still a few things people sometimes trip over A common mistake is forgetting that you need to explicitly access the result of a task usingtask.result(). The task group itself doesn't return a combined list of results likeasyncio.gather. You must calltask.result()on the task objects after theasync withblock completes (or within theasync withblock, but generally after is cleaner). If any task fails, theTaskGroupimmediately cancels the others and raises anExceptionGroup. If you don't specifically handle this type, your program will crash. You need to use atry...except*block (Python 3.11+) to specifically catch theExceptionGroupand handle its contained exceptions. Note: Theexcept*syntax is crucial here for handling the structure. WhileTaskGroupis the recommended way for structured concurrency, you'll still see, or might need to use, these older alternatives This is the most common pre-3.11 way to run tasks concurrently and get their results. To makegatherbehave similarly toTaskGroup(i.e., let all tasks run even if one fails), you must usereturn_exceptions=True This ",
+      "display_url": "runebook.dev",
+      "engine": "swisscows",
+      "engine_rank": 9,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "Error Handling If any task in the group raises an exception, the TaskGroup immediately cancels the remaining tasks and then raises an ExceptionGroup that aggregates all the exceptions .",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 9
+        }
+      ],
+      "title": "Structured Concurrency in Python 3.11+: Switching from asyncio.gather to TaskGroup",
+      "url": "https://runebook.dev/en/docs/python/library/asyncio-task/asyncio.TaskGroup"
+    },
+    {
+      "content": "Source: https://superfastpython.com/asyncio-taskgroup/\n\nHow to use asyncio.TaskGroup Need To Manage Multiple Coroutines as a Group How to Use asyncio.TaskGroup Example of Waiting on Multiple Tasks with a TaskGroup Example of TaskGroup with Arguments and Return Values Example of Cancelling All Tasks if One Task Fails Using TaskGroup Example of Cancelling One Task in a TaskGroup Takeaways A problem with tasks is that it is a good idea to assign and keep track of theasyncio.Taskobjects. The reason is that if we don't the tasks may be garbage collected, terminating the task. A helpful solution is to use aTaskGroupto create and manage a collection of tasks. It has a number of benefits, such as canceling all tasks in the group if one task fails. In this tutorial, you will discover how to use theTaskGroupin asyncio. After completing this tutorial, you will know: It is common to issue many coroutines and then manage them as a group. Treating multiple coroutines as a group allows for functionality such as: Prior to Python 3.11, there were two main approaches to handling multiple coroutines as a group, they were: Theasyncio.gather()function takes one more coroutine orasyncio.Taskobjects. It returns aFutureobject that allows the group of tasks to be managed together with features such as canceling all tasks and waiting on all tasks. You can learn more about how to use theasyncio.gather()function in the tutorial: It is possible to use cancel all tasks in the group if one task in the group fails with an exception. You can see an example of this in the tutorial: Theasyncio.wait()function takes a collection of coroutines or tasks and returns the set of tasks that meet the specified conditions, such as one completed, all completed or first to fail. You can learn more about how to use theasyncio.wait()function in the tutorial: The release of Python version 3.11 introduced a new approach to managing multiple coroutines or tasks as a group, called theasyncio.TaskGroup. Python 3.11 introduce theasyncio.TaskGrouptask for managing a group of ",
+      "display_url": "superfastpython.com",
+      "engine": "swisscows",
+      "engine_rank": 10,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "How to cancel all tasks if one task in the TaskGroup fails. Let's get started. It is common to issue many coroutines and then manage them as a group. Treating multiple coroutines as a group allows for functionality such as: Waiting until all tasks are completed. Canceling all tasks if one task fails. Handling an exception raised in any task. Prior to Python 3.11, there were two main approaches to handling multiple coroutines as a group, they were: ... The asyncio...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 10
+        }
+      ],
+      "title": "How to use asyncio.TaskGroup – SuperFastPython",
+      "url": "https://superfastpython.com/asyncio-taskgroup/"
+    }
+  ],
+  "diagnostics": {
+    "fetch": {
+      "budget_exhausted": false,
+      "cache_hits": 0,
+      "cache_misses": 10,
+      "cancelled": 0,
+      "outcomes": {
+        "cache_hit": 0,
+        "no_content": 0,
+        "request_failed": 2,
+        "response_too_large": 0,
+        "success": 8,
+        "unsupported_content_type": 0
+      },
+      "pages": [
+        {
+          "download_ms": 0,
+          "outcome": "request_failed",
+          "parse_ms": 0,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 0,
+          "response_bytes": 0,
+          "total_ms": 130,
+          "url": "https://stackoverflow.com/questions/75250788/how-to-prevent-python3-11-taskgroup-from-canceling-all-the-tasks"
+        },
+        {
+          "download_ms": 2,
+          "outcome": "success",
+          "parse_ms": 1,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 135,
+          "response_bytes": 42931,
+          "total_ms": 138,
+          "url": "https://runebook.dev/en/docs/python/library/asyncio-task/task-groups"
+        },
+        {
+          "download_ms": 141,
+          "outcome": "success",
+          "parse_ms": 8,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 520,
+          "response_bytes": 325611,
+          "total_ms": 670,
+          "url": "https://speakerdeck.com/jrfk/asyncio-evolved-enhanced-exception-handling-with-taskgroup-in-python-3-dot-11-europython-2023"
+        },
+        {
+          "download_ms": 7,
+          "outcome": "success",
+          "parse_ms": 6,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 123,
+          "response_bytes": 177279,
+          "total_ms": 137,
+          "url": "https://docs.python.org/3/library/asyncio-task.html"
+        },
+        {
+          "download_ms": 1,
+          "outcome": "success",
+          "parse_ms": 1,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 133,
+          "response_bytes": 36384,
+          "total_ms": 136,
+          "url": "https://runebook.dev/en/docs/python/library/asyncio-task/asyncio.TaskGroup.create_task"
+        },
+        {
+          "download_ms": 130,
+          "outcome": "success",
+          "parse_ms": 3,
+          "parse_queue_ms": 0,
+          "queue_ms": 130,
+          "request_ms": 243,
+          "response_bytes": 318386,
+          "total_ms": 508,
+          "url": "https://ep2023.europython.eu/session/asyncio-evolved-enhanced-exception-handling-with-taskgroup-in-python-311/"
+        },
+        {
+          "download_ms": 0,
+          "outcome": "request_failed",
+          "parse_ms": 0,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 0,
+          "response_bytes": 0,
+          "total_ms": 454,
+          "url": "https://billypoon.com/insights/structured-concurrency-in-python-with-taskgroup-writing-async-code-that-doesn-t-break"
+        },
+        {
+          "download_ms": 0,
+          "outcome": "success",
+          "parse_ms": 1,
+          "parse_queue_ms": 0,
+          "queue_ms": 135,
+          "request_ms": 212,
+          "response_bytes": 120658,
+          "total_ms": 349,
+          "url": "https://www.stanza.dev/courses/python/error-handling/python-exception-groups"
+        },
+        {
+          "download_ms": 1,
+          "outcome": "success",
+          "parse_ms": 1,
+          "parse_queue_ms": 0,
+          "queue_ms": 137,
+          "request_ms": 37,
+          "response_bytes": 37322,
+          "total_ms": 177,
+          "url": "https://runebook.dev/en/docs/python/library/asyncio-task/asyncio.TaskGroup"
+        },
+        {
+          "download_ms": 0,
+          "outcome": "success",
+          "parse_ms": 1,
+          "parse_queue_ms": 0,
+          "queue_ms": 176,
+          "request_ms": 221,
+          "response_bytes": 27558,
+          "total_ms": 399,
+          "url": "https://superfastpython.com/asyncio-taskgroup/"
+        }
+      ],
+      "response_bytes": 1086129
+    },
+    "provider_cancellations": 0,
+    "providers": [
+      {
+        "elapsed_ms": 315,
+        "engine": "swisscows",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "results",
+        "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+        "raw_result_count": 10,
+        "result_count": 10,
+        "retries": 0,
+        "success": true
+      }
+    ]
+  },
+  "engines": [
+    "swisscows"
+  ],
+  "mode": "fallback",
+  "queries": [
+    "Python asyncio TaskGroup exception handling ExceptionGroup"
+  ],
+  "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+  "results": [
+    {
+      "bm25_score": null,
+      "content": "Source: https://speakerdeck.com/jrfk/asyncio-evolved-enhanced-exception-handling-with-taskgroup-in-python-3-dot-11-europython-2023\n\nAsyncio Evolved: Enhanced Exception Handling with TaskGroup in Python 3.11(EuroPython 2023) Junya Fukuda More Decks by Junya Fukuda Other Decks in Technology Featured Transcript In Python 3.11, asyncio.TaskGroup() and asyncio timeout context managers were added. Additionally, get_event_loop() was deprecated in 3.10, and loop objects were further obscured, making the already less intimidating asyncio even less scary. I will discuss the basic usage of asyncio in Python 3.11, which has become simpler and more flexible, focusing on exception and cancellation handling. I hope that this will be helpful for those who choose asyncio when writing web applications using ASGI frameworks or Python scripts where asynchronous I/O is useful. Session:https://ep2023.europython.eu/session/asyncio-evolved-enhanced-exception-handling-with-taskgroup-in-python-311Twitter:https://twitter.com/JunyaFff Asyncio Evolved: Enhanced Exception Handling with TaskGroup in Python 3.11Junya Fukuda EuroPython 2023 Who am I? 👤 •book •Python Practical Recipes •Expert PythonProgramming - Fourth Edition •Written by Tarek Ziadé, Michał Jaworski Here is today's code •Junya Fukudaʢ@JunyaFffʣcalled “Jun” not “Junior” •Photos 📷 Tweets 🐦 👍 •Software Engineer at Groove X, inc. asyncio's new features and New \"Hello-ish world\" Today's Goal •Focus on exception handling and cancellation. •Introducing thenew API asyncio.TaskGroup. •Writing asyncio code in a \"reliable\" and \"safe\" way •The new standard \"Hello-ish world\" Why are we talking about thisʁ There are two mainreasons. Motivation (why are we talking about this?) •There are twomain reasons. async def main(): print(f\"{time.ctime()} Hello!\") await asyncio.sleep(1.0) print(f\"{time.ctime()} GoodBye!\") loop= asyncio.get_event_loop() task = loop.create_task(main()) loop.run_until_complete(task) pending = asyncio.all_tasks(loop=loop) for task in pending: task.cancel() group = asyncio.gather(*pending, return_exceptions=True) loop.run_until_complete(group) loop.close() M",
+      "content_chars": 2132,
+      "content_sha256": "72ac7d35573818cce442165b99b496b922cb1bf1346c8acacc2ea5a7c0095fb3",
+      "engine": "swisscows",
+      "engine_rank": 3,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "rank": 1,
+      "snippet": "= tg.create_task(coro_success()) task2 = tg.create_task(coro_value_err()) task3 = tg.create_task(coro_type_err()) results = [task1.result(), task2.result(), task3.result()] except* ValueError as err: print(f\"{err=}\") except* TypeError as err: print(f\"{err=}\") $ python311 3_asyncio_taskgroup_except.py err=ExceptionGroup('unhandled errors in a TaskGroup', [ValueError()]) err=ExceptionGroup('unhandled errors in a TaskGroup', [TypeError()]) $ python311 Two Exception are captured.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 3
+        }
+      ],
+      "title": "Asyncio Evolved: Enhanced Exception Handling with TaskGroup in Python 3.11(EuroPython 2023) - Speaker Deck",
+      "url": "https://speakerdeck.com/jrfk/asyncio-evolved-enhanced-exception-handling-with-taskgroup-in-python-3-dot-11-europython-2023"
+    },
+    {
+      "bm25_score": null,
+      "content": "Source: https://ep2023.europython.eu/session/asyncio-evolved-enhanced-exception-handling-with-taskgroup-in-python-311/\n\nAbstract Description The speaker With the release of Python 3.11 in October 2022, PEP 654 \"Exception Groups and except\" was accepted, and asyncio.TaskGroup() was added. This enhancement of exception and cancellation handling has allowed asyncio to evolve more flexibly, addressing the existing issues with asyncio APIs, such as insufficient cancellation and exception handling in asyncio.gather. In this talk, I would like to discuss the problems of existing asyncio APIs and how the newly introduced asyncio.TaskGroup() solves these issues. Attendees will learn about the improved way of handling exceptions and cancellations using asyncio.TaskGroup(), enabling them to write more efficient and robust asynchronous code with Python 3.11. In Python 3.11, asyncio.TaskGroup() and asyncio timeout context managers were added. Additionally, get_event_loop() was deprecated in 3.10, and loop objects were further obscured, making the already less intimidating asyncio even less scary. I will discuss the basic usage of asyncio in Python 3.11, which has become simpler and more flexible, focusing on exception and cancellation handling. I hope that this will be helpful for those who choose asyncio when writing web applications using ASGI frameworks or Python scripts where asynchronous I/O is useful. Develops \"LOVOT\", a family-like robot that promotes the ability to love, at GROOVE X, Inc. He has spoken at PyCon JP, DjangoCongress JP, and other events. As a community activity, he participates in the management of GeekLab Nagano. Co-author of \"Python Practical Recipes (2022 Gijutsu Hyoron Co., Ltd.)\". Translation of \"Expert Python Programming - Fourth Edition\". Likes beer, camping, and asyncio. Twitter account is @JunyaFff. Understand the limitations of the existing asyncio APIs, specifically regarding cancellation and exception handling in asyncio.gather. Learn how Python 3.11's asyncio.TaskGroup() overcomes these limitations and improves exception and cancellation handling. Apply the new ",
+      "content_chars": 2120,
+      "content_sha256": "a0563815f659675c8ad0b18a896dbbb34c686dd3796d3866924bb745561dc7b9",
+      "engine": "swisscows",
+      "engine_rank": 6,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "rank": 2,
+      "snippet": "With the release of Python 3.11 in October 2022, PEP 654 \"Exception Groups and except\" was accepted, and asyncio. TaskGroup() was added . This enhancement of exception and cancellation handling has allowed asyncio to evolve more flexibly, addressing ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 6
+        }
+      ],
+      "title": "Asyncio Evolved: Enhanced Exception Handling with TaskGroup in Python 3.11 | July 17th-23rd 2023 | Prague, Czech Republic & Remote",
+      "url": "https://ep2023.europython.eu/session/asyncio-evolved-enhanced-exception-handling-with-taskgroup-in-python-311/"
+    },
+    {
+      "bm25_score": null,
+      "content": "Source: https://runebook.dev/en/docs/python/library/asyncio-task/asyncio.TaskGroup\n\nStructured Concurrency in Python 3.11+: Switching from asyncio.gather to TaskGroup Theasyncio.TaskGroupis a great feature introduced in Python 3.11 that makes managing groups of concurrent tasks much safer and easier than previous methods likeasyncio.gather(). Think of anasyncio.TaskGroupas a container for multiple asynchronous tasks . When you use it, all the tasks within the group are executed concurrently. The key benefits are Structured ConcurrencyIt uses theasync withstatement, ensuring that all tasks created within the block are completed before the block exits. This means you don't have dangling tasks. Error HandlingIf any task in the group raises an exception, theTaskGroupimmediately cancels the remaining tasks and then raises anExceptionGroupthat aggregates all the exceptions. This predictable behavior is a big improvement over earlier methods. Here's how you use it WhileTaskGroupis safer, there are still a few things people sometimes trip over A common mistake is forgetting that you need to explicitly access the result of a task usingtask.result(). The task group itself doesn't return a combined list of results likeasyncio.gather. You must calltask.result()on the task objects after theasync withblock completes (or within theasync withblock, but generally after is cleaner). If any task fails, theTaskGroupimmediately cancels the others and raises anExceptionGroup. If you don't specifically handle this type, your program will crash. You need to use atry...except*block (Python 3.11+) to specifically catch theExceptionGroupand handle its contained exceptions. Note: Theexcept*syntax is crucial here for handling the structure. WhileTaskGroupis the recommended way for structured concurrency, you'll still see, or might need to use, these older alternatives This is the most common pre-3.11 way to run tasks concurrently and get their results. To makegatherbehave similarly toTaskGroup(i.e., let all tasks run even if one fails), you must usereturn_exceptions=True This ",
+      "content_chars": 2084,
+      "content_sha256": "4ce704bd49c88b673f5af5feb54f52d1f077ff6201d0591e78b4b7e51b7400cd",
+      "engine": "swisscows",
+      "engine_rank": 9,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "rank": 3,
+      "snippet": "Error Handling If any task in the group raises an exception, the TaskGroup immediately cancels the remaining tasks and then raises an ExceptionGroup that aggregates all the exceptions .",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 9
+        }
+      ],
+      "title": "Structured Concurrency in Python 3.11+: Switching from asyncio.gather to TaskGroup",
+      "url": "https://runebook.dev/en/docs/python/library/asyncio-task/asyncio.TaskGroup"
+    },
+    {
+      "bm25_score": null,
+      "content": "Source: https://runebook.dev/en/docs/python/library/asyncio-task/task-groups\n\nTask Group Trouble: Exception Handling in Python Asyncio (3.11+) asyncio.TaskGroupis a great addition to Python'sasynciolibrary. It's an asynchronous context manager that provides a reliable way to start a group of related tasks and wait for them all to finish. The key feature is structured concurrency, meaning tasks created within the group are implicitly awaited when theasync withblock exits, which helps prevent tasks from being \"orphaned\" or silently lost. Here's a basic example Task Groups are designed to be safer, but there are still a few things that can trip you up! A core feature of Task Groups is that if any task raises an unhandled exception, the Task Group will automatically Cancel all other running tasks in the group. Wait for all remaining tasks (including the cancelled ones) to finish. Exit theasync withblock by raising an ExceptionGroup (if multiple tasks failed or were cancelled and didn't handleCancelledError) or the original exception (if only one failed and it was the first to complete). Since Python 3.11, the official way to handle multiple exceptions concurrently is usingexcept*. TroubleIf you don't use the newexcept*syntax (available in Python 3.11+), or you just use a standardexcept Exception, you might not be catching theExceptionGroupcorrectly. SolutionAlways use atry/except*block outside theasync withstatement to handle the potentialExceptionGroupthat wraps any task exceptions. When an exception forces the Task Group to cancel other tasks, those tasks receive anasyncio.CancelledError. If your worker coroutine catches all exceptions (except Exception:or a bareexcept:) and doesn't re-raiseCancelledError, the Task Group might not realize the task was cancelled, leading to unexpected behavior. TroubleA worker that is cancelled but suppresses theCancelledErrormight keep the Task Group waiting or lead to unclear state. SolutionWhen writing worker coroutines, be careful not to swallowCancelledErrorif you want cancellation to proceed normally. Uset",
+      "content_chars": 2078,
+      "content_sha256": "27548f4a2aef711c1d8af972e4fe440205cd3b5267123ea6874d790363378650",
+      "engine": "swisscows",
+      "engine_rank": 2,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "rank": 4,
+      "snippet": "Exit the async with block by raising ... Since Python 3.11, the official way to handle multiple exceptions concurrently is using except* ....",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 2
+        }
+      ],
+      "title": "Task Group Trouble: Exception Handling in Python Asyncio (3.11+)",
+      "url": "https://runebook.dev/en/docs/python/library/asyncio-task/task-groups"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 7,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "rank": 5,
+      "snippet": "import asyncio import random async def fetch_data(name): delay = random.uniform(0.5, 2.0) await asyncio.sleep(delay) if delay > 1.5: raise ValueError(f\"{name} took too long!\") print(f\"{name} done after {delay:.2f}s\") async def main(): async with asyncio.TaskGroup() as tg: tg.create_task(fetch_data(\"Task A\")) tg.create_task(fetch_data(\"Task B\")) tg.create_task(fetch_data(\"Task C\")) asyncio.run(main()) ... The async with block defines a safe region where tasks live. If any task fails, the TaskGroup cancels all remaining tasks and waits for them. When the block exits, all tasks are finished or properly cleaned up. If at least one task raises an exception, the TaskGroup raises an ExceptionGroup that contains all non-cancellation exceptions after all tasks have finished.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 7
+        }
+      ],
+      "title": "Structured Concurrency in Python with TaskGroup: Writing Async Code That Doesn’t Break — Billy Poon",
+      "url": "https://billypoon.com/insights/structured-concurrency-in-python-with-taskgroup-writing-async-code-that-doesn-t-break"
+    }
+  ],
+  "returned_chars": 8414,
+  "run_id": "run",
+  "timings_ms": {
+    "fetch": 670,
+    "initialize": 131,
+    "rank": 2,
+    "search": 315
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "engine": "bing",
+  "query": "James Webb TRAPPIST-1 b atmosphere observations 2025",
+  "elapsed_ms": 727,
+  "result_count": 10,
+  "retries": 0,
+  "success": true,
+  "outcome": "results",
+  "error": null,
+  "raw_result_count": 10,
+  "filtered_count": 0
+}

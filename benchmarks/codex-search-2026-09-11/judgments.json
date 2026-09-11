@@ -1,0 +1,766 @@
+{
+  "rubric": {
+    "0": "Off-topic, wrong entity, or generic keyword match without task-specific value.",
+    "1": "Related/background information, broad likely route, or mismatch to requested date.",
+    "2": "Directly addresses the specific information need, based on title, URL and returned excerpt."
+  },
+  "assessment": "Single assistant review of unique query/URL pairs, reused across repeated runs. Not blind or independent; relevance is not factual verification. Language, freshness and duplicate issues discussed separately. No pages fetched for quality scoring.",
+  "judgments": [
+    {
+      "query_id": "q01",
+      "url": "https://en.wikipedia.org/wiki/Australia",
+      "title": "Australia",
+      "score": 1,
+      "reason": "Related country, territory or capital-policy page, less directly targeted than the Canberra result."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.dfat.gov.au/about-australia",
+      "title": "About Australia | Australian Government Department of Foreign Affairs and Trade",
+      "score": 1,
+      "reason": "Related country, territory or capital-policy page, less directly targeted than the Canberra result."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.aph.gov.au/Parliamentary_Business/Committees/Joint/National_Capital_and_External_Territories/NationalCapital/A_Capital_for_All_Australians/Chapter_1_-_Introduction",
+      "title": "Chapter 1 - Introduction – Parliament of Australia",
+      "score": 1,
+      "reason": "Related country, territory or capital-policy page, less directly targeted than the Canberra result."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://en.wikipedia.org/wiki/Australian_Capital_Territory",
+      "title": "Australian Capital Territory",
+      "score": 1,
+      "reason": "Related country, territory or capital-policy page, less directly targeted than the Canberra result."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://en.wikipedia.org/wiki/Canberra",
+      "title": "Canberra",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.capitalfm.com/",
+      "title": "Capital - The UK's No.1 Hit Music Station",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.radio-uk.co.uk/capital-fm",
+      "title": "Capital London, listen live - Radio UK",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.radio-uk.co.uk/capital",
+      "title": "Capital , listen live - Radio UK",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://radio-live-uk.com/capital-fm",
+      "title": "Capital Radio UK - listen live",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://en.wikipedia.org/wiki/List_of_national_capitals",
+      "title": "List of national capitals - Wikipedia",
+      "score": 1,
+      "reason": "Broad list of capitals is potentially useful, but returned excerpt does not identify Australia or Canberra."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://dictionary.cambridge.org/dictionary/english/why",
+      "title": "WHY | English meaning - Cambridge Dictionary",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://www.youtube.com/watch?v=4qeaBFFq3to",
+      "title": "Sabrina Carpenter - Why (Official Video ) - YouTube",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://www.merriam-webster.com/dictionary/why",
+      "title": "WHY Definition & Meaning - Merriam-Webster",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://www.youtube.com/watch?v=HG7I4oniOyA",
+      "title": "Annie Lennox - Why (Official Music Video) - YouTube",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://dictionary.cambridge.org/us/dictionary/english/why",
+      "title": "WHY | definition in the Cambridge English Dictionary",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://www.weather.gov/fgz/SkyBlue",
+      "title": "Why Is The Sky Blue?",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://en.wikipedia.org/wiki/Rayleigh_scattering",
+      "title": "Rayleigh scattering",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://scienceinsights.org/why-is-the-sky-blue-rayleigh-scattering-explained/",
+      "title": "Why Is the Sky Blue? Rayleigh Scattering Explained - ScienceInsights",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://technav.ieee.org/topic/rayleigh-scattering/",
+      "title": "Rayleigh scattering | IEEE Technology Navigator",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://www.weather.gov.hk/en/education/earth-science/optical-phenomena/00364-why-is-the-sky-blue.html",
+      "title": "Why is the sky blue?｜Hong Kong Observatory(HKO)｜Educational Resources",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://github.com/python/cpython/blob/main/Lib/asyncio/taskgroups.py",
+      "title": "cpython/Lib/asyncio/taskgroups.py at main · python/cpython · GitHub",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://github.com/python/cpython/blob/main/Doc/library/asyncio-task.rst",
+      "title": "cpython/Doc/library/asyncio-task.rst at main · python/cpython · GitHub",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://docs.python.org/3/library/asyncio-task.html?highlight=n",
+      "title": "Coroutines and tasks — Python 3.14.7 documentation",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://github.com/python/cpython/blob/main/Doc/library/asyncio-task.rst?plain=1",
+      "title": "cpython/Doc/library/asyncio-task.rst at main · python/cpython · GitHub",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://github.com/yottayoshida/modern-python-guidance/blob/main/skills/modern-python-guidance/guides/async/exception-groups.md",
+      "title": "modern-python-guidance/skills/modern-python-guidance/guides/async/exception-groups.md at main · yottayoshida/modern-python-guidance · GitHub",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.python.org/",
+      "title": "Welcome to Python.org",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.python.org/downloads/",
+      "title": "Download Python | Python.org",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.w3schools.com/python/",
+      "title": "Python Tutorial - W3Schools",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.online-python.com/",
+      "title": "Online Python - IDE, Editor, Compiler, Interpreter",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://en.wikipedia.org/wiki/Python_(programming_language)",
+      "title": "Python (programming language ) - Wikipedia",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://dictionary.cambridge.org/dictionary/english/explain",
+      "title": "EXPLAIN | English meaning - Cambridge Dictionary",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.merriam-webster.com/dictionary/explain",
+      "title": "EXPLAIN Definition & Meaning - Merriam-Webster",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.merriam-webster.com/thesaurus/explain",
+      "title": "EXPLAIN Synonyms: 50 Similar and Opposite Words - Merriam-Webster",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://dictionary.cambridge.org/us/dictionary/english/explain",
+      "title": "EXPLAIN | definition in the Cambridge English Dictionary",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.collinsdictionary.com/dictionary/english/explain",
+      "title": "EXPLAIN definition and meaning | Collins English Dictionary",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://wiki.postgresql.org/wiki/Slow_Query_Questions",
+      "title": "Slow Query Questions - PostgreSQL wiki",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/docs/current/sql-explain.html",
+      "title": "PostgreSQL: Documentation: 18: EXPLAIN",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/docs/18/using-explain.html",
+      "title": "PostgreSQL: Documentation: 18: 14.1. Using EXPLAIN",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/files/documentation/pdf/12/postgresql-12-A4.pdf",
+      "title": "PostgreSQL 12.22 Documentation",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/docs/16/using-explain.html",
+      "title": "PostgreSQL: Documentation: 16: 14.1. Using EXPLAIN",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/construct-traceql-queries/",
+      "title": "Construct a TraceQL query | Grafana Tempo documentation",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://grafana.com/docs/tempo/latest/introduction/trace-structure/?plcmt=products-nav",
+      "title": "Trace structure | Grafana Tempo documentation",
+      "score": 1,
+      "reason": "Useful trace structure or child-count context, but not a direct guide to parent-child structural operators."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://grafana.com/docs/grafana/latest/datasources/tempo/query-editor/traceql-editor/",
+      "title": "Write TraceQL queries with the editor | Grafana documentation",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/trace-structure/",
+      "title": "Learn about trace structure and TraceQL | Grafana Tempo documentation",
+      "score": 1,
+      "reason": "Useful trace structure or child-count context, but not a direct guide to parent-child structural operators."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://grafana.com/blog/tempo-2-10-release-all-the-latest-features/",
+      "title": "Tempo 2.10 release: new TraceQL features, LLM-optimized API responses, vParquet5, and more | Grafana Labs",
+      "score": 1,
+      "reason": "Useful trace structure or child-count context, but not a direct guide to parent-child structural operators."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://en.wikipedia.org/wiki/Tempo",
+      "title": "Tempo - Wikipedia",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://www.bbc.co.uk/bitesize/articles/ztxvcxs",
+      "title": "What is tempo in music? - BBC Bitesize",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://simple.wikipedia.org/wiki/Tempo",
+      "title": "Tempo - Simple English Wikipedia , the free encyclopedia",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://dictionary.cambridge.org/dictionary/english/tempo",
+      "title": "TEMPO | English meaning - Cambridge Dictionary",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://www.bbc.co.uk/bitesize/guides/zq6nrwx/revision/1",
+      "title": "Understanding musical terms - National 5 Music Revision - BBC",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://openai.com/codex/",
+      "title": "Codex | AI Coding Partner from OpenAI",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://openai.com/index/openai-codex/",
+      "title": "OpenAI Codex",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://www.codex.com/codex/",
+      "title": "CODEX – Codex",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://github.com/openai/codex",
+      "title": "GitHub - openai/ codex : Lightweight coding agent that runs in your ...",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://chatgpt.com/codex/",
+      "title": "Codex in ChatGPT | AI Coding Agents for Software Engineering",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://learn.chatgpt.com/pt-BR/docs/config-file/config-reference",
+      "title": "Referência de configuração | ChatGPT Learn",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://learn.chatgpt.com/zh-Hans/docs/config-file/config-reference",
+      "title": "配置参考资料 | ChatGPT Learn",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://learn.chatgpt.com/ja-JP/docs/config-file/config-sample",
+      "title": "設定例 | ChatGPT Learn",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://learn.chatgpt.com/de-DE/docs/config-file/config-reference",
+      "title": "Konfigurationsreferenz | ChatGPT Learn",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://learn.chatgpt.com/es-419/docs/config-file/config-reference",
+      "title": "Referencia de configuración | ChatGPT Learn",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://doc.rust-lang.org/stable/error_codes/E0382.html",
+      "title": "E0382 - Error codes index",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://www.rustfaq.org/en/how-to-fix-rust-e0382-use-of-moved-value/",
+      "title": "How to fix Rust E0382 use of moved value — Rust FAQ",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://www.rustfaq.org/en/how-to-fix-use-of-moved-value-error/",
+      "title": "How to fix use of moved value error — Rust FAQ",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://users.rust-lang.org/t/help-to-fix-build-error-use-of-moved-value/19579",
+      "title": "Help to fix build error \"use of moved value\" - help - The Rust Programming Language Forum",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://users.rust-lang.org/t/how-to-fix-use-of-moved-value-error/111382",
+      "title": "How to fix use of moved value error - help - The Rust Programming Language Forum",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://rust.facepunch.com/",
+      "title": "Rust — Explore, Build and Survive",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://rust-lang.org/",
+      "title": "Rust Programming Language",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://store.steampowered.com/app/252490/Rust/",
+      "title": "Rust on Steam",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://en.wikipedia.org/wiki/Rust_(programming_language)",
+      "title": "Rust (programming language ) - Wikipedia",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://rust.facepunch.com/play",
+      "title": "Rust - Play — Rust",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://en.wikipedia.org/wiki/James_(band)",
+      "title": "James (band ) - Wikipedia",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://wearejames.com/",
+      "title": "the official JAMES website",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://www.youtube.com/playlist?list=PLMEZyDHJojxMMkhO7741f1LyNlz2YQLCa",
+      "title": "James playlist - BEST songs - YouTube",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://music.youtube.com/channel/UCvTAoRf5FA_ERVm7X-_lj2A",
+      "title": "James - YouTube Music",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://wearejames.com/news/",
+      "title": "News - James",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://science.nasa.gov/mission/webb/science-overview/science-explainers/what-is-webb-revealing-about-the-trappist-1-system/",
+      "title": "What is Webb Revealing About the TRAPPIST-1 System? - NASA Science",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://doi.org/10.1051/0004-6361/202554243",
+      "title": "Constraints on the possible atmospheres on TRAPPIST-1 b: insights from 3D climate modeling | Astronomy & Astrophysics (A&A)",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://www.cea.fr/paris-saclay/Pages/Actualites/Scientifique/2025/trappist-b-atmosphere-ou-pas.aspx",
+      "title": "CEA PARIS-SACLAY - Trappist-1b : atmosphère ou pas ?",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://www.nature.com/articles/s41550-026-02806-9",
+      "title": "No thick atmosphere around TRAPPIST-1 b and c from JWST thermal phase curves | Nature Astronomy",
+      "score": 1,
+      "reason": "Correct planet and atmospheric topic, but primarily 2023 or 2026 work rather than the requested 2025-era findings."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://science.nasa.gov/universe/exoplanets/webb-measures-the-temperature-of-a-trappist-1-exoplanet/",
+      "title": "Webb Measures the Temperature of a TRAPPIST-1 Exoplanet - NASA Science",
+      "score": 1,
+      "reason": "Correct planet and atmospheric topic, but primarily 2023 or 2026 work rather than the requested 2025-era findings."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://github.com/grafana/tempo/releases",
+      "title": "Releases · grafana/tempo · GitHub",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://grafana.com/docs/tempo/latest/release-notes/v3-0/",
+      "title": "Version 3.0 release notes | Grafana Tempo documentation",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://github.com/grafana/tempo/blob/main/CHANGELOG.md",
+      "title": "tempo/CHANGELOG.md at main · grafana/tempo · GitHub",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://newreleases.io/project/github/grafana/tempo/release/v3.0.0",
+      "title": "grafana/tempo v3.0.0 on GitHub",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://github.com/grafana/tempo/blob/main/CHANGELOG.md?plain=1",
+      "title": "tempo/CHANGELOG.md at main · grafana/tempo · GitHub",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://grafana.com/",
+      "title": "Grafana Labs - Full-stack observability for the agentic era",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://grafana.com/grafana/download",
+      "title": "Download Grafana",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://en.wikipedia.org/wiki/Grafana",
+      "title": "Grafana - Wikipedia",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://github.com/grafana/grafana",
+      "title": "GitHub - grafana / grafana : The open and composable observability and ...",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://www.geeksforgeeks.org/blogs/what-is-grafana/",
+      "title": "Grafana - GeeksforGeeks",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://en.wikipedia.org/wiki/London",
+      "title": "London - Wikipedia",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.visitlondon.com/",
+      "title": "Visit London - We are London 's Official Visitor Guide",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.visitlondon.com/things-to-do/best-things-to-do-in-london",
+      "title": "Best things to do in London : Our top picks for 2026",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.britannica.com/place/London",
+      "title": "London | History, Maps, Population, Area, & Facts | Britannica",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://en.wikipedia.org/wiki/City_of_London",
+      "title": "City of London - Wikipedia",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.visitlondon.com/things-to-do/place/52747-science-museum",
+      "title": "Science Museum London | Tickets and Info",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.sciencemuseum.org.uk/see-and-do/welcome-back",
+      "title": "See and do | Science Museum",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.sciencemuseum.org.uk/sites/default/files/2024-10/science-museum-map-nov-24.pdf",
+      "title": "Science Museum map",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.sciencemuseum.org.uk/sites/default/files/2024-06/SM-Map-2024-June.pdf",
+      "title": "Science Museum Map",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.kensingtonandchelsea.london/attractions/science-museum",
+      "title": "Science Museum | Kensington and Chelsea, London",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://wiki.postgresql.org/wiki/SlowQueryQuestions",
+      "title": "Slow Query Questions - PostgreSQL wiki",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://www.nature.com/articles/s41586-023-05951-7",
+      "title": "Thermal emission from the Earth-sized exoplanet TRAPPIST-1 b using JWST | Nature",
+      "score": 1,
+      "reason": "Correct planet and atmospheric topic, but primarily 2023 or 2026 work rather than the requested 2025-era findings."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://www.livescience.com/planet-earth/why-is-the-sky-blue",
+      "title": "Why is the sky blue? | Live Science",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.sciencemuseum.org.uk/visit",
+      "title": "Visit | Science Museum , London",
+      "score": 2,
+      "reason": "Specifically addresses visiting the London Science Museum or its opening hours."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://whichmuseum.co.uk/museum/science-museum-london-4545/opening-hours",
+      "title": "Opening Hours - Science Museum ( London )",
+      "score": 2,
+      "reason": "Specifically addresses visiting the London Science Museum or its opening hours."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.sciencemuseum.org.uk/",
+      "title": "Home | Science Museum",
+      "score": 1,
+      "reason": "Correct official museum homepage, but excerpt covers admissions rather than hours."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.wonderfulmuseums.com/museum/london-science-museum-opening-times/",
+      "title": "London Science Museum Opening Times : Your Essential Guide to …",
+      "score": 2,
+      "reason": "Specifically addresses visiting the London Science Museum or its opening hours."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.opening-hours-uk.co.uk/opening-hours/science-museum-london",
+      "title": "Science Museum, London Opening Hours",
+      "score": 2,
+      "reason": "Specifically addresses visiting the London Science Museum or its opening hours."
+    }
+  ]
+}

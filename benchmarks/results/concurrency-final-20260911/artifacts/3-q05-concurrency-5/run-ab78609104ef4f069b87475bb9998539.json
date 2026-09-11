@@ -1,0 +1,583 @@
+{
+  "candidate_counts": {
+    "after_candidate_selection": 15,
+    "after_ranking": 15,
+    "after_search": 20,
+    "returned": 5,
+    "with_content": 15
+  },
+  "candidates": [
+    {
+      "content": "Source: https://grafana.com/docs/tempo/latest/traceql/construct-traceql-queries/\n\nConstruct a TraceQL query Examples Select spans Combine spansets using operators Aggregators Grouping Arithmetic Selection Retrieve most recent results (experimental) Was this page helpful? Related resources from Grafana Labs In TraceQL, a query is an expression that’s evaluated on one trace at a time The query is structured as a set of chained expressions called a pipeline. In TraceQL, curly brackets{}always select a set of spans from available traces. Curly brackets are commonly paired with a condition to reduce the spans fetched. The simplest query looks like this: The conditions inside the braces are applied to each span; if there’s a match, then it’s returned. In this case, there are no conditions so it matches everything. Each expression in the pipeline selects or discards spansets from being included in the results set. For example: In this example, the search reduces traces to those spans where: Queries select sets of spans and filter them through a pipeline of aggregators and conditions. If, for a given trace, this pipeline produces a spanset then it’s included in the results of the query. Refer toTraceQL metrics queriesfor examples of TraceQL metrics queries. The following examples illustrate some commonly used queries. You can use these examples as a starting point for your own queries. Query construction tips: Let’s say that you want to find traces of a specific operation, then both the operation name (the span attributename) and the name of the service that holds this operation (the resource attributeservice.name) should be specified for proper filtering. In the example below, traces are filtered on theresource.service.namevaluefrontendand the spannamevaluePOST /api/order: When using the same Grafana stack for multiple environments (for example,productionandstaging) or having services that share the same name but are differentiated though their namespace, the query looks like: This example finds all traces on the operationPOST /api/ordersthat have a spa",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 1,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "You can use the span:childCount intrinsic to find the number of direct children of a span.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 1
+        }
+      ],
+      "title": "Construct a TraceQL query | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/construct-traceql-queries/"
+    },
+    {
+      "content": "Source: https://grafana.com/docs/tempo/latest/introduction/trace-structure/\n\nTrace structure Was this page helpful? Related resources from Grafana Labs Traces are telemetry data structured as trees. Traces are made of spans (for example, a span tree); there is a root span that can have zero to multiple branches that are called child spans. Each child span can itself be a parent span of one or multiple child spans, and so on so forth. In the specific context of Tempo andTraceQL query language, a span has the following associated fields: The first four properties areintrinsics. Intrinsics are the core, built-in fields that are fundamental to the identity and lifecycle of spans and traces. These fields are defined by the OpenTelemetry specification and are always present. They describe the essential structure of distributed tracing data. Attributesare custom span metadata in the form of key-value pairs. There are four types of attributes: span attributes, resource attributes, event attributes, and link attributes. Span attributesare key-value pairs that contain metadata that you can use to annotate a span to carry information about the operation it’s tracking. For example, in an eCommerce application, if a span tracks an operation that adds an item to a user’s shopping cart, the user ID, added item ID and cart ID can be captured and attached to the span as span attributes. Aresource attributerepresents information about an entity producing the span. For example, a span created by a process running in a container deployed by Kubernetes could link a resource that specifies the cluster name, namespace, pod, and container name. Resource attributes are resource-related metadata (key-value pairs) that are describing the Resource. Anevent attributerepresents a unique point in the time during the span’s duration. For more information, refer toAll about span eventsandSpan eventsin the OTEL documentation. Alink attributelets you query link data in a span. A span link associates one span with one or more other spans that are a causal relationship. For mor",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 2,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Traces are made of spans (for example, a span tree); there is a root span that can have zero to multiple branches that are called child spans. Each child span can itself be a parent span of one or multiple child spans , and so on so forth. In ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 2
+        }
+      ],
+      "title": "Trace structure | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/introduction/trace-structure/"
+    },
+    {
+      "content": "Source: https://grafana.com/docs/tempo/latest/traceql/\n\nTraceQL Get started with TraceQL How can you use TraceQL? Resources Was this page helpful? Related resources from Grafana Labs TraceQL is a query language designed for selecting traces in Tempo. Distributed traces contain a wealth of information, and tools like auto-instrumentation simplify the process of capturing data. Extracting value from traces can be much harder. For example, Tempo metrics-generator can aggregate traces into service graphs and span metrics, and exemplars allow you to navigate from a spike in API latency to a trace that contributed to that spike. But traces can do so much more. Traces are the flow of events throughout your components. They have a tree structure—-with a root, branches, and leaves—-arbitrary key/value data at any location, and of course timestamps. For example, you can use traces to perform root cause analyses (RCA) on a service outage and use TraceQL to pinpoint the root cause. Refer toDiagnose errors with tracesfor a use case example. Use these references to get started with TraceQL: TraceQL uses similar syntax and semantics asPromQLandLogQL, where possible. There’s supposed to be a video here, but for some reason there isn’t. Either we entered the id wrong (oops!), or Vimeo is down. If it’s the latter, we’d expect they’ll be back up and running soon. In the meantime,check out our blog! You can use TraceQL queries using the command line or in Grafana with the query editor and query builder. The query editor and builder are available in theTempo data sourcefor Grafana Explore. In addition, you can use Traces Drilldown to investigate your tracing data without writing TraceQL queries. For more information, refer to theTraces Drilldowndocumentation. For more information, refer toWrite TraceQL queries in Grafana. TraceQL metrics generate metrics from traces and let you use TraceQL to query metrics. Refer toTraceQL metricsfor more information. TraceQL requires the Parquet columnar format, which is the default block format for Tempo. ",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 3,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "For example, you can use traces to perform root cause analyses (RCA) on a service outage and use TraceQL to pinpoint the root cause. Refer to Diagnose errors with traces for a use case example. ... Determine the information you want to query by understanding the relationship of queries to trace structure and spans.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 3
+        }
+      ],
+      "title": "TraceQL | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/"
+    },
+    {
+      "content": "Source: https://grafana.com/docs/tempo/latest/traceql/trace-structure/\n\nLearn about trace structure and TraceQL Was this page helpful? Related resources from Grafana Labs The purpose of TraceQL is to search or query for spans. The query returns a set of spans, also called a spanset. A TraceQL query can select traces based on: Refer toTrace Structurefor information about trace structure, intrinsics, and span resources and attributes. A query is structured as a pipeline of operations (filters and aggregators). The query expression is evaluated on one trace at a time, selecting or discarding spans from the result. At each stage of the query pipeline, the selected spans for a trace are grouped in a spanset (set of spans). The associated trace is also returned. The result of the query is the spansets (and their associated traces) for all the traces evaluated. The simplest query is this one: The curly braces encompass the select/filter conditions. In theory, each span (and the trace it belongs to) matching those conditions is returned by the query. In the previous example, since there are no filter conditions, all spans are matching and thus returned with their associated traces. In practice, the query is performed against a defined time interval, relative (for example, the last 3 hours) or absolute (for example, from X date-time to Y date-time). The query response is also limited by the number of traces (Limit) and spans per spanset (Span Limit). To learn more about query syntax, refer to theConstruct a TraceQL querydocumentation. Refer toTrace Structurefor information about trace structure, intrinsics, and span resources and attributes. span attributes, timing, and duration structural relationships between spans aggregated data from the spans in a trace Query options:Limit,Span LimitandTable Format(Traces or Spans). Trace (by Trace ID). TheNameandServicecolumns are displaying the trace root span name and associated service.Note:Trace results for matching spans are returned on a first-match basis. These results may not be the latest traces s",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 4,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "The Name and Service columns are displaying the trace root span name and associated service. Note: Trace results for matching spans are returned on a first-match basis. These results may not be the latest traces stored by Tempo. ... To learn more about query syntax, refer to the Construct a TraceQL ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 4
+        }
+      ],
+      "title": "Learn about trace structure and TraceQL | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/trace-structure/"
+    },
+    {
+      "content": "Source: https://grafana.com/blog/grafana-tempo-2-8-release-memory-improvements-new-traceql-features-and-more/\n\nGrafana Tempo 2.8 release: memory improvements, new TraceQL features, and more TraceQL features Performance enhancements: compactor memory usage Breaking changes What’s next in Grafana Tempo? Grafana Tempo 2.8is officially here, delivering new TraceQL features, performance improvements, and bug fixes, as well as some breaking changes. Watch the video below to learn more about the TraceQL features, or continue reading to get a quick overview of these and other updates. If you’re looking for something more in-depth for all of the changes that happened in this release, head over to theGrafana Tempo 2.8 release notesor thechangelog. No Tempo release is complete without some newTraceQLfeatures. Here are a few we’re excited to share from the 2.8 release. If you want to run the same queries you see in this post, you can go to ourlocal Docker Compose exampleand follow the instructions there. Then, go tolocalhost:3000and click onExplore, which should take you to Tempo. By default, TraceQL searches are non-deterministic — they return the first matching results they find, not necessarily the most recent. A long-running community request has been to always return the most recent results. Now, in Tempo 2.8, we’ve added this featureas a query hintto modify the behavior of the query. If you specifically want the latest traces, use the TraceQL query hint with(most_recent=true). You can see a few more example queries in ourdocs. Ultimately we would like to make this the default TraceQL behavior, but due to regressions on certain queries, we decided to make it a query hint for now. We will re-evaluate as we continue to improve Tempo performance! If you have a parent span ID, you can now look up the associated children spans using thenewspan:parentIDintrinsic. For example, let’s look at the span ID of alist-articlesspan: We can make our query as follows: And we can see that our parent,list-articles (cb3557c2873e9e07), has two children spans, which arefetch-articles (1420e572dec5a4d1)a",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 5,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "We will re-evaluate as we continue to improve Tempo performance! If you have a parent span ID, you can now look up the associated children spans using the new span:parentID intrinsic .",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 5
+        }
+      ],
+      "title": "Grafana Tempo 2.8 release: memory improvements, new TraceQL features, and more | Grafana Labs",
+      "url": "https://grafana.com/blog/grafana-tempo-2-8-release-memory-improvements-new-traceql-features-and-more/"
+    },
+    {
+      "content": "Source: https://grafana.com/docs/tempo/latest/release-notes/version-2/v2-8/\n\nVersion 2.8 release notes New language features for TraceQL Major performance and memory usage improvements Features and enhancements Upgrade considerations Security fixes Bug fixes Was this page helpful? Related resources from Grafana Labs The Tempo team is pleased to announce the release of Tempo 2.8. This release gives you: These release notes highlight the most important features and bugfixes. For a complete list, refer to theTempo changelog. Read theTempo 2.8 blog postfor more examples and details about these improvements. We’re excited to roll out three powerful enhancements to TraceQL, giving you more flexibility and performance when querying traces in Grafana Cloud with Tempo. When you’re looking at latency, error rates, or throughput across hundreds or thousands of services or endpoints, it’s easy to get lost in all the data. Previously, you’d have to pull back the full set of aggregates and then manually inspect or post‑process the results to find your worst offenders or best performers. Withtopk(n)andbottomk(n), you can immediately narrow your focus to the top‑ or bottom‑ranked spans in a single, efficient query. This saves time and reduces the data volume you need to scan downstream. These are second stage functions used, where: For more information, refer to thetopk and bottomk documentation(PR 4646). Thesum_over_time()function lets you aggregate numerical values by computing the sum value of them. The time interval that the sum is computed over is set by thestepparameter. Withsum_over_time(), you can directly compute cumulative sums inside TraceQL, like total bytes transferred, total error counts, or resource consumption over time. For each step interval,sum_over_time(attr)totals the values ofattracross all matching spans. Refer toTraceQL metrics functionsfor more information. (PR 4786) When troubleshooting a live incident or monitoring production health, you often need to see the absolute latest traces first. By default, Tempo’s query engine favors sp",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 6,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "In addition, you can query by parent span id. Using span:parentID, you can ensure that you are looking at a child span of a specific parent , which is useful for example in span linking.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 6
+        }
+      ],
+      "title": "Version 2.8 release notes | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/release-notes/version-2/v2-8/"
+    },
+    {
+      "content": "Source: https://grafana.com/blog/grafana-tempo-2-3-release-faster-trace-queries-traceql-upgrades/\n\nGrafana Tempo 2.3 release: faster trace queries, TraceQL upgrades vParquet3 New TraceQL features What’s next in Grafana Tempo? Grafana Tempo 2.3has been unleashed upon the world, bringing with it the latest iteration of the vParquet backend! Tempo 2.3 has a little bit of everything, but the headline item here is vParquet3 and new features that improve search speeds. Watch the video above for all the details, or continue reading to get a quick overview of the latest updates in Tempo. If you’re looking for something more in-depth, don’t hesitate to jump into thechangelogor ourGrafana Tempo 2.3 release notes. vParquet3 is the latest Parquet backend version for Tempo. This new format has a number of small improvements, but the big feature is the ability to choose your own dedicated string attribute columns, which allows for much more performantTraceQLqueries. Parquet backends will, by default, put the majority of the span attributes into one large column. This means that for some TraceQL queries you are pulling a lot more data than necessary. With vParquet3, you can use thededicated columns configurationto reduce the size of this main attributes column. We’ve found the most useful columns to pull out are simply the ones that contribute the most to the column’s size, so we recommend using theCLI toolto help discover these attributes. Check out this search latency reduction as we rolled out vParquet3 in one of our clusters: Note: vParquet3 is included in Tempo 2.3 but is not default, and we encourage everyone to enable and configure it. vParquet3 is officially GA and we have been running it in production for months. We have decided to leave vParquet2 default to allow for a cleaner upgrade and downgrade path. It will be a sad day when I write a Tempo release blog post and can’t include a TraceQL section. Thankfully, today is not that day! Tempo 2.3 brings a few new structural operators to the table. First, we have the parent and ancestor operators. Recall that all structur",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 7,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Recall that all structural operators return results from the right-hand side of the operator! Parent and ancestor are the inverse of child and descendant . Find, spans of service foo that have children from service bar:",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 7
+        }
+      ],
+      "title": "Grafana Tempo 2.3 release: faster trace queries, TraceQL upgrades | Grafana Labs",
+      "url": "https://grafana.com/blog/grafana-tempo-2-3-release-faster-trace-queries-traceql-upgrades/"
+    },
+    {
+      "content": "Source: https://grafana.com/docs/grafana/latest/datasources/tempo/query-editor/\n\nQuery tracing data Before you begin Choose a query editing mode Understand search behavior Use TraceQL panels in dashboards Set options for query builder and editor Use query types together Upload a JSON trace file Cross-tenant TraceQL queries Next steps Was this page helpful? Related resources from Grafana Labs The Tempo data source’s query editor helps you query and display traces from Tempo inExplore. The queries useTraceQL, the query language designed specifically for tracing. For general documentation on querying data sources in Grafana, refer toQuery and transform data. You can compose TraceQL queries in Grafana and Grafana Cloud usingExploreand a Tempo data source. You don’t have to know TraceQL to create a query. TheSearchquery builder lets you select options from drop-down lists to build a query visually. These selections generate a TraceQL query that you can transfer to theTraceQLeditor to refine further. TraceQL queries follow the pattern{ conditions } | pipeline, where conditions inside{}select spans and pipeline operators likecount()oravg()aggregate results. To learn the full syntax, refer toConstruct a TraceQL query. For a language overview, refer to theTraceQL documentation. The query editor has threeQuery typesthat you can use to explore your tracing data. You can use these modes by themselves or in combination to create building blocks to generate custom queries. Adding another query adds a new query block. Refer toUse query types togetherfor more information. Start here if you’re exploring data or learning TraceQL. TheSearchquery builder provides drop-down lists and text fields to build a query visually without needing to know TraceQL syntax. Your selections automatically generate a TraceQL query that you can copy to the editor for further refinement. Refer toSearch traces using the query builderfor more information. Use theTraceQLeditor when you need complex filters, structural queries across parent and child spans, or aggregations that the Search",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 8,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Use the TraceQL editor when you need complex filters, structural queries across parent and child spans, or aggregations that the Search builder doesn’t support. The editor provides autocomplete for attribute names, scopes, and operators.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 8
+        }
+      ],
+      "title": "Query tracing data | Grafana documentation",
+      "url": "https://grafana.com/docs/grafana/latest/datasources/tempo/query-editor/"
+    },
+    {
+      "content": "Source: https://grafana.com/docs/grafana/latest/datasources/tempo/query-editor/traceql-editor/\n\nWrite TraceQL queries with the editor Before you begin Write TraceQL queries using the query editor Query by TraceID Use autocomplete to write queries View query results Next steps Was this page helpful? Related resources from Grafana Labs Use theTraceQLeditor when you need structural queries across parent and child spans, aggregations, or other features that theSearch query builderdoesn’t support. TraceQL queries follow the pattern{ conditions } | pipeline. Refer toConstruct a TraceQL queryfor the full syntax. To get started, paste this query into the editor and selectRun query: This returns all error spans from thefrontendservice. Replacefrontendwith your service name. For more examples, refer toTraceQL query examples. If queries return no results, check that yourTempo data source is configured and connected. Inspired by PromQL and LogQL, TraceQL is a query language designed for selecting traces. TraceQL provides a method for formulating precise queries so you can zoom in to the data you need. Query results are returned faster because the queries limit what is searched. To learn more about how to query by TraceQL, refer to theTraceQL documentation. The TraceQL query editor in GrafanaExplorelets you search by trace ID and write TraceQL queries using autocomplete. This feature is automatically available in Grafana 10 (and newer) and Grafana Cloud. To use the TraceQL query editor in self-hosted Grafana 9.3.2 and older, you need toenable thetraceqlEditorfeature toggle. If you’re trying to query a self-managed Grafana Tempo or Grafana Enterprise Traces database with a gateway, such as nginx, in front of it from your hosted Grafana, that gateway (for example, nginx) must allow gRPC connections. If it doesn’t, streaming won’t work and queries will fail to return results. If you can’t configure your gateway to allow gRPC, deactivate streaming in your hosted Grafana. In Grafana 11.2 and newer, you can deactivate theStreamingoption in your Tempo data source settings fromCon",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 9,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Documentation Grafana documentation Data sources Tempo Query tracing data Write TraceQL queries · Grafana Cloud Enterprise Open source · Use the TraceQL editor when you need structural queries across parent and child spans, aggregations, or other features that the Search query builder doesn’t support.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 9
+        }
+      ],
+      "title": "Write TraceQL queries with the editor | Grafana documentation",
+      "url": "https://grafana.com/docs/grafana/latest/datasources/tempo/query-editor/traceql-editor/"
+    },
+    {
+      "content": "Source: https://grafana.com/docs/tempo/latest/introduction/architecture/\n\nTempo architecture Design goals Deployment modes How data flows Components Storage What you can query Component details Things to keep in mind Next steps Was this page helpful? Related resources from Grafana Labs The journey of a trace is usually from an instrumented application, to a trace receiver/collector, to a trace backend store, and then those traces are retrieved and visualized in a tool like Grafana. Grafana Tempo acts in two major capacities: This page gives a high-level overview of how Tempo works: how it ingests, stores, and queries trace data, and the components that make up a Tempo deployment. For in-depth operational detail, refer to theTempo architecture reference. The Tempo architecture is built around a few goals that shape how it ingests, stores, and queries traces. All Tempo components are compiled into the same binary; the-targetparameter controls which components run in a given process, whether that’s one process running everything or many processes each running one component. This lets you run Tempo in two modes: Object storage is recommended for production in both modes; a local filesystem backend is available for development and testing. For more information, refer toDeployment modesandSet up for tracing. Tempo separates the write path, which gets trace data into storage, from the read path, which serves queries. The following steps describe the write path in microservices mode. In monolithic mode, the distributor pushes data in-process to the live-store and metrics-generator instead of writing to Kafka. Trace data is sent from the tracing pipeline (OpenTelemetry Collector, Grafana Alloy) to adistributor. The distributor validates the request, shards traces by trace ID, and writes toKafka. Kafka acknowledges the write, and the distributor returns a response to the client. After the write is acknowledged, downstream components consume the data asynchronously: Live-storesconsume from Kafka and make data available for recent queries. Block-buil",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 10,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "When a trace ID is queried in Tempo, it returns all of the currently stored/ingested spans that belong to that trace and presents them in a mapped response (that is, a graph of parent/child/sibling relationships between spans ) that allows, for ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 10
+        }
+      ],
+      "title": "Tempo architecture | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/introduction/architecture/"
+    },
+    {
+      "content": "Source: https://grafana.com/docs/enterprise-traces/latest/introduction/architecture/\n\nTempo architecture Design goals Deployment modes How data flows Components Storage What you can query Component details Things to keep in mind Next steps Was this page helpful? Related resources from Grafana Labs The journey of a trace is usually from an instrumented application, to a trace receiver/collector, to a trace backend store, and then those traces are retrieved and visualized in a tool like Grafana. Grafana Tempo acts in two major capacities: This page gives a high-level overview of how Tempo works: how it ingests, stores, and queries trace data, and the components that make up a Tempo deployment. For in-depth operational detail, refer to theTempo architecture reference. The Tempo architecture is built around a few goals that shape how it ingests, stores, and queries traces. All Tempo components are compiled into the same binary; the-targetparameter controls which components run in a given process, whether that’s one process running everything or many processes each running one component. This lets you run Tempo in two modes: Object storage is recommended for production in both modes; a local filesystem backend is available for development and testing. For more information, refer toDeployment modesandSet up for tracing. Tempo separates the write path, which gets trace data into storage, from the read path, which serves queries. The following steps describe the write path in microservices mode. In monolithic mode, the distributor pushes data in-process to the live-store and metrics-generator instead of writing to Kafka. Trace data is sent from the tracing pipeline (OpenTelemetry Collector, Grafana Alloy) to adistributor. The distributor validates the request, shards traces by trace ID, and writes toKafka. Kafka acknowledges the write, and the distributor returns a response to the client. After the write is acknowledged, downstream components consume the data asynchronously: Live-storesconsume from Kafka and make data available for recent queries. Block-buil",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 11,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "When a trace ID is queried in Tempo, it returns all of the currently stored/ingested spans that belong to that trace and presents them in a mapped response (that is, a graph of parent/child/sibling relationships between spans ) that allows, for ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 11
+        }
+      ],
+      "title": "Tempo architecture | Grafana Enterprise Traces documentation",
+      "url": "https://grafana.com/docs/enterprise-traces/latest/introduction/architecture/"
+    },
+    {
+      "content": "Source: https://grafana.com/docs/grafana-cloud/connect-externally-hosted/data-sources/tempo/query-editor/\n\nQuery tracing data Before you begin Choose a query editing mode Understand search behavior Use TraceQL panels in dashboards Set options for query builder and editor Use query types together Upload a JSON trace file Cross-tenant TraceQL queries Next steps Was this page helpful? Related resources from Grafana Labs The Tempo data source’s query editor helps you query and display traces from Tempo inExplore. The queries useTraceQL, the query language designed specifically for tracing. For general documentation on querying data sources in Grafana, refer toQuery and transform data. You can compose TraceQL queries in Grafana and Grafana Cloud usingExploreand a Tempo data source. You don’t have to know TraceQL to create a query. TheSearchquery builder lets you select options from drop-down lists to build a query visually. These selections generate a TraceQL query that you can transfer to theTraceQLeditor to refine further. TraceQL queries follow the pattern{ conditions } | pipeline, where conditions inside{}select spans and pipeline operators likecount()oravg()aggregate results. To learn the full syntax, refer toConstruct a TraceQL query. For a language overview, refer to theTraceQL documentation. The query editor has threeQuery typesthat you can use to explore your tracing data. You can use these modes by themselves or in combination to create building blocks to generate custom queries. Adding another query adds a new query block. Refer toUse query types togetherfor more information. Start here if you’re exploring data or learning TraceQL. TheSearchquery builder provides drop-down lists and text fields to build a query visually without needing to know TraceQL syntax. Your selections automatically generate a TraceQL query that you can copy to the editor for further refinement. Refer toSearch traces using the query builderfor more information. Use theTraceQLeditor when you need complex filters, structural queries across parent and child spans, or aggregations that the Search",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 12,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Use the TraceQL editor when you need complex filters, structural queries across parent and child spans, or aggregations that the Search builder doesn’t support. The editor provides autocomplete for attribute names, scopes, and operators.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 12
+        }
+      ],
+      "title": "Tempo query editor | Grafana Cloud documentation",
+      "url": "https://grafana.com/docs/grafana-cloud/connect-externally-hosted/data-sources/tempo/query-editor/"
+    },
+    {
+      "content": "Source: https://grafana.com/docs/grafana/latest/explore/simplified-exploration/traces/concepts/trace-structure\n\nTrace structure Was this page helpful? Related resources from Grafana Labs Traces are telemetry data structured as trees. Traces are made of spans (for example, a span tree); there is a root span that can have zero to multiple branches that are called child spans. Each child span can itself be a parent span of one or multiple child spans, and so on so forth. In the specific context of Tempo andTraceQL query language, a span has the following associated fields: The first four properties areintrinsics. Intrinsics are the core, built-in fields that are fundamental to the identity and lifecycle of spans and traces. These fields are defined by the OpenTelemetry specification and are always present. They describe the essential structure of distributed tracing data. Attributesare custom span metadata in the form of key-value pairs. There are four types of attributes: span attributes, resource attributes, event attributes, and link attributes. Span attributesare key-value pairs that contain metadata that you can use to annotate a span to carry information about the operation it’s tracking. For example, in an eCommerce application, if a span tracks an operation that adds an item to a user’s shopping cart, the user ID, added item ID and cart ID can be captured and attached to the span as span attributes. Aresource attributerepresents information about an entity producing the span. For example, a span created by a process running in a container deployed by Kubernetes could link a resource that specifies the cluster name, namespace, pod, and container name. Resource attributes are resource-related metadata (key-value pairs) that are describing the Resource. Anevent attributerepresents a unique point in the time during the span’s duration. For more information, refer toAll about span eventsandSpan eventsin the OTEL documentation. Alink attributelets you query link data in a span. A span link associates one span with one or more other spans that are a causal relationship. For mor",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 13,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Traces are made of spans (for example, a span tree); there is a root span that can have zero to multiple branches that are called child spans. Each child span can itself be a parent span of one or multiple child spans , and so on so forth. In ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 13
+        }
+      ],
+      "title": "Trace structure | Grafana documentation",
+      "url": "https://grafana.com/docs/grafana/latest/explore/simplified-exploration/traces/concepts/trace-structure"
+    },
+    {
+      "content": "Source: https://grafana.com/docs/grafana-cloud/send-data/traces/introduction/architecture/\n\nTempo architecture Design goals Deployment modes How data flows Components Storage What you can query Component details Things to keep in mind Next steps Was this page helpful? Related resources from Grafana Labs The journey of a trace is usually from an instrumented application, to a trace receiver/collector, to a trace backend store, and then those traces are retrieved and visualized in a tool like Grafana. Grafana Tempo acts in two major capacities: This page gives a high-level overview of how Tempo works: how it ingests, stores, and queries trace data, and the components that make up a Tempo deployment. For in-depth operational detail, refer to theTempo architecture reference. The Tempo architecture is built around a few goals that shape how it ingests, stores, and queries traces. All Tempo components are compiled into the same binary; the-targetparameter controls which components run in a given process, whether that’s one process running everything or many processes each running one component. This lets you run Tempo in two modes: Object storage is recommended for production in both modes; a local filesystem backend is available for development and testing. For more information, refer toDeployment modesandSet up for tracing. Tempo separates the write path, which gets trace data into storage, from the read path, which serves queries. The following steps describe the write path in microservices mode. In monolithic mode, the distributor pushes data in-process to the live-store and metrics-generator instead of writing to Kafka. Trace data is sent from the tracing pipeline (OpenTelemetry Collector, Grafana Alloy) to adistributor. The distributor validates the request, shards traces by trace ID, and writes toKafka. Kafka acknowledges the write, and the distributor returns a response to the client. After the write is acknowledged, downstream components consume the data asynchronously: Live-storesconsume from Kafka and make data available for recent queries. Block-buil",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 14,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "When a trace ID is queried in Tempo, it returns all of the currently stored/ingested spans that belong to that trace and present them in a mapped response (that is, a graph of parent/child/sibling relationships between spans ) that allow, for ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 14
+        }
+      ],
+      "title": "Tempo architecture | Grafana Cloud documentation",
+      "url": "https://grafana.com/docs/grafana-cloud/send-data/traces/introduction/architecture/"
+    },
+    {
+      "content": "Source: https://grafana.com/docs/grafana-cloud/observe-and-act/send-data/traces/introduction/trace-structure/\n\nTrace structure Was this page helpful? Related resources from Grafana Labs Traces are telemetry data structured as trees. Traces are made of spans (for example, a span tree); there is a root span that can have zero to multiple branches that are called child spans. Each child span can itself be a parent span of one or multiple child spans, and so on so forth. In the specific context of Tempo andTraceQL query language, a span has the following associated fields: The first four properties areintrinsics. Intrinsics are the core, built-in fields that are fundamental to the identity and lifecycle of spans and traces. These fields are defined by the OpenTelemetry specification and are always present. They describe the essential structure of distributed tracing data. Attributesare custom span metadata in the form of key-value pairs. There are four types of attributes: span attributes, resource attributes, event attributes, and link attributes. Span attributesare key-value pairs that contain metadata that you can use to annotate a span to carry information about the operation it’s tracking. For example, in an eCommerce application, if a span tracks an operation that adds an item to a user’s shopping cart, the user ID, added item ID and cart ID can be captured and attached to the span as span attributes. Aresource attributerepresents information about an entity producing the span. For example, a span created by a process running in a container deployed by Kubernetes could link a resource that specifies the cluster name, namespace, pod, and container name. Resource attributes are resource-related metadata (key-value pairs) that are describing the Resource. Anevent attributerepresents a unique point in the time during the span’s duration. For more information, refer toAll about span eventsandSpan eventsin the OTEL documentation. Alink attributelets you query link data in a span. A span link associates one span with one or more other spans that are a causal relationship. For mor",
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 15,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Traces are made of spans (for example, a span tree); there is a root span that can have zero to multiple branches that are called child spans. Each child span can itself be a parent span of one or multiple child spans , and so on so forth. In ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 15
+        }
+      ],
+      "title": "Trace structure | Grafana Cloud documentation",
+      "url": "https://grafana.com/docs/grafana-cloud/observe-and-act/send-data/traces/introduction/trace-structure/"
+    }
+  ],
+  "diagnostics": {
+    "fetch": {
+      "budget_exhausted": false,
+      "cache_hits": 0,
+      "cache_misses": 15,
+      "cancelled": 0,
+      "outcomes": {
+        "cache_hit": 0,
+        "no_content": 0,
+        "request_failed": 0,
+        "response_too_large": 0,
+        "success": 15,
+        "unsupported_content_type": 0
+      },
+      "pages": [
+        {
+          "download_ms": 27,
+          "outcome": "success",
+          "parse_ms": 4,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 109,
+          "response_bytes": 236021,
+          "total_ms": 141,
+          "url": "https://grafana.com/docs/tempo/latest/traceql/construct-traceql-queries/"
+        },
+        {
+          "download_ms": 49,
+          "outcome": "success",
+          "parse_ms": 2,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 109,
+          "response_bytes": 168399,
+          "total_ms": 161,
+          "url": "https://grafana.com/docs/tempo/latest/introduction/trace-structure/"
+        },
+        {
+          "download_ms": 17,
+          "outcome": "success",
+          "parse_ms": 2,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 158,
+          "response_bytes": 169548,
+          "total_ms": 179,
+          "url": "https://grafana.com/docs/tempo/latest/traceql/"
+        },
+        {
+          "download_ms": 6,
+          "outcome": "success",
+          "parse_ms": 2,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 169,
+          "response_bytes": 167649,
+          "total_ms": 179,
+          "url": "https://grafana.com/docs/tempo/latest/traceql/trace-structure/"
+        },
+        {
+          "download_ms": 13,
+          "outcome": "success",
+          "parse_ms": 2,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 176,
+          "response_bytes": 426528,
+          "total_ms": 192,
+          "url": "https://grafana.com/blog/grafana-tempo-2-8-release-memory-improvements-new-traceql-features-and-more/"
+        },
+        {
+          "download_ms": 84,
+          "outcome": "success",
+          "parse_ms": 2,
+          "parse_queue_ms": 0,
+          "queue_ms": 136,
+          "request_ms": 59,
+          "response_bytes": 202610,
+          "total_ms": 283,
+          "url": "https://grafana.com/docs/tempo/latest/release-notes/version-2/v2-8/"
+        },
+        {
+          "download_ms": 5,
+          "outcome": "success",
+          "parse_ms": 2,
+          "parse_queue_ms": 0,
+          "queue_ms": 158,
+          "request_ms": 98,
+          "response_bytes": 360275,
+          "total_ms": 264,
+          "url": "https://grafana.com/blog/grafana-tempo-2-3-release-faster-trace-queries-traceql-upgrades/"
+        },
+        {
+          "download_ms": 5,
+          "outcome": "success",
+          "parse_ms": 4,
+          "parse_queue_ms": 0,
+          "queue_ms": 176,
+          "request_ms": 43,
+          "response_bytes": 337929,
+          "total_ms": 229,
+          "url": "https://grafana.com/docs/grafana/latest/datasources/tempo/query-editor/"
+        },
+        {
+          "download_ms": 2,
+          "outcome": "success",
+          "parse_ms": 5,
+          "parse_queue_ms": 0,
+          "queue_ms": 176,
+          "request_ms": 40,
+          "response_bytes": 336372,
+          "total_ms": 225,
+          "url": "https://grafana.com/docs/grafana/latest/datasources/tempo/query-editor/traceql-editor/"
+        },
+        {
+          "download_ms": 81,
+          "outcome": "success",
+          "parse_ms": 4,
+          "parse_queue_ms": 0,
+          "queue_ms": 189,
+          "request_ms": 72,
+          "response_bytes": 181993,
+          "total_ms": 348,
+          "url": "https://grafana.com/docs/tempo/latest/introduction/architecture/"
+        },
+        {
+          "download_ms": 38,
+          "outcome": "success",
+          "parse_ms": 3,
+          "parse_queue_ms": 0,
+          "queue_ms": 219,
+          "request_ms": 45,
+          "response_bytes": 152663,
+          "total_ms": 307,
+          "url": "https://grafana.com/docs/enterprise-traces/latest/introduction/architecture/"
+        },
+        {
+          "download_ms": 35,
+          "outcome": "success",
+          "parse_ms": 15,
+          "parse_queue_ms": 0,
+          "queue_ms": 225,
+          "request_ms": 250,
+          "response_bytes": 849976,
+          "total_ms": 526,
+          "url": "https://grafana.com/docs/grafana-cloud/connect-externally-hosted/data-sources/tempo/query-editor/"
+        },
+        {
+          "download_ms": 8,
+          "outcome": "success",
+          "parse_ms": 4,
+          "parse_queue_ms": 0,
+          "queue_ms": 262,
+          "request_ms": 213,
+          "response_bytes": 325270,
+          "total_ms": 488,
+          "url": "https://grafana.com/docs/grafana/latest/explore/simplified-exploration/traces/concepts/trace-structure"
+        },
+        {
+          "download_ms": 135,
+          "outcome": "success",
+          "parse_ms": 14,
+          "parse_queue_ms": 0,
+          "queue_ms": 280,
+          "request_ms": 98,
+          "response_bytes": 848406,
+          "total_ms": 528,
+          "url": "https://grafana.com/docs/grafana-cloud/send-data/traces/introduction/architecture/"
+        },
+        {
+          "download_ms": 10,
+          "outcome": "success",
+          "parse_ms": 13,
+          "parse_queue_ms": 0,
+          "queue_ms": 303,
+          "request_ms": 29,
+          "response_bytes": 834686,
+          "total_ms": 357,
+          "url": "https://grafana.com/docs/grafana-cloud/observe-and-act/send-data/traces/introduction/trace-structure/"
+        }
+      ],
+      "response_bytes": 5598325
+    },
+    "provider_cancellations": 0,
+    "providers": [
+      {
+        "elapsed_ms": 289,
+        "engine": "swisscows",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "results",
+        "query": "site:grafana.com Tempo TraceQL parent child spans",
+        "raw_result_count": 20,
+        "result_count": 20,
+        "retries": 0,
+        "success": true
+      }
+    ]
+  },
+  "engines": [
+    "swisscows"
+  ],
+  "mode": "fallback",
+  "queries": [
+    "site:grafana.com Tempo TraceQL parent child spans"
+  ],
+  "query": "site:grafana.com Tempo TraceQL parent child spans",
+  "results": [
+    {
+      "bm25_score": null,
+      "content": "Source: https://grafana.com/docs/grafana/latest/datasources/tempo/query-editor/traceql-editor/\n\nWrite TraceQL queries with the editor Before you begin Write TraceQL queries using the query editor Query by TraceID Use autocomplete to write queries View query results Next steps Was this page helpful? Related resources from Grafana Labs Use theTraceQLeditor when you need structural queries across parent and child spans, aggregations, or other features that theSearch query builderdoesn’t support. TraceQL queries follow the pattern{ conditions } | pipeline. Refer toConstruct a TraceQL queryfor the full syntax. To get started, paste this query into the editor and selectRun query: This returns all error spans from thefrontendservice. Replacefrontendwith your service name. For more examples, refer toTraceQL query examples. If queries return no results, check that yourTempo data source is configured and connected. Inspired by PromQL and LogQL, TraceQL is a query language designed for selecting traces. TraceQL provides a method for formulating precise queries so you can zoom in to the data you need. Query results are returned faster because the queries limit what is searched. To learn more about how to query by TraceQL, refer to theTraceQL documentation. The TraceQL query editor in GrafanaExplorelets you search by trace ID and write TraceQL queries using autocomplete. This feature is automatically available in Grafana 10 (and newer) and Grafana Cloud. To use the TraceQL query editor in self-hosted Grafana 9.3.2 and older, you need toenable thetraceqlEditorfeature toggle. If you’re trying to query a self-managed Grafana Tempo or Grafana Enterprise Traces database with a gateway, such as nginx, in front of it from your hosted Grafana, that gateway (for example, nginx) must allow gRPC connections. If it doesn’t, streaming won’t work and queries will fail to return results. If you can’t configure your gateway to allow gRPC, deactivate streaming in your hosted Grafana. In Grafana 11.2 and newer, you can deactivate theStreamingoption in your Tempo data source settings fromCon",
+      "content_chars": 2096,
+      "content_sha256": "0bc18002c0153a83f5691db4461e66c311c4f63338e4b7c171279d733884109a",
+      "engine": "swisscows",
+      "engine_rank": 9,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "rank": 1,
+      "snippet": "Documentation Grafana documentation Data sources Tempo Query tracing data Write TraceQL queries · Grafana Cloud Enterprise Open source · Use the TraceQL editor when you need structural queries across parent and child spans, aggregations, or other features that the Search query builder doesn’t support.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 9
+        }
+      ],
+      "title": "Write TraceQL queries with the editor | Grafana documentation",
+      "url": "https://grafana.com/docs/grafana/latest/datasources/tempo/query-editor/traceql-editor/"
+    },
+    {
+      "bm25_score": null,
+      "content": "Source: https://grafana.com/docs/grafana-cloud/connect-externally-hosted/data-sources/tempo/query-editor/\n\nQuery tracing data Before you begin Choose a query editing mode Understand search behavior Use TraceQL panels in dashboards Set options for query builder and editor Use query types together Upload a JSON trace file Cross-tenant TraceQL queries Next steps Was this page helpful? Related resources from Grafana Labs The Tempo data source’s query editor helps you query and display traces from Tempo inExplore. The queries useTraceQL, the query language designed specifically for tracing. For general documentation on querying data sources in Grafana, refer toQuery and transform data. You can compose TraceQL queries in Grafana and Grafana Cloud usingExploreand a Tempo data source. You don’t have to know TraceQL to create a query. TheSearchquery builder lets you select options from drop-down lists to build a query visually. These selections generate a TraceQL query that you can transfer to theTraceQLeditor to refine further. TraceQL queries follow the pattern{ conditions } | pipeline, where conditions inside{}select spans and pipeline operators likecount()oravg()aggregate results. To learn the full syntax, refer toConstruct a TraceQL query. For a language overview, refer to theTraceQL documentation. The query editor has threeQuery typesthat you can use to explore your tracing data. You can use these modes by themselves or in combination to create building blocks to generate custom queries. Adding another query adds a new query block. Refer toUse query types togetherfor more information. Start here if you’re exploring data or learning TraceQL. TheSearchquery builder provides drop-down lists and text fields to build a query visually without needing to know TraceQL syntax. Your selections automatically generate a TraceQL query that you can copy to the editor for further refinement. Refer toSearch traces using the query builderfor more information. Use theTraceQLeditor when you need complex filters, structural queries across parent and child spans, or aggregations that the Search",
+      "content_chars": 2107,
+      "content_sha256": "484a70ae5b1fc08e0559fe0175904b6c657d07cc9ab5c03361233a3442e4ece9",
+      "engine": "swisscows",
+      "engine_rank": 12,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "rank": 2,
+      "snippet": "Use the TraceQL editor when you need complex filters, structural queries across parent and child spans, or aggregations that the Search builder doesn’t support. The editor provides autocomplete for attribute names, scopes, and operators.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 12
+        }
+      ],
+      "title": "Tempo query editor | Grafana Cloud documentation",
+      "url": "https://grafana.com/docs/grafana-cloud/connect-externally-hosted/data-sources/tempo/query-editor/"
+    },
+    {
+      "bm25_score": null,
+      "content": "Source: https://grafana.com/docs/grafana/latest/datasources/tempo/query-editor/\n\nQuery tracing data Before you begin Choose a query editing mode Understand search behavior Use TraceQL panels in dashboards Set options for query builder and editor Use query types together Upload a JSON trace file Cross-tenant TraceQL queries Next steps Was this page helpful? Related resources from Grafana Labs The Tempo data source’s query editor helps you query and display traces from Tempo inExplore. The queries useTraceQL, the query language designed specifically for tracing. For general documentation on querying data sources in Grafana, refer toQuery and transform data. You can compose TraceQL queries in Grafana and Grafana Cloud usingExploreand a Tempo data source. You don’t have to know TraceQL to create a query. TheSearchquery builder lets you select options from drop-down lists to build a query visually. These selections generate a TraceQL query that you can transfer to theTraceQLeditor to refine further. TraceQL queries follow the pattern{ conditions } | pipeline, where conditions inside{}select spans and pipeline operators likecount()oravg()aggregate results. To learn the full syntax, refer toConstruct a TraceQL query. For a language overview, refer to theTraceQL documentation. The query editor has threeQuery typesthat you can use to explore your tracing data. You can use these modes by themselves or in combination to create building blocks to generate custom queries. Adding another query adds a new query block. Refer toUse query types togetherfor more information. Start here if you’re exploring data or learning TraceQL. TheSearchquery builder provides drop-down lists and text fields to build a query visually without needing to know TraceQL syntax. Your selections automatically generate a TraceQL query that you can copy to the editor for further refinement. Refer toSearch traces using the query builderfor more information. Use theTraceQLeditor when you need complex filters, structural queries across parent and child spans, or aggregations that the Search",
+      "content_chars": 2081,
+      "content_sha256": "4db94c84a07109a6297f87788dfbcba49268b26bf564b2daf727e10c57e19a33",
+      "engine": "swisscows",
+      "engine_rank": 8,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "rank": 3,
+      "snippet": "Use the TraceQL editor when you need complex filters, structural queries across parent and child spans, or aggregations that the Search builder doesn’t support. The editor provides autocomplete for attribute names, scopes, and operators.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 8
+        }
+      ],
+      "title": "Query tracing data | Grafana documentation",
+      "url": "https://grafana.com/docs/grafana/latest/datasources/tempo/query-editor/"
+    },
+    {
+      "bm25_score": null,
+      "content": "Source: https://grafana.com/blog/grafana-tempo-2-3-release-faster-trace-queries-traceql-upgrades/\n\nGrafana Tempo 2.3 release: faster trace queries, TraceQL upgrades vParquet3 New TraceQL features What’s next in Grafana Tempo? Grafana Tempo 2.3has been unleashed upon the world, bringing with it the latest iteration of the vParquet backend! Tempo 2.3 has a little bit of everything, but the headline item here is vParquet3 and new features that improve search speeds. Watch the video above for all the details, or continue reading to get a quick overview of the latest updates in Tempo. If you’re looking for something more in-depth, don’t hesitate to jump into thechangelogor ourGrafana Tempo 2.3 release notes. vParquet3 is the latest Parquet backend version for Tempo. This new format has a number of small improvements, but the big feature is the ability to choose your own dedicated string attribute columns, which allows for much more performantTraceQLqueries. Parquet backends will, by default, put the majority of the span attributes into one large column. This means that for some TraceQL queries you are pulling a lot more data than necessary. With vParquet3, you can use thededicated columns configurationto reduce the size of this main attributes column. We’ve found the most useful columns to pull out are simply the ones that contribute the most to the column’s size, so we recommend using theCLI toolto help discover these attributes. Check out this search latency reduction as we rolled out vParquet3 in one of our clusters: Note: vParquet3 is included in Tempo 2.3 but is not default, and we encourage everyone to enable and configure it. vParquet3 is officially GA and we have been running it in production for months. We have decided to leave vParquet2 default to allow for a cleaner upgrade and downgrade path. It will be a sad day when I write a Tempo release blog post and can’t include a TraceQL section. Thankfully, today is not that day! Tempo 2.3 brings a few new structural operators to the table. First, we have the parent and ancestor operators. Recall that all structur",
+      "content_chars": 2099,
+      "content_sha256": "e320747a36dfe6f8dae8ef46a7c020e8bccff68f0045c9a3c05ed8d11ee1453f",
+      "engine": "swisscows",
+      "engine_rank": 7,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "rank": 4,
+      "snippet": "Recall that all structural operators return results from the right-hand side of the operator! Parent and ancestor are the inverse of child and descendant . Find, spans of service foo that have children from service bar:",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 7
+        }
+      ],
+      "title": "Grafana Tempo 2.3 release: faster trace queries, TraceQL upgrades | Grafana Labs",
+      "url": "https://grafana.com/blog/grafana-tempo-2-3-release-faster-trace-queries-traceql-upgrades/"
+    },
+    {
+      "bm25_score": null,
+      "content": "Source: https://grafana.com/docs/tempo/latest/release-notes/version-2/v2-8/\n\nVersion 2.8 release notes New language features for TraceQL Major performance and memory usage improvements Features and enhancements Upgrade considerations Security fixes Bug fixes Was this page helpful? Related resources from Grafana Labs The Tempo team is pleased to announce the release of Tempo 2.8. This release gives you: These release notes highlight the most important features and bugfixes. For a complete list, refer to theTempo changelog. Read theTempo 2.8 blog postfor more examples and details about these improvements. We’re excited to roll out three powerful enhancements to TraceQL, giving you more flexibility and performance when querying traces in Grafana Cloud with Tempo. When you’re looking at latency, error rates, or throughput across hundreds or thousands of services or endpoints, it’s easy to get lost in all the data. Previously, you’d have to pull back the full set of aggregates and then manually inspect or post‑process the results to find your worst offenders or best performers. Withtopk(n)andbottomk(n), you can immediately narrow your focus to the top‑ or bottom‑ranked spans in a single, efficient query. This saves time and reduces the data volume you need to scan downstream. These are second stage functions used, where: For more information, refer to thetopk and bottomk documentation(PR 4646). Thesum_over_time()function lets you aggregate numerical values by computing the sum value of them. The time interval that the sum is computed over is set by thestepparameter. Withsum_over_time(), you can directly compute cumulative sums inside TraceQL, like total bytes transferred, total error counts, or resource consumption over time. For each step interval,sum_over_time(attr)totals the values ofattracross all matching spans. Refer toTraceQL metrics functionsfor more information. (PR 4786) When troubleshooting a live incident or monitoring production health, you often need to see the absolute latest traces first. By default, Tempo’s query engine favors sp",
+      "content_chars": 2077,
+      "content_sha256": "fd66484ce3dc72ea2b21745ba91872fad88fef626e0a4bda8dbd5e8c486c6d43",
+      "engine": "swisscows",
+      "engine_rank": 6,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "rank": 5,
+      "snippet": "In addition, you can query by parent span id. Using span:parentID, you can ensure that you are looking at a child span of a specific parent , which is useful for example in span linking.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 6
+        }
+      ],
+      "title": "Version 2.8 release notes | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/release-notes/version-2/v2-8/"
+    }
+  ],
+  "returned_chars": 10460,
+  "run_id": "run",
+  "timings_ms": {
+    "fetch": 529,
+    "initialize": 131,
+    "rank": 2,
+    "search": 289
+  }
+}

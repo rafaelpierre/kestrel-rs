@@ -286,3 +286,9 @@ independently of the crate.
 Retain and clone `KestrelClient` to reuse connections across calls. Shared transport
 settings, opt-in origin warm-up, DNS caching, protocol diagnostics and a cold/warm
 benchmark are described in [HTTP/2 transport tuning](docs/http2.md).
+
+### Experimental providers and latency controls
+
+Opt-in adapters now include Dogpile, Ecosia, Swisscows, Yep, Qwant and Mojeek.
+See [provider contracts, query syntax, randomized headers and pooled HTTP/2 transport](docs/search-providers.md)
+and the [quality/latency benchmark workflow](benchmarks/README.md).

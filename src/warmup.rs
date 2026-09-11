@@ -64,11 +64,7 @@ impl KestrelClient {
             }
         }
         Ok(stream::iter(selected.into_iter().map(|engine| async move {
-            let origin = match engine {
-                Engine::Duckduckgo => "https://html.duckduckgo.com/",
-                Engine::Bing => "https://www.bing.com/",
-                Engine::Yahoo => "https://search.yahoo.com/",
-            };
+            let origin = search_origin(engine);
             let started = Instant::now();
             let result = if engine == Engine::Yahoo {
                 self.search
@@ -96,6 +92,20 @@ impl KestrelClient {
         .buffered(4)
         .collect()
         .await)
+    }
+}
+
+fn search_origin(engine: Engine) -> &'static str {
+    match engine {
+        Engine::Duckduckgo => "https://html.duckduckgo.com/",
+        Engine::Bing => "https://www.bing.com/",
+        Engine::Yahoo => "https://search.yahoo.com/",
+        Engine::Dogpile => "https://www.dogpile.com/",
+        Engine::Ecosia => "https://www.ecosia.org/",
+        Engine::Swisscows => "https://api.swisscows.com/",
+        Engine::Yep => "https://api.yep.com/",
+        Engine::Qwant => "https://api.qwant.com/",
+        Engine::Mojeek => "https://www.mojeek.com/",
     }
 }
 
@@ -165,6 +175,29 @@ mod tests {
         );
         assert!(origins(&["file:///tmp/page".into()]).is_err());
         assert!(origins(&["bad-url".into()]).is_err());
+    }
+
+    #[test]
+    fn additional_provider_warmup_matches_actual_request_origin() {
+        let client = reqwest::Client::new();
+        for engine in [
+            Engine::Dogpile,
+            Engine::Ecosia,
+            Engine::Swisscows,
+            Engine::Yep,
+            Engine::Qwant,
+            Engine::Mojeek,
+        ] {
+            let request =
+                crate::providers::request(&client, engine, "test", "", crate::TimeFilter::Any)
+                    .unwrap()
+                    .build()
+                    .unwrap();
+            assert_eq!(
+                search_origin(engine),
+                format!("{}/", request.url().origin().ascii_serialization())
+            );
+        }
     }
 
     #[tokio::test]

@@ -54,6 +54,10 @@ Each element in the returned array contains:
 - By default, at most three times `--top-k` candidates are fetched before BM25 ranking.
 - BM25 filtering removes zero-relevance results unless an entire query group scores zero.
 - Use `--no-fetch` for a fast, low-cost keyword search.
+- Additional opt-in engines: dogpile, ecosia, swisscows, yep, qwant, mojeek.
+- Use --search-budget to bound all provider attempts, including retries.
+- Experimental --ranking-policy hybrid retains snippet-only results when fetching fails.
+- Search/fetch clients select random browser headers and reuse HTTP/2 or HTTP/1.1 connections within the process.
 "#;
 
 pub fn generate_skill_md(root: &mut Command) -> String {

@@ -1,0 +1,39 @@
+{
+  "status": "success",
+  "data": {
+    "result": {
+      "items": {
+        "mainline": [
+          {
+            "serpContextId": 1001,
+            "type": "web",
+            "count": 10,
+            "items": [
+              {
+                "title": "Canberra - Wikipedia",
+                "favicon": "https://s.qwant.com/v1/fav/7sTbOFcs7HDCAg1gklmTrD3cbfgk_BKm4RkSTepbmHu1tVIV_bMVvFbUneMV4dfVsxKgak0IZcrpgNjdFKnWVQ:f57b609d64291580641cf6e2ac180774",
+                "url": "https://en.wikipedia.org/wiki/Canberra",
+                "urlPingSuffix": "DevEx,5144.1",
+                "source": "https://en.wikipedia.org/wiki/Canberra",
+                "desc": "As Australia's capital, Canberra is the most important centre for much of Australia's political reportage and thus all the major media, including the Australian Broadcasting Corporation, the commercial television networks, and the metropolitan newspapers maintain local bureaus.",
+                "_id": "e0ecc7b0b4b7a7a18400aa04c3d0d76b",
+                "isFamilyFriendly": true
+              },
+              {
+                "title": "What is the Capital of Australia? - Mappr",
+                "favicon": "https://s.qwant.com/v1/fav/9DfNxu1IEJIVVe9U3kEmtdEu-erycUj4205_fNmBr61KGuKHn2eNdhb7fQWvteJltAfmbl_it5SPAlpxkm30fA:f57b609d64291580641cf6e2ac180774",
+                "url": "https://www.mappr.co/capital-cities/australia/",
+                "urlPingSuffix": "DevEx,5167.1",
+                "thumbnailUrl": "https://s2.qwant.com/thumbr/0x0/7/8/5a3c2b528017b8e045b417a2566aebac4923a50a36222f51b358e0f091770f/th.jpg?u=https%3A%2F%2Fwww.bing.com%2Fth%3Fid%3DOIP.JHDMGr2rRZCBsFeosgj8UwHaEy%26w%3D160%26h%3D160%26c%3D7%26pid%3D5.1&q=0&b=1&p=0&a=0",
+                "source": "https://www.mappr.co/capital-cities/australia",
+                "desc": "Learn why Canberra is the capital of Australia, how it was founded, and what features make it unique. Explore its location, population, climate, economy, and attractions on a map.",
+                "_id": "1609e1b98c8303530dac82cbaba1708b",
+                "isFamilyFriendly": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "swisscows": {
+    "runs": 30,
+    "median_seconds": 0.4486344585020561,
+    "p95_seconds": 1.3537983339920174,
+    "errors": 0,
+    "empty": 0,
+    "returned_slots": 150,
+    "expected_slots": 150,
+    "precision_at_5": 0.66,
+    "runs_with_direct_result": 27,
+    "http_versions": {
+      "HTTP/2.0": 30
+    }
+  }
+}

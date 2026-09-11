@@ -1,0 +1,20 @@
+{
+  "concurrency-5": {
+    "runs": 30,
+    "median_seconds": 1.6737826880125795,
+    "p95_seconds": 3.0796455839881673,
+    "errors": 0,
+    "empty": 0,
+    "returned_slots": 150,
+    "expected_slots": 150
+  },
+  "concurrency-10": {
+    "runs": 30,
+    "median_seconds": 1.45629393751733,
+    "p95_seconds": 2.8136260420142207,
+    "errors": 0,
+    "empty": 0,
+    "returned_slots": 150,
+    "expected_slots": 150
+  }
+}

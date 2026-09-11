@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T21:09:35.938378+00:00",
+  "engine": "swisscows",
+  "final_url": "https://api.swisscows.com/v5/web/search?freshness=All&itemsCount=20&locale=en-US&offset=0&query=site%3Alearn.chatgpt.com+Codex+otel+trace_exporter&spellcheck=false",
+  "html_file": "swisscows-a7cf94faa9e242a5babd3cf3902daa07.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "site:learn.chatgpt.com Codex otel trace_exporter"
+}

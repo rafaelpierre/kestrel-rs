@@ -1,0 +1,212 @@
+[
+  {
+    "id": "coding-01",
+    "split": "development",
+    "repository": "tokio-rs/tokio",
+    "as_of": "2026-09-11",
+    "question": "In tokio-rs/tokio, identify the release published on 2026-07-20 that lists the change linked to https://github.com/tokio-rs/tokio/pull/8300. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-02",
+    "split": "development",
+    "repository": "tokio-rs/tokio",
+    "as_of": "2026-09-11",
+    "question": "In tokio-rs/tokio, identify the release published on 2026-07-20 that lists the change linked to https://github.com/tokio-rs/tokio/pull/8252. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-03",
+    "split": "development",
+    "repository": "serde-rs/serde",
+    "as_of": "2026-09-11",
+    "question": "In serde-rs/serde, identify the release published on 2026-07-18 that lists the Update to syn 3. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-04",
+    "split": "development",
+    "repository": "clap-rs/clap",
+    "as_of": "2026-09-11",
+    "question": "In clap-rs/clap, identify the release published on 2026-08-06 that lists the change involving `Command::get_overridden_usage`. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-05",
+    "split": "development",
+    "repository": "clap-rs/clap",
+    "as_of": "2026-09-11",
+    "question": "In clap-rs/clap, identify the release published on 2026-07-31 that lists the change involving `value_names`. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-06",
+    "split": "development",
+    "repository": "hyperium/hyper",
+    "as_of": "2026-09-11",
+    "question": "In hyperium/hyper, identify the release published on 2026-08-28 that lists the http1:**. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-07",
+    "split": "development",
+    "repository": "hyperium/hyper",
+    "as_of": "2026-09-11",
+    "question": "In hyperium/hyper, identify the release published on 2026-08-28 that lists the change linked to https://github.com/hyperium/hyper/pull/4152. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-08",
+    "split": "development",
+    "repository": "seanmonstar/reqwest",
+    "as_of": "2026-09-11",
+    "question": "In seanmonstar/reqwest, identify the release published on 2026-09-08 that lists the change involving `Error::is_dns()`. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-09",
+    "split": "development",
+    "repository": "seanmonstar/reqwest",
+    "as_of": "2026-09-11",
+    "question": "In seanmonstar/reqwest, identify the release published on 2026-09-08 that lists the change involving `ClientBuilder::http1_max_headers(usize)`. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-10",
+    "split": "development",
+    "repository": "seanmonstar/reqwest",
+    "as_of": "2026-09-11",
+    "question": "In seanmonstar/reqwest, identify the release published on 2026-09-08 that lists the change involving `TlsInfo`. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-11",
+    "split": "held_out",
+    "repository": "astral-sh/ruff",
+    "as_of": "2026-09-11",
+    "question": "In astral-sh/ruff, identify the release published on 2026-09-10 that lists the change linked to https://github.com/astral-sh/ruff/pull/26700. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-12",
+    "split": "held_out",
+    "repository": "astral-sh/ruff",
+    "as_of": "2026-09-11",
+    "question": "In astral-sh/ruff, identify the release published on 2026-09-10 that lists the change linked to https://github.com/astral-sh/ruff/pull/28311. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-13",
+    "split": "held_out",
+    "repository": "astral-sh/ruff",
+    "as_of": "2026-09-11",
+    "question": "In astral-sh/ruff, identify the release published on 2026-09-10 that lists the change linked to https://github.com/astral-sh/ruff/pull/28259. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-14",
+    "split": "held_out",
+    "repository": "astral-sh/ruff",
+    "as_of": "2026-09-11",
+    "question": "In astral-sh/ruff, identify the release published on 2026-09-10 that lists the change linked to https://github.com/astral-sh/ruff/pull/27981. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-15",
+    "split": "held_out",
+    "repository": "astral-sh/ruff",
+    "as_of": "2026-09-11",
+    "question": "In astral-sh/ruff, identify the release published on 2026-09-10 that lists the change linked to https://github.com/astral-sh/ruff/pull/26584. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-16",
+    "split": "held_out",
+    "repository": "astral-sh/ruff",
+    "as_of": "2026-09-11",
+    "question": "In astral-sh/ruff, identify the release published on 2026-09-10 that lists the change linked to https://github.com/astral-sh/ruff/pull/28310. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-17",
+    "split": "held_out",
+    "repository": "astral-sh/uv",
+    "as_of": "2026-09-11",
+    "question": "In astral-sh/uv, identify the release published on 2026-09-10 that lists the change linked to https://github.com/astral-sh/uv/pull/21431. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-18",
+    "split": "held_out",
+    "repository": "astral-sh/uv",
+    "as_of": "2026-09-11",
+    "question": "In astral-sh/uv, identify the release published on 2026-09-10 that lists the change linked to https://github.com/astral-sh/uv/pull/21563. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-19",
+    "split": "held_out",
+    "repository": "astral-sh/uv",
+    "as_of": "2026-09-11",
+    "question": "In astral-sh/uv, identify the release published on 2026-09-10 that lists the change linked to https://github.com/astral-sh/uv/pull/21555. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-20",
+    "split": "held_out",
+    "repository": "astral-sh/uv",
+    "as_of": "2026-09-11",
+    "question": "In astral-sh/uv, identify the release published on 2026-09-10 that lists the change linked to https://github.com/astral-sh/uv/pull/21279. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-21",
+    "split": "held_out",
+    "repository": "astral-sh/uv",
+    "as_of": "2026-09-11",
+    "question": "In astral-sh/uv, identify the release published on 2026-09-10 that lists the change linked to https://github.com/astral-sh/uv/pull/18713. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-22",
+    "split": "held_out",
+    "repository": "astral-sh/uv",
+    "as_of": "2026-09-11",
+    "question": "In astral-sh/uv, identify the release published on 2026-09-10 that lists the change linked to https://github.com/astral-sh/uv/pull/21563. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-23",
+    "split": "held_out",
+    "repository": "pydantic/pydantic",
+    "as_of": "2026-09-11",
+    "question": "In pydantic/pydantic, identify the release published on 2026-08-28 that lists the change linked to https://github.com/pydantic/pydantic/pull/13535. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-24",
+    "split": "held_out",
+    "repository": "pydantic/pydantic",
+    "as_of": "2026-09-11",
+    "question": "In pydantic/pydantic, identify the release published on 2026-08-28 that lists the change linked to https://github.com/pydantic/pydantic/pull/13624. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-25",
+    "split": "held_out",
+    "repository": "pydantic/pydantic",
+    "as_of": "2026-09-11",
+    "question": "In pydantic/pydantic, identify the release published on 2026-08-28 that lists the change linked to https://github.com/pydantic/pydantic/pull/13629. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-26",
+    "split": "held_out",
+    "repository": "pydantic/pydantic",
+    "as_of": "2026-09-11",
+    "question": "In pydantic/pydantic, identify the release published on 2026-08-28 that lists the change linked to https://github.com/pydantic/pydantic/pull/13731. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-27",
+    "split": "held_out",
+    "repository": "pytest-dev/pytest",
+    "as_of": "2026-09-11",
+    "question": "In pytest-dev/pytest, identify the release published on 2026-06-19 that lists the change linked to https://github.com/pytest-dev/pytest/issues/14220. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-28",
+    "split": "held_out",
+    "repository": "pytest-dev/pytest",
+    "as_of": "2026-09-11",
+    "question": "In pytest-dev/pytest, identify the release published on 2026-06-19 that lists the change linked to https://github.com/pytest-dev/pytest/issues/14591. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-29",
+    "split": "held_out",
+    "repository": "pytest-dev/pytest",
+    "as_of": "2026-09-11",
+    "question": "In pytest-dev/pytest, identify the release published on 2026-06-19 that lists the change linked to https://github.com/pytest-dev/pytest/issues/14606. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  },
+  {
+    "id": "coding-30",
+    "split": "held_out",
+    "repository": "pytest-dev/pytest",
+    "as_of": "2026-09-11",
+    "question": "In pytest-dev/pytest, identify the release published on 2026-06-19 that lists the change linked to https://github.com/pytest-dev/pytest/issues/14608. What behavior, API, or dependency changed? Give the release tag and cite the release notes."
+  }
+]

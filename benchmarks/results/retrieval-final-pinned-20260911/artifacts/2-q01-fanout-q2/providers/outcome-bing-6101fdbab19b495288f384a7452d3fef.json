@@ -1,0 +1,12 @@
+{
+  "engine": "bing",
+  "query": "What is the capital of Australia?",
+  "elapsed_ms": 700,
+  "result_count": 10,
+  "retries": 0,
+  "success": true,
+  "outcome": "results",
+  "error": null,
+  "raw_result_count": 10,
+  "filtered_count": 0
+}

@@ -83,10 +83,14 @@ impl TransportOptions {
             .redirect(reqwest::redirect::Policy::limited(10))
     }
 
-    pub(crate) fn impersonated_builder(&self) -> primp::ClientBuilder {
+    pub(crate) fn impersonated_builder(
+        &self,
+        profile: crate::http_client::BrowserProfile,
+    ) -> primp::ClientBuilder {
         // Apply policy after impersonation, which otherwise overwrites H2 settings.
         primp::Client::builder()
-            .impersonate(primp::Impersonate::ChromeV146)
+            .impersonate(profile.browser)
+            .impersonate_os(profile.os)
             .pool_idle_timeout(self.pool_idle_timeout)
             .pool_max_idle_per_host(self.max_idle_per_host)
             .connect_timeout(self.connect_timeout)
@@ -389,7 +393,7 @@ mod tests {
     async fn impersonated_h2_pool_reuses_connections() {
         let server = h2_server(2, 256 * 1024, Duration::ZERO).await;
         let client = TransportOptions::default()
-            .impersonated_builder()
+            .impersonated_builder(crate::http_client::BrowserProfile::random())
             .no_proxy()
             .http2_prior_knowledge()
             .timeout(Duration::from_secs(5))
@@ -554,7 +558,7 @@ mod tls_tests {
                 .build()
                 .unwrap();
             let impersonated = options
-                .impersonated_builder()
+                .impersonated_builder(crate::http_client::BrowserProfile::random())
                 .no_proxy()
                 .resolve("localhost", address)
                 .add_root_certificate(primp::Certificate::from_der(&der).unwrap())

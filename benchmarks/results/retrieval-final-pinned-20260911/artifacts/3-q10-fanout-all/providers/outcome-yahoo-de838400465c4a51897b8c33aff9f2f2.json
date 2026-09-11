@@ -1,0 +1,12 @@
+{
+  "engine": "yahoo",
+  "query": "London Science Museum opening hours",
+  "elapsed_ms": 1526,
+  "result_count": 0,
+  "retries": 0,
+  "success": false,
+  "outcome": "request_error",
+  "error": "Yahoo request failed: error sending request for url (https://search.yahoo.com/search?p=London+Science+Museum+opening+hours&ei=UTF-8)",
+  "raw_result_count": 0,
+  "filtered_count": 0
+}

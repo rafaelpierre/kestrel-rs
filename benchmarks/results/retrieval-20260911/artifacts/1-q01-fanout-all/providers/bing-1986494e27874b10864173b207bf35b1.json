@@ -1,0 +1,9 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T20:44:26.151281+00:00",
+  "engine": "bing",
+  "final_url": "https://www.bing.com/search?q=What+is+the+capital+of+Australia%3F",
+  "html_file": "bing-1986494e27874b10864173b207bf35b1.html",
+  "http_status": 200,
+  "query": "What is the capital of Australia?"
+}

@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T21:02:21.976347+00:00",
+  "engine": "bing",
+  "final_url": "https://www.bing.com/search?q=site%3Apostgresql.org+EXPLAIN+ANALYZE+BUFFERS",
+  "html_file": "bing-c0ad847dff7546299f8a1a62812d7374.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "site:postgresql.org EXPLAIN ANALYZE BUFFERS"
+}

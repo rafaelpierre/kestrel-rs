@@ -1,0 +1,341 @@
+{
+  "candidate_counts": {
+    "after_candidate_selection": 10,
+    "after_ranking": 10,
+    "after_search": 10,
+    "returned": 5,
+    "with_content": 0
+  },
+  "candidates": [
+    {
+      "content": null,
+      "display_url": "https:// www.python.org",
+      "engine": "bing",
+      "engine_rank": 1,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "Experienced programmers in any other language can pick up Python very quickly, and beginners find the clean syntax and …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 1
+        }
+      ],
+      "title": "Welcome to Python.org",
+      "url": "https://www.python.org/"
+    },
+    {
+      "content": null,
+      "display_url": "https:// www.python.org › downloads",
+      "engine": "bing",
+      "engine_rank": 2,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "Python was created in the early 1990s by Guido van Rossum at Stichting Mathematisch Centrum in the Netherlands as a successor …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 2
+        }
+      ],
+      "title": "Download Python | Python.org",
+      "url": "https://www.python.org/downloads/"
+    },
+    {
+      "content": null,
+      "display_url": "https:// www.w3schools.com › python",
+      "engine": "bing",
+      "engine_rank": 3,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "Learn Python Python is a popular programming language. Python can be used on a server to create web applications. Python is …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 3
+        }
+      ],
+      "title": "Python Tutorial - W3Schools",
+      "url": "https://www.w3schools.com/python/"
+    },
+    {
+      "content": null,
+      "display_url": "https:// www.online-python.com",
+      "engine": "bing",
+      "engine_rank": 4,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "Python, which was initially developed by Guido van Rossum and made available to the public in 1991, is currently one of the most …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 4
+        }
+      ],
+      "title": "Online Python - IDE, Editor, Compiler, Interpreter",
+      "url": "https://www.online-python.com/"
+    },
+    {
+      "content": null,
+      "display_url": "https:// en.wikipedia.org › wiki › Python_(programming_language)",
+      "engine": "bing",
+      "engine_rank": 5,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "Python is a high-level, general-purpose programming language that emphasizes code readability, simplicity, and ease-of-writing with …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 5
+        }
+      ],
+      "title": "Python (programming language ) - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Python_(programming_language)"
+    },
+    {
+      "content": null,
+      "display_url": "https:// docs.python.org",
+      "engine": "bing",
+      "engine_rank": 6,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "20 hours ago · This page is licensed under the Python Software Foundation License Version 2. Examples, recipes, and other code in …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 6
+        }
+      ],
+      "title": "Python 3.14.7 documentation",
+      "url": "https://docs.python.org/"
+    },
+    {
+      "content": null,
+      "display_url": "https:// www.programiz.com › python-programming › online-compiler",
+      "engine": "bing",
+      "engine_rank": 7,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "Write and run your Python code using our online compiler. Enjoy additional features like code sharing, dark mode, and support for …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 7
+        }
+      ],
+      "title": "Online Python Compiler (Interpreter) - Programiz",
+      "url": "https://www.programiz.com/python-programming/online-compiler/"
+    },
+    {
+      "content": null,
+      "display_url": "https:// docs.python.org › tutorial",
+      "engine": "bing",
+      "engine_rank": 8,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "2 days ago · Python is an easy to learn, powerful programming language. It has efficient high-level data structures and a simple but …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 8
+        }
+      ],
+      "title": "The Python Tutorial — Python 3.14.7 documentation",
+      "url": "https://docs.python.org/3/tutorial/index.html"
+    },
+    {
+      "content": null,
+      "display_url": "https:// www.w3schools.com › python › python_intro.asp",
+      "engine": "bing",
+      "engine_rank": 9,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "Python has syntax that allows developers to write programs with fewer lines than some other programming languages. Python runs …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 9
+        }
+      ],
+      "title": "Introduction to Python - W3Schools",
+      "url": "https://www.w3schools.com/python/python_intro.asp"
+    },
+    {
+      "content": null,
+      "display_url": "https:// wiki.python.org › moin › BeginnersGuide",
+      "engine": "bing",
+      "engine_rank": 10,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "snippet": "This is the program that reads Python programs and carries out their instructions; you need it before you can do any Python …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 10
+        }
+      ],
+      "title": "BeginnersGuide - Python Software Foundation Wiki Server",
+      "url": "https://wiki.python.org/moin/BeginnersGuide"
+    }
+  ],
+  "diagnostics": {
+    "fetch": null,
+    "provider_cancellations": 2,
+    "providers": [
+      {
+        "elapsed_ms": 321,
+        "engine": "duckduckgo",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "cancelled_quorum",
+        "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+        "raw_result_count": 0,
+        "result_count": 0,
+        "retries": 0,
+        "success": false
+      },
+      {
+        "elapsed_ms": 320,
+        "engine": "bing",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "results",
+        "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+        "raw_result_count": 10,
+        "result_count": 10,
+        "retries": 0,
+        "success": true
+      },
+      {
+        "elapsed_ms": 320,
+        "engine": "yahoo",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "cancelled_quorum",
+        "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+        "raw_result_count": 0,
+        "result_count": 0,
+        "retries": 0,
+        "success": false
+      }
+    ]
+  },
+  "engines": [
+    "duckduckgo",
+    "bing",
+    "yahoo"
+  ],
+  "mode": "fanout",
+  "queries": [
+    "Python asyncio TaskGroup exception handling ExceptionGroup"
+  ],
+  "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+  "results": [
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 1,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "rank": 1,
+      "snippet": "Experienced programmers in any other language can pick up Python very quickly, and beginners find the clean syntax and …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 1
+        }
+      ],
+      "title": "Welcome to Python.org",
+      "url": "https://www.python.org/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 2,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "rank": 2,
+      "snippet": "Python was created in the early 1990s by Guido van Rossum at Stichting Mathematisch Centrum in the Netherlands as a successor …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 2
+        }
+      ],
+      "title": "Download Python | Python.org",
+      "url": "https://www.python.org/downloads/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 3,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "rank": 3,
+      "snippet": "Learn Python Python is a popular programming language. Python can be used on a server to create web applications. Python is …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 3
+        }
+      ],
+      "title": "Python Tutorial - W3Schools",
+      "url": "https://www.w3schools.com/python/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 4,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "rank": 4,
+      "snippet": "Python, which was initially developed by Guido van Rossum and made available to the public in 1991, is currently one of the most …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 4
+        }
+      ],
+      "title": "Online Python - IDE, Editor, Compiler, Interpreter",
+      "url": "https://www.online-python.com/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 5,
+      "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+      "rank": 5,
+      "snippet": "Python is a high-level, general-purpose programming language that emphasizes code readability, simplicity, and ease-of-writing with …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Python asyncio TaskGroup exception handling ExceptionGroup",
+          "rank": 5
+        }
+      ],
+      "title": "Python (programming language ) - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Python_(programming_language)"
+    }
+  ],
+  "returned_chars": 0,
+  "run_id": "run",
+  "timings_ms": {
+    "initialize": 143,
+    "search": 321
+  }
+}

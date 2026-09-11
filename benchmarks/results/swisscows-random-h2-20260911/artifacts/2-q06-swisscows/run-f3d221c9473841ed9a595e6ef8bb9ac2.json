@@ -1,0 +1,485 @@
+{
+  "candidate_counts": {
+    "after_candidate_selection": 20,
+    "after_ranking": 20,
+    "after_search": 20,
+    "returned": 5,
+    "with_content": 0
+  },
+  "candidates": [
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 1,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Don't combine either array with [shell_environment_policy.filters] in the same configuration layer; Codex rejects that combination. See the dedicated MCP documentation for configuration details. Enable OpenTelemetry (OTel) log export to track Codex runs (API requests, SSE/events, prompts, tool approvals/results).",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 1
+        }
+      ],
+      "title": "Advanced Configuration | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-advanced"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 2,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Keyotel.trace_exporter.<id>.tls.client-certificate ... Client certificate path for OTEL trace exporter TLS.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 2
+        }
+      ],
+      "title": "Configuration Reference | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-reference"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 3,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Default: \"dev\" environment = \"dev\" # Exporter: none (default) | otlp-http | otlp-grpc exporter = \"none\" # Trace exporter: none (default) | otlp-http | otlp-grpc trace_exporter = \"none\" # Metrics exporter: none | statsig | otlp-http | otlp-grpc metrics_exporter = \"statsig\" # Example OTLP/HTTP exporter configuration # [otel.exporter.\"otlp-http\"] # endpoint = \"https://otel.example.com/v1/logs\" # protocol = \"binary\" # \"binary\" | \"json\" # [otel.exporter.\"otlp-http\".headers] # \"x-otlp-api-key\" = \"${OTLP_TOKEN}\" # [otel.exporter.\"otlp-http\".tls] # ca-certificate = \"certs/otel-ca.pem\" # client-certifi",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 3
+        }
+      ],
+      "title": "Sample Configuration | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-sample"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 4,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Replaces the older `background... from Codex output (default: `vscode`).\", }, { key: \"otel.environment\", type: \"string\", description: \"Environment tag applied to emitted OpenTelemetry events (default: `dev`).\", }, { key: \"otel.exporter\", type: \"none | otlp-http | otlp-grpc\", description: \"Select the OpenTelemetry exporter and provide any endpoint metadata.\", }, { key: \"otel.trace_exporter\", ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 4
+        }
+      ],
+      "title": "Configuration Reference",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-reference.md"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 5,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Codex exports only telemetry produced by its OTel module.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 5
+        }
+      ],
+      "title": "Agent approvals & security | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/agent-approvals-security"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 6,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Trace and fix a flaky retry bug. Retry loop now stops at max retries before waiting. Changes applied. ... Reference open files, selected code, and recent chats directly from the composer. Codex starts with the code you are already looking at, so you spend less time restating the problem.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 6
+        }
+      ],
+      "title": "Codex IDE extension | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/codex/ide"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 7,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "# Set conservative defaults approval_policy = \"on-request\" sandbox_mode = \"workspace-write\" [sandbox_workspace_write] network_access = false # keep network disabled unless explicitly allowed [otel] environment = \"prod\" exporter = \"otlp-http\" # point at your collector log_user_prompt = false # keep prompts redacted # exporter details live under exporter tables; see Monitoring and telemetry above",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 7
+        }
+      ],
+      "title": "Managed configuration | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/enterprise/managed-configuration"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 8,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "The Agents SDK handles orchestration across Codex, hand-offs, and traces.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 8
+        }
+      ],
+      "title": "Use Codex with the Agents SDK | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/mcp-server"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 9,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Use Codex interactively or call codex exec from repeatable workflows and pipelines.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 9
+        }
+      ],
+      "title": "Codex CLI | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/codex/cli"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 10,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Codex exports only telemetry produced by its OTel module.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 10
+        }
+      ],
+      "title": "Agent approvals & security",
+      "url": "https://learn.chatgpt.com/docs/agent-approvals-security.md"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 11,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Export or track findings as portable artifacts or approval-gated tracking destinations . Write vulnerability reports from supplied findings, disclosure notes, source, and PoCs. Propose security hardening from scan results or other security evidence.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 11
+        }
+      ],
+      "title": "Codex Security | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/security"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 12,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Adds the disabled-by-default features.context_management.experimental_mode configuration. When enabled for eligible ChatGPT Plus, Pro, or Pro Lite sessions using the Codex backend, it activates token-budget context, history notes, and the new_context tool. API-key sessions, custom providers, and temporary structured threads remain excluded.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 12
+        }
+      ],
+      "title": "ChatGPT & Codex changelog | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/changelog"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 13,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Codex reads the variable named by that config, so the variable name itself is not a fixed Codex environment variable. For automation secret handling, see Use API key auth. For access token setup, see Access tokens. For workload identity setup, see Workload identity federation. RUST_LOG accepts values such as error, warn, info, debug, and trace.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 13
+        }
+      ],
+      "title": "Environment variables | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/config-file/environment-variables"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 14,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Use the Codex app server to build custom clients that handle authentication, conversation history, approvals, and streamed agent events.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 14
+        }
+      ],
+      "title": "Codex SDK | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/codex-sdk"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 15,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "This page catalogs every documented Codex CLI command and flag. Use the interactive tables to search by key or description.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 15
+        }
+      ],
+      "title": "Developer commands | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/developer-commands"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 16,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "high: Use when an agent needs to trace complex logic, check assumptions, or work through edge cases (for example, reviewer or security-focused agents). ... Higher reasoning effort increases response time and token usage, but it can improve quality for complex work. For details, see Models, Config basics, and Configuration Reference. ChatGPT or Codex handles orchestration across agents, including spawning new subagents, routing follow-up instructions, waiting for results, and closing agent threads.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 16
+        }
+      ],
+      "title": "Subagents | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/agent-configuration/subagents"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 17,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Export or track findings to create JSON, CSV, SARIF, an approval-gated Linear, GitHub, or Jira issue, or a private draft GitHub Security Advisory.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 17
+        }
+      ],
+      "title": "Plugin quickstart – Codex Security | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/security/plugin"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 18,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Remote terminal UI mode lets you run app-server on one machine and connect the Codex CLI terminal interface from another. Start a WebSocket listener: ... For a non-local connection, configure WebSocket authentication and put the connection behind TLS. Store the bearer token in an environment variable and pass its name instead of putting the token on the command line: export CODEX_REMOTE_TOKEN=\"$(cat \"$HOME/.codex/app-server-token\")\" codex --remote wss://remote-host:4500 \\ --remote-auth-token-env CODEX_REMOTE_TOKEN",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 18
+        }
+      ],
+      "title": "Codex App Server | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/app-server"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 19,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Prevented full Responses WebSocket request payloads from being written to trace logs. (#30771) ... No user-facing changes were identified for this release. ... Maintenance-only patch release with no user-facing changes since 0.142.2. ... Codex Remote has reached general availability.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 19
+        }
+      ],
+      "title": "Codex changelog | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/changelog?date=2026-01-06"
+    },
+    {
+      "content": null,
+      "display_url": "learn.chatgpt.com",
+      "engine": "swisscows",
+      "engine_rank": 20,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "snippet": "Use the import flow to bring instructions, settings, skills, plugins, projects, and recent work from another agent into the ChatGPT desktop app or Codex CLI. The desktop app can import from Claude Code, Claude Cowork, or Cursor.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 20
+        }
+      ],
+      "title": "Import from another agent | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/import"
+    }
+  ],
+  "diagnostics": {
+    "fetch": null,
+    "provider_cancellations": 0,
+    "providers": [
+      {
+        "elapsed_ms": 304,
+        "engine": "swisscows",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "results",
+        "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+        "raw_result_count": 20,
+        "result_count": 20,
+        "retries": 0,
+        "success": true
+      }
+    ]
+  },
+  "engines": [
+    "swisscows"
+  ],
+  "mode": "fallback",
+  "queries": [
+    "site:learn.chatgpt.com Codex otel trace_exporter"
+  ],
+  "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+  "results": [
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 1,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "rank": 1,
+      "snippet": "Don't combine either array with [shell_environment_policy.filters] in the same configuration layer; Codex rejects that combination. See the dedicated MCP documentation for configuration details. Enable OpenTelemetry (OTel) log export to track Codex runs (API requests, SSE/events, prompts, tool approvals/results).",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 1
+        }
+      ],
+      "title": "Advanced Configuration | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-advanced"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 2,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "rank": 2,
+      "snippet": "Keyotel.trace_exporter.<id>.tls.client-certificate ... Client certificate path for OTEL trace exporter TLS.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 2
+        }
+      ],
+      "title": "Configuration Reference | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-reference"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 3,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "rank": 3,
+      "snippet": "Default: \"dev\" environment = \"dev\" # Exporter: none (default) | otlp-http | otlp-grpc exporter = \"none\" # Trace exporter: none (default) | otlp-http | otlp-grpc trace_exporter = \"none\" # Metrics exporter: none | statsig | otlp-http | otlp-grpc metrics_exporter = \"statsig\" # Example OTLP/HTTP exporter configuration # [otel.exporter.\"otlp-http\"] # endpoint = \"https://otel.example.com/v1/logs\" # protocol = \"binary\" # \"binary\" | \"json\" # [otel.exporter.\"otlp-http\".headers] # \"x-otlp-api-key\" = \"${OTLP_TOKEN}\" # [otel.exporter.\"otlp-http\".tls] # ca-certificate = \"certs/otel-ca.pem\" # client-certifi",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 3
+        }
+      ],
+      "title": "Sample Configuration | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-sample"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 4,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "rank": 4,
+      "snippet": "Replaces the older `background... from Codex output (default: `vscode`).\", }, { key: \"otel.environment\", type: \"string\", description: \"Environment tag applied to emitted OpenTelemetry events (default: `dev`).\", }, { key: \"otel.exporter\", type: \"none | otlp-http | otlp-grpc\", description: \"Select the OpenTelemetry exporter and provide any endpoint metadata.\", }, { key: \"otel.trace_exporter\", ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 4
+        }
+      ],
+      "title": "Configuration Reference",
+      "url": "https://learn.chatgpt.com/docs/config-file/config-reference.md"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 5,
+      "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+      "rank": 5,
+      "snippet": "Codex exports only telemetry produced by its OTel module.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:learn.chatgpt.com Codex otel trace_exporter",
+          "rank": 5
+        }
+      ],
+      "title": "Agent approvals & security | ChatGPT Learn",
+      "url": "https://learn.chatgpt.com/docs/agent-approvals-security"
+    }
+  ],
+  "returned_chars": 0,
+  "run_id": "run",
+  "timings_ms": {
+    "initialize": 126,
+    "search": 304
+  }
+}

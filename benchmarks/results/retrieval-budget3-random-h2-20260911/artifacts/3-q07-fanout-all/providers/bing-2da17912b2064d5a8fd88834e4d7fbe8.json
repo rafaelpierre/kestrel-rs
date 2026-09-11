@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T20:58:02.708818+00:00",
+  "engine": "bing",
+  "final_url": "https://www.bing.com/search?q=Rust+E0382+use+of+moved+value+how+to+fix",
+  "html_file": "bing-2da17912b2064d5a8fd88834e4d7fbe8.html",
+  "http_status": 200,
+  "http_version": "HTTP/2.0",
+  "query": "Rust E0382 use of moved value how to fix"
+}

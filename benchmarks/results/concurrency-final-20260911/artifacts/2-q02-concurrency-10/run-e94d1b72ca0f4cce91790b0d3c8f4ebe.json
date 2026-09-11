@@ -1,0 +1,583 @@
+{
+  "candidate_counts": {
+    "after_candidate_selection": 15,
+    "after_ranking": 15,
+    "after_search": 15,
+    "returned": 5,
+    "with_content": 10
+  },
+  "candidates": [
+    {
+      "content": "Source: http://hyperphysics.phy-astr.gsu.edu/hbase/atmos/blusky.html\n\nBlue Sky Rayleigh Scattering Mie Scattering Rayleigh and Mie Scattering Sky Saturation and Brightness The blue color of the sky is caused by thescatteringof sunlight off the molecules of the atmosphere. This scattering, calledRayleigh scattering, is more effective at short wavelengths (the blue end of thevisible spectrum). Therefore the light scattered down to the earth at a large angle with respect to the direction of the sun's light is predominantly in the blue end of the spectrum. Clouds in contrast to the blue sky appear white to achromatic gray. The water droplets that make up the cloud are much larger than the molecules of the air and the scattering from them is almost independent of wavelength in the visible range. This is an outstanding image of the blue sky and its extent relative to the diameter of the Earth. It was taken from a U.S. Air Force U-2 craft at about 70,000 feet. Rayleigh scattering refers to the scattering of light off of the molecules of the air, and can be extended to scattering from particles up to about a tenth of the wavelength of the light. It is Rayleigh scattering off the molecules of the air which gives us theblue sky. Lord Rayleigh calculated the scattered intensity from dipole scatterers much smaller than the wavelength to be: Rayleigh scattering can be considered to be elastic scattering since the photon energies of the scattered photons is not changed. Scattering in which the scattered photons have either a higher or lower photon energy is calledRaman scattering. Usually this kind of scattering involves exciting some vibrational mode of the molecules, giving a lower scattered photon energy, or scattering off an excited vibrational state of a molecule which adds its vibrational energy to the incident photon. The scattering from molecules and very tiny particles (< 1 /10 wavelength) is predominantlyRayleighscattering. For particle sizes larger than a wavelength, Mie scattering predominates. This scattering produces a pattern like an",
+      "display_url": "hyperphysics.phy-astr.gsu.edu",
+      "engine": "swisscows",
+      "engine_rank": 1,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "The blue color of the sky is caused by the scattering of sunlight off the molecules of the atmosphere . This scattering, called Rayleigh scattering, is more effective at short wavelengths (the blue end of the visible spectrum). Therefore the light scattered down to the earth at a large angle ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 1
+        }
+      ],
+      "title": "Blue Sky and Rayleigh Scattering",
+      "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/atmos/blusky.html"
+    },
+    {
+      "content": "Source: https://en.wikipedia.org/wiki/Rayleigh_scattering\n\nRayleigh scattering(/ˈreɪli/RAY-lee) is the scattering or deflection oflight, or otherelectromagnetic radiation, by particles with a size much smaller than thewavelengthof the radiation. For light frequencies well below theresonancefrequency of the scattering medium (normaldispersionregime), the amount of scattering isinversely proportionalto thefourth powerof the wavelength (e.g., a blue color is scattered much more than a red color as light propagates through air). The phenomenon is named after the 19th-century British physicistLord Rayleigh(John William Strutt).[2] Rayleigh scattering results from the electricpolarizabilityof the particles. The oscillating electric field of a light wave acts on the charges within a particle, causing them to move at the same frequency. The particle, therefore, becomes a small radiatingdipolewhose radiation we see as scattered light. The particles may be individual atoms or molecules; it can occur when light travels through transparent solids and liquids, but is most prominently seen ingases. Rayleigh scattering ofsunlightinEarth's atmospherecausesdiffuse sky radiation. Since blue light wavelengths scatter more, the diffuse sky seen indaytimeis blue. Attwilightthe sunlight on the horizon is missing the scattered blue light wavelengths giving ayellowishto reddish hue to the lowSun.[1] Scattering by particles with a size comparable to, or larger than, the wavelength of the light is typically treated by theMie theory, thediscrete dipole approximationand other computational techniques. Rayleigh scattering applies to particles that are small with respect to wavelengths of light, and that are optically \"soft\" (i.e., with arefractive indexclose to 1).Anomalous diffraction theoryapplies to optically soft but larger particles. In c. 1506–1510,Leonardo da Vinciconjectured that the scattering of sunlight by small particles in the atmosphere gave the sky itsblue hue, and analysis of his paintings suggest that he understood the influence of par",
+      "display_url": "en.wikipedia.org",
+      "engine": "swisscows",
+      "engine_rank": 2,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "Rayleigh scattering applies to particles that are small with respect to wavelengths of light, and that are optically \"soft\" (i.e., with a refractive index close to 1). Anomalous diffraction theory applies to optically soft but larger particles. In c. 1506–1510, Leonardo da Vinci conjectured that the scattering of sunlight by small particles in the atmosphere gave the sky its blue ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 2
+        }
+      ],
+      "title": "Rayleigh scattering - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Rayleigh_scattering"
+    },
+    {
+      "content": "Source: https://www.rmg.co.uk/stories/space-astronomy/why-sky-blue\n\nThis content is hosted by a third party What is light? This content is hosted by a third party Find more stories you might like See the universe in a new light Never miss a shooting star Accessible astronomy It’s a common misconception that the sky is blue because it reflects the blue of the seas and oceans. In fact, it’s theEarth’s atmosphere, and a process known as 'scattering', that causes our skies to be blue. Learn more with astronomers at theRoyal Observatory Greenwich. Please allow all cookies to watch the video. Here's the short answer... Aswhite lightpasses through our atmosphere, tiny air molecules cause it to ‘scatter’. The scattering caused by these tiny air molecules (known asRayleigh scattering) increases as the wavelength of light decreases. Violet and blue light have the shortest wavelengths and red light has the longest. Therefore,blue light is scattered more than red lightand the sky appears blue during the day. When the Sun is low in the sky during sunrise and sunset, the light has to travel further through the Earth’s atmosphere. We don’t see the blue light because it gets scattered away, but the red light isn’t scattered very much – so the sky appears red. Still interested? Keep reading after the jump for more illuminating info about light, including thecolour of the sky on Mars... The Sun gives out or emits all the colours of visible light which we see as being approximately white. As demonstrated by Sir Isaac Newton with a triangular prism, when white light passes through the prism it separates out into the colours of the rainbow. This experiment demonstrates that white light is composed of all the colours of visible light in roughly the same amounts. Please allow all cookies to watch the video. These different colours have different wavelengths, and this affects how they interact with different substances. Violet and blue light have the shortest wavelengths and red light has the longest. Find more astronomy videos and resources The Earth’s at",
+      "display_url": "www.rmg.co.uk",
+      "engine": "swisscows",
+      "engine_rank": 3,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "The scattering caused by these tiny air molecules (known as Rayleigh scattering) increases as the wavelength of light decreases . Violet and blue light have the shortest wavelengths and red light has the longest.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 3
+        }
+      ],
+      "title": "Why is the sky blue? | Royal Observatory",
+      "url": "https://www.rmg.co.uk/stories/space-astronomy/why-sky-blue"
+    },
+    {
+      "content": null,
+      "display_url": "www.reddit.com",
+      "engine": "swisscows",
+      "engine_rank": 4,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "This means blue light (contained in the white light from the sun) causes the air molecules to oscillate more and thus scatter more . Due to some fancy math stuff blue light gets scattered nearly 10 times more than red light so the sky appears blue.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 4
+        }
+      ],
+      "title": "r/explainlikeimfive on Reddit: ELI5:HOW does Rayleigh scattering make the sky red/blue/whatever?",
+      "url": "https://www.reddit.com/r/explainlikeimfive/comments/lyhooz/eli5how_does_rayleigh_scattering_make_the_sky/"
+    },
+    {
+      "content": "Source: https://www.ebsco.com/research-starters/chemistry/rayleigh-scattering\n\nRayleigh scattering Full Article More Like ThisRelated Articles Related Articles(3) Full Article More Like ThisRelated Articles Related Articles(3) Rayleigh scattering is a phenomenon that describes how light is scattered by small molecules in the atmosphere, specifically particles that are about one-tenth the size of the wavelength of the light. This scattering effect is primarily responsible for the blue color of the sky, as shorter wavelengths of light, such as blue and violet, are scattered more efficiently than longer wavelengths like red. Despite violet light being scattered even more, the human eye is more sensitive to blue light, which is why the sky appears blue rather than violet. The term Rayleigh scattering is named after British physicist Lord Rayleigh, who established a mathematical formula in the 19th century to describe the scattering process. As sunlight travels through the atmosphere, it interacts with nitrogen and oxygen molecules, causing shorter blue wavelengths to diffuse and create the blue sky we observe. During sunrise and sunset, when the Sun is lower in the sky, its light encounters a greater thickness of the atmosphere, scattering the shorter wavelengths and allowing the longer red and orange wavelengths to dominate, resulting in the warm hues often seen during those times. Factors such as air pollution, humidity, and seasonal changes can also influence the color and intensity of sunsets, with particles in the atmosphere enhancing the scattering effect and altering the colors displayed. Overall, Rayleigh scattering plays a crucial role in our perception of sky color and the beauty of natural light phenomena. Authored By:Sheposh, Richard 1 of 4 Published In:2020 2 of 4 Authored By:Sheposh, Richard 1 of 4Authored By:Sheposh, Richard Published In:2020 2 of 4 Evidence of Sub‐Micrometric Plastic Release When Heating Food Containers Based on Light Scattering Measurements. Rayleigh Scattering from a Sphere Located Near a Planar Rigid Boundary. U",
+      "display_url": "www.ebsco.com",
+      "engine": "swisscows",
+      "engine_rank": 5,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "This scattering effect is primarily responsible for the blue color of the sky, as shorter wavelengths of light, such as blue and violet, are scattered more efficiently than longer wavelengths like red .",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 5
+        }
+      ],
+      "title": "Rayleigh scattering | Chemistry | Research Starters | EBSCOhost",
+      "url": "https://www.ebsco.com/research-starters/chemistry/rayleigh-scattering"
+    },
+    {
+      "content": "Source: https://sparks.learning.asu.edu/videos/rayleigh-scattering-blue-sky-thinking\n\nWhy Is the Sky Blue? Understanding Rayleigh Scattering Rayleigh scattering refers to the scattering of light by small gas molecules, with shorter wavelengths (blue light) being scattered more effectively than longer wavelengths (red light). This answers the popular question of \"why is the sky blue?\". During sunset, when the sun is lower on the horizon, more of the shorter wavelengths are scattered, leaving behind a dominance of red light, creating the iconic reddish sunset colors. Pollution can enhance the scattering effect, leading to more vibrant and dramatic sunset colors. Clouds, on the other hand, scatter all visible light equally, appearing white, although they may sometimes appear gray due to shading. Light interacts with particles and gas molecules in the air. It can be absorbed or scattered, both by physical particles and by gasses - the small gas molecules that we find in the air serving to interrupt the path of light. This is what is called Raleigh Scattering. This scattering of the light depends on the wavelength and so the higher energy parts of the light spectrum (smaller wavelengths) get scattered more strongly than the larger wavelengths. Or, in other terms, the blue light is scattered more effectively than the red light by the air molecules. So a consequence is that if the sun is out and high in the sky the blue light is getting scattered more and when we look at the sky we see the diffuse blue light from the Raleigh scattering of the sunlight. The blue sky above the Golden Gate Bridge shows this well. Now, in the evening when the sun sets or goes down on the horizon, our viewing angle changes and we are looking at light from the sun that has passed through considerably more of our atmosphere, much of it closer to the earth’s surface where it is denser. The same process means that a significant proportion of the short and medium wave light, blue and green, is removed from the path of the observer through scattering. The remaining light, the longer w",
+      "display_url": "sparks.learning.asu.edu",
+      "engine": "swisscows",
+      "engine_rank": 6,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "Rayleigh scattering refers to the scattering of light by small gas molecules, with shorter wavelengths (blue light) being scattered more effectively than longer wavelengths (red light).",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 6
+        }
+      ],
+      "title": "Why Is the Sky Blue? Understanding Rayleigh Scattering",
+      "url": "https://sparks.learning.asu.edu/videos/rayleigh-scattering-blue-sky-thinking"
+    },
+    {
+      "content": "Source: https://scienceinsights.org/why-is-the-sky-blue-rayleigh-scattering-explained/\n\nHow Sunlight Interacts With Air Molecules Why Blue and Not Red Why Blue Instead of Violet Why Sunsets Turn Red and Orange Rayleigh Scattering vs. Mie Scattering What the Martian Sky Reveals The sky is blue because sunlight collides with gas molecules in the atmosphere, and shorter wavelengths of light scatter far more than longer ones. This process, called Rayleigh scattering, redirects blue light in every direction across the sky, which is why you see blue no matter where you look overhead. The effect follows a precise physical rule: scattering intensity is inversely proportional to the fourth power of the wavelength, meaning small differences in color translate to large differences in how much light gets scattered. Sunlight looks white, but it contains every color of the visible spectrum, from violet at around 380 nanometers to red at around 700 nanometers. When this light enters Earth’s atmosphere, it encounters an enormous number of gas molecules. The atmosphere is 78% nitrogen and nearly 21% oxygen, and these tiny molecules are what do the scattering. Here’s what happens at the molecular level. A photon of sunlight has an oscillating electric field. When it passes close to a nitrogen or oxygen molecule, that electric field pushes and pulls on the molecule’s electrons, forcing them to oscillate in sync. Those accelerating electrons then emit a new photon of the same wavelength, but in a different direction. The original light has been “scattered.” This works because the gas molecules are much smaller than the wavelength of visible light, typically less than one-tenth the wavelength. That size relationship is what makes this Rayleigh scattering rather than other types of scattering that occur with larger particles. The key to the sky’s color is the wavelength dependence. Rayleigh scattering intensity scales with the inverse fourth power of wavelength. In practical terms, if you halve the wavelength, scattering becomes 16 times stronger. Blue light (around 450 nan",
+      "display_url": "scienceinsights.org",
+      "engine": "swisscows",
+      "engine_rank": 7,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "The sky is blue because sunlight collides with gas molecules in the atmosphere, and shorter wavelengths of light scatter far more than longer ones . This process, called Rayleigh scattering, redirects blue light in every direction across the ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 7
+        }
+      ],
+      "title": "Why Is the Sky Blue? Rayleigh Scattering Explained - ScienceInsights",
+      "url": "https://scienceinsights.org/why-is-the-sky-blue-rayleigh-scattering-explained/"
+    },
+    {
+      "content": "Source: https://www.wtamu.edu/~cbaird/sq/2013/03/28/why-is-the-sky-blue/\n\nWhy is the sky blue? Category:Earth SciencePublished: March 28, 2013 By: Christopher S. Baird, author ofThe Top 50 Science Questions with Surprising Answersand Associate Professor of Physics at West Texas A&M University If you look in any popular science book on this topic, it will tell you that the sky is blue because of Rayleigh scattering in the atmosphere. While Rayleigh scattering is a very important part of the answer, it is not the only part. If the only effect at work were Rayleigh scattering, then the sky would be violet, not blue. In fact, there are four factors involved; all required to give the final answer of blue: Rayleigh scattering is what happens when light bounces off an object that is much smaller than its wavelength. Physical derivations show that for Rayleigh scattering, the higher frequency colors such as blue and violet are scattered much more strongly than low frequency colors such as red and orange. Mathematically, the intensity of scattered light is proportional tof4, wherefis the frequency of the light. This means that a color that is twice the frequency of another color will be 16 times brighter than that other color after scattering if they both were equally bright to start out with. In the atmosphere, the objects doing the scattering are mostly nitrogen molecules (N2) and oxygen molecules (O2). These molecules are much smaller than visible light (oxygen molecules are about 0.1 nanometers wide and visible light has a wavelength of about 500 nanometers), so the scattering in the atmosphere is Rayleigh scattering. But if this were the end of the story, the sky would be violet and not blue because violet is the highest-frequency visible color. Let us look at the other effects. Most people think that the sunlight traveling through space before it hits our atmosphere is a perfectly white color. Perfect white is an equal mix of all colors. In reality, the sunlight hitting the atmosphere doesnothave an equal distribution of colors, but has a th",
+      "display_url": "www.wtamu.edu",
+      "engine": "swisscows",
+      "engine_rank": 8,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "These molecules are much smaller than visible light (oxygen molecules are about 0.1 nanometers wide and visible light has a wavelength of about 500 nanometers), so the scattering in the atmosphere is Rayleigh scattering.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 8
+        }
+      ],
+      "title": "Why is the sky blue? | Science Questions with Surprising Answers",
+      "url": "https://www.wtamu.edu/~cbaird/sq/2013/03/28/why-is-the-sky-blue/"
+    },
+    {
+      "content": "Source: https://stao.ca/resource/rayleigh-scattering-why-does-the-sky-look-blue/\n\nRayleigh Scattering: Why Does the Sky Look Blue? (Grade 7) Categories:Lab/Student Activity When light from the sun hits the Earth’s atmosphere, the shorter wavelength blue light gets scattered in all directions at the same time. This is why the sky appears to be blue. The intensity of blueness is greater directly overhead compared with the blueness closer to the sunlight.“Rayleigh scattering – named after the British physicist Lord Rayleigh – in the atmosphere causes diffuse sky radiation, which is the reason for the blue colour of the sky and the yellow tone of the sun itself.” (Wikipedia).When doing this experiment, some students may see blue in their glass while others may see grey or white. The students should look at the glass at an angle and look toward the bottom third of the glass. Have students look aroundat their classmates’ glasses, while staying at their own desks. The blueness is easier to see from a distance.",
+      "display_url": "stao.ca",
+      "engine": "swisscows",
+      "engine_rank": 9,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "The intensity of blueness is greater directly overhead compared with the blueness closer to the sunlight. “Rayleigh scattering – named after the British physicist Lord Rayleigh – in the atmosphere causes diffuse sky radiation , which is the reason for the blue colour of the sky and the ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 9
+        }
+      ],
+      "title": "Rayleigh Scattering: Why Does the Sky Look Blue? (Grade 7) | STAO",
+      "url": "https://stao.ca/resource/rayleigh-scattering-why-does-the-sky-look-blue/"
+    },
+    {
+      "content": null,
+      "display_url": "www.weather.gov",
+      "engine": "swisscows",
+      "engine_rank": 10,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "The sky looks blue, not violet, because our eyes are more sensitive to blue light (and the sun also emits more energy as blue light than as violet). This process of scattering is known as Rayleigh scattering (named after Lord John Rayleigh, who first described it in the 1870's).",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 10
+        }
+      ],
+      "title": "Why Is The Sky Blue?",
+      "url": "https://www.weather.gov/fgz/SkyBlue"
+    },
+    {
+      "content": null,
+      "display_url": "www.nuscimagazine.com",
+      "engine": "swisscows",
+      "engine_rank": 11,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "Because the sun produces white light — which is a mixture of the entire spectrum of visible light — higher-energy blue light scatters more than lower-energy red light , making the sky appear bluish; the sky, however, does not appear purple because the sun produces relatively little violet light.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 11
+        }
+      ],
+      "title": "Rayleigh scattering: Why the sky is blue and ...",
+      "url": "https://www.nuscimagazine.com/rayleigh-scattering-why-the-sky-is-blue-and-other-miscellanea"
+    },
+    {
+      "content": null,
+      "display_url": "www.needtoknowfacts.com",
+      "engine": "swisscows",
+      "engine_rank": 12,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "When someone asks, “What phenomenon makes the sky appear blue?” the answer is Rayleigh scattering. It is the scattering of sunlight by molecules and tiny particles in Earth’s atmosphere, especially ni",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 12
+        }
+      ],
+      "title": "Why Is the Sky Blue? The Science of Rayleigh Scattering",
+      "url": "https://www.needtoknowfacts.com/trivia/science/what-phenomenon-makes-the-sky-appear-blue"
+    },
+    {
+      "content": "Source: https://weather.metoffice.gov.uk/learn-about/weather/optical-effects/why-is-the-sky-blue\n\nWhy the sky is blue and sunsets red Why does the blue fade at the horizon? Why are sunsets red or orange? To understand why we see the sky as blue and sunsets as red or orange, we need to understand a little bit about how light is made up of a spectrum of colours. The sky appears blue because of a phenomenon called Rayleigh scattering. Sunlight, although it looks white, is actually made up of many colours, each with a different wavelength. At one end of the spectrum is red light which has the longest wavelength and at the other are blue and violet light which have a much shorter wavelength. When sunlight enters Earth’s atmosphere, it collides with tiny gas molecules - mainly nitrogen and oxygen. These molecules are much smaller than the wavelength of visible light, so they scatter shorter wavelengths much more than longer wavelengths. Even though violet light is scattered even more than blue, our eyes are more sensitive to blue, and there’s less violet in sunlight to begin with. That’s why we see a blue sky instead of a purple one. The sky looks most vibrant overhead and paler near the horizon. This happens because light from the horizon travels through more atmosphere, getting scattered and re-scattered along the way. The increased scattering mixes in more white light, making the blue less intense. Again, this is to do with Rayleigh scattering and the fact that light is made up of many different colours of differing wavelengths. Blue and violet light gets scattered more than other colours because it travels as shorter, smaller waves. At sunrise and sunset, the Sun is low in the sky, so its light passes through a thicker layer of atmosphere. The shorter wavelength blue light is scattered further, as the sunlight passes over a greater distance, and we see the longer wavelengths—reds and oranges—that create those beautiful sunset and sunrise colours. In summary, the colours we see in the sky are all about how sunlight interacts with the atmosphere. Blue skies and red ",
+      "display_url": "weather.metoffice.gov.uk",
+      "engine": "swisscows",
+      "engine_rank": 13,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "Blue and violet light gets scattered more than other colours because it travels as shorter, smaller waves . At sunrise and sunset, the Sun is low in the sky, so its light passes through a thicker layer of atmosphere.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 13
+        }
+      ],
+      "title": "Why the sky is blue and sunsets red - Met Office",
+      "url": "https://weather.metoffice.gov.uk/learn-about/weather/optical-effects/why-is-the-sky-blue"
+    },
+    {
+      "content": null,
+      "display_url": "physics.stackexchange.com",
+      "engine": "swisscows",
+      "engine_rank": 14,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "Yet on Wikipedia, we have (emphasis added): \"The daytime sky appears blue because air molecules scatter shorter wavelengths of sunlight more than longer ones (redder light)...most of the light in the daytime sky is caused by scattering, which ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 14
+        }
+      ],
+      "title": "scattering - The blue sky — is the simple Rayleigh explanation wrong? - Physics Stack Exchange",
+      "url": "https://physics.stackexchange.com/questions/771067/the-blue-sky-is-the-simple-rayleigh-explanation-wrong"
+    },
+    {
+      "content": "Source: https://scienceinsights.org/what-is-rayleigh-scattering-and-why-the-sky-is-blue/\n\nHow It Works Why Shorter Wavelengths Scatter More Why the Sky Is Blue, Not Violet Sunsets and the Long Path How Rayleigh Differs From Mie Scattering Polarization of Scattered Light Applications in Technology Rayleigh scattering is the scattering of light by particles much smaller than the wavelength of that light. It’s the reason the sky is blue, sunsets are red, and certain technologies like fiber optics and atmospheric sensors work the way they do. The key principle: shorter wavelengths of light scatter far more intensely than longer ones, following a relationship where scattering intensity is proportional to the inverse fourth power of wavelength. When sunlight or any electromagnetic wave encounters a tiny particle, the wave’s electric field pushes on the charged particles (electrons and protons) within it. This temporarily polarizes the particle, turning it into a small oscillating electric dipole. That dipole then re-emits light in many directions, like a tiny antenna broadcasting in all directions at once. The incoming light hasn’t been absorbed and re-released in the way fluorescence works. Instead, it’s immediately redirected. For this process to count as Rayleigh scattering, the particle needs to be very small relative to the wavelength of incoming light. The threshold is roughly 5% of the wavelength or less. Visible light has wavelengths between about 380 and 700 nanometers, and the nitrogen and oxygen molecules that make up most of Earth’s atmosphere are only a fraction of a nanometer across. They fit comfortably within the Rayleigh regime. The defining feature of Rayleigh scattering is its strong wavelength dependence. Scattering intensity scales with the inverse fourth power of wavelength. In practical terms, this means a small change in wavelength produces a large change in how much the light gets scattered. Blue light at around 430 nanometers scatters roughly six times more efficiently than red light at 680 nanometers. Violet light, with an even short",
+      "display_url": "scienceinsights.org",
+      "engine": "swisscows",
+      "engine_rank": 15,
+      "query": "why is the sky blue Rayleigh scattering",
+      "snippet": "Rayleigh scattering is the scattering of light by particles much smaller than the wavelength of that light . It’s the reason the sky is blue, sunsets are red, and certain technologies like fiber optics and atmospheric sensors work the way they do.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 15
+        }
+      ],
+      "title": "What Is Rayleigh Scattering and Why the Sky Is Blue - ScienceInsights",
+      "url": "https://scienceinsights.org/what-is-rayleigh-scattering-and-why-the-sky-is-blue/"
+    }
+  ],
+  "diagnostics": {
+    "fetch": {
+      "budget_exhausted": false,
+      "cache_hits": 0,
+      "cache_misses": 15,
+      "cancelled": 0,
+      "outcomes": {
+        "cache_hit": 0,
+        "no_content": 4,
+        "request_failed": 1,
+        "response_too_large": 0,
+        "success": 10,
+        "unsupported_content_type": 0
+      },
+      "pages": [
+        {
+          "download_ms": 2,
+          "outcome": "success",
+          "parse_ms": 0,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 261,
+          "response_bytes": 10713,
+          "total_ms": 265,
+          "url": "http://hyperphysics.phy-astr.gsu.edu/hbase/atmos/blusky.html"
+        },
+        {
+          "download_ms": 39,
+          "outcome": "success",
+          "parse_ms": 11,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 174,
+          "response_bytes": 245551,
+          "total_ms": 225,
+          "url": "https://en.wikipedia.org/wiki/Rayleigh_scattering"
+        },
+        {
+          "download_ms": 0,
+          "outcome": "success",
+          "parse_ms": 6,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 130,
+          "response_bytes": 108322,
+          "total_ms": 137,
+          "url": "https://www.rmg.co.uk/stories/space-astronomy/why-sky-blue"
+        },
+        {
+          "download_ms": 0,
+          "outcome": "no_content",
+          "parse_ms": 0,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 165,
+          "response_bytes": 8479,
+          "total_ms": 165,
+          "url": "https://www.reddit.com/r/explainlikeimfive/comments/lyhooz/eli5how_does_rayleigh_scattering_make_the_sky/"
+        },
+        {
+          "download_ms": 0,
+          "outcome": "success",
+          "parse_ms": 1,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 160,
+          "response_bytes": 147220,
+          "total_ms": 162,
+          "url": "https://www.ebsco.com/research-starters/chemistry/rayleigh-scattering"
+        },
+        {
+          "download_ms": 6,
+          "outcome": "success",
+          "parse_ms": 1,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 205,
+          "response_bytes": 76758,
+          "total_ms": 213,
+          "url": "https://sparks.learning.asu.edu/videos/rayleigh-scattering-blue-sky-thinking"
+        },
+        {
+          "download_ms": 5,
+          "outcome": "success",
+          "parse_ms": 1,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 172,
+          "response_bytes": 177629,
+          "total_ms": 179,
+          "url": "https://scienceinsights.org/why-is-the-sky-blue-rayleigh-scattering-explained/"
+        },
+        {
+          "download_ms": 0,
+          "outcome": "success",
+          "parse_ms": 1,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 532,
+          "response_bytes": 16929,
+          "total_ms": 534,
+          "url": "https://www.wtamu.edu/~cbaird/sq/2013/03/28/why-is-the-sky-blue/"
+        },
+        {
+          "download_ms": 172,
+          "outcome": "success",
+          "parse_ms": 4,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 1421,
+          "response_bytes": 511253,
+          "total_ms": 1598,
+          "url": "https://stao.ca/resource/rayleigh-scattering-why-does-the-sky-look-blue/"
+        },
+        {
+          "download_ms": 0,
+          "outcome": "no_content",
+          "parse_ms": 1,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 177,
+          "response_bytes": 52843,
+          "total_ms": 179,
+          "url": "https://www.weather.gov/fgz/SkyBlue"
+        },
+        {
+          "download_ms": 0,
+          "outcome": "no_content",
+          "parse_ms": 0,
+          "parse_queue_ms": 0,
+          "queue_ms": 137,
+          "request_ms": 340,
+          "response_bytes": 40541,
+          "total_ms": 478,
+          "url": "https://www.nuscimagazine.com/rayleigh-scattering-why-the-sky-is-blue-and-other-miscellanea"
+        },
+        {
+          "download_ms": 1,
+          "outcome": "no_content",
+          "parse_ms": 1,
+          "parse_queue_ms": 0,
+          "queue_ms": 160,
+          "request_ms": 404,
+          "response_bytes": 18719,
+          "total_ms": 568,
+          "url": "https://www.needtoknowfacts.com/trivia/science/what-phenomenon-makes-the-sky-appear-blue"
+        },
+        {
+          "download_ms": 0,
+          "outcome": "success",
+          "parse_ms": 2,
+          "parse_queue_ms": 0,
+          "queue_ms": 164,
+          "request_ms": 115,
+          "response_bytes": 86756,
+          "total_ms": 283,
+          "url": "https://weather.metoffice.gov.uk/learn-about/weather/optical-effects/why-is-the-sky-blue"
+        },
+        {
+          "download_ms": 0,
+          "outcome": "request_failed",
+          "parse_ms": 0,
+          "parse_queue_ms": 0,
+          "queue_ms": 0,
+          "request_ms": 0,
+          "response_bytes": 0,
+          "total_ms": 285,
+          "url": "https://physics.stackexchange.com/questions/771067/the-blue-sky-is-the-simple-rayleigh-explanation-wrong"
+        },
+        {
+          "download_ms": 3,
+          "outcome": "success",
+          "parse_ms": 0,
+          "parse_queue_ms": 0,
+          "queue_ms": 178,
+          "request_ms": 52,
+          "response_bytes": 178420,
+          "total_ms": 235,
+          "url": "https://scienceinsights.org/what-is-rayleigh-scattering-and-why-the-sky-is-blue/"
+        }
+      ],
+      "response_bytes": 1680133
+    },
+    "provider_cancellations": 0,
+    "providers": [
+      {
+        "elapsed_ms": 298,
+        "engine": "swisscows",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "results",
+        "query": "why is the sky blue Rayleigh scattering",
+        "raw_result_count": 15,
+        "result_count": 15,
+        "retries": 0,
+        "success": true
+      }
+    ]
+  },
+  "engines": [
+    "swisscows"
+  ],
+  "mode": "fallback",
+  "queries": [
+    "why is the sky blue Rayleigh scattering"
+  ],
+  "query": "why is the sky blue Rayleigh scattering",
+  "results": [
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 12,
+      "query": "why is the sky blue Rayleigh scattering",
+      "rank": 1,
+      "snippet": "When someone asks, “What phenomenon makes the sky appear blue?” the answer is Rayleigh scattering. It is the scattering of sunlight by molecules and tiny particles in Earth’s atmosphere, especially ni",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 12
+        }
+      ],
+      "title": "Why Is the Sky Blue? The Science of Rayleigh Scattering",
+      "url": "https://www.needtoknowfacts.com/trivia/science/what-phenomenon-makes-the-sky-appear-blue"
+    },
+    {
+      "bm25_score": null,
+      "content": "Source: https://stao.ca/resource/rayleigh-scattering-why-does-the-sky-look-blue/\n\nRayleigh Scattering: Why Does the Sky Look Blue? (Grade 7) Categories:Lab/Student Activity When light from the sun hits the Earth’s atmosphere, the shorter wavelength blue light gets scattered in all directions at the same time. This is why the sky appears to be blue. The intensity of blueness is greater directly overhead compared with the blueness closer to the sunlight.“Rayleigh scattering – named after the British physicist Lord Rayleigh – in the atmosphere causes diffuse sky radiation, which is the reason for the blue colour of the sky and the yellow tone of the sun itself.” (Wikipedia).When doing this experiment, some students may see blue in their glass while others may see grey or white. The students should look at the glass at an angle and look toward the bottom third of the glass. Have students look aroundat their classmates’ glasses, while staying at their own desks. The blueness is easier to see from a distance.",
+      "content_chars": 1018,
+      "content_sha256": "acfd90736b6b3e76d3fcb90f4821394c0910051b6ddfff2a1225794fd04eeb6d",
+      "engine": "swisscows",
+      "engine_rank": 9,
+      "query": "why is the sky blue Rayleigh scattering",
+      "rank": 2,
+      "snippet": "The intensity of blueness is greater directly overhead compared with the blueness closer to the sunlight. “Rayleigh scattering – named after the British physicist Lord Rayleigh – in the atmosphere causes diffuse sky radiation , which is the reason for the blue colour of the sky and the ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 9
+        }
+      ],
+      "title": "Rayleigh Scattering: Why Does the Sky Look Blue? (Grade 7) | STAO",
+      "url": "https://stao.ca/resource/rayleigh-scattering-why-does-the-sky-look-blue/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 10,
+      "query": "why is the sky blue Rayleigh scattering",
+      "rank": 3,
+      "snippet": "The sky looks blue, not violet, because our eyes are more sensitive to blue light (and the sun also emits more energy as blue light than as violet). This process of scattering is known as Rayleigh scattering (named after Lord John Rayleigh, who first described it in the 1870's).",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 10
+        }
+      ],
+      "title": "Why Is The Sky Blue?",
+      "url": "https://www.weather.gov/fgz/SkyBlue"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 11,
+      "query": "why is the sky blue Rayleigh scattering",
+      "rank": 4,
+      "snippet": "Because the sun produces white light — which is a mixture of the entire spectrum of visible light — higher-energy blue light scatters more than lower-energy red light , making the sky appear bluish; the sky, however, does not appear purple because the sun produces relatively little violet light.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 11
+        }
+      ],
+      "title": "Rayleigh scattering: Why the sky is blue and ...",
+      "url": "https://www.nuscimagazine.com/rayleigh-scattering-why-the-sky-is-blue-and-other-miscellanea"
+    },
+    {
+      "bm25_score": null,
+      "content": "Source: https://scienceinsights.org/why-is-the-sky-blue-rayleigh-scattering-explained/\n\nHow Sunlight Interacts With Air Molecules Why Blue and Not Red Why Blue Instead of Violet Why Sunsets Turn Red and Orange Rayleigh Scattering vs. Mie Scattering What the Martian Sky Reveals The sky is blue because sunlight collides with gas molecules in the atmosphere, and shorter wavelengths of light scatter far more than longer ones. This process, called Rayleigh scattering, redirects blue light in every direction across the sky, which is why you see blue no matter where you look overhead. The effect follows a precise physical rule: scattering intensity is inversely proportional to the fourth power of the wavelength, meaning small differences in color translate to large differences in how much light gets scattered. Sunlight looks white, but it contains every color of the visible spectrum, from violet at around 380 nanometers to red at around 700 nanometers. When this light enters Earth’s atmosphere, it encounters an enormous number of gas molecules. The atmosphere is 78% nitrogen and nearly 21% oxygen, and these tiny molecules are what do the scattering. Here’s what happens at the molecular level. A photon of sunlight has an oscillating electric field. When it passes close to a nitrogen or oxygen molecule, that electric field pushes and pulls on the molecule’s electrons, forcing them to oscillate in sync. Those accelerating electrons then emit a new photon of the same wavelength, but in a different direction. The original light has been “scattered.” This works because the gas molecules are much smaller than the wavelength of visible light, typically less than one-tenth the wavelength. That size relationship is what makes this Rayleigh scattering rather than other types of scattering that occur with larger particles. The key to the sky’s color is the wavelength dependence. Rayleigh scattering intensity scales with the inverse fourth power of wavelength. In practical terms, if you halve the wavelength, scattering becomes 16 times stronger. Blue light (around 450 nan",
+      "content_chars": 2088,
+      "content_sha256": "3748c827a1a0833ca5faf4ec9f2b42e39a438746c1e7a6c99eae8ebfe9b4875c",
+      "engine": "swisscows",
+      "engine_rank": 7,
+      "query": "why is the sky blue Rayleigh scattering",
+      "rank": 5,
+      "snippet": "The sky is blue because sunlight collides with gas molecules in the atmosphere, and shorter wavelengths of light scatter far more than longer ones . This process, called Rayleigh scattering, redirects blue light in every direction across the ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "why is the sky blue Rayleigh scattering",
+          "rank": 7
+        }
+      ],
+      "title": "Why Is the Sky Blue? Rayleigh Scattering Explained - ScienceInsights",
+      "url": "https://scienceinsights.org/why-is-the-sky-blue-rayleigh-scattering-explained/"
+    }
+  ],
+  "returned_chars": 3106,
+  "run_id": "run",
+  "timings_ms": {
+    "fetch": 1599,
+    "initialize": 140,
+    "rank": 4,
+    "search": 298
+  }
+}

@@ -1,0 +1,339 @@
+{
+  "rubric": {
+    "0": "Off-topic, wrong entity, or generic keyword match without task-specific value.",
+    "1": "Related/background information, broad likely route, or mismatch to requested date.",
+    "2": "Directly addresses the specific information need, based on title, URL and returned excerpt."
+  },
+  "assessment": "Single assistant review of unique query/URL pairs, reused across repeated runs. Not blind or independent; relevance is not factual verification. Language, freshness and duplicate issues discussed separately. No pages fetched for quality scoring.",
+  "judgments": [
+    {
+      "query_id": "q01",
+      "url": "https://www.radioplayeruk.com/radio/capitalfm.php",
+      "title": "Capital FM | Florence & The Machine - Spectrum (Say My Name)",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://radio-live-uk.com/capital-fm",
+      "title": "Capital Radio UK - listen live",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://en.wikipedia.org/wiki/Capital_city",
+      "title": "Capital city - Wikipedia",
+      "score": 1,
+      "reason": "Background definition of capital city; does not directly identify Australia’s capital."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://en.wikipedia.org/wiki/List_of_national_capitals",
+      "title": "List of national capitals - Wikipedia",
+      "score": 1,
+      "reason": "Broad list of capitals is potentially useful, but returned excerpt does not identify Australia or Canberra."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://www.thefreedictionary.com/why",
+      "title": "Why - definition of why by The Free Dictionary",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://usdictionary.com/definitions/why/",
+      "title": "Why : Definition, Meaning, and Examples - usdictionary.com",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://www.collinsdictionary.com/dictionary/english/why",
+      "title": "WHY definition and meaning | Collins English Dictionary",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://en.wikipedia.org/wiki/Why",
+      "title": "Why - Wikipedia",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://www.merriam-webster.com/dictionary/why",
+      "title": "WHY Definition & Meaning - Merriam-Webster",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://docs.python.org/",
+      "title": "Python 3.14.7 documentation",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://wiki.python.org/moin/BeginnersGuide",
+      "title": "BeginnersGuide - Python Software Foundation Wiki Server",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://docs.python.org/3/tutorial/index.html",
+      "title": "The Python Tutorial — Python 3.14.7 documentation",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.online-python.com/",
+      "title": "Online Python - IDE, Editor, Compiler, Interpreter",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.python.org/downloads/",
+      "title": "Download Python | Python.org",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.collinsdictionary.com/dictionary/english/explain",
+      "title": "EXPLAIN definition and meaning | Collins English Dictionary",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://dictionary.cambridge.org/dictionary/english/explain",
+      "title": "EXPLAIN | English meaning - Cambridge Dictionary",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://dictionary.cambridge.org/us/dictionary/english/explain",
+      "title": "EXPLAIN | definition in the Cambridge English Dictionary",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://englishwordchamps.com/explain-meaning-and-examples/",
+      "title": "Understanding “ Explain ” – Meaning, Usage, and Examples",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.thefreedictionary.com/explain",
+      "title": "Explain - definition of explain by The Free Dictionary",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://www.merriam-webster.com/dictionary/tempo",
+      "title": "TEMPO Definition & Meaning - Merriam-Webster",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://www.thefreedictionary.com/tempo",
+      "title": "Tempo - definition of tempo by The Free Dictionary",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://suzanstroud.com/music-dictionary/tempo/",
+      "title": "Tempo - Suzan Stroud",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://en.wikipedia.org/wiki/Tempo",
+      "title": "Tempo - Wikipedia",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q05",
+      "url": "https://simple.wikipedia.org/wiki/Tempo",
+      "title": "Tempo - Simple English Wikipedia , the free encyclopedia",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://github.com/openai/codex",
+      "title": "GitHub - openai/ codex : Lightweight coding agent that runs in your ...",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://learn.chatgpt.com/docs/codex/cli",
+      "title": "Codex CLI | ChatGPT Learn",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://openai.com/index/openai-codex/",
+      "title": "OpenAI Codex",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://chatgpt.com/codex/",
+      "title": "Codex in ChatGPT | AI Coding Agents for Software Engineering",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q06",
+      "url": "https://openai.com/codex/",
+      "title": "Codex | AI Coding Partner from OpenAI",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://doc.rust-lang.org/",
+      "title": "Rust Documentation",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://rust-lang.org/",
+      "title": "Rust Programming Language",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://github.com/rust-lang/rust",
+      "title": "rust -lang / rust : Empowering everyone to build reliable and ... - GitHub",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://rust-lang.org/tools/install/",
+      "title": "Install Rust - Rust Programming Language",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://en.wikipedia.org/wiki/Rust_(programming_language)",
+      "title": "Rust (programming language ) - Wikipedia",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q08",
+      "url": "https://en.wikipedia.org/wiki/James_discography",
+      "title": "James discography - Wikipedia",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://github.com/grafana/grafana/releases",
+      "title": "Releases · grafana / grafana - GitHub",
+      "score": 0,
+      "reason": "Generic keyword match or wrong entity; does not address the specific requested information."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://en.wikipedia.org/wiki/Grafana",
+      "title": "Grafana - Wikipedia",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://github.com/grafana/grafana",
+      "title": "GitHub - grafana / grafana : The open and composable observability and ...",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q09",
+      "url": "https://grafana.com/",
+      "title": "Grafana Labs - Full-stack observability for the agentic era",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.opening-hours-uk.co.uk/opening-hours/science-museum-london",
+      "title": "Science Museum, London Opening Hours",
+      "score": 2,
+      "reason": "Specifically addresses visiting the London Science Museum or its opening hours."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.wonderfulmuseums.com/museum/london-science-museum-opening-times/",
+      "title": "London Science Museum Opening Times : Your Essential Guide to …",
+      "score": 2,
+      "reason": "Specifically addresses visiting the London Science Museum or its opening hours."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.visitlondon.com/things-to-do/place/52747-science-museum",
+      "title": "Science Museum London | Tickets and Info",
+      "score": 2,
+      "reason": "Title, URL and returned excerpt directly address the requested topic."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.breaks.com/attractions/london/science-museum-3te5eyt7/",
+      "title": "Science Museum , London — Opening Hours , Ratings, Map",
+      "score": 2,
+      "reason": "Title, URL and snippet specifically address opening hours at London’s Science Museum."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.wikiopeninghours.co.uk/en/sw7-2bx/london/art-culture-museum/science-museum-C2KVDNLOV01HxvgE",
+      "title": "Opening hours of Science Museum in London - Address and useful ...",
+      "score": 2,
+      "reason": "Title, URL and snippet specifically address opening hours at London’s Science Museum."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://dictionary.cambridge.org/dictionary/english/why",
+      "title": "WHY | English meaning - Cambridge Dictionary",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q02",
+      "url": "https://dictionary.cambridge.org/us/dictionary/english/why",
+      "title": "WHY | definition in the Cambridge English Dictionary",
+      "score": 0,
+      "reason": "Matches a broad keyword, different entity, or generic product page; does not address the specific request."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://whichmuseum.co.uk/museum/science-museum-london-4545/opening-hours",
+      "title": "Opening Hours - Science Museum ( London )",
+      "score": 2,
+      "reason": "Specifically addresses visiting the London Science Museum or its opening hours."
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "dogpile": {
+    "runs": 3,
+    "median_seconds": 0.281192958005704,
+    "p95_seconds": 0.39225420900038444,
+    "errors": 3,
+    "empty": 3,
+    "returned_slots": 0,
+    "expected_slots": 15
+  },
+  "ecosia": {
+    "runs": 3,
+    "median_seconds": 0.2776297499949578,
+    "p95_seconds": 0.3933739580097608,
+    "errors": 3,
+    "empty": 3,
+    "returned_slots": 0,
+    "expected_slots": 15
+  },
+  "swisscows": {
+    "runs": 3,
+    "median_seconds": 0.4174587089801207,
+    "p95_seconds": 0.47122533302172087,
+    "errors": 0,
+    "empty": 0,
+    "returned_slots": 15,
+    "expected_slots": 15
+  },
+  "yep": {
+    "runs": 3,
+    "median_seconds": 1.5301075000024866,
+    "p95_seconds": 1.5628304170095362,
+    "errors": 0,
+    "empty": 3,
+    "returned_slots": 0,
+    "expected_slots": 15
+  },
+  "qwant": {
+    "runs": 3,
+    "median_seconds": 0.4155532500008121,
+    "p95_seconds": 0.976702917017974,
+    "errors": 2,
+    "empty": 2,
+    "returned_slots": 5,
+    "expected_slots": 15
+  },
+  "mojeek": {
+    "runs": 3,
+    "median_seconds": 0.30134683300275356,
+    "p95_seconds": 0.41511187501600944,
+    "errors": 3,
+    "empty": 3,
+    "returned_slots": 0,
+    "expected_slots": 15
+  }
+}

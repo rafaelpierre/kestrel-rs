@@ -1,0 +1,485 @@
+{
+  "candidate_counts": {
+    "after_candidate_selection": 20,
+    "after_ranking": 20,
+    "after_search": 20,
+    "returned": 5,
+    "with_content": 0
+  },
+  "candidates": [
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 1,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "You can use the span:childCount intrinsic to find the number of direct children of a span.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 1
+        }
+      ],
+      "title": "Construct a TraceQL query | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/construct-traceql-queries/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 2,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Traces are made of spans (for example, a span tree); there is a root span that can have zero to multiple branches that are called child spans. Each child span can itself be a parent span of one or multiple child spans , and so on so forth. In ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 2
+        }
+      ],
+      "title": "Trace structure | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/introduction/trace-structure/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 3,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "For example, you can use traces to perform root cause analyses (RCA) on a service outage and use TraceQL to pinpoint the root cause. Refer to Diagnose errors with traces for a use case example. ... Determine the information you want to query by understanding the relationship of queries to trace structure and spans.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 3
+        }
+      ],
+      "title": "TraceQL | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 4,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "The Name and Service columns are displaying the trace root span name and associated service. Note: Trace results for matching spans are returned on a first-match basis. These results may not be the latest traces stored by Tempo. ... To learn more about query syntax, refer to the Construct a TraceQL ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 4
+        }
+      ],
+      "title": "Learn about trace structure and TraceQL | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/trace-structure/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 5,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "We will re-evaluate as we continue to improve Tempo performance! If you have a parent span ID, you can now look up the associated children spans using the new span:parentID intrinsic .",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 5
+        }
+      ],
+      "title": "Grafana Tempo 2.8 release: memory improvements, new TraceQL features, and more | Grafana Labs",
+      "url": "https://grafana.com/blog/grafana-tempo-2-8-release-memory-improvements-new-traceql-features-and-more/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 6,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "In addition, you can query by parent span id. Using span:parentID, you can ensure that you are looking at a child span of a specific parent , which is useful for example in span linking.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 6
+        }
+      ],
+      "title": "Version 2.8 release notes | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/release-notes/version-2/v2-8/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 7,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Recall that all structural operators return results from the right-hand side of the operator! Parent and ancestor are the inverse of child and descendant . Find, spans of service foo that have children from service bar:",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 7
+        }
+      ],
+      "title": "Grafana Tempo 2.3 release: faster trace queries, TraceQL upgrades | Grafana Labs",
+      "url": "https://grafana.com/blog/grafana-tempo-2-3-release-faster-trace-queries-traceql-upgrades/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 8,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Use the TraceQL editor when you need complex filters, structural queries across parent and child spans, or aggregations that the Search builder doesn’t support. The editor provides autocomplete for attribute names, scopes, and operators.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 8
+        }
+      ],
+      "title": "Query tracing data | Grafana documentation",
+      "url": "https://grafana.com/docs/grafana/latest/datasources/tempo/query-editor/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 9,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Documentation Grafana documentation Data sources Tempo Query tracing data Write TraceQL queries · Grafana Cloud Enterprise Open source · Use the TraceQL editor when you need structural queries across parent and child spans, aggregations, or other features that the Search query builder doesn’t support.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 9
+        }
+      ],
+      "title": "Write TraceQL queries with the editor | Grafana documentation",
+      "url": "https://grafana.com/docs/grafana/latest/datasources/tempo/query-editor/traceql-editor/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 10,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "When a trace ID is queried in Tempo, it returns all of the currently stored/ingested spans that belong to that trace and presents them in a mapped response (that is, a graph of parent/child/sibling relationships between spans ) that allows, for ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 10
+        }
+      ],
+      "title": "Tempo architecture | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/introduction/architecture/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 11,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "When a trace ID is queried in Tempo, it returns all of the currently stored/ingested spans that belong to that trace and presents them in a mapped response (that is, a graph of parent/child/sibling relationships between spans ) that allows, for ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 11
+        }
+      ],
+      "title": "Tempo architecture | Grafana Enterprise Traces documentation",
+      "url": "https://grafana.com/docs/enterprise-traces/latest/introduction/architecture/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 12,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Traces are made of spans (for example, a span tree); there is a root span that can have zero to multiple branches that are called child spans. Each child span can itself be a parent span of one or multiple child spans , and so on so forth. In ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 12
+        }
+      ],
+      "title": "Trace structure | Grafana documentation",
+      "url": "https://grafana.com/docs/grafana/latest/explore/simplified-exploration/traces/concepts/trace-structure"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 13,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Use the TraceQL editor when you need complex filters, structural queries across parent and child spans, or aggregations that the Search builder doesn’t support. The editor provides autocomplete for attribute names, scopes, and operators.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 13
+        }
+      ],
+      "title": "Tempo query editor | Grafana Cloud documentation",
+      "url": "https://grafana.com/docs/grafana-cloud/connect-externally-hosted/data-sources/tempo/query-editor/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 14,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "When a trace ID is queried in Tempo, it returns all of the currently stored/ingested spans that belong to that trace and present them in a mapped response (that is, a graph of parent/child/sibling relationships between spans ) that allow, for ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 14
+        }
+      ],
+      "title": "Tempo architecture | Grafana Cloud documentation",
+      "url": "https://grafana.com/docs/grafana-cloud/send-data/traces/introduction/architecture/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 15,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Traces are made of spans (for example, a span tree); there is a root span that can have zero to multiple branches that are called child spans. Each child span can itself be a parent span of one or multiple child spans , and so on so forth. In ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 15
+        }
+      ],
+      "title": "Trace structure | Grafana Cloud documentation",
+      "url": "https://grafana.com/docs/grafana-cloud/observe-and-act/send-data/traces/introduction/trace-structure/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 16,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "The team decides to use structural operators to follow an error chain from the top-level mythical-requester service to any descendant spans that also have an error status. Descendant spans can be any span that’s descended from the parent span, such as a child or a further child at any depth.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 16
+        }
+      ],
+      "title": "Diagnose errors with traces | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/solutions-with-traces/traces-diagnose-errors/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 17,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "traceql Copy · { resource.service.name = \"frontend\" } >> { span:status = error } Direct parent/child relationship (parent then child): traceql Copy · { resource.service.name = \"api\" } > { span:name = \"SELECT product\" } Sibling services involved in the same trace: traceql Copy ·",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 17
+        }
+      ],
+      "title": "TraceQL cookbook | Grafana Cloud documentation",
+      "url": "https://grafana.com/docs/grafana-cloud/send-data/traces/traces-query-editor/traceql-cookbook/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 18,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "rootless_trace_flushed_to_wal: Incremented when a trace is flushed that doesn’t have a root span. A root span is a span with all 0 parent id. You might see these data quality metrics if you use a Prometheus query like this to explore Tempo warnings:",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 18
+        }
+      ],
+      "title": "Long-running traces | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/troubleshooting/querying/long-running-traces/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 19,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "The “Aggregate by” feature is a stepping stone on the way to the future of powerful, flexible query-time metrics from traces. In that glorious future, you’ll be able to do crazy things like “compute the 99th percentile latency of all spans for serviceB whose parent span is from serviceA for each namespace.” Here’s what the TraceQL for that might look like:",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 19
+        }
+      ],
+      "title": "Traces to metrics: Perform ad hoc queries in Grafana Tempo | Grafana Labs",
+      "url": "https://grafana.com/blog/traces-to-metrics-ad-hoc-red-metrics-in-grafana-tempo-with-aggregate-by/"
+    },
+    {
+      "content": null,
+      "display_url": "grafana.com",
+      "engine": "swisscows",
+      "engine_rank": 20,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "snippet": "Spans must include traceID and spanID , and non-root spans must include parentSpanID to establish hierarchy. If these identifiers are missing, the trace data is incomplete at the instrumentation level and the graph can’t be rendered.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 20
+        }
+      ],
+      "title": "Troubleshoot Tempo data source issues | Grafana documentation",
+      "url": "https://grafana.com/docs/grafana/latest/datasources/tempo/troubleshooting/"
+    }
+  ],
+  "diagnostics": {
+    "fetch": null,
+    "provider_cancellations": 0,
+    "providers": [
+      {
+        "elapsed_ms": 226,
+        "engine": "swisscows",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "results",
+        "query": "site:grafana.com Tempo TraceQL parent child spans",
+        "raw_result_count": 20,
+        "result_count": 20,
+        "retries": 0,
+        "success": true
+      }
+    ]
+  },
+  "engines": [
+    "swisscows"
+  ],
+  "mode": "fallback",
+  "queries": [
+    "site:grafana.com Tempo TraceQL parent child spans"
+  ],
+  "query": "site:grafana.com Tempo TraceQL parent child spans",
+  "results": [
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 1,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "rank": 1,
+      "snippet": "You can use the span:childCount intrinsic to find the number of direct children of a span.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 1
+        }
+      ],
+      "title": "Construct a TraceQL query | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/construct-traceql-queries/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 2,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "rank": 2,
+      "snippet": "Traces are made of spans (for example, a span tree); there is a root span that can have zero to multiple branches that are called child spans. Each child span can itself be a parent span of one or multiple child spans , and so on so forth. In ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 2
+        }
+      ],
+      "title": "Trace structure | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/introduction/trace-structure/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 3,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "rank": 3,
+      "snippet": "For example, you can use traces to perform root cause analyses (RCA) on a service outage and use TraceQL to pinpoint the root cause. Refer to Diagnose errors with traces for a use case example. ... Determine the information you want to query by understanding the relationship of queries to trace structure and spans.",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 3
+        }
+      ],
+      "title": "TraceQL | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 4,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "rank": 4,
+      "snippet": "The Name and Service columns are displaying the trace root span name and associated service. Note: Trace results for matching spans are returned on a first-match basis. These results may not be the latest traces stored by Tempo. ... To learn more about query syntax, refer to the Construct a TraceQL ...",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 4
+        }
+      ],
+      "title": "Learn about trace structure and TraceQL | Grafana Tempo documentation",
+      "url": "https://grafana.com/docs/tempo/latest/traceql/trace-structure/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "swisscows",
+      "engine_rank": 5,
+      "query": "site:grafana.com Tempo TraceQL parent child spans",
+      "rank": 5,
+      "snippet": "We will re-evaluate as we continue to improve Tempo performance! If you have a parent span ID, you can now look up the associated children spans using the new span:parentID intrinsic .",
+      "sources": [
+        {
+          "engine": "swisscows",
+          "query": "site:grafana.com Tempo TraceQL parent child spans",
+          "rank": 5
+        }
+      ],
+      "title": "Grafana Tempo 2.8 release: memory improvements, new TraceQL features, and more | Grafana Labs",
+      "url": "https://grafana.com/blog/grafana-tempo-2-8-release-memory-improvements-new-traceql-features-and-more/"
+    }
+  ],
+  "returned_chars": 0,
+  "run_id": "run",
+  "timings_ms": {
+    "initialize": 132,
+    "search": 226
+  }
+}

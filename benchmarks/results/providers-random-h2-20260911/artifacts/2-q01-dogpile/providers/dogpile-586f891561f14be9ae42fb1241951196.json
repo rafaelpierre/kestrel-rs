@@ -1,0 +1,10 @@
+{
+  "attempt": 1,
+  "captured_at": "2026-09-11T20:51:59.775767+00:00",
+  "engine": "dogpile",
+  "final_url": "https://www.dogpile.com/api/search",
+  "html_file": "dogpile-586f891561f14be9ae42fb1241951196.html",
+  "http_status": 403,
+  "http_version": "HTTP/2.0",
+  "query": "What is the capital of Australia?"
+}

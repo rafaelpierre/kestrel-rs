@@ -1,0 +1,341 @@
+{
+  "candidate_counts": {
+    "after_candidate_selection": 10,
+    "after_ranking": 10,
+    "after_search": 10,
+    "returned": 5,
+    "with_content": 0
+  },
+  "candidates": [
+    {
+      "content": null,
+      "display_url": "https:// grafana .com",
+      "engine": "bing",
+      "engine_rank": 1,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "snippet": "Avoid lock-in and ensure reliability with Grafana Cloud. The AI-powered platform built on open standards unifies metrics, logs, traces, …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 1
+        }
+      ],
+      "title": "Grafana Labs - Full-stack observability for the agentic era",
+      "url": "https://grafana.com/"
+    },
+    {
+      "content": null,
+      "display_url": "https:// grafana .com › grafana › download",
+      "engine": "bing",
+      "engine_rank": 2,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "snippet": "Sep 1, 2026 · Overview of how to download and install different versions of Grafana on different operating systems.",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 2
+        }
+      ],
+      "title": "Download Grafana",
+      "url": "https://grafana.com/grafana/download"
+    },
+    {
+      "content": null,
+      "display_url": "https:// en.wikipedia.org › wiki › Grafana",
+      "engine": "bing",
+      "engine_rank": 3,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "snippet": "Grafana is an open-source analytics and visualization web application. It connects to time series databases and other data sources, …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 3
+        }
+      ],
+      "title": "Grafana - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Grafana"
+    },
+    {
+      "content": null,
+      "display_url": "https:// github.com › grafana › grafana",
+      "engine": "bing",
+      "engine_rank": 4,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "snippet": "The open and composable observability and data visualization platform. Visualize metrics, logs, and traces from multiple sources like …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 4
+        }
+      ],
+      "title": "GitHub - grafana / grafana : The open and composable observability …",
+      "url": "https://github.com/grafana/grafana"
+    },
+    {
+      "content": null,
+      "display_url": "https://www.geeksforgeeks.org › blogs › what-is- grafana",
+      "engine": "bing",
+      "engine_rank": 5,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "snippet": "Apr 1, 2026 · Grafana OnCall represents a strong solution to manage which team member handles particular incidents at what time. The …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 5
+        }
+      ],
+      "title": "Grafana - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/blogs/what-is-grafana/"
+    },
+    {
+      "content": null,
+      "display_url": "https://play. grafana .org › dashboards",
+      "engine": "bing",
+      "engine_rank": 6,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "snippet": "Explore and manage Grafana dashboards to visualize data effectively.",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 6
+        }
+      ],
+      "title": "Dashboards - Grafana",
+      "url": "https://play.grafana.org/dashboards"
+    },
+    {
+      "content": null,
+      "display_url": "https://learn. grafana .com › page › course-catalog",
+      "engine": "bing",
+      "engine_rank": 7,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "snippet": "Intro to Grafana & Observability Learn how Grafana fits into the observability ecosystem by exploring key concepts like monitoring, …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 7
+        }
+      ],
+      "title": "All Courses Catalog - learn. grafana .com",
+      "url": "https://learn.grafana.com/page/course-catalog"
+    },
+    {
+      "content": null,
+      "display_url": "https://learn. grafana .com",
+      "engine": "bing",
+      "engine_rank": 8,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "snippet": "GROT Academy Your Grafana Cloud Learning Hub Learn how to use Grafana Cloud to monitor, visualize, and take action on your data at …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 8
+        }
+      ],
+      "title": "GROT Academy",
+      "url": "https://learn.grafana.com/"
+    },
+    {
+      "content": null,
+      "display_url": "https:// github.com › grafana › grafana › releases",
+      "engine": "bing",
+      "engine_rank": 9,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "snippet": "Dec 4, 2010 · The open and composable observability and data visualization platform. Visualize metrics, logs, and traces from multiple …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 9
+        }
+      ],
+      "title": "Releases · grafana / grafana - GitHub",
+      "url": "https://github.com/grafana/grafana/releases"
+    },
+    {
+      "content": null,
+      "display_url": "https://play. grafana .org › login",
+      "engine": "bing",
+      "engine_rank": 10,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "snippet": "Sign in with Grafana.com Sign in with Okta Documentation Support Cloud Advanced (Licensed) Grafana Cloud",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 10
+        }
+      ],
+      "title": "Grafana",
+      "url": "https://play.grafana.org/login"
+    }
+  ],
+  "diagnostics": {
+    "fetch": null,
+    "provider_cancellations": 0,
+    "providers": [
+      {
+        "elapsed_ms": 3002,
+        "engine": "duckduckgo",
+        "error": "search deadline exceeded",
+        "filtered_count": 0,
+        "outcome": "deadline",
+        "query": "Grafana Tempo 3.0 release notes breaking changes",
+        "raw_result_count": 0,
+        "result_count": 0,
+        "retries": 0,
+        "success": false
+      },
+      {
+        "elapsed_ms": 381,
+        "engine": "bing",
+        "error": null,
+        "filtered_count": 0,
+        "outcome": "results",
+        "query": "Grafana Tempo 3.0 release notes breaking changes",
+        "raw_result_count": 10,
+        "result_count": 10,
+        "retries": 0,
+        "success": true
+      },
+      {
+        "elapsed_ms": 2351,
+        "engine": "yahoo",
+        "error": "Yahoo returned HTTP 500",
+        "filtered_count": 0,
+        "outcome": "request_error",
+        "query": "Grafana Tempo 3.0 release notes breaking changes",
+        "raw_result_count": 0,
+        "result_count": 0,
+        "retries": 0,
+        "success": false
+      }
+    ]
+  },
+  "engines": [
+    "duckduckgo",
+    "bing",
+    "yahoo"
+  ],
+  "mode": "fanout",
+  "queries": [
+    "Grafana Tempo 3.0 release notes breaking changes"
+  ],
+  "query": "Grafana Tempo 3.0 release notes breaking changes",
+  "results": [
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 1,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "rank": 1,
+      "snippet": "Avoid lock-in and ensure reliability with Grafana Cloud. The AI-powered platform built on open standards unifies metrics, logs, traces, …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 1
+        }
+      ],
+      "title": "Grafana Labs - Full-stack observability for the agentic era",
+      "url": "https://grafana.com/"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 2,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "rank": 2,
+      "snippet": "Sep 1, 2026 · Overview of how to download and install different versions of Grafana on different operating systems.",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 2
+        }
+      ],
+      "title": "Download Grafana",
+      "url": "https://grafana.com/grafana/download"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 3,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "rank": 3,
+      "snippet": "Grafana is an open-source analytics and visualization web application. It connects to time series databases and other data sources, …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 3
+        }
+      ],
+      "title": "Grafana - Wikipedia",
+      "url": "https://en.wikipedia.org/wiki/Grafana"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 4,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "rank": 4,
+      "snippet": "The open and composable observability and data visualization platform. Visualize metrics, logs, and traces from multiple sources like …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 4
+        }
+      ],
+      "title": "GitHub - grafana / grafana : The open and composable observability …",
+      "url": "https://github.com/grafana/grafana"
+    },
+    {
+      "bm25_score": null,
+      "content": null,
+      "content_chars": 0,
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "engine": "bing",
+      "engine_rank": 5,
+      "query": "Grafana Tempo 3.0 release notes breaking changes",
+      "rank": 5,
+      "snippet": "Apr 1, 2026 · Grafana OnCall represents a strong solution to manage which team member handles particular incidents at what time. The …",
+      "sources": [
+        {
+          "engine": "bing",
+          "query": "Grafana Tempo 3.0 release notes breaking changes",
+          "rank": 5
+        }
+      ],
+      "title": "Grafana - GeeksforGeeks",
+      "url": "https://www.geeksforgeeks.org/blogs/what-is-grafana/"
+    }
+  ],
+  "returned_chars": 0,
+  "run_id": "run",
+  "timings_ms": {
+    "initialize": 128,
+    "search": 3002
+  }
+}
