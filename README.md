@@ -76,9 +76,10 @@ instructions. It does not edit shell configuration. For an all-user installation
 each user's `PATH` must include `/usr/local/bin`.
 
 Running the installed copy's `install` command with the same destination is a
-no-op. Other existing files and symlinks are never overwritten. Update
-package-managed installations with their package manager; to replace a manual
-installation, remove the old copy first. The command also reports another
+no-op. For other existing files and symlinks, the command asks `Replace it? [y/N]`.
+Enter `y` or `yes` to replace the copy; any other answer or no input leaves it
+untouched. Replacing a symlink leaves its target untouched. Prefer updating
+package-managed installations with their package manager. The command also reports another
 `kestrel` executable taking precedence on `PATH`.
 
 `install` copies a binary you already have; it does not download releases or

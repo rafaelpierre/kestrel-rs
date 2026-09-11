@@ -68,7 +68,7 @@ fn default_install_uses_home_and_reports_path_conflicts() {
 }
 
 #[test]
-fn refuses_existing_files_and_symlinks_without_modifying_them() {
+fn preserves_existing_files_and_symlinks_without_confirmation() {
     let temporary = tempfile::tempdir().unwrap();
     let destination = temporary.path().join("kestrel");
     let target = temporary.path().join("managed-binary");
@@ -85,8 +85,9 @@ fn refuses_existing_files_and_symlinks_without_modifying_them() {
             .arg("--dir")
             .arg(temporary.path())
             .assert()
-            .failure()
-            .stderr(predicate::str::contains("nothing was replaced"));
+            .success()
+            .stderr(predicate::str::contains("Replace it? [y/N]"))
+            .stdout(predicate::str::contains("nothing was replaced"));
         assert_eq!(
             fs::symlink_metadata(&destination).unwrap().is_symlink(),
             link
@@ -110,7 +111,7 @@ fn refuses_existing_files_and_symlinks_without_modifying_them() {
         .arg("--dir")
         .arg(temporary.path())
         .assert()
-        .failure();
+        .success();
     assert_eq!(fs::read_link(destination).unwrap(), target);
 }
 
@@ -128,4 +129,75 @@ fn rejects_conflicting_scopes_and_empty_directory() {
         .assert()
         .failure()
         .stderr(predicate::str::contains("a value is required"));
+}
+
+#[test]
+fn prompts_and_only_replaces_when_confirmed() {
+    for answer in ["n\n", "\n", "maybe\n", "y\n", " YES \n"] {
+        for link in [false, true] {
+            let temporary = tempfile::tempdir().unwrap();
+            let destination = temporary.path().join("kestrel");
+            let target = temporary.path().join("managed-binary");
+            fs::write(&target, "old installation").unwrap();
+            if link {
+                symlink(&target, &destination).unwrap();
+            } else {
+                fs::write(&destination, "old installation").unwrap();
+            }
+            let confirmed = matches!(answer.trim().to_ascii_lowercase().as_str(), "y" | "yes");
+            Command::cargo_bin("kestrel")
+                .unwrap()
+                .arg("install")
+                .arg("--dir")
+                .arg(temporary.path())
+                .write_stdin(answer)
+                .assert()
+                .success()
+                .stderr(predicate::str::contains("Replace it? [y/N]"))
+                .stdout(predicate::str::contains(if confirmed {
+                    "Installed:"
+                } else {
+                    "Installation cancelled"
+                }));
+            assert_eq!(fs::read_to_string(&target).unwrap(), "old installation");
+            if confirmed {
+                assert!(!fs::symlink_metadata(&destination).unwrap().is_symlink());
+                Command::new(&destination)
+                    .arg("--version")
+                    .assert()
+                    .success();
+            } else {
+                assert_eq!(
+                    fs::read_to_string(&destination).unwrap(),
+                    "old installation"
+                );
+                assert_eq!(
+                    fs::symlink_metadata(&destination).unwrap().is_symlink(),
+                    link
+                );
+            }
+            assert_eq!(fs::read_dir(temporary.path()).unwrap().count(), 2);
+        }
+    }
+}
+
+#[test]
+fn replaces_dangling_symlink_after_confirmation() {
+    let temporary = tempfile::tempdir().unwrap();
+    let destination = temporary.path().join("kestrel");
+    let target = temporary.path().join("missing");
+    symlink(&target, &destination).unwrap();
+    Command::cargo_bin("kestrel")
+        .unwrap()
+        .arg("install")
+        .arg("--dir")
+        .arg(temporary.path())
+        .write_stdin("y\n")
+        .assert()
+        .success();
+    assert!(!target.exists());
+    Command::new(&destination)
+        .arg("--version")
+        .assert()
+        .success();
 }

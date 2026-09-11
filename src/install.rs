@@ -1,6 +1,6 @@
 use std::env;
 use std::fs;
-use std::io;
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, clap::Args)]
@@ -32,8 +32,16 @@ pub fn run(arguments: InstallArgs) -> Result<(), Box<dyn std::error::Error>> {
     let source = env::current_exe()?;
     let destination = directory.join("kestrel");
     match copy_executable(&source, &destination) {
-        Ok(true) => println!("Installed: {}", fs::canonicalize(&destination)?.display()),
-        Ok(false) => println!("Already installed: {}", destination.display()),
+        Ok(InstallOutcome::Installed) => {
+            println!("Installed: {}", fs::canonicalize(&destination)?.display())
+        }
+        Ok(InstallOutcome::AlreadyInstalled) => {
+            println!("Already installed: {}", destination.display())
+        }
+        Ok(InstallOutcome::Cancelled) => {
+            println!("Installation cancelled; nothing was replaced.");
+            return Ok(());
+        }
         Err(error) if error.kind() == io::ErrorKind::PermissionDenied => {
             let hint = if arguments.system {
                 "Run with sudo for --system, or omit --system to install for your user."
@@ -54,23 +62,42 @@ pub fn run(arguments: InstallArgs) -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn copy_executable(source: &Path, destination: &Path) -> io::Result<bool> {
-    match fs::symlink_metadata(destination) {
+enum InstallOutcome {
+    Installed,
+    AlreadyInstalled,
+    Cancelled,
+}
+
+fn copy_executable(source: &Path, destination: &Path) -> io::Result<InstallOutcome> {
+    let replace = match fs::symlink_metadata(destination) {
         Ok(metadata) => {
             if metadata.is_file() && fs::canonicalize(source)? == fs::canonicalize(destination)? {
-                return Ok(false);
+                return Ok(InstallOutcome::AlreadyInstalled);
             }
-            return Err(io::Error::new(
-                io::ErrorKind::AlreadyExists,
-                format!(
-                    "{} already exists; nothing was replaced. Use its package manager to update it, or remove a manually installed copy before retrying.",
-                    destination.display()
-                ),
-            ));
+            if !metadata.is_file() && !metadata.is_symlink() {
+                return Err(io::Error::new(
+                    io::ErrorKind::AlreadyExists,
+                    format!(
+                        "{} exists and is not a file or symlink; nothing was replaced.",
+                        destination.display()
+                    ),
+                ));
+            }
+            eprint!(
+                "{} already exists. Replace it? [y/N] ",
+                destination.display()
+            );
+            io::stderr().flush()?;
+            let mut answer = String::new();
+            io::stdin().read_line(&mut answer)?;
+            if !matches!(answer.trim().to_ascii_lowercase().as_str(), "y" | "yes") {
+                return Ok(InstallOutcome::Cancelled);
+            }
+            true
         }
-        Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+        Err(error) if error.kind() == io::ErrorKind::NotFound => false,
         Err(error) => return Err(error),
-    }
+    };
     let directory = destination.parent().ok_or_else(|| {
         io::Error::new(
             io::ErrorKind::InvalidInput,
@@ -78,8 +105,8 @@ fn copy_executable(source: &Path, destination: &Path) -> io::Result<bool> {
         )
     })?;
     fs::create_dir_all(directory)?;
-    // Stage in the destination directory, then publish without overwriting a
-    // concurrent install. A failed copy never leaves a partial executable.
+    // Stage in the destination directory so a failed copy leaves the old binary
+    // intact. Only overwrite when the user explicitly confirmed replacement.
     let mut staged = tempfile::NamedTempFile::new_in(directory)?;
     io::copy(&mut fs::File::open(source)?, staged.as_file_mut())?;
     #[cfg(unix)]
@@ -92,10 +119,14 @@ fn copy_executable(source: &Path, destination: &Path) -> io::Result<bool> {
             .set_permissions(fs::Permissions::from_mode(mode))?;
     }
     staged.as_file().sync_all()?;
-    staged
-        .persist_noclobber(destination)
-        .map_err(|error| error.error)?;
-    Ok(true)
+    if replace {
+        staged.persist(destination).map_err(|error| error.error)?;
+    } else {
+        staged
+            .persist_noclobber(destination)
+            .map_err(|error| error.error)?;
+    }
+    Ok(InstallOutcome::Installed)
 }
 
 fn report_path(destination: &Path) -> io::Result<()> {
