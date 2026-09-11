@@ -10,6 +10,10 @@ pub mod model;
 pub mod ranking;
 pub mod search;
 pub mod skill;
+pub mod transport;
+mod warmup;
+pub use transport::TransportOptions;
+pub use warmup::WarmupResult;
 
 pub use cache::PageCache;
 pub use client::KestrelClient;

@@ -38,14 +38,24 @@ pub enum KestrelError {
     NestedRuntime,
 }
 
+#[derive(Clone)]
 pub(crate) struct SearchClients {
-    standard: reqwest::Client,
-    yahoo: Option<primp::Client>,
+    pub(crate) standard: reqwest::Client,
+    pub(crate) yahoo: Option<primp::Client>,
 }
 
 impl SearchClients {
     pub(crate) fn new(engines: &[Engine]) -> Result<Self, KestrelError> {
-        let standard = reqwest::Client::builder()
+        Self::with_transport(engines, &crate::TransportOptions::default())
+    }
+
+    pub(crate) fn with_transport(
+        engines: &[Engine],
+        transport: &crate::TransportOptions,
+    ) -> Result<Self, KestrelError> {
+        transport.validate()?;
+        let standard = transport
+            .standard_builder()
             .user_agent(SEARCH_USER_AGENT)
             .default_headers({
                 let mut headers = reqwest::header::HeaderMap::new();
@@ -59,8 +69,8 @@ impl SearchClients {
             .redirect(reqwest::redirect::Policy::limited(10))
             .build()?;
         let yahoo = engines.contains(&Engine::Yahoo).then(|| {
-            primp::Client::builder()
-                .impersonate(primp::Impersonate::ChromeV146)
+            transport
+                .impersonated_builder()
                 .timeout(SEARCH_TIMEOUT)
                 .build()
         });

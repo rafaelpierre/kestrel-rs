@@ -93,10 +93,17 @@ pub async fn fetch_all_detailed(
 }
 
 pub(crate) fn build_client() -> Result<reqwest::Client, KestrelError> {
+    build_client_with_transport(&crate::TransportOptions::default())
+}
+
+pub(crate) fn build_client_with_transport(
+    transport: &crate::TransportOptions,
+) -> Result<reqwest::Client, KestrelError> {
+    transport.validate()?;
     let user_agent = USER_AGENTS[rand::random::<u64>() as usize % USER_AGENTS.len()];
-    Ok(reqwest::Client::builder()
+    Ok(transport
+        .standard_builder()
         .user_agent(user_agent)
-        .http2_adaptive_window(true)
         .redirect(reqwest::redirect::Policy::limited(10))
         .build()?)
 }
@@ -220,7 +227,18 @@ async fn fetch_one_detailed(
     options: &FetchOptions,
 ) -> FetchItem {
     let started = Instant::now();
-    match fetch_one_inner(url, client, network, parsing, options, started).await {
+    let mut http_version = None;
+    let mut item = match fetch_one_inner(
+        url,
+        client,
+        network,
+        parsing,
+        options,
+        started,
+        &mut http_version,
+    )
+    .await
+    {
         Ok(item) => item,
         Err(error) => {
             crate::log_event!(
@@ -234,6 +252,7 @@ async fn fetch_one_detailed(
                 diagnostic: PageFetchDiagnostic {
                     url: url.to_owned(),
                     outcome: FetchOutcome::RequestFailed,
+                    http_version: None,
                     queue_ms: 0,
                     request_ms: 0,
                     download_ms: 0,
@@ -244,7 +263,9 @@ async fn fetch_one_detailed(
                 },
             }
         }
-    }
+    };
+    item.diagnostic.http_version = http_version;
+    item
 }
 
 async fn fetch_one_inner(
@@ -254,18 +275,16 @@ async fn fetch_one_inner(
     parsing: Arc<Semaphore>,
     options: &FetchOptions,
     started: Instant,
+    http_version: &mut Option<String>,
 ) -> Result<FetchItem, KestrelError> {
     let queue_started = Instant::now();
     let (body, encoding, queue_ms, request_ms, download_ms, response_bytes) = {
         let _permit = network.acquire().await.expect("semaphore remains open");
         let queue_ms = elapsed_millis(queue_started);
         let request_started = Instant::now();
-        let response = client
-            .get(url)
-            .timeout(options.timeout)
-            .send()
-            .await?
-            .error_for_status()?;
+        let response = client.get(url).timeout(options.timeout).send().await?;
+        *http_version = Some(format!("{:?}", response.version()));
+        let response = response.error_for_status()?;
         let request_ms = elapsed_millis(request_started);
         let content_type = response
             .headers()
@@ -430,6 +449,7 @@ fn page_diagnostic(
     PageFetchDiagnostic {
         url: url.to_owned(),
         outcome,
+        http_version: None,
         queue_ms,
         request_ms,
         download_ms,
