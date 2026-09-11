@@ -1,1 +1,0 @@
-Stopped after observing repeated 46-second full-fanout/quorum-2 calls. Completed records remain valid observations of the pre-randomized-header build. Later runs use a separate directory and explicit search budget; do not pool these measurements.

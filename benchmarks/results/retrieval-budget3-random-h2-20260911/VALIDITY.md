@@ -1,1 +1,0 @@
-The executable was rebuilt during the final query of round 3. Do not use the aggregate summary as a fixed-binary comparison. Rounds 1–2 completed before the rebuild and remain a balanced 120-call diagnostic batch. A subsequent pinned-binary batch replaces this batch for final reporting.

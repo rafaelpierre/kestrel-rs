@@ -80,4 +80,5 @@ and budgets. Agent correctness, citation support and closed-book-failed results
 must be recorded separately from retrieval relevance. No agent or native-search
 measurements should be inferred from the subprocess runner.
 
-Investigation findings and completed measurements: [September 11 implementation report](investigation-2026-09-11/REPORT.md).
+Generated results, investigation reports, and captured provider responses are kept
+locally and ignored by Git. Benchmark scripts and input datasets remain tracked.

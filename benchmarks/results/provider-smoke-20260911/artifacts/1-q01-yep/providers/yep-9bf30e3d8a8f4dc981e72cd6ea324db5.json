@@ -1,9 +1,0 @@
-{
-  "attempt": 1,
-  "captured_at": "2026-09-11T20:43:19.439163+00:00",
-  "engine": "yep",
-  "final_url": "https://api.yep.com/search?query=What+is+the+capital+of+Australia%3F&safeSearch=moderate&limit=20",
-  "html_file": "yep-9bf30e3d8a8f4dc981e72cd6ea324db5.html",
-  "http_status": 200,
-  "query": "What is the capital of Australia?"
-}

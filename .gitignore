@@ -6,6 +6,10 @@
 lcov.info
 
 
-# Local executable snapshots used to keep benchmark batches reproducible.
-benchmarks/results/**/.binary/
+# Generated benchmark outputs and captured provider responses (kept locally).
+/benchmarks/results/
+/benchmarks/investigation-*/
+/benchmarks/codex-search-*/**/*.json
+!/benchmarks/codex-search-*/queries.json
+/benchmarks/codex-search-*/**/*.md
 benchmarks/__pycache__/
