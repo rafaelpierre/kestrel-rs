@@ -205,8 +205,8 @@ async fn capture_live_matrix() {
                 .await
                 {
                     Ok(Ok(row)) => row,
-                    Ok(Err(_)) => json!({"results":[],"error":"transport_error"}),
-                    Err(_) => json!({"results":[],"error":"deadline"}),
+                    Ok(Err(_)) => json!({"results":[],"error":"transport_error","attempts":1}),
+                    Err(_) => json!({"results":[],"error":"deadline","attempts":1}),
                 }
             } else {
                 let options = SearchOptions {
