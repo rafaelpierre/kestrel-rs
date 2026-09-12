@@ -59,19 +59,19 @@ struct SearchArgs {
     #[arg(short = 'e', long = "engine", default_values = ["duckduckgo", "bing", "yahoo"], action = ArgAction::Append)]
     engines: Vec<Engine>,
 
-    /// Use engines in order on failure, or run every engine/query pair.
-    #[arg(long, default_value = "fallback")]
-    mode: SearchMode,
+    /// Provider mode (default: fanout with --search-budget, otherwise fallback).
+    #[arg(long)]
+    mode: Option<SearchMode>,
 
     /// Maximum concurrent search-engine requests.
     #[arg(long, default_value_t = 5, value_parser = positive_usize)]
     search_concurrency: usize,
 
-    /// Stop fanout after N providers per query return non-empty results.
+    /// Stop fanout after N nonempty responses (default: 1 with implicit budgeted fanout).
     #[arg(long, value_parser = positive_usize, value_name = "N")]
     provider_quorum: Option<usize>,
 
-    /// Total search seconds, including provider queueing and retries.
+    /// Total search seconds; defaults to fanout quorum 1 unless --mode is explicit.
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     search_budget: Option<f64>,
 
@@ -154,6 +154,25 @@ struct SearchArgs {
     /// Output format. Use json for agent/programmatic consumption.
     #[arg(long, default_value = "text")]
     output: Output,
+}
+
+impl SearchArgs {
+    fn search_options(&self) -> SearchOptions {
+        let budgeted_default = self.mode.is_none() && self.search_budget.is_some();
+        SearchOptions {
+            engines: self.engines.clone(),
+            mode: self.mode.unwrap_or(if budgeted_default {
+                SearchMode::Fanout
+            } else {
+                SearchMode::Fallback
+            }),
+            region: self.region.clone(),
+            time_filter: self.time_filter,
+            max_concurrency: self.search_concurrency,
+            provider_quorum: self.provider_quorum.or(budgeted_default.then_some(1)),
+            search_budget: self.search_budget.map(Duration::from_secs_f64),
+        }
+    }
 }
 
 #[derive(Debug, clap::Args)]
@@ -309,6 +328,7 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
     let mut queries = vec![arguments.query.clone()];
     queries.extend(arguments.additional_queries.clone());
     let query_label = queries.join(" | ");
+    let options = arguments.search_options();
     eprintln!(
         "[kestrel] Searching {} query(s) with {} ({})...",
         queries.len(),
@@ -318,18 +338,9 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             .map(ToString::to_string)
             .collect::<Vec<_>>()
             .join(", "),
-        arguments.mode,
+        options.mode,
     );
 
-    let options = SearchOptions {
-        engines: arguments.engines.clone(),
-        mode: arguments.mode,
-        region: arguments.region.clone(),
-        time_filter: arguments.time_filter,
-        max_concurrency: arguments.search_concurrency,
-        provider_quorum: arguments.provider_quorum,
-        search_budget: arguments.search_budget.map(Duration::from_secs_f64),
-    };
     let mut timings = BTreeMap::new();
     let initialize_started = Instant::now();
     let client = match KestrelClient::new() {
@@ -811,6 +822,66 @@ mod tests {
             panic!("expected search");
         };
         assert_eq!(args.engines, [Engine::Yahoo, Engine::Bing]);
+    }
+
+    #[test]
+    fn budgeted_search_defaults_and_explicit_overrides() {
+        for (flags, mode, quorum) in [
+            (vec![], SearchMode::Fallback, None),
+            (vec!["--search-budget", "3"], SearchMode::Fanout, Some(1)),
+            (vec!["--search-budget", "0.5"], SearchMode::Fanout, Some(1)),
+            (
+                vec!["--search-budget", "3", "--provider-quorum", "2"],
+                SearchMode::Fanout,
+                Some(2),
+            ),
+            (
+                vec!["--search-budget", "3", "--mode", "fallback"],
+                SearchMode::Fallback,
+                None,
+            ),
+            (
+                vec!["--search-budget", "3", "--mode", "fanout"],
+                SearchMode::Fanout,
+                None,
+            ),
+            (vec!["--mode", "fanout"], SearchMode::Fanout, None),
+            (
+                vec![
+                    "--mode",
+                    "fanout",
+                    "--search-budget",
+                    "3",
+                    "--provider-quorum",
+                    "2",
+                ],
+                SearchMode::Fanout,
+                Some(2),
+            ),
+            (
+                vec!["--engine", "bing", "--search-budget", "3"],
+                SearchMode::Fanout,
+                Some(1),
+            ),
+        ] {
+            let cli = Cli::try_parse_from(
+                ["kestrel", "search", "test"]
+                    .into_iter()
+                    .chain(flags.clone()),
+            )
+            .unwrap();
+            let Commands::Search(args) = cli.command else {
+                panic!("expected search")
+            };
+            let options = args.search_options();
+            assert_eq!(options.mode, mode, "{flags:?}");
+            assert_eq!(options.provider_quorum, quorum, "{flags:?}");
+            assert_eq!(options.engines, args.engines);
+            assert_eq!(
+                options.search_budget,
+                args.search_budget.map(Duration::from_secs_f64)
+            );
+        }
     }
 
     #[test]

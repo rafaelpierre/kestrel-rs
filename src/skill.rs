@@ -126,6 +126,7 @@ kestrel fetch "https://www.rust-lang.org/learn" --output json
 kestrel fetch "https://example.com/article" --content-limit 40000 --timeout 20
 kestrel search "python async patterns" -k 3
 kestrel search "rust ownership" --no-fetch --output json
+kestrel search "rust ownership" --search-budget 3 --no-fetch
 kestrel search "climate news" --time-filter w --region us-en
 kestrel search "python typing" -q "pyright docs" -e duckduckgo -e bing --mode fanout
 ```
@@ -133,6 +134,11 @@ kestrel search "python typing" -q "pyright docs" -e duckduckgo -e bing --mode fa
     );
     rendered.push_str(
         r#"
+With `--search-budget` and no explicit `--mode`, search uses fanout quorum 1.
+An explicit quorum overrides 1; an explicit mode preserves that mode's behavior.
+Quorum counts nonempty responses, not relevance. The search budget excludes page
+fetching; use `--no-fetch` for search results only or set `--fetch-budget` separately.
+
 ## Fetch output
 
 `kestrel fetch <URL>` accepts one full HTTP or HTTPS URL. Text output contains

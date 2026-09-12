@@ -130,6 +130,10 @@ kestrel search "python typing" \
   --engine duckduckgo --engine bing --engine yahoo \
   --mode fanout
 
+# Bound provider search to three seconds and return the first nonempty response
+kestrel search "rust ownership" \
+  --mode fanout --provider-quorum 1 --search-budget 3 --no-fetch
+
 # Return after two providers per query produce results and cancel stragglers
 kestrel search "python typing" \
   --engine duckduckgo --engine bing --engine yahoo \
@@ -144,6 +148,18 @@ kestrel search "rust async patterns" \
   --cache-max-entries 1000 \
   --fetch-budget 2
 ```
+
+Providing `--search-budget` without `--mode` automatically selects fanout with
+quorum 1, so a slow provider cannot prevent the others from being queried. For
+example, `kestrel search "rust ownership" --search-budget 3 --no-fetch` uses this
+policy. An explicit `--provider-quorum` overrides the automatic quorum. An explicit
+`--mode fanout` keeps full fanout unless a quorum is supplied; `--mode fallback`
+keeps ordered fallback. Searches without a budget retain their existing defaults.
+This automatic selection applies to the CLI; library `SearchOptions` remain explicit.
+
+Quorum counts nonempty responses,
+not semantic relevance. `--search-budget` covers provider search; page fetching
+has its own `--fetch-budget`. Use `--no-fetch` when only search results are needed.
 
 Progress is written to stderr and results to stdout, making `--output json`
 safe to pipe into another program. Each JSON result can include `title`, `url`,

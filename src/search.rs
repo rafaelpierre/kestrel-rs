@@ -645,12 +645,8 @@ async fn search_duckduckgo(
     })
 }
 
-async fn search_bing(
-    query: &str,
-    region: &str,
-    time_filter: TimeFilter,
-    client: &reqwest::Client,
-) -> Result<ProviderResponse, KestrelError> {
+// Keep production and request-construction regressions on the same path.
+fn bing_request(client: &reqwest::Client, query: &str, region: &str) -> reqwest::RequestBuilder {
     let mut params = vec![("q", query)];
     let country = region
         .split_once('-')
@@ -658,6 +654,15 @@ async fn search_bing(
     if !country.is_empty() {
         params.push(("cc", country));
     }
+    client.get("https://www.bing.com/search").query(&params)
+}
+
+async fn search_bing(
+    query: &str,
+    region: &str,
+    time_filter: TimeFilter,
+    client: &reqwest::Client,
+) -> Result<ProviderResponse, KestrelError> {
     if time_filter != TimeFilter::Any {
         crate::log_event!(
             "search_filter_unsupported",
@@ -668,7 +673,7 @@ async fn search_bing(
         );
     }
     let (text, retries) = request_standard_with_retries(client, Engine::Bing, query, || {
-        client.get("https://www.bing.com/search").query(&params)
+        bing_request(client, query, region)
     })
     .await?;
     Ok(ProviderResponse {
@@ -1788,6 +1793,78 @@ mod tests {
         }
     }
 
+    const BING_UNRELATED: &str = include_str!("../tests/fixtures/providers/bing-unrelated.html");
+
+    #[test]
+    fn bing_request_preserves_complete_query_and_region() {
+        let client = reqwest::Client::new();
+        for query in [
+            "why does the moon cause ocean tides",
+            "Rust E0382 use of moved value fix borrowing clone",
+            "tokio watch Receiver borrow_and_update changed deadlock Ref across await",
+            "\"use of moved value\" borrowing",
+            "site:docs.rs/tokio \"borrow_and_update\"",
+            "C++ & Rust café 日本語 #ownership? x=1+2%",
+        ] {
+            for (region, country) in [("", None), ("gb-en", Some("gb")), ("us", Some("us"))] {
+                let request = bing_request(&client, query, region).build().unwrap();
+                assert_eq!(request.method(), reqwest::Method::GET);
+                assert_eq!(request.url().scheme(), "https");
+                assert_eq!(request.url().host_str(), Some("www.bing.com"));
+                assert_eq!(request.url().path(), "/search");
+                assert_eq!(request.url().fragment(), None);
+                let pairs: Vec<_> = request.url().query_pairs().into_owned().collect();
+                let mut expected = vec![("q".to_owned(), query.to_owned())];
+                if let Some(country) = country {
+                    expected.push(("cc".to_owned(), country.to_owned()));
+                }
+                assert_eq!(pairs, expected);
+            }
+        }
+    }
+
+    #[test]
+    fn bing_query_echo_does_not_replace_response_entries() {
+        let results = parse_provider_response(Engine::Bing, BING_UNRELATED).unwrap();
+        assert_eq!(results.len(), 2);
+        assert_eq!(results[0].title, "Why — dictionary definition");
+        assert_eq!(results[0].url, "https://example.com/dictionary/why");
+        assert_eq!(results[0].snippet, "The meaning of why: for what reason.");
+        assert_eq!(results[1].title, "Why: music video");
+        assert_eq!(results[1].url, "https://example.org/music/why");
+        assert_eq!(results[1].snippet, "Watch the official music video.");
+    }
+
+    // Document the orchestration impact without introducing a relevance heuristic.
+    #[tokio::test]
+    async fn bing_unrelated_results_currently_stop_fallback_and_satisfy_quorum() {
+        let mut calls = Vec::new();
+        let results = collect_fallback(
+            "why does the moon cause ocean tides",
+            &[Engine::Bing, Engine::Yahoo],
+            |engine| {
+                calls.push(engine);
+                std::future::ready(parse_provider_response(Engine::Bing, BING_UNRELATED))
+            },
+        )
+        .await
+        .unwrap();
+        assert_eq!(calls, [Engine::Bing]);
+        assert_eq!(results.len(), 2);
+
+        type Outcome = (usize, Result<Vec<SearchResult>, KestrelError>);
+        let pending: FuturesUnordered<futures_util::future::BoxFuture<'static, Outcome>> =
+            FuturesUnordered::new();
+        pending.push(Box::pin(async {
+            (0, parse_provider_response(Engine::Bing, BING_UNRELATED))
+        }));
+        pending.push(Box::pin(std::future::pending()));
+        let (completed, cancelled) = collect_fanout(pending, Some(1)).await;
+        assert_eq!(completed.len(), 1);
+        assert_eq!(completed[0].as_ref().unwrap().len(), 2);
+        assert_eq!(cancelled, 1);
+    }
+
     #[test]
     fn parses_redirects_and_canonicalizes() {
         let encoded =
@@ -2061,3 +2138,6 @@ mod tests {
         assert_eq!(results[0].sources[0].rank, 4);
     }
 }
+
+#[cfg(test)]
+mod bing_fidelity;

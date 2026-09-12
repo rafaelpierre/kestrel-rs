@@ -1,0 +1,35 @@
+[
+  {
+    "fixture": "bing-live-quoted.html",
+    "query": "\"use of moved value\" borrowing clone",
+    "captured_at": "2026-09-12T12:44:49.425204+00:00",
+    "response_sha256": "ee4176e416aa93eedaa38ade4b662af186103d2302926625416446d3f53cc7f2",
+    "initial_url": "https://www.bing.com/search?q=%22use+of+moved+value%22+borrowing+clone&cc=gb",
+    "final_url": "https://www.bing.com/search?q=%22use+of+moved+value%22+borrowing+clone&cc=gb",
+    "http_status": 200,
+    "http_version": "HTTP/2.0",
+    "sanitization": "First two organic blocks; keep semantic tags/classes/text; decode destinations, remove queries/fragments, other attributes and active content."
+  },
+  {
+    "fixture": "bing-live-tokio.html",
+    "query": "tokio watch Receiver borrow_and_update changed deadlock Ref across await",
+    "captured_at": "2026-09-12T12:44:47.225069+00:00",
+    "response_sha256": "4389acc0e689ac5426914ca617ca60b06ee5b061befed20edaa44d567d625078",
+    "initial_url": "https://www.bing.com/search?q=tokio+watch+Receiver+borrow_and_update+changed+deadlock+Ref+across+await&cc=gb",
+    "final_url": "https://www.bing.com/search?q=tokio+watch+Receiver+borrow_and_update+changed+deadlock+Ref+across+await&cc=gb",
+    "http_status": 200,
+    "http_version": "HTTP/2.0",
+    "sanitization": "First two organic blocks; keep semantic tags/classes/text; decode destinations, remove queries/fragments, other attributes and active content."
+  },
+  {
+    "fixture": "bing-live-site.html",
+    "query": "site:docs.rs tokio watch Receiver borrow_and_update",
+    "captured_at": "2026-09-12T12:44:53.052305+00:00",
+    "response_sha256": "03990b2049d2520b86158356ab8ae95ace8f8669c17ce7adaf630971e27bdd78",
+    "initial_url": "https://www.bing.com/search?q=site%3Adocs.rs+tokio+watch+Receiver+borrow_and_update&cc=gb",
+    "final_url": "https://www.bing.com/search?q=site%3Adocs.rs+tokio+watch+Receiver+borrow_and_update&cc=gb",
+    "http_status": 200,
+    "http_version": "HTTP/2.0",
+    "sanitization": "First two organic blocks; keep semantic tags/classes/text; decode destinations, remove queries/fragments, other attributes and active content."
+  }
+]

@@ -1,0 +1,8 @@
+[
+  {"id":"moon","query":"why does the moon cause ocean tides","intent":"Explains lunar gravity or differential gravitational forces causing ocean tides."},
+  {"id":"rust","query":"Rust E0382 use of moved value fix borrowing clone","intent":"Explains Rust ownership/E0382 with borrowing or cloning as a remedy; game and language homepages are not sufficient."},
+  {"id":"tokio","query":"tokio watch Receiver borrow_and_update changed deadlock Ref across await","intent":"Documents watch Receiver borrows, locks and the risk of holding Ref across await."},
+  {"id":"quoted","query":"\"use of moved value\" borrowing clone","intent":"Explains the quoted Rust ownership error and a borrowing or cloning fix."},
+  {"id":"site","query":"site:docs.rs tokio watch Receiver borrow_and_update","intent":"docs.rs documentation for Tokio watch Receiver and borrow_and_update."},
+  {"id":"postgres","query":"PostgreSQL EXPLAIN ANALYZE actual rows loops meaning","intent":"Explains interpretation of actual rows and loops in PostgreSQL EXPLAIN ANALYZE."}
+]
