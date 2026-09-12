@@ -32,7 +32,7 @@ def parse_args() -> argparse.Namespace:
         dest="engines",
         choices=("duckduckgo", "bing", "yahoo"),
     )
-    parser.add_argument("--mode", choices=("fallback", "fanout"), default="fanout")
+    parser.add_argument("--mode", choices=("fanout",), default="fanout")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     args.engines = args.engines or ["duckduckgo", "bing", "yahoo"]

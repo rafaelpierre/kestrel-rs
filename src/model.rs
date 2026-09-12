@@ -42,20 +42,18 @@ impl std::fmt::Display for Engine {
     }
 }
 
-/// How multiple engines are combined.
+/// Concurrent provider orchestration. Retained for API compatibility; fanout is the only mode.
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize, ValueEnum)]
 #[serde(rename_all = "lowercase")]
 #[clap(rename_all = "lower")]
 pub enum SearchMode {
     #[default]
-    Fallback,
     Fanout,
 }
 
 impl std::fmt::Display for SearchMode {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.write_str(match self {
-            Self::Fallback => "fallback",
             Self::Fanout => "fanout",
         })
     }
@@ -149,7 +147,7 @@ impl Default for SearchOptions {
     fn default() -> Self {
         Self {
             engines: vec![Engine::Duckduckgo, Engine::Bing, Engine::Yahoo],
-            mode: SearchMode::Fallback,
+            mode: SearchMode::Fanout,
             region: String::new(),
             time_filter: TimeFilter::Any,
             max_concurrency: 5,

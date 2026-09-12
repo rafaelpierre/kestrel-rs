@@ -15,15 +15,6 @@ pub(crate) struct BrowserProfile {
 }
 
 impl BrowserProfile {
-    #[cfg(test)]
-    pub(crate) fn bing_experiment() -> Self {
-        Self {
-            browser: Impersonate::ChromeV146,
-            os: ImpersonateOS::MacOS,
-            language: "en-GB,en;q=0.9",
-        }
-    }
-
     pub fn random() -> Self {
         let browsers = [
             Impersonate::ChromeV146,

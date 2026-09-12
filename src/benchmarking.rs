@@ -141,6 +141,19 @@ fn write_artifact_to(
     Ok(target)
 }
 
+#[cfg(test)]
+tokio::task_local! {
+    pub(crate) static TEST_TRACE_DIRECTORY: Option<PathBuf>;
+}
+
+fn trace_directory() -> Option<PathBuf> {
+    #[cfg(test)]
+    if let Ok(directory) = TEST_TRACE_DIRECTORY.try_with(Clone::clone) {
+        return directory;
+    }
+    std::env::var_os("KESTRELSEARCH_PROVIDER_TRACE_DIR").map(PathBuf::from)
+}
+
 /// Opt-in raw provider capture; normal output never includes response HTML.
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn capture_provider(
@@ -152,13 +165,12 @@ pub(crate) fn capture_provider(
     attempt: usize,
     html: &str,
 ) {
-    let Ok(directory) = std::env::var("KESTRELSEARCH_PROVIDER_TRACE_DIR") else {
+    let Some(directory) = trace_directory() else {
         return;
     };
-    let directory = Path::new(&directory);
     let id = format!("{}-{}", engine, uuid::Uuid::new_v4().simple());
     let write = || -> io::Result<()> {
-        fs::create_dir_all(directory)?;
+        fs::create_dir_all(&directory)?;
         fs::write(directory.join(format!("{id}.html")), html)?;
         fs::write(
             directory.join(format!("{id}.json")),
@@ -166,6 +178,7 @@ pub(crate) fn capture_provider(
                 "engine": engine, "query": query, "final_url": url, "http_status": status, "http_version": http_version,
                 "attempt": attempt, "html_file": format!("{id}.html"),
                 "captured_at": chrono::Utc::now().to_rfc3339(),
+                "correlation": crate::search::current_correlation(),
             }))?,
         )
     };
@@ -176,16 +189,15 @@ pub(crate) fn capture_provider(
 
 /// Record only generated browser headers, never credentials or response cookies.
 pub(crate) fn capture_headers(client: &str, headers: &reqwest::header::HeaderMap) {
-    let Ok(directory) = std::env::var("KESTRELSEARCH_PROVIDER_TRACE_DIR") else {
+    let Some(directory) = trace_directory() else {
         return;
     };
-    let directory = Path::new(&directory);
     let values: BTreeMap<_, _> = headers
         .iter()
         .filter_map(|(name, value)| value.to_str().ok().map(|value| (name.as_str(), value)))
         .collect();
     let write = || -> io::Result<()> {
-        fs::create_dir_all(directory)?;
+        fs::create_dir_all(&directory)?;
         fs::write(
             directory.join(format!(
                 "headers-{client}-{}.json",
@@ -200,20 +212,28 @@ pub(crate) fn capture_headers(client: &str, headers: &reqwest::header::HeaderMap
 }
 
 /// Preserve diagnostics even when all providers fail and no SearchReport is returned.
-pub(crate) fn capture_provider_diagnostic(diagnostic: &ProviderSearchDiagnostic) {
-    let Ok(directory) = std::env::var("KESTRELSEARCH_PROVIDER_TRACE_DIR") else {
+pub(crate) fn capture_provider_lifecycle(
+    diagnostic: &ProviderSearchDiagnostic,
+    lifecycle: Option<&crate::provider_diagnostics::Lifecycle>,
+) {
+    let Some(directory) = trace_directory() else {
         return;
     };
-    let directory = Path::new(&directory);
     let write = || -> io::Result<()> {
-        fs::create_dir_all(directory)?;
+        fs::create_dir_all(&directory)?;
         fs::write(
             directory.join(format!(
                 "outcome-{}-{}.json",
                 diagnostic.engine,
                 uuid::Uuid::new_v4().simple()
             )),
-            serde_json::to_vec_pretty(diagnostic)?,
+            serde_json::to_vec_pretty(&{
+                let mut value = serde_json::to_value(diagnostic)?;
+                if let Some(lifecycle) = lifecycle {
+                    value["lifecycle"] = serde_json::to_value(lifecycle)?;
+                }
+                value
+            })?,
         )
     };
     if let Err(error) = write() {
@@ -244,7 +264,7 @@ mod tests {
             &BTreeMap::from([("search".into(), 12)]),
             &["example query".into()],
             &[],
-            SearchMode::Fallback,
+            SearchMode::Fanout,
             &[],
             0,
             None,
@@ -253,6 +273,7 @@ mod tests {
         )
         .unwrap();
         let artifact: Value = serde_json::from_slice(&fs::read(target).unwrap()).unwrap();
+        assert_eq!(artifact["mode"], "fanout");
         assert_eq!(artifact["returned_chars"], "Some page text".chars().count());
         assert_eq!(artifact["results"][0]["content"], "Some page text");
         assert!(

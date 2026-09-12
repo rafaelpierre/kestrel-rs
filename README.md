@@ -14,7 +14,7 @@ compatible with the Python implementation.
 ## Highlights
 
 - No API key or hosted search service required.
-- DuckDuckGo, Bing, and Yahoo in ordered fallback or concurrent fanout mode.
+- DuckDuckGo, Bing, and Yahoo searched concurrently in fanout mode.
 - Multiple queries with round-robin merging across query/provider buckets.
 - Canonical-URL deduplication with provider and query provenance retained.
 - Bounded concurrent downloads and HTML parsing, with response-size and
@@ -88,10 +88,10 @@ Silicon macOS only. Linux users can build from source with Cargo.
 
 ## Use the CLI
 
-The default command searches DuckDuckGo, falling back to Bing and then Yahoo on
-provider errors (including bot challenges), and fetches up to three times `--top-k`
-candidates, extracts up to 2,000 characters per page, ranks them with BM25, and
-returns the best five results:
+The default command searches DuckDuckGo, Bing, and Yahoo concurrently, retaining
+results from successful providers when others fail (including bot challenges).
+It fetches up to three times `--top-k` candidates, extracts up to 2,000 characters
+per page, ranks them with BM25, and returns the best five results:
 
 ```bash
 kestrel search "python dataclasses"
@@ -111,10 +111,14 @@ object with `url` and `content` fields. Failed requests, unsupported content suc
 as PDFs, and empty extractions exit unsuccessfully with an error on stderr.
 The extractor does not render JavaScript.
 
+Fanout is the only search mode. `--mode fanout` remains accepted for compatibility;
+`--mode fallback` is no longer supported. In the library, `SearchMode::Fanout`
+is the default and only variant; migrate uses of `SearchMode::Fallback` to it.
+
 Common variants:
 
-`--mode fanout` searches all three providers concurrently by default. Use
-`--engine` to select specific providers or set their fallback order. For example,
+Search runs all three default providers concurrently. Use
+`--engine` to select specific providers. For example,
 `kestrel search "test" --engine bing --no-fetch` searches only Bing.
 
 ```bash
@@ -127,17 +131,12 @@ kestrel search "openai news" --no-fetch
 # Search several queries and providers concurrently
 kestrel search "python typing" \
   --query "pyright docs" \
-  --engine duckduckgo --engine bing --engine yahoo \
-  --mode fanout
-
-# Bound provider search to three seconds and return the first nonempty response
-kestrel search "rust ownership" \
-  --mode fanout --provider-quorum 1 --search-budget 3 --no-fetch
+  --engine duckduckgo --engine bing --engine yahoo
 
 # Return after two providers per query produce results and cancel stragglers
 kestrel search "python typing" \
   --engine duckduckgo --engine bing --engine yahoo \
-  --mode fanout --provider-quorum 2
+  --provider-quorum 2
 
 # Pre-rank title/snippet candidates before deciding which pages to fetch
 kestrel search "rust async patterns" --pre-rank
@@ -148,18 +147,6 @@ kestrel search "rust async patterns" \
   --cache-max-entries 1000 \
   --fetch-budget 2
 ```
-
-Providing `--search-budget` without `--mode` automatically selects fanout with
-quorum 1, so a slow provider cannot prevent the others from being queried. For
-example, `kestrel search "rust ownership" --search-budget 3 --no-fetch` uses this
-policy. An explicit `--provider-quorum` overrides the automatic quorum. An explicit
-`--mode fanout` keeps full fanout unless a quorum is supplied; `--mode fallback`
-keeps ordered fallback. Searches without a budget retain their existing defaults.
-This automatic selection applies to the CLI; library `SearchOptions` remain explicit.
-
-Quorum counts nonempty responses,
-not semantic relevance. `--search-budget` covers provider search; page fetching
-has its own `--fetch-budget`. Use `--no-fetch` when only search results are needed.
 
 Progress is written to stderr and results to stdout, making `--output json`
 safe to pipe into another program. Each JSON result can include `title`, `url`,

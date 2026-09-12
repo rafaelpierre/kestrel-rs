@@ -65,7 +65,7 @@ pub fn generate_skill_md(root: &mut Command) -> String {
     let mut rendered = HEADER.to_owned();
     rendered.push_str(r#"## Choosing a command
 
-- Use `kestrel search "keywords"` to discover pages about a topic. Search defaults to DuckDuckGo, Bing, and Yahoo in fallback order.
+- Use `kestrel search "keywords"` to discover pages about a topic. Search runs DuckDuckGo, Bing, and Yahoo concurrently by default.
 - Use `kestrel fetch "https://example.com/path/to/page"` when you already have a page URL and need its contents. Fetch requests that URL directly, without a search provider or BM25 filtering.
 - Do not use `search "site:<full-url-to-page>"` as a substitute for fetching a known page. Use `site:example.com keywords` only to discover pages within a site.
 
@@ -126,19 +126,13 @@ kestrel fetch "https://www.rust-lang.org/learn" --output json
 kestrel fetch "https://example.com/article" --content-limit 40000 --timeout 20
 kestrel search "python async patterns" -k 3
 kestrel search "rust ownership" --no-fetch --output json
-kestrel search "rust ownership" --search-budget 3 --no-fetch
 kestrel search "climate news" --time-filter w --region us-en
-kestrel search "python typing" -q "pyright docs" -e duckduckgo -e bing --mode fanout
+kestrel search "python typing" -q "pyright docs" -e duckduckgo -e bing
 ```
 "#,
     );
     rendered.push_str(
         r#"
-With `--search-budget` and no explicit `--mode`, search uses fanout quorum 1.
-An explicit quorum overrides 1; an explicit mode preserves that mode's behavior.
-Quorum counts nonempty responses, not relevance. The search budget excludes page
-fetching; use `--no-fetch` for search results only or set `--fetch-budget` separately.
-
 ## Fetch output
 
 `kestrel fetch <URL>` accepts one full HTTP or HTTPS URL. Text output contains
