@@ -155,7 +155,22 @@ with these instructions rather than guessing its contents.
   before committing, sign every commit (for example, `git commit -S`), and verify
   locally. After pushing, confirm GitHub reports the commits as **Verified**.
   A sign-off trailer is not a cryptographic signature. Never bypass signing;
-  report a blocker if a usable signing key or GitHub verification is unavailable.
+  check available signing alternatives before reporting a blocker.
+- GitHub supports automatic commit signing through its API using the existing
+  authenticated login. Use the
+  [createCommitOnBranch mutation](https://docs.github.com/en/graphql/reference/commits#createcommitonbranch)
+  as an alternative when local signing is unavailable (for example, an expired
+  local key). GitHub signs these commits when supported; do not assume an API
+  success alone proves signature verification.
+- Verify the resulting commit signature locally and confirm GitHub reports it as
+  **Verified**. Confirm its complete Git tree, including file modes, exactly
+  matches the tested worktree and its parent is the intended base before updating
+  the PR branch. For a rebase, create the signed commit on a temporary branch at
+  the intended base, verify it, then update the PR branch with an explicit
+  `--force-with-lease` against the previously observed head. Remove the temporary
+  branch after confirming the PR points to the verified commit. If neither local
+  signing nor GitHub API signing yields a verified commit, report the blocker;
+  never publish an unsigned substitute.
 - Use Conventional Commits: `fix:` for fixes, `feat:` for features, `docs:` for
   documentation, and an appropriate other type for maintenance. Mark intentional
   breaking changes with `!` or a `BREAKING CHANGE:` footer; release-plz uses these
