@@ -452,14 +452,8 @@ async fn run_one(
                 let message = error.to_string();
                 entry.outcome = if matches!(error, KestrelError::ProviderResponseTooLarge { .. }) {
                     "response_too_large"
-                } else if message.contains("deadline exceeded") {
-                    "deadline"
-                } else if message.contains("bot challenge") {
-                    "challenge"
-                } else if message.contains("unrecognized search page") {
-                    "unrecognized"
                 } else {
-                    "request_error"
+                    provider_error_outcome(&message)
                 }
                 .into();
                 entry.error = Some(message);
@@ -467,6 +461,18 @@ async fn run_one(
         }
     }
     outcome.map(|response| with_provenance(response.results, engine, query))
+}
+
+fn provider_error_outcome(message: &str) -> &'static str {
+    if message.contains("deadline exceeded") {
+        "deadline"
+    } else if message.contains("bot challenge") {
+        "challenge"
+    } else if message.contains("unrecognized search page") {
+        "unrecognized"
+    } else {
+        "request_error"
+    }
 }
 
 struct DiagnosticTimer {
@@ -1739,6 +1745,46 @@ mod tests {
             let error = parse_duckduckgo_response(&html).unwrap_err();
             assert!(error.to_string().contains("bot challenge"));
             assert!(error.to_string().contains("--engine bing"));
+        }
+    }
+
+    #[tokio::test]
+    async fn mojeek_http_success_challenge_and_forbidden_remain_distinct() {
+        use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+
+        let challenge = include_str!("../tests/fixtures/providers/mojeek-challenge.html");
+        for status in [200, 403] {
+            let server = MockServer::start().await;
+            Mock::given(method("GET"))
+                .respond_with(ResponseTemplate::new(status).set_body_string(challenge))
+                .expect(1)
+                .mount(&server)
+                .await;
+            let client = reqwest::Client::new();
+            let response = request_standard_with_retries(&client, Engine::Mojeek, "test", || {
+                client.get(server.uri())
+            })
+            .await;
+            let error = if status == 200 {
+                let (html, retries) = response.unwrap();
+                assert_eq!(retries, 0);
+                crate::providers::parse(Engine::Mojeek, &html).unwrap_err()
+            } else {
+                response.unwrap_err()
+            };
+            let message = error.to_string();
+            assert_eq!(
+                provider_error_outcome(&message),
+                if status == 200 {
+                    "challenge"
+                } else {
+                    "request_error"
+                }
+            );
+            if status == 403 {
+                assert!(message.contains("HTTP 403"));
+                assert!(!message.contains("bot challenge"));
+            }
         }
     }
 
