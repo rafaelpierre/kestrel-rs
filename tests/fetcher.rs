@@ -69,7 +69,7 @@ async fn detailed_fetch_reports_transfer_and_phase_metadata() {
 }
 
 #[tokio::test]
-async fn rejects_unsupported_and_declared_oversized_responses() {
+async fn rejects_unsupported_but_extracts_declared_oversized_responses() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/binary"))
@@ -85,8 +85,7 @@ async fn rejects_unsupported_and_declared_oversized_responses() {
         .respond_with(
             ResponseTemplate::new(200)
                 .insert_header("content-type", "text/html")
-                .insert_header("content-length", "101")
-                .set_body_bytes(vec![b'x'; 101]),
+                .set_body_string(PAGE),
         )
         .mount(&server)
         .await;
@@ -103,7 +102,13 @@ async fn rejects_unsupported_and_declared_oversized_responses() {
     )
     .await
     .unwrap();
-    assert_eq!(results, [None, None]);
+    assert_eq!(results[0], None);
+    assert!(
+        results[1]
+            .as_deref()
+            .unwrap()
+            .contains("meaningful page content")
+    );
 }
 
 #[tokio::test]
@@ -202,4 +207,113 @@ async fn page_cache_avoids_a_second_network_fetch() {
             assert_eq!(report.pages[0].outcome, FetchOutcome::CacheHit);
         }
     }
+}
+
+#[tokio::test]
+async fn capped_pages_are_not_cached_by_either_api() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(200).set_body_string(PAGE))
+        .expect(3)
+        .mount(&server)
+        .await;
+    let directory = tempfile::tempdir().unwrap();
+    let cache = PageCache::new(directory.path(), Duration::from_secs(60)).unwrap();
+    let client = KestrelClient::new().unwrap();
+    let urls = [server.uri()];
+    let mut options = FetchOptions {
+        max_response_bytes: 100,
+        ..FetchOptions::default()
+    };
+    let content = client
+        .fetch_all_cached(&urls, &options, &cache, None)
+        .await
+        .unwrap();
+    assert!(content[0].is_some());
+    let report = client
+        .fetch_all_cached_detailed(&urls, &options, &cache, None)
+        .await
+        .unwrap();
+    assert_eq!(report.cache_hits, 0);
+    assert_eq!(report.pages[0].response_bytes, 100);
+    options.max_response_bytes = 1000;
+    let report = client
+        .fetch_all_cached_detailed(&urls, &options, &cache, None)
+        .await
+        .unwrap();
+    assert_eq!(report.cache_hits, 0);
+    assert!(
+        report.contents[0]
+            .as_deref()
+            .unwrap()
+            .ends_with("extraction.")
+    );
+    let report = client
+        .fetch_all_cached_detailed(&urls, &options, &cache, None)
+        .await
+        .unwrap();
+    assert_eq!(report.cache_hits, 1);
+}
+
+#[tokio::test]
+async fn decoded_prefix_handles_compression_boundaries_and_empty_content() {
+    use std::io::Write;
+    let server = MockServer::start().await;
+    let prefix = "<main><p>This is readable text preceding a split character: ";
+    let html = format!("{prefix}é and additional text</p></main>");
+    let mut gzip = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+    gzip.write_all(html.as_bytes()).unwrap();
+    Mock::given(path("/compressed"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .insert_header("content-type", "text/html; charset=utf-8")
+                .insert_header("content-encoding", "gzip")
+                .set_body_bytes(gzip.finish().unwrap()),
+        )
+        .mount(&server)
+        .await;
+    Mock::given(path("/empty"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_string("<script>".to_owned() + &"x".repeat(200)),
+        )
+        .mount(&server)
+        .await;
+    for (cap, expected) in [
+        (html.len() + 1, html.len()),
+        (html.len(), html.len()),
+        (prefix.len() + 1, prefix.len() + 1),
+    ] {
+        let options = FetchOptions {
+            max_response_bytes: cap,
+            ..FetchOptions::default()
+        };
+        let report = fetch_all_detailed(&[format!("{}/compressed", server.uri())], &options)
+            .await
+            .unwrap();
+        assert_eq!(report.pages[0].outcome, FetchOutcome::Success);
+        assert_eq!(report.pages[0].response_bytes, expected);
+        let text = report.contents[0].as_deref().unwrap();
+        assert!(text.starts_with("This is readable text"));
+        if cap == prefix.len() + 1 {
+            assert!(text.ends_with('�'));
+            assert!(!text.contains("additional"));
+        }
+    }
+    let options = FetchOptions {
+        max_response_bytes: 40,
+        content_limit: 10,
+        ..FetchOptions::default()
+    };
+    let report = fetch_all_detailed(
+        &[
+            format!("{}/compressed", server.uri()),
+            format!("{}/empty", server.uri()),
+        ],
+        &options,
+    )
+    .await
+    .unwrap();
+    assert_eq!(report.contents[0].as_deref(), Some("This is re"));
+    assert_eq!(report.pages[1].outcome, FetchOutcome::NoContent);
+    assert_eq!(report.pages[1].response_bytes, 40);
 }

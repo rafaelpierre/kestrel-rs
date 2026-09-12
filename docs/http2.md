@@ -56,9 +56,14 @@ latency-sensitive phase, rather than adding it immediately before every request.
 Options validate before client construction. Fixed stream windows allow 65,535
 bytes through 16 MiB; connection windows allow 65,535 bytes through 64 MiB. These
 are flow-control credits, not hard total memory bounds. Adaptive mode overrides
-fixed windows and may grow them. Existing response-size and concurrency limits
-remain in force. PING intervals must be at least 30 seconds; the server may need
-a longer interval. Idle PING requires an explicit interval.
+fixed windows and may grow them. Page fetching retains at most
+`max_response_bytes` decoded body bytes (1,000,000 by default), then cancels the
+unread response and extracts its prefix without waiting for EOF.
+HTTP/2 cancellation targets the response stream, preserving unrelated streams
+and connection reuse; HTTP/1.1 drops the unread response. Already buffered or
+in-flight transport bytes are outside the retained-body bound. Existing
+concurrency and parser backpressure limits remain in force. PING intervals must
+be at least 30 seconds; the server may need a longer interval. Idle PING requires an explicit interval.
 
 DNS uses the operating system resolver, preserving hosts-file and VPN behavior.
 The lifetime is an application freshness bound, **not an authoritative DNS TTL**.
@@ -80,6 +85,15 @@ Yahoo, with flow-control settings overridden by the transport policy.
 `fetch_all_detailed` records the negotiated `http_version` once response headers
 arrive, including rejected responses. It is absent for cache hits and failures
 before headers. Older JSON without this field remains readable.
+
+For page downloads, `response_bytes` counts retained decoded body bytes. A value
+at the configured byte cap means the extraction may be incomplete, including
+exact-boundary responses where the client does not wait for EOF. `fetch_capped`
+logs this cutoff; the extraction still reports `success` when usable or
+`no_content` otherwise. The legacy `response_too_large` outcome remains readable
+but is no longer emitted by page fetching. Byte-capped extractions are not written
+to the page cache, preventing reuse of a partial result under a larger byte budget.
+Normal fetch/search JSON schemas are unchanged.
 
 | Timing | Meaning |
 | --- | --- |

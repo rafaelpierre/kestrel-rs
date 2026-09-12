@@ -15,7 +15,7 @@ use tokio::sync::Semaphore;
 use crate::model::{FetchOptions, FetchOutcome, FetchReport, PageFetchDiagnostic};
 use crate::search::KestrelError;
 
-pub const DEFAULT_MAX_RESPONSE_BYTES: usize = 2_000_000;
+pub const DEFAULT_MAX_RESPONSE_BYTES: usize = 1_000_000;
 const SUPPORTED_CONTENT_TYPES: &[&str] = &["text/html", "application/xhtml+xml", "text/plain"];
 const CLUTTER_PATTERNS: &[&str] = &[
     "menu",
@@ -185,11 +185,10 @@ pub(crate) async fn fetch_all_reusing_client_with_diagnostics(
     })
 }
 
-// Reject oversized chunks before copying or growing the retained buffer.
+// Append only the prefix that fits. Return false as soon as the cap is reached,
+// even at an exact boundary: polling again could wait indefinitely for EOF.
 fn append_body_chunk(body: &mut Vec<u8>, chunk: &[u8], limit: usize) -> bool {
-    if chunk.len() > limit.saturating_sub(body.len()) {
-        return false;
-    }
+    let chunk = &chunk[..chunk.len().min(limit.saturating_sub(body.len()))];
     if body.capacity() - body.len() < chunk.len() {
         let capacity = (body.len() + chunk.len())
             .max(body.capacity().saturating_mul(2))
@@ -197,7 +196,7 @@ fn append_body_chunk(body: &mut Vec<u8>, chunk: &[u8], limit: usize) -> bool {
         body.reserve_exact(capacity - body.len());
     }
     body.extend_from_slice(chunk);
-    true
+    body.len() < limit
 }
 
 fn validate_options(options: &FetchOptions) -> Result<(), KestrelError> {
@@ -338,31 +337,6 @@ async fn fetch_one_inner(
                     .map_err(|error| KestrelError::Search(error.to_string()))
             })
             .transpose()?;
-        if let Some(length) = declared_length
-            && length > options.max_response_bytes
-        {
-            crate::log_event!(
-                "fetch_skipped",
-                "url" => url,
-                "reason" => "response_too_large",
-                "response_bytes" => length,
-                "max_response_bytes" => options.max_response_bytes,
-            );
-            return Ok(FetchItem {
-                content: None,
-                diagnostic: page_diagnostic(
-                    url,
-                    FetchOutcome::ResponseTooLarge,
-                    started,
-                    queue_ms,
-                    request_ms,
-                    0,
-                    0,
-                    0,
-                    length,
-                ),
-            });
-        }
         let encoding = response_encoding(&content_type);
         let download_started = Instant::now();
         let mut stream = response.bytes_stream();
@@ -373,31 +347,19 @@ async fn fetch_one_inner(
         );
         while let Some(chunk) = stream.next().await {
             let chunk = chunk?;
-            let received_bytes = body.len().saturating_add(chunk.len());
             if !append_body_chunk(&mut body, &chunk, options.max_response_bytes) {
                 crate::log_event!(
-                    "fetch_skipped",
+                    "fetch_capped",
                     "url" => url,
-                    "reason" => "response_too_large",
-                    "response_bytes" => received_bytes,
+                    "response_bytes" => body.len(),
                     "max_response_bytes" => options.max_response_bytes,
                 );
-                return Ok(FetchItem {
-                    content: None,
-                    diagnostic: page_diagnostic(
-                        url,
-                        FetchOutcome::ResponseTooLarge,
-                        started,
-                        queue_ms,
-                        request_ms,
-                        elapsed_millis(download_started),
-                        0,
-                        0,
-                        received_bytes,
-                    ),
-                });
+                break;
             }
         }
+        // Drop the unread response before parser admission. On HTTP/2 this
+        // cancels this stream while allowing other pooled streams to continue.
+        drop(stream);
         let download_ms = elapsed_millis(download_started);
         let response_bytes = body.len();
         (
@@ -601,15 +563,17 @@ mod tests {
     const PAGE: &str = r#"<html><body><nav>Ignore navigation</nav><aside>Ignore sidebar</aside><main><h1>Kestrel heading</h1><h2>Useful section</h2><p>This is meaningful page content that should be preserved in the extraction.</p><p>Source: ignored metadata</p></main></body></html>"#;
 
     #[test]
-    fn rejects_oversized_chunk_without_growing_buffer() {
+    fn retains_crossing_chunk_prefix_without_exceeding_cap() {
         let mut body = vec![b'x'; 15];
-        let capacity = body.capacity();
         assert!(!append_body_chunk(&mut body, &[b'y'; 100], 16));
-        assert_eq!(body, vec![b'x'; 15]);
-        assert_eq!(body.capacity(), capacity);
-        assert!(append_body_chunk(&mut body, b"y", 16));
-        assert_eq!(body.len(), 16);
+        assert_eq!(body, [vec![b'x'; 15], vec![b'y']].concat());
+        assert_eq!(body.capacity(), 16);
         assert!(!append_body_chunk(&mut body, b"z", 16));
+        assert_eq!(body.len(), 16);
+        let mut body = Vec::new();
+        assert!(append_body_chunk(&mut body, b"x", 2));
+        assert!(!append_body_chunk(&mut body, b"y", 2));
+        assert_eq!(body, b"xy");
     }
 
     #[test]
@@ -749,3 +713,6 @@ mod tests {
         );
     }
 }
+
+#[cfg(test)]
+mod cutoff_tests;
