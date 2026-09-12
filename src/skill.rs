@@ -55,7 +55,8 @@ Each element in the returned array contains:
 - BM25 filtering removes zero-relevance results unless an entire query group scores zero.
 - Use `--no-fetch` for a fast, low-cost keyword search.
 - Additional opt-in engines: dogpile, ecosia, swisscows, yep, qwant, mojeek.
-- Use --search-budget to bound all provider attempts, including retries.
+- Fanout defaults to a five-second search budget, including queueing and retries. Use --search-budget to change it or --no-search-budget to disable the total deadline.
+- Search, page fetching, and parsing concurrency each default to 10.
 - Experimental --ranking-policy hybrid retains snippet-only results when fetching fails.
 - Search/fetch clients select random browser headers and reuse HTTP/2 or HTTP/1.1 connections within the process.
 "#;

@@ -150,7 +150,7 @@ impl Default for SearchOptions {
             mode: SearchMode::Fanout,
             region: String::new(),
             time_filter: TimeFilter::Any,
-            max_concurrency: 5,
+            max_concurrency: 10,
             provider_quorum: None,
             search_budget: None,
         }
@@ -264,8 +264,8 @@ impl Default for FetchOptions {
         Self {
             timeout: Duration::from_secs(10),
             content_limit: 2_000,
-            max_concurrency: 5,
-            parse_concurrency: 2,
+            max_concurrency: 10,
+            parse_concurrency: 10,
             max_response_bytes: 2_000_000,
         }
     }

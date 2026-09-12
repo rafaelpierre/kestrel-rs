@@ -156,8 +156,8 @@ Providing `--search-budget` without `--mode` automatically selects quorum 1
 for fanout, returning after the first nonempty provider response. For
 example, `kestrel search "rust ownership" --search-budget 3 --no-fetch` uses this
 policy. An explicit `--provider-quorum` overrides the automatic quorum. An explicit
-`--mode fanout` keeps full fanout unless a quorum is supplied. Searches without
-a budget retain full fanout by default.
+`--mode fanout` keeps full fanout unless a quorum is supplied. Searches without an explicit `--search-budget` retain full fanout, bounded by
+the default five-second budget unless `--no-search-budget` is supplied.
 This automatic selection applies to the CLI; library `SearchOptions` remain explicit.
 
 Quorum counts nonempty responses,
@@ -175,8 +175,18 @@ resource limits.
 
 ### Defaults and opt-in tradeoffs
 
-Kestrel deliberately preserves the Python-compatible selection behavior by
-default. Two measured optimizations remain explicit opt-ins:
+CLI fanout searches have a five-second total search budget, including provider
+queueing and retries. Completed results are retained when the deadline expires.
+Use `--search-budget SECS` to change it or `--no-search-budget` to wait for all
+providers to finish their attempts. The library has no total search deadline
+unless one is supplied. Per-request timeouts still apply.
+This budget does not include page fetching or ranking.
+
+Search requests, page fetching, and HTML parsing each default to a maximum
+concurrency of 10 in both the CLI and library. Override them with
+`--search-concurrency`, `--concurrency`, and `--parse-concurrency`, respectively.
+
+Two measured optimizations remain explicit opt-ins:
 
 - `--pre-rank` scores titles and snippets before page fetching. In a 24-pair
   live ablation it slightly reduced requests and downloaded bytes, but did not

@@ -98,7 +98,8 @@ measures three searches through one client without confusing this with startup.
 ## Diagnostics and experiments
 
 - `--search-budget SECS` covers provider queueing and retries, retaining completed
-  providers. It is separate from `--fetch-budget`.
+  providers. CLI fanout defaults to five seconds; `--no-search-budget` disables
+  that deadline. It is separate from `--fetch-budget`.
 - `--ranking-policy provider|snippet|body|hybrid|rrf` selects opt-in policies.
   Body retains legacy BM25 behavior and requires fetching. Snippet and hybrid
   retain candidates with missing content; hybrid ignores the synthetic Source
