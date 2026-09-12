@@ -191,6 +191,15 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(skill.contains("Fetch completed in 0.125 seconds."));
     assert!(skill.contains("Empty successful searches also report time"));
     assert!(skill.contains("--query-syntax"));
+    assert!(skill.contains("Defaults do not cause conflicts"));
+    assert!(skill.contains("## Choosing limits: collected, fetched, returned"));
+    assert!(skill.contains("## Recipes: speed, coverage and relevance"));
+    assert!(skill.contains("not replenished"));
+    assert!(skill.contains("not 5,000 total output characters"));
+    assert!(skill.contains("does not itself stop the network download sooner"));
+    assert!(skill.contains("--min-results 15 --fetch-candidates 15"));
+    assert!(skill.contains("usage status 2 before requests"));
+    assert!(skill.contains("Choose either `--rank` or `--ranking-policy`, never both"));
     assert!(skill.contains("Portable query syntax is the default for every provider"));
     assert!(skill.contains("Query constraints apply before counting"));
     assert!(skill.contains("--min-results"));
@@ -254,6 +263,50 @@ fn malformed_primary_and_additional_queries_fail_before_search() {
             .failure()
             .stderr(predicate::str::contains("Invalid portable query"))
             .stderr(predicate::str::contains("--query-syntax native"));
+    }
+}
+
+#[test]
+fn contradictory_search_options_fail_before_requests_in_either_order() {
+    let mut pairs = vec![
+        (vec!["--fetch"], vec!["--no-fetch"]),
+        (vec!["--rank"], vec!["--no-rank"]),
+        (vec!["--no-fetch"], vec!["--rank"]),
+        (vec!["--no-fetch"], vec!["--pre-rank"]),
+        (vec!["--no-fetch"], vec!["--ranking-policy", "body"]),
+        (vec!["--search-budget", "5"], vec!["--no-search-budget"]),
+    ];
+    for policy in ["provider", "snippet", "body", "hybrid", "rrf"] {
+        pairs.push((vec!["--rank"], vec!["--ranking-policy", policy]));
+        pairs.push((vec!["--no-rank"], vec!["--ranking-policy", policy]));
+    }
+    for option in [
+        "--fetch-candidates",
+        "--content-limit",
+        "--max-response-bytes",
+        "--timeout",
+        "--fetch-budget",
+        "--cache-ttl",
+        "--cache-max-entries",
+        "--concurrency",
+        "--parse-concurrency",
+    ] {
+        pairs.push((vec!["--no-fetch"], vec![option, "10"]));
+    }
+    pairs.push((vec!["--no-fetch"], vec!["--cache-dir", "cache"]));
+    for (left, right) in pairs {
+        for (first, second) in [(&left, &right), (&right, &left)] {
+            Command::cargo_bin("kestrel")
+                .unwrap()
+                .args(["search", "test"])
+                .args(first)
+                .args(second)
+                .assert()
+                .code(2)
+                .stdout("")
+                .stderr(predicate::str::contains("cannot be used with"))
+                .stderr(predicate::str::contains("Searching").not());
+        }
     }
 }
 

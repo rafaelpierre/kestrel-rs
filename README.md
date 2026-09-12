@@ -151,9 +151,9 @@ kestrel search "python typing" \
   --query "pyright docs" \
   --engine duckduckgo --engine bing --engine yahoo
 
-# Bound provider search to three seconds and return the first nonempty response
+# Bound provider search to three seconds and stop at five accepted candidates
 kestrel search "rust ownership" \
-  --mode fanout --provider-quorum 1 --search-budget 3 --no-fetch
+  --min-results 5 --search-budget 3 --no-fetch
 
 # Return after five unique results per query and cancel unfinished requests
 kestrel search "python typing" \
@@ -170,17 +170,18 @@ kestrel search "rust async patterns" \
   --fetch-budget 2
 ```
 
-Providing `--search-budget` without `--mode` automatically selects quorum 1
-for fanout, returning after the first nonempty provider response. For
-example, `kestrel search "rust ownership" --search-budget 3 --no-fetch` uses this
-policy. An explicit `--provider-quorum` overrides the automatic quorum. An explicit
-`--mode fanout` keeps full fanout unless a quorum is supplied. Searches without an explicit `--search-budget` retain full fanout, bounded by
-the default five-second budget unless `--no-search-budget` is supplied.
-This automatic selection applies to the CLI; library `SearchOptions` remain explicit.
+Provider search stops at `--min-results` unique accepted candidates per query
+(default five), or when providers finish or the search budget expires. This is
+independent of `--top-k` (the final result ceiling) and `--fetch-candidates`
+(the page-candidate ceiling, default three times top-k). To rank a larger pool,
+raise both the collection threshold and fetch limit, for example
+`kestrel search '"machine learning"' --min-results 15 --fetch-candidates 15 -k 5`.
+Neither collection nor fetching guarantees five final results: requests can fail
+and BM25 can filter candidates. Kestrel does not refill failed fetch slots.
 
-Quorum counts nonempty responses,
-not semantic relevance. `--search-budget` covers provider search; page fetching
-has its own `--fetch-budget`. Use `--no-fetch` when only search results are needed.
+`--provider-quorum` is retained for compatibility but ignored by result-count
+fanout. `--search-budget` covers provider search; page fetching has its own
+`--fetch-budget`. Use `--no-fetch` when only search results are needed.
 
 Successful `search` and `fetch` commands print elapsed wall-clock seconds to three
 decimal places on stderr, for example `[kestrel] Search completed in 1.234 seconds.`
@@ -217,7 +218,15 @@ and stderr diagnostics without a JSON error envelope.
 provided. Library result types and benchmark artifact schemas are unchanged.
 
 Run `kestrel search --help` for all provider filters, concurrency controls, and
-resource limits.
+resource limits. See the [argument interaction reference](docs/cli-arguments.md)
+for stage boundaries and compatible combinations.
+
+Explicit fetch-stage settings (such as `--timeout`, `--pre-rank`, and cache
+options) now conflict with `--no-fetch` instead of being silently ignored.
+Choose at most one of `--rank`, `--no-rank`, or `--ranking-policy`; explicit
+`--rank` and body policy require fetching. Conflicts exit with usage status 2
+before requests. Remove redundant or inactive settings from existing scripts.
+`--no-fetch --no-rank` and metadata policies without fetching remain valid.
 
 ### Defaults and opt-in tradeoffs
 
@@ -346,8 +355,8 @@ for methodology, limitations, and result artifacts.
 
 ## Development status
 
-Fine-grained diagnostics are complete. Snippet pre-ranking and provider quorum
-have been evaluated and intentionally remain opt-in. The next planned work is
+Fine-grained diagnostics are complete. Snippet pre-ranking remains opt-in;
+provider quorum is superseded by result-count stopping. The next planned work is
 adaptive page-fetch scheduling, followed by per-host concurrency,
 extracted-content deduplication, and batch/streaming operation.
 
@@ -394,7 +403,7 @@ Search defaults to portable query constraints across all nine providers:
 `kestrel search '"machine learning"'` requires the phrase in a title or snippet;
 `machine AND learning` requires both terms. Plain space-separated terms also use
 AND. `OR`, `NOT`, exclusions, parentheses and `site:hostname` are supported.
-Checks happen before quorum and work with `--no-fetch` and `--no-rank`.
+Checks happen before result-count stopping and work with `--no-fetch` and `--no-rank`.
 These checks use search-result metadata, not full-page evidence; they can exclude
 pages whose snippets omit the requested terms. Use `--query-syntax native` for
 provider-specific syntax and the previous passthrough behavior.
