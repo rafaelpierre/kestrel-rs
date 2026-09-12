@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v2.0.0...v3.0.0) - 2026-09-12
+
+### Added
+
+- [**breaking**] include elapsed seconds in search and fetch JSON
+- search all nine supported engines by default
+
+### Fixed
+
+- return partial pages with a 1 MB fetch default
+- bound fanout search latency and raise concurrency defaults
+- count isolated Bing attempts on errors and deadlines
+- default budgeted CLI searches to fanout quorum one
+
+### Other
+
+- Merge pull request #58 from rafaelpierre/codex/53-partial-fetch
+- Merge pull request #63 from rafaelpierre/codex/61-elapsed-seconds
+- Merge pull request #60 from rafaelpierre/codex/59-github-api-signing
+- document verified GitHub API commit signing
+- Merge pull request #56 from rafaelpierre/codex/issue-55-agents-guidelines
+- add repository agent development guidelines
+- Merge pull request #45 from rafaelpierre/codex/issue-32-bing-fidelity
+- Preserve budgeted quorum defaults and resolve fanout-only integration
+- Prepare verified integration of current main
+
 ### Changed
 
 - Search now defaults to portable title/snippet query constraints across all nine providers. Supports phrases, Boolean expressions, exclusions and hostname restrictions before quorum. Use `--query-syntax native` or `SearchOptions.query_syntax = QuerySyntax::Native` for previous passthrough behavior. Explicit SearchOptions literals require the new field.
