@@ -283,6 +283,7 @@ pub async fn run() -> ExitCode {
 }
 
 async fn run_fetch(arguments: FetchArgs) -> ExitCode {
+    let command_started = Instant::now();
     let options = FetchOptions {
         timeout: Duration::from_secs_f64(arguments.timeout),
         content_limit: arguments.content_limit,
@@ -325,10 +326,12 @@ async fn run_fetch(arguments: FetchArgs) -> ExitCode {
             .expect("strings serialize to JSON")
         ),
     }
+    print_completion("Fetch", command_started);
     ExitCode::SUCCESS
 }
 
 async fn run_search(arguments: SearchArgs) -> ExitCode {
+    let command_started = Instant::now();
     if arguments.no_fetch
         && matches!(
             arguments.ranking_policy,
@@ -412,6 +415,7 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
                 "No results found."
             }
         );
+        print_completion("Search", command_started);
         return ExitCode::SUCCESS;
     }
     eprintln!("[kestrel] Got {} results.", results.len());
@@ -490,7 +494,15 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
         },
         Output::Text => render_text_results(&results, &query_label),
     }
+    print_completion("Search", command_started);
     ExitCode::SUCCESS
+}
+
+fn print_completion(command: &str, started: Instant) {
+    eprintln!(
+        "[kestrel] {command} completed in {:.3} seconds.",
+        started.elapsed().as_secs_f64()
+    );
 }
 
 async fn attach_page_content(

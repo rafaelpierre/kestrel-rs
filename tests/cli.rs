@@ -1,7 +1,23 @@
 use std::fs;
+use std::time::Duration;
 
 use assert_cmd::Command;
 use predicates::prelude::*;
+
+fn completion_seconds(stderr: &[u8], command: &str) -> f64 {
+    let stderr = std::str::from_utf8(stderr).unwrap();
+    let prefix = format!("[kestrel] {command} completed in ");
+    let lines: Vec<_> = stderr
+        .lines()
+        .filter_map(|line| line.strip_prefix(&prefix))
+        .collect();
+    assert_eq!(lines.len(), 1, "expected one completion line: {stderr}");
+    let seconds = lines[0].strip_suffix(" seconds.").unwrap();
+    assert_eq!(seconds.split_once('.').unwrap().1.len(), 3);
+    let seconds: f64 = seconds.parse().unwrap();
+    assert!(seconds.is_finite() && seconds >= 0.0);
+    seconds
+}
 
 #[test]
 fn help_lists_search_and_skill_commands() {
@@ -50,6 +66,7 @@ async fn fetch_extracts_a_known_url_as_text_or_json() {
         .and(path("/article"))
         .respond_with(ResponseTemplate::new(200)
             .insert_header("content-type", "text/html")
+            .set_delay(Duration::from_millis(100))
             .set_body_string("<nav>Unwanted navigation</nav><main><h1>Article heading</h1><p>This is meaningful article content fetched directly from a known page URL.</p></main>"))
         .expect(2)
         .mount(&server).await;
@@ -61,22 +78,26 @@ async fn fetch_extracts_a_known_url_as_text_or_json() {
             .assert()
             .success()
             .get_output()
-            .stdout
             .clone();
-        let value: serde_json::Value = serde_json::from_slice(&output).unwrap();
+        assert!(completion_seconds(&output.stderr, "Fetch") >= 0.1);
+        let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(value.as_object().unwrap().len(), 2);
         assert_eq!(value["url"], url);
         let content = value["content"].as_str().unwrap();
         assert!(content.starts_with(&format!("Source: {url}\n")));
         assert!(content.contains("meaningful article content"));
         assert!(!content.contains("Unwanted navigation"));
-        Command::cargo_bin("kestrel")
+        let output = Command::cargo_bin("kestrel")
             .unwrap()
             .args(["fetch", &url, "--content-limit", "30"])
             .assert()
             .success()
             .stdout(predicate::str::starts_with(format!("Source: {url}\n")))
             .stdout(predicate::str::contains("Article heading"))
-            .stdout(predicate::str::contains("known page URL").not());
+            .stdout(predicate::str::contains("known page URL").not())
+            .get_output()
+            .clone();
+        assert!(completion_seconds(&output.stderr, "Fetch") >= 0.1);
     })
     .await
     .unwrap();
@@ -107,7 +128,8 @@ async fn fetch_reports_http_and_unsupported_content_failures() {
                 .assert()
                 .failure()
                 .stdout("")
-                .stderr(predicate::str::contains("Fetch failed"));
+                .stderr(predicate::str::contains("Fetch failed"))
+                .stderr(predicate::str::contains("completed in").not());
         }
     })
     .await
@@ -152,6 +174,9 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(target.exists());
     let skill = fs::read_to_string(&target).unwrap();
     assert!(skill.contains("name: kestrelsearch"));
+    assert!(skill.contains("Search completed in 1.234 seconds."));
+    assert!(skill.contains("Fetch completed in 0.125 seconds."));
+    assert!(skill.contains("Empty successful searches also report time"));
     assert!(skill.contains("--query-syntax"));
     assert!(skill.contains("Portable query syntax is the default for every provider"));
     assert!(skill.contains("accepted results after query constraints"));
@@ -208,5 +233,28 @@ fn malformed_primary_and_additional_queries_fail_before_search() {
             .failure()
             .stderr(predicate::str::contains("Invalid portable query"))
             .stderr(predicate::str::contains("--query-syntax native"));
+    }
+}
+
+#[test]
+fn failed_search_has_no_success_completion_line() {
+    // A one-nanosecond deadline expires before provider jobs start, avoiding live requests.
+    for output in ["text", "json"] {
+        Command::cargo_bin("kestrel")
+            .unwrap()
+            .args([
+                "search",
+                "query",
+                "--no-fetch",
+                "--search-budget",
+                "0.000000001",
+                "--output",
+                output,
+            ])
+            .assert()
+            .failure()
+            .stdout("")
+            .stderr(predicate::str::contains("Every search failed"))
+            .stderr(predicate::str::contains("completed in").not());
     }
 }

@@ -49,6 +49,7 @@ page text is unavailable, including searches with `--no-fetch`.
 
 - This `SKILL.md` is compatible with Claude Code, Codex, and GitHub Copilot in VS Code.
 - Progress logs go to **stderr**; use `--output json` for machine-readable **stdout**.
+- Successful `search` and `fetch` commands report elapsed wall-clock seconds to three decimal places on stderr, e.g. `[kestrel] Search completed in 1.234 seconds.` or `[kestrel] Fetch completed in 0.125 seconds.` This includes initialization, retrieval, extraction, optional ranking, and result output; it excludes argument parsing and process startup. Empty successful searches also report time. Text/JSON stdout schemas are unchanged, and failures do not print a success completion line.
 - Numeric counts and sizes must be positive integers; durations must be finite and greater than zero.
 - PDFs are skipped during content fetching.
 - Page bodies are streamed up to `--max-response-bytes`; network and parsing concurrency are independent.
