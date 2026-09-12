@@ -6,3 +6,7 @@ title and `.captcha-wrap` JavaScript challenge message. The fixture retains
 those elements and the document/body attributes, while removing scripts,
 provider-generated identifiers, request-specific URLs, navigation, styles,
 and unrelated metadata. The raw captures remain local and uncommitted.
+
+`bing-unrelated.html` is synthetic. Its full-query document title and unrelated organic entries exercise faithful parsing and the current nonempty fallback/quorum policy; it does not establish live Bing behavior or semantic relevance.
+
+`bing-live-quoted.html`, `bing-live-tokio.html` and `bing-live-site.html` are sanitized first-two-result excerpts from September 12 live responses. See `bing-live-provenance.json` for context and response hashes. They preserve result markup/text, decode destinations and remove tracking/active content. The quoted/site failures and the successful Tokio response exercise parsing; they do not establish a global provider failure or its cause. Use `benchmarks/sanitize_bing_fixture.py` to create reviewed excerpts from local raw captures.
