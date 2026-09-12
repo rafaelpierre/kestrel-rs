@@ -1,0 +1,22 @@
+{
+  "captured_date": "2026-09-12",
+  "kind": "manual_browser_observation_not_wire_fixture",
+  "provider": "felo",
+  "query": "Rust E0382 use of moved value",
+  "observed_source_count": 11,
+  "complete_source_list": false,
+  "sources": [
+    {
+      "rank": 1,
+      "url": "https://users.rust-lang.org/t/how-to-solve-this-used-of-moved-value-issue/68138",
+      "title": "How to solve this \"used of moved value\" issue",
+      "snippet": "error[E0382]: use of moved value: This is because you can only give away ownership of a value once. To fix it, you can clone the vector."
+    },
+    {
+      "rank": 8,
+      "url": "https://doc.rust-lang.org/error_codes/E0382.html",
+      "title": "E0382 - Error codes index",
+      "snippet": "Sometimes we don't need to move the value. Using a reference, we can let another function borrow the value without changing its ownership. In the example below, ..."
+    }
+  ]
+}
