@@ -185,6 +185,21 @@ pub(crate) async fn fetch_all_reusing_client_with_diagnostics(
     })
 }
 
+// Reject oversized chunks before copying or growing the retained buffer.
+fn append_body_chunk(body: &mut Vec<u8>, chunk: &[u8], limit: usize) -> bool {
+    if chunk.len() > limit.saturating_sub(body.len()) {
+        return false;
+    }
+    if body.capacity() - body.len() < chunk.len() {
+        let capacity = (body.len() + chunk.len())
+            .max(body.capacity().saturating_mul(2))
+            .min(limit);
+        body.reserve_exact(capacity - body.len());
+    }
+    body.extend_from_slice(chunk);
+    true
+}
+
 fn validate_options(options: &FetchOptions) -> Result<(), KestrelError> {
     for (name, value) in [
         ("max_concurrency", options.max_concurrency),
@@ -270,8 +285,10 @@ async fn fetch_one_inner(
     http_version: &mut Option<String>,
 ) -> Result<FetchItem, KestrelError> {
     let queue_started = Instant::now();
+    // Keep the download slot until a parser takes ownership of this body.
+    // This bounds downloading/waiting bodies to max_concurrency per batch.
+    let network_permit = network.acquire().await.expect("semaphore remains open");
     let (body, encoding, queue_ms, request_ms, download_ms, response_bytes) = {
-        let _permit = network.acquire().await.expect("semaphore remains open");
         let queue_ms = elapsed_millis(queue_started);
         let request_started = Instant::now();
         let response = client.get(url).timeout(options.timeout).send().await?;
@@ -356,13 +373,13 @@ async fn fetch_one_inner(
         );
         while let Some(chunk) = stream.next().await {
             let chunk = chunk?;
-            body.extend_from_slice(&chunk);
-            if body.len() > options.max_response_bytes {
+            let received_bytes = body.len().saturating_add(chunk.len());
+            if !append_body_chunk(&mut body, &chunk, options.max_response_bytes) {
                 crate::log_event!(
                     "fetch_skipped",
                     "url" => url,
                     "reason" => "response_too_large",
-                    "response_bytes" => body.len(),
+                    "response_bytes" => received_bytes,
                     "max_response_bytes" => options.max_response_bytes,
                 );
                 return Ok(FetchItem {
@@ -376,7 +393,7 @@ async fn fetch_one_inner(
                         elapsed_millis(download_started),
                         0,
                         0,
-                        body.len(),
+                        received_bytes,
                     ),
                 });
             }
@@ -395,10 +412,18 @@ async fn fetch_one_inner(
 
     let limit = options.content_limit;
     let parse_queue_started = Instant::now();
-    let _permit = parsing.acquire().await.expect("semaphore remains open");
+    let parse_permit = parsing
+        .acquire_owned()
+        .await
+        .expect("semaphore remains open");
+    drop(network_permit);
     let parse_queue_ms = elapsed_millis(parse_queue_started);
     let parse_started = Instant::now();
     let content = tokio::task::spawn_blocking(move || {
+        // Blocking work survives cancellation of its async caller. Keep its
+        // slot until the body and DOM are released, including while queued.
+        let _permit = parse_permit;
+        let body = body;
         let (html, _, _) = encoding.decode(&body);
         parse_content(&html, limit)
     })
@@ -574,6 +599,128 @@ mod tests {
     use super::*;
 
     const PAGE: &str = r#"<html><body><nav>Ignore navigation</nav><aside>Ignore sidebar</aside><main><h1>Kestrel heading</h1><h2>Useful section</h2><p>This is meaningful page content that should be preserved in the extraction.</p><p>Source: ignored metadata</p></main></body></html>"#;
+
+    #[test]
+    fn rejects_oversized_chunk_without_growing_buffer() {
+        let mut body = vec![b'x'; 15];
+        let capacity = body.capacity();
+        assert!(!append_body_chunk(&mut body, &[b'y'; 100], 16));
+        assert_eq!(body, vec![b'x'; 15]);
+        assert_eq!(body.capacity(), capacity);
+        assert!(append_body_chunk(&mut body, b"y", 16));
+        assert_eq!(body.len(), 16);
+        assert!(!append_body_chunk(&mut body, b"z", 16));
+    }
+
+    #[test]
+    fn parser_backpressure_bounds_large_batches_and_survives_cancellation() {
+        // Occupy the only blocking worker so parsers deterministically retain
+        // their bodies without finishing. No timing assumptions about HTML CPU.
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .max_blocking_threads(1)
+            .enable_all()
+            .build()
+            .unwrap();
+        runtime.block_on(async {
+            use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+
+            let server = MockServer::start().await;
+            let client = reqwest::Client::builder().no_proxy().build().unwrap();
+            let options = FetchOptions {
+                max_concurrency: 5,
+                parse_concurrency: 2,
+                max_response_bytes: 64 * 1024,
+                ..FetchOptions::default()
+            };
+            let page = format!("<main><p>{}</p></main>", "retained page text ".repeat(3400));
+            assert!(page.len() <= options.max_response_bytes);
+            assert!(page.len() > options.max_response_bytes * 9 / 10);
+            Mock::given(method("GET"))
+                .respond_with(
+                    ResponseTemplate::new(200)
+                        .insert_header("content-type", "text/html")
+                        .set_body_string(page.clone()),
+                )
+                .mount(&server)
+                .await;
+
+            for (batch_size, cancel) in [(200, false), (400, true)] {
+                let previous_requests = server.received_requests().await.unwrap().len();
+                let (release, gate) = std::sync::mpsc::channel::<()>();
+                let (entered, ready) = tokio::sync::oneshot::channel();
+                let blocker = tokio::task::spawn_blocking(move || {
+                    entered.send(()).unwrap();
+                    // Sender drops on test failure, preventing shutdown hangs.
+                    let _ = gate.recv();
+                });
+                ready.await.unwrap();
+                let network = Arc::new(Semaphore::new(options.max_concurrency));
+                let parsing = Arc::new(Semaphore::new(options.parse_concurrency));
+                let mut jobs = Vec::new();
+                for index in 0..batch_size {
+                    let url = format!("{}/{index}", server.uri());
+                    let client = client.clone();
+                    let network = network.clone();
+                    let parsing = parsing.clone();
+                    let options = options.clone();
+                    jobs.push(tokio::spawn(async move {
+                        fetch_one_detailed(&url, &client, network, parsing, &options).await
+                    }));
+                }
+                let bound = options.max_concurrency + options.parse_concurrency;
+                tokio::time::timeout(Duration::from_secs(5), async {
+                    loop {
+                        let requests =
+                            server.received_requests().await.unwrap().len() - previous_requests;
+                        if requests >= bound && parsing.available_permits() == 0 {
+                            break;
+                        }
+                        tokio::task::yield_now().await;
+                    }
+                })
+                .await
+                .unwrap();
+                // Let the fast server drain any erroneously admitted downloads.
+                tokio::time::sleep(Duration::from_millis(100)).await;
+                let requests = server.received_requests().await.unwrap().len() - previous_requests;
+                assert_eq!(requests, bound, "batch size {batch_size}");
+                assert!(requests * page.len() <= bound * options.max_response_bytes);
+                assert_eq!(network.available_permits(), 0);
+
+                if cancel {
+                    for job in &jobs {
+                        job.abort();
+                    }
+                    for job in jobs {
+                        assert!(matches!(job.await, Err(error) if error.is_cancelled()));
+                    }
+                    assert_eq!(network.available_permits(), options.max_concurrency);
+                    // The queued blocking parsers still own their bodies/slots.
+                    assert_eq!(parsing.available_permits(), 0);
+                    drop(release);
+                    blocker.await.unwrap();
+                } else {
+                    drop(release);
+                    blocker.await.unwrap();
+                    for (index, job) in jobs.into_iter().enumerate() {
+                        let item = job.await.unwrap();
+                        assert_eq!(item.diagnostic.url, format!("{}/{index}", server.uri()));
+                        assert_eq!(item.diagnostic.outcome, FetchOutcome::Success);
+                        assert!(item.content.unwrap().contains("retained page text"));
+                    }
+                }
+                tokio::time::timeout(Duration::from_secs(5), async {
+                    while parsing.available_permits() != options.parse_concurrency {
+                        tokio::task::yield_now().await;
+                    }
+                })
+                .await
+                .unwrap();
+                assert_eq!(network.available_permits(), options.max_concurrency);
+            }
+        });
+    }
 
     #[test]
     fn extracts_weighted_main_text_and_noise() {
