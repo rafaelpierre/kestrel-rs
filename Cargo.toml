@@ -1,6 +1,6 @@
 [package]
 name = "kestrel-rs"
-version = "2.0.0"
+version = "3.0.0"
 edition = "2024"
 rust-version = "1.89"
 description = "Web search, page extraction, and relevance ranking for AI agents"
