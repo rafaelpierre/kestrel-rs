@@ -410,8 +410,7 @@ fn parse_qwant(text: &str) -> Result<Vec<SearchResult>, KestrelError> {
     Ok(results)
 }
 
-fn parse_mojeek(text: &str) -> Result<Vec<SearchResult>, KestrelError> {
-    let doc = Html::parse_document(text);
+pub(crate) fn mojeek_challenge(doc: &Html) -> bool {
     let select = |s| Selector::parse(s).expect("constant selector");
     // The observed challenge has both a page-level title and a dedicated wrapper.
     // Never classify CAPTCHA mentions in ordinary result titles/snippets as blocking.
@@ -431,7 +430,13 @@ fn parse_mojeek(text: &str) -> Result<Vec<SearchResult>, KestrelError> {
             .to_ascii_lowercase()
             .contains("javascript is required to complete this challenge.")
     });
-    if captcha_title && challenge_message {
+    captcha_title && challenge_message
+}
+
+fn parse_mojeek(text: &str) -> Result<Vec<SearchResult>, KestrelError> {
+    let doc = Html::parse_document(text);
+    let select = |s| Selector::parse(s).expect("constant selector");
+    if mojeek_challenge(&doc) {
         return Err(KestrelError::Search(
             "mojeek returned a bot challenge".into(),
         ));
