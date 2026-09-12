@@ -160,6 +160,12 @@ impl Default for SearchOptions {
 }
 
 /// Controls bounded page retrieval and extraction.
+///
+/// Per fetch batch, at most `max_concurrency` bodies are downloading or waiting
+/// for parsing, plus `parse_concurrency` bodies owned by parsers. Each body is
+/// limited to `max_response_bytes`. Decoded text, DOM expansion, HTTP transport
+/// buffers, and retained output are additional memory. Download slots remain
+/// occupied while waiting for a parser, applying backpressure to the network.
 #[derive(Clone, Debug)]
 pub struct FetchOptions {
     pub timeout: Duration,
