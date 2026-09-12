@@ -103,15 +103,19 @@ struct SearchArgs {
     #[arg(long, conflicts_with = "no_fetch")]
     fetch: bool,
 
-    /// Do not fetch or parse result pages.
-    #[arg(long, conflicts_with = "fetch")]
+    /// Skip page retrieval and default BM25; conflicts with explicit fetch-stage options.
+    #[arg(long, conflicts_with_all = [
+        "fetch", "rank", "fetch_candidates", "pre_rank", "content_limit",
+        "max_response_bytes", "timeout", "fetch_budget", "cache_ttl", "cache_dir",
+        "cache_max_entries", "concurrency", "parse_concurrency",
+    ])]
     no_fetch: bool,
 
-    /// Explicitly enable BM25 ranking (enabled by default and requires fetching).
-    #[arg(long, conflicts_with = "no_rank")]
+    /// Explicitly enable default BM25; requires fetching and no explicit ranking policy.
+    #[arg(long, conflicts_with_all = ["no_rank", "ranking_policy"])]
     rank: bool,
 
-    /// Keep provider ordering instead of applying BM25 ranking.
+    /// Skip final ranking; --pre-rank can still reorder fetch candidates.
     #[arg(long, conflicts_with = "rank")]
     no_rank: bool,
 
@@ -353,8 +357,18 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             Some(kestrelsearch::ranking::RankingPolicy::Body)
         )
     {
-        eprintln!("[kestrel] --ranking-policy body requires fetching");
-        return ExitCode::FAILURE;
+        let mut command = Cli::command();
+        command.build();
+        // Clap conflicts are unconditional; this constraint depends on the policy value.
+        let mut command = command
+            .find_subcommand("search")
+            .cloned()
+            .unwrap_or(command);
+        command.error(
+                clap::error::ErrorKind::ArgumentConflict,
+                "--ranking-policy body cannot be used with --no-fetch; remove --no-fetch or choose provider, snippet, hybrid, or rrf",
+            )
+            .exit();
     }
     let mut queries = vec![arguments.query.clone()];
     queries.extend(arguments.additional_queries.clone());
@@ -886,6 +900,53 @@ mod tests {
     use super::*;
 
     #[test]
+    fn compatible_stage_options_remain_accepted() {
+        Cli::command().debug_assert();
+        for flags in [
+            vec![],
+            vec!["--fetch", "--rank"],
+            vec!["--no-fetch", "--no-rank"],
+            vec!["--no-fetch", "--ranking-policy", "provider"],
+            vec!["--no-fetch", "--ranking-policy", "snippet"],
+            vec!["--no-fetch", "--ranking-policy", "hybrid"],
+            vec!["--no-fetch", "--ranking-policy", "rrf"],
+            vec!["--pre-rank", "--no-rank"],
+            vec!["--ranking-policy", "body"],
+            vec!["--fetch", "--ranking-policy", "body"],
+            vec![
+                "--no-fetch",
+                "--search-concurrency",
+                "2",
+                "--search-budget",
+                "1",
+            ],
+            vec![
+                "--timeout",
+                "2",
+                "--fetch-budget",
+                "1",
+                "--search-budget",
+                "3",
+            ],
+            vec![
+                "--cache-ttl",
+                "60",
+                "--cache-dir",
+                "cache",
+                "--cache-max-entries",
+                "2",
+            ],
+        ] {
+            Cli::try_parse_from(
+                ["kestrel", "search", "test"]
+                    .into_iter()
+                    .chain(flags.clone()),
+            )
+            .unwrap_or_else(|error| panic!("{flags:?}: {error}"));
+        }
+    }
+
+    #[test]
     fn query_syntax_preserves_shell_argument_and_additional_queries() {
         for (flags, syntax) in [
             (vec![], kestrelsearch::QuerySyntax::Portable),
@@ -1224,6 +1285,10 @@ mod tests {
         for (left, right) in [
             (vec!["--fetch"], vec!["--no-fetch"]),
             (vec!["--rank"], vec!["--no-rank"]),
+            (vec!["--rank"], vec!["--no-fetch"]),
+            (vec!["--rank"], vec!["--ranking-policy", "snippet"]),
+            (vec!["--no-fetch"], vec!["--pre-rank"]),
+            (vec!["--no-fetch"], vec!["--timeout", "10"]),
             (vec!["--search-budget", "3"], vec!["--no-search-budget"]),
             (vec!["--ranking-policy", "snippet"], vec!["--no-rank"]),
         ] {
@@ -1299,14 +1364,21 @@ mod tests {
             assert!(seconds <= started.elapsed().as_secs_f64());
         }
 
-        let documented_fields: Vec<_> = skill
+        let schema = skill
+            .split_once("## Search JSON output schema\n")
+            .unwrap()
+            .1
+            .split_once("## Notes\n")
+            .unwrap()
+            .0;
+        let documented_fields: Vec<_> = schema
             .lines()
             .filter_map(|line| line.strip_prefix("| `"))
             .map(|line| line.split('`').next().unwrap())
             .collect();
         assert_eq!(documented_fields.len(), complete.as_object().unwrap().len());
         for field in complete.as_object().unwrap().keys() {
-            let row = skill
+            let row = schema
                 .lines()
                 .find(|line| line.starts_with(&format!("| `{field}` |")))
                 .unwrap_or_else(|| panic!("Undocumented JSON field: {field}"));

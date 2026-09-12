@@ -154,8 +154,18 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
   `-e`/`--engine` selections replace the default engine list.
 - Fetching and content-only BM25 ranking are enabled by default; `--fetch` and
   `--rank` are optional enable switches, not boolean-valued parameters.
-  `--no-fetch` skips page retrieval and default BM25 ranking, even with `--rank`.
-  `--no-rank` skips final ranking but still fetches pages unless `--no-fetch` is set.
+  `--no-fetch` skips page retrieval and default BM25 ranking and conflicts with
+  explicit `--rank`. Choose either `--rank` or `--ranking-policy`, never both.
+  `--no-rank` skips final ranking but still fetches pages unless `--no-fetch` is set;
+  it can be combined with `--pre-rank`, which can change candidate order.
+- With `--no-fetch`, omit explicit fetch-stage options: `--fetch-candidates`,
+  `--pre-rank`, `--content-limit`, `--max-response-bytes`, `--timeout`,
+  `--fetch-budget`, `--cache-ttl`, `--cache-dir`, `--cache-max-entries`,
+  `--concurrency`, and `--parse-concurrency`. Defaults do not cause conflicts.
+  Previously these settings were silently ignored; remove them from search-only
+  commands. Conflicting arguments now exit with usage status 2 before requests,
+  with an error on stderr and no results on stdout. This also applies to
+  `--no-fetch --ranking-policy body` (previously runtime status 1).
 - `--pre-rank` scores titles/snippets before selecting fetch candidates, and only
   takes effect when fetching and the candidate count exceeds the fetch limit.
 - Experimental `--ranking-policy` choices: `provider` preserves candidate order;
@@ -205,6 +215,137 @@ Cancellation affects only the current HTTP/2 response stream; HTTP/1.1 is also
 supported. In-flight transport bytes may exceed the retained-body cap.
 "#,
     );
+    rendered.push_str(r#"
+## Choosing limits: collected, fetched, returned
+
+These are separate stages, not aliases for one count:
+
+| Option | What it controls | Default and tradeoff |
+| --- | --- | --- |
+| `--min-results N` | Stop provider collection at N unique accepted candidates **per query** | 5; a larger threshold gives later results a chance but can take longer. Deadlines or exhausted providers may leave fewer. |
+| `--fetch-candidates N` | Maximum candidates selected for page fetching across the merged queries | 3 × top-k; does not request more provider results. More candidates can supply alternatives when pages fail or rank poorly, at greater fetch/parse cost. |
+| `-k N`, `--top-k N` | Same option: maximum final results across all queries | 5; not a guaranteed result count, collection threshold, or fetch count. |
+| `--content-limit CHARS` | Maximum extracted body characters **per page**, before body ranking | Search: 2,000; standalone fetch: 20,000. Shorter text reduces output and ranking input but can omit relevant passages. Not a token limit or total-output cap. |
+| `--max-response-bytes BYTES` | Maximum retained decoded response bytes **per page** | 1,000,000; reaching the cap extracts the prefix. A smaller cap reduces retained/downloaded body work but may cut off the article entirely. |
+
+For one query, increasing top-k or fetch-candidates above five does not raise the
+default five-candidate collection threshold. Increase `--min-results` as well
+when you want a larger pool. With multiple queries, collection is per query,
+then URLs are deduplicated and the fetch and final-output ceilings apply globally.
+A higher threshold does not guarantee provider diversity or semantic relevance.
+
+A log such as “Got 8 results; Fetching 5 pages; Successfully fetched 4/5;
+Returning top 4” describes successive stages, not conflicting options. The
+number collected depends on the installed version and query count; older builds
+could collect eight for one query before current result-count stopping. The five
+selected candidates are not replenished from the unselected results after a
+failure. Default body BM25 removes nonpositive scores when a query group has
+positive scores; if the entire group scores zero, it retains the group. Thus a
+fetch failure can reduce the final count, but successful-fetch count and returned
+count are not always equal. `-k 5` promises at most five, never exactly five.
+
+Character limits exclude titles, snippets, URLs, the added `Source:` prefix,
+formatting and JSON overhead. Five returned bodies limited to 1,000 characters
+contribute at most 5,000 body characters, not 5,000 total output characters.
+Reducing `--content-limit` does not itself stop the network download sooner;
+use the byte cap for that. Increasing the character limit cannot recover bytes
+already cut off by the byte cap. Longer prefixes can expose more useful evidence
+but can also contain more irrelevant material; BM25 is lexical, not a guarantee
+of semantic quality.
+
+## Recipes: speed, coverage and relevance
+
+These describe work and coverage tradeoffs, not measured speedups or a quality
+ranking. Provider latency, available candidates, cache state and page structure
+can change the outcome. All examples return up to five results.
+
+### Least page work: metadata only
+
+```bash
+kestrel search '"machine learning"' -k 5 --no-fetch --output json
+kestrel search '"machine learning"' -k 5 --no-fetch --ranking-policy snippet --output json
+```
+
+Both skip page downloads and extraction, generally the largest saving. The first
+keeps merged provider order; the second adds inexpensive title/snippet ranking.
+Neither evaluates page-body evidence. Do not add fetch-stage limits to no-fetch
+commands. Narrowing `--engine` reduces provider requests but can lose coverage.
+
+### Bounded page work and short output
+
+```bash
+kestrel search '"machine learning"' -k 5 --min-results 5 --fetch-candidates 5 --content-limit 1000 --search-budget 3 --fetch-budget 2 --timeout 2
+```
+
+Collect up to the per-query threshold, select at most five candidates, and rank
+short extracted bodies. The search budget bounds provider work, the fetch budget
+bounds the entire page-fetch stage, and timeout bounds each page request. Tight
+budgets cancel slow work and may leave fewer useful results. They are separate
+stage limits, not an exact end-to-end deadline including initialization/output.
+This favors less work and shorter output over ranking breadth or complete pages.
+
+### More evidence and alternatives for body ranking
+
+```bash
+kestrel search '"machine learning"' -k 5 --min-results 15 --fetch-candidates 15 --content-limit 5000 --search-budget 10 --fetch-budget 10
+```
+
+Seek fifteen candidates, fetch at most fifteen, then choose up to five using
+body BM25. Compared with the bounded recipe, this allows more collection time,
+more page work and longer passages. It gives ranking more opportunities to find
+relevant evidence and tolerate failures, but may be slower and is not guaranteed
+to return five or improve relevance. Raising only fetch-candidates would not
+raise the collection threshold. The default 1 MB byte cap still applies.
+
+### Broader discovery with fewer page fetches
+
+```bash
+kestrel search '"machine learning"' -k 5 --min-results 20 --fetch-candidates 8 --pre-rank --content-limit 3000 --search-budget 10 --fetch-budget 5
+```
+
+Pre-rank titles/snippets from the collected pool, then fetch at most eight pages.
+This reduces page requests relative to fetching all twenty, while still allowing
+body ranking. Snippets can miss valuable pages, and collecting twenty may itself
+be slow. Pre-ranking has no effect if the pool is no larger than the fetch limit.
+
+### Keep metadata candidates when page fetching fails
+
+```bash
+kestrel search '"machine learning"' -k 5 --min-results 15 --fetch-candidates 15 --ranking-policy hybrid --content-limit 3000 --fetch-budget 5
+```
+
+Hybrid uses title, snippet and available body evidence and retains candidates
+without bodies. It may return five items even when fewer than five pages were
+read; inspect `content` before treating a result as fetched evidence. It neither
+refills fetch slots nor guarantees five results. `--no-rank` also skips body-score
+filtering, but keeps candidate order instead of selecting by body relevance and
+still fetches pages. Use `--no-fetch` when page text is not needed.
+
+### Repeated searches: reuse extracted pages
+
+```bash
+kestrel search '"machine learning"' -k 5 --min-results 15 --fetch-candidates 15 --content-limit 3000 --cache-ttl 300 --cache-max-entries 1000
+```
+
+Run again with the same settings to reuse unexpired page entries for up to five
+minutes. The first run still pays cold-fetch cost; provider search still runs on
+every invocation. Cache hits can save page requests, but text may be stale within
+the TTL. Changing the content limit changes the cache key and can miss the cache.
+More concurrency can overlap waits but raises resource use and is not always
+faster; lower concurrency reduces simultaneous work and may increase latency.
+
+### Known URL: read more of one page directly
+
+```bash
+kestrel fetch "https://example.com/article" --content-limit 40000 --max-response-bytes 2000000 --timeout 20 --output json
+```
+
+This bypasses discovery and ranking. It allows more body bytes and extracted
+characters than the defaults, potentially taking longer. Extraction can still
+return less text; JavaScript is not rendered and truncated prefixes may lack the
+article. Search and direct-fetch content limits are per page, not total output.
+
+"#);
     rendered.push_str(SCHEMA_AND_NOTES);
     rendered.push_str(
         r#"
