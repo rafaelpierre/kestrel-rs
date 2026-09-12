@@ -47,33 +47,84 @@ conversion, parsers and concurrent searches require additional memory.
 
 ## Query language
 
-Kestrel transports the complete native query unchanged, using form/URL/JSON
-encoding appropriate to each endpoint. It does not convert quotes, lowercase
-Boolean operators, split `C++`, or reinterpret arbitrary syntax as another
-provider's query language.
+The default `--query-syntax portable` uses the same lexical contract for **all
+nine providers**, including opt-in engines. Constraints are checked against each
+result's title and snippet **before quorum, merging, fetching and ranking**.
+The complete original query is still encoded and sent as a retrieval hint; we do
+not assume a provider honors its operators. This does not repair upstream
+retrieval, and a provider that ignores the hint may supply no acceptable results.
 
-- [Ecosia](https://support.ecosia.org/article/447-search-features) documents quoted
-  phrases, `AND`, `OR`, `-term`, `site:` and provider-dependent `filetype:`.
-- [Swisscows](https://support.swisscows.com/swisscows-search/search-operators/)
-  documents `site:`, quoted phrases, `+`, `-`, uppercase `AND`/`OR`/`NOT`,
-  `ext:`, `filetype:`, `inbody:`, `intitle:`, `inpage:`, `lang:` and `loc:`.
-  Its operators are explicitly experimental.
-- [Mojeek](https://www.mojeek.com/support/search-operators.html) documents
-  `site:`, `inanchor:`, `intext:`, `intitle:`, `inurl:`, their `all` forms,
-  and date operators. Its [operator guide](https://blog.mojeek.com/2023/08/mojeek-operators-a-guide.html)
-  also documents exclusions. Date filters refer to modification dates.
-- Qwant, Dogpile and Yep native syntax is passed through, but operator support
-  has not been established by this implementation. Do not claim cross-provider
-  Boolean/phrase parity from encoding tests alone.
+```sh
+# Shell single quotes preserve the double quotes sent to Kestrel.
+kestrel search '"machine learning"' --engine swisscows --no-fetch --no-rank
+# Both terms, anywhere in the title/snippet, without requiring adjacency.
+kestrel search 'machine AND learning' --engine swisscows
+kestrel search '("machine learning" OR "deep learning") -jobs site:example.com'
+# Provider-specific operators and previous passthrough behavior.
+kestrel search 'filetype:pdf "machine learning"' --query-syntax native
+```
 
-All engines additionally enforce an unambiguous, standalone positive
-`site:hostname` locally before quorum acceptance. Hostnames include subdomains,
-not unrelated names containing the domain. Quoted literal operators, `NOT`,
-`OR`, parentheses, multiple site operators and path-based site filters are left
-to the provider. They are not silently treated as simple hostname restrictions.
+| Portable syntax | Metadata constraint |
+|---|---|
+| `machine learning`, `machine AND learning` | Both terms; they may appear in different fields |
+| `"machine learning"` | Adjacent words in order within one field |
+| `machine OR learning` | At least one branch |
+| `NOT jobs`, `-jobs` | Exclude results whose title or snippet matches `jobs` |
+| `(a OR b) c` | Grouping; otherwise NOT binds before AND, then OR |
+| `site:example.com` | URL hostname equals example.com or a subdomain |
+| `-site:example.com`, multiple sites with OR | Boolean hostname restrictions |
 
-No local keyword-overlap threshold claims to prove relevance. A valid nonempty
-response still may be off-topic; quality judgments remain a separate benchmark.
+Operators are uppercase; lowercase `and`, `or`, `not` are literal terms.
+Matching ignores case and collapses whitespace. Punctuation otherwise remains
+literal, and identifier boundaries preserve `C++`, `C#` and underscores. Phrase
+matches cannot cross the title/snippet boundary. Inside quotes, `\"` and `\\`
+escape a quote and backslash. Apostrophes are ordinary characters. Unbalanced or
+empty quotes, incomplete expressions, unsupported operators, wildcards, pipes,
+and site URLs/paths are rejected before provider requests. Portable queries are
+limited to 8192 bytes, 128 tokens and 32 levels of grouping/negation.
+
+**Evidence limits:** these are title/snippet constraints, not semantic relevance
+or a guarantee about the complete page. Missing positive-match evidence excludes
+a result even when a full page might match. NOT means no match in the available
+metadata, not proof of absence in the page. Missing/failed/truncated page fetches
+do not alter the decision; `--no-rank` and `--no-fetch` use the same checks. An
+empty accepted set does not prove that the web has no matching pages. Result URL
+text and fetched body text do not supply positive keyword/phrase evidence.
+
+Rejected results do not satisfy provider quorum. Remaining providers continue
+within the existing search budget; rejection triggers no unbounded extra calls.
+Diagnostics retain raw and accepted counts, `filtered_count`, and
+`filtered_empty`. Original provider ranks and query provenance are retained.
+
+| Provider | Request field | Portable checks |
+|---|---|---|
+| DuckDuckGo | form `q` | Shared contract above |
+| Bing | URL `q` | Shared contract above |
+| Yahoo | URL `p` | Shared contract above |
+| Dogpile | JSON `q` | Shared contract above |
+| Ecosia | URL `q` | Shared contract above |
+| Swisscows | URL `query` | Shared contract above |
+| Yep | URL `query` | Shared contract above |
+| Qwant | URL `q` | Shared contract above |
+| Mojeek | URL `q` | Shared contract above |
+
+`--query-syntax native` preserves provider-specific query passthrough. It disables
+portable parsing and metadata checks; the existing conservative standalone
+positive `site:hostname` filter and HTTP(S) URL validation remain. Native Boolean,
+phrase and other operator support is provider-dependent and is not guaranteed
+by serialization tests. Use this mode for `filetype:`, `intitle:`, site paths,
+wildcards, or other provider syntax outside the portable subset.
+
+Rust callers can set `SearchOptions.query_syntax` to `QuerySyntax::Native` to
+retain the previous contract. `SearchOptions::default()` and the single-provider
+`search`/`search_blocking` APIs now use portable semantics; use `search_many` with
+one engine to choose native syntax. Explicit `SearchOptions` struct literals
+must add the new field or use `..Default::default()`.
+
+The opt-in `benchmarks/query_semantics.py` runs the CLI matrix across all providers
+and fetch/rank modes. Live failures and empty output are separate outcomes, not
+proof of operator support. Deterministic parser, request encoding and quorum tests
+run in CI without live provider availability.
 
 ## Random headers and pooled transport
 

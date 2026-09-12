@@ -209,6 +209,7 @@ async fn capture_live_matrix() {
                 }
             } else {
                 let options = SearchOptions {
+                    query_syntax: QuerySyntax::Native,
                     provider_quorum: (variant == "fanout-q1").then_some(1),
                     region: "gb-en".into(),
                     search_budget: Some(budget),

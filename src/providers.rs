@@ -543,6 +543,11 @@ mod tests {
     fn exact_queries_survive_browser_and_transport_encoding() {
         let client = reqwest::Client::new();
         for query in [
+            "\"machine learning\"",
+            "machine AND learning",
+            "machine learning",
+            "(Rust OR Python) NOT game",
+            r#""say \"hello\"""#,
             "site:postgresql.org EXPLAIN ANALYZE BUFFERS",
             "\"C++ & Rust\" -game OR café",
             "Unicode 日本語 #tag +plus %20",

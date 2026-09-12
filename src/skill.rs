@@ -55,6 +55,9 @@ page text is unavailable, including searches with `--no-fetch`.
 - By default, at most three times `--top-k` candidates are fetched before BM25 ranking.
 - BM25 filtering removes zero-relevance results unless an entire query group scores zero.
 - Use `--no-fetch` for a fast, low-cost keyword search.
+- Portable query syntax is the default for every provider: quoted phrases require adjacency in one title/snippet; unquoted terms use AND. Uppercase AND/OR/NOT, exclusions, parentheses and site:hostname are supported.
+- Query constraints filter title/snippet evidence before provider quorum, independently of fetching/ranking. Missing positive evidence excludes a result; NOT checks metadata absence, not the full page.
+- Use --query-syntax native for provider-specific syntax such as filetype:pdf and the previous passthrough behavior. Do not claim complete-page relevance from metadata matches.
 - Additional opt-in engines: dogpile, ecosia, swisscows, yep, qwant, mojeek.
 - Fanout defaults to a five-second search budget, including queueing and retries. Use --search-budget to change it or --no-search-budget to disable the total deadline.
 - Search, page fetching, and parsing concurrency each default to 10.
@@ -77,13 +80,25 @@ pub fn generate_skill_md(root: &mut Command) -> String {
 
 "#);
     for name in ["search", "fetch"] {
+        // Clap selects long help only when that subcommand has long-help content.
+        // Follow the actual --help path rather than guessing its render mode.
+        let help = root
+            .clone()
+            .try_get_matches_from([root.get_name(), name, "--help"])
+            .err()
+            .filter(|error| error.kind() == clap::error::ErrorKind::DisplayHelp)
+            .map(|error| error.to_string());
         let Some(command) = root.find_subcommand_mut(name) else {
             continue;
         };
         let _ = writeln!(rendered, "## `{name}` subcommand\n");
         // Let Clap render positionals, placeholders, repeatability, defaults and
         // value choices exactly as it does for the executable's help output.
-        let _ = writeln!(rendered, "```text\n{}\n```", command.render_help());
+        let _ = writeln!(
+            rendered,
+            "```text\n{}\n```",
+            help.unwrap_or_else(|| command.render_help().to_string())
+        );
         let mut conflicts = std::collections::BTreeSet::new();
         for argument in command.get_arguments() {
             for other in command.get_arg_conflicts_with(argument) {
@@ -138,7 +153,8 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
 - Search defaults to a five-second total deadline with no provider quorum.
   Explicit `--search-budget` without `--mode` selects quorum 1; explicit
   `--provider-quorum` overrides it. `--mode fanout` suppresses that implicit quorum.
-  Quorum counts nonempty provider responses per query, not relevance or result count.
+  Quorum counts provider responses with accepted results after query constraints,
+  not semantic relevance or the number of results.
   `--no-search-budget` disables the total search deadline; request timeouts remain.
 - The search budget excludes page fetching. `--fetch-budget` separately bounds the
   candidate-fetch stage and retains completed pages; it is unset by default.

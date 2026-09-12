@@ -18,6 +18,8 @@ use crate::model::{
     TimeFilter,
 };
 
+use crate::query::{QueryPlan, QuerySyntax};
+
 use crate::provider_diagnostics::{Challenge, Phase, Recorder, TransportKind};
 
 tokio::task_local! {
@@ -205,6 +207,7 @@ pub async fn search(
     region: &str,
     time_filter: TimeFilter,
 ) -> Result<Vec<SearchResult>, KestrelError> {
+    QueryPlan::parse(query, QuerySyntax::Portable)?;
     let clients = SearchClients::new(&[engine])?;
     search_with_clients(query, engine, region, time_filter, &clients).await
 }
@@ -225,7 +228,14 @@ pub(crate) async fn search_with_clients(
                 Arc::new(Mutex::new(Vec::new())),
                 None,
                 None,
-                run_provider(query, engine, region, time_filter, clients),
+                run_provider(
+                    query,
+                    engine,
+                    region,
+                    time_filter,
+                    clients,
+                    QuerySyntax::Portable,
+                ),
             )
             .await
         })
@@ -329,6 +339,7 @@ async fn search_many_with_clients_in_run(
             Arc::clone(&diagnostics),
             &options.region,
             options.time_filter,
+            options.query_syntax,
             options.provider_quorum,
             deadline,
         )
@@ -360,6 +371,7 @@ fn run_fanout_query<'a>(
     diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
     region: &'a str,
     time_filter: TimeFilter,
+    query_syntax: QuerySyntax,
     provider_quorum: Option<usize>,
     deadline: Option<tokio::time::Instant>,
 ) -> impl Future<Output = (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)> + 'a {
@@ -376,6 +388,7 @@ fn run_fanout_query<'a>(
             diagnostics,
             region,
             time_filter,
+            query_syntax,
             deadline,
             Some(Arc::clone(&quorum_cancelled)),
         );
@@ -473,6 +486,9 @@ fn validate_request(
             clean_engines.len()
         )));
     }
+    for query in &clean_queries {
+        QueryPlan::parse(query, options.query_syntax)?;
+    }
     Ok((clean_queries, clean_engines))
 }
 
@@ -485,6 +501,7 @@ fn run_one<'a>(
     diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
     region: &'a str,
     time_filter: TimeFilter,
+    query_syntax: QuerySyntax,
     deadline: Option<tokio::time::Instant>,
     quorum_cancelled: Option<Arc<AtomicBool>>,
 ) -> impl Future<Output = Result<Vec<SearchResult>, KestrelError>> + 'a {
@@ -495,7 +512,7 @@ fn run_one<'a>(
         diagnostics,
         deadline,
         quorum_cancelled,
-        run_provider(query, engine, region, time_filter, clients),
+        run_provider(query, engine, region, time_filter, clients, query_syntax),
     );
     async move {
         job.await
@@ -674,7 +691,9 @@ async fn run_provider(
     region: &str,
     time_filter: TimeFilter,
     clients: &SearchClients,
+    query_syntax: QuerySyntax,
 ) -> Result<ProviderResponse, KestrelError> {
+    let plan = QueryPlan::parse(query, query_syntax)?;
     let mut result = match engine {
         Engine::Duckduckgo => {
             search_duckduckgo(query, region, time_filter, &clients.standard).await
@@ -693,13 +712,7 @@ async fn run_provider(
     };
     record_phase(Phase::Processing);
     if let Ok(response) = &mut result {
-        response.raw_result_count = response.results.len();
-        for (index, result) in response.results.iter_mut().enumerate() {
-            result.engine_rank = Some(index + 1);
-        }
-        response
-            .results
-            .retain(|result| result_allowed(query, &result.url));
+        filter_response(query, &plan, response);
     }
     if let Err(error) = &result {
         crate::log_event!(
@@ -716,6 +729,20 @@ async fn run_provider(
         crate::log_event!("search_no_results", "engine" => engine.as_str(), "query" => query);
     }
     result
+}
+
+fn filter_response(query: &str, plan: &QueryPlan, response: &mut ProviderResponse) {
+    response.raw_result_count = response.results.len();
+    for (index, result) in response.results.iter_mut().enumerate() {
+        result.engine_rank = Some(index + 1);
+    }
+    response.results.retain(|result| {
+        if plan.is_native() {
+            result_allowed(query, &result.url)
+        } else {
+            valid_result_url(&result.url).is_some() && plan.matches(result)
+        }
+    });
 }
 
 async fn search_additional(
@@ -739,12 +766,12 @@ async fn search_additional(
     })
 }
 
-async fn search_duckduckgo(
+fn duckduckgo_request(
+    client: &reqwest::Client,
     query: &str,
     region: &str,
     time_filter: TimeFilter,
-    client: &reqwest::Client,
-) -> Result<ProviderResponse, KestrelError> {
+) -> reqwest::RequestBuilder {
     let mut data = vec![("q", query)];
     if !region.is_empty() {
         data.push(("kl", region));
@@ -752,8 +779,17 @@ async fn search_duckduckgo(
     if time_filter != TimeFilter::Any {
         data.push(("df", time_filter.as_str()));
     }
+    client.post("https://html.duckduckgo.com/html/").form(&data)
+}
+
+async fn search_duckduckgo(
+    query: &str,
+    region: &str,
+    time_filter: TimeFilter,
+    client: &reqwest::Client,
+) -> Result<ProviderResponse, KestrelError> {
     let (text, retries) = request_standard_with_retries(client, Engine::Duckduckgo, query, || {
-        client.post("https://html.duckduckgo.com/html/").form(&data)
+        duckduckgo_request(client, query, region, time_filter)
     })
     .await?;
     Ok(ProviderResponse {
@@ -801,12 +837,12 @@ async fn search_bing(
     })
 }
 
-async fn search_yahoo(
+fn yahoo_request(
+    client: &primp::Client,
     query: &str,
     region: &str,
     time_filter: TimeFilter,
-    client: &primp::Client,
-) -> Result<ProviderResponse, KestrelError> {
+) -> primp::RequestBuilder {
     let mut params = vec![("p", query), ("ei", "UTF-8")];
     if !region.is_empty() {
         params.push(("vl", region));
@@ -814,13 +850,21 @@ async fn search_yahoo(
     if time_filter != TimeFilter::Any {
         params.push(("btf", time_filter.as_str()));
     }
-    let (html, retries) = request_yahoo_with_retries(query, || {
-        client
-            .get("https://search.yahoo.com/search")
-            .query(&params)
-            .timeout(SEARCH_TIMEOUT)
-    })
-    .await?;
+    client
+        .get("https://search.yahoo.com/search")
+        .query(&params)
+        .timeout(SEARCH_TIMEOUT)
+}
+
+async fn search_yahoo(
+    query: &str,
+    region: &str,
+    time_filter: TimeFilter,
+    client: &primp::Client,
+) -> Result<ProviderResponse, KestrelError> {
+    let (html, retries) =
+        request_yahoo_with_retries(query, || yahoo_request(client, query, region, time_filter))
+            .await?;
     Ok(ProviderResponse {
         results: parse_provider_response(Engine::Yahoo, &html)?,
         retries,
@@ -1333,17 +1377,22 @@ pub(crate) fn site_domain(query: &str) -> Option<String> {
     Some(domain)
 }
 
-fn result_allowed(query: &str, value: &str) -> bool {
-    let Ok(url) = Url::parse(value) else {
-        return false;
-    };
-    if !matches!(url.scheme(), "http" | "https") {
-        return false;
+fn valid_result_url(value: &str) -> Option<Url> {
+    let url = Url::parse(value).ok()?;
+    if !matches!(url.scheme(), "http" | "https") || url.host_str().is_none() {
+        return None;
     }
-    let Some(host) = url.host_str() else {
+    Some(url)
+}
+
+fn result_allowed(query: &str, value: &str) -> bool {
+    let Some(url) = valid_result_url(value) else {
         return false;
     };
-    let host = host.trim_end_matches('.');
+    let host = url
+        .host_str()
+        .expect("validated hostname")
+        .trim_end_matches('.');
     site_domain(query).is_none_or(|domain| host == domain || host.ends_with(&format!(".{domain}")))
 }
 
@@ -1998,9 +2047,160 @@ mod tests {
     const BING_UNRELATED: &str = include_str!("../tests/fixtures/providers/bing-unrelated.html");
 
     #[test]
+    fn default_provider_requests_preserve_portable_and_native_syntax() {
+        let standard = reqwest::Client::new();
+        let yahoo = primp::Client::builder().build().unwrap();
+        for query in [
+            r#""machine learning""#,
+            "machine AND learning",
+            "machine learning",
+            "(Rust OR Python) NOT game",
+            "site:example.com C++ café 日本語 & x=1+2%",
+            r#""say \"hello\"""#,
+        ] {
+            let ddg = duckduckgo_request(&standard, query, "uk-en", TimeFilter::W)
+                .build()
+                .unwrap();
+            let pairs: HashMap<_, _> =
+                url::form_urlencoded::parse(ddg.body().unwrap().as_bytes().unwrap())
+                    .into_owned()
+                    .collect();
+            assert_eq!(pairs["q"], query);
+            assert_eq!(pairs["kl"], "uk-en");
+            assert_eq!(pairs["df"], "w");
+            let request = yahoo_request(&yahoo, query, "uk-en", TimeFilter::W)
+                .build()
+                .unwrap();
+            let pairs: HashMap<_, _> = request.url().query_pairs().into_owned().collect();
+            assert_eq!(pairs["p"], query);
+            assert_eq!(pairs["vl"], "uk-en");
+            assert_eq!(pairs["btf"], "w");
+        }
+    }
+
+    #[test]
+    fn portable_filter_is_shared_by_every_provider_and_preserves_raw_ranks() {
+        let query = r#""machine learning""#;
+        let plan = QueryPlan::parse(query, QuerySyntax::Portable).unwrap();
+        for engine in [
+            Engine::Duckduckgo,
+            Engine::Bing,
+            Engine::Yahoo,
+            Engine::Dogpile,
+            Engine::Ecosia,
+            Engine::Swisscows,
+            Engine::Yep,
+            Engine::Qwant,
+            Engine::Mojeek,
+        ] {
+            let mut response = ProviderResponse {
+                results: vec![
+                    SearchResult::parsed(
+                        "Machine Mart".into(),
+                        "https://example.com/shop".into(),
+                        String::new(),
+                        "Power tools".into(),
+                    ),
+                    SearchResult::parsed(
+                        "Machine learning".into(),
+                        "https://example.com/ml".into(),
+                        String::new(),
+                        String::new(),
+                    ),
+                ],
+                retries: 0,
+                raw_result_count: 0,
+            };
+            filter_response(query, &plan, &mut response);
+            let results = with_provenance(response.results, engine, query);
+            assert_eq!(response.raw_result_count, 2);
+            assert_eq!(results.len(), 1);
+            assert_eq!(results[0].engine_rank, Some(2));
+            assert_eq!(results[0].query.as_deref(), Some(query));
+            assert_eq!(results[0].engine, Some(engine));
+        }
+    }
+
+    #[tokio::test]
+    async fn filtered_results_record_diagnostics_before_quorum() {
+        let diagnostics = Arc::new(Mutex::new(Vec::new()));
+        let query = r#""machine learning""#;
+        let results = run_one_job(
+            query,
+            Engine::Bing,
+            Arc::new(Semaphore::new(1)),
+            Arc::clone(&diagnostics),
+            None,
+            None,
+            async {
+                let mut response = ProviderResponse {
+                    results: vec![SearchResult::parsed(
+                        "Machine".into(),
+                        "https://example.com".into(),
+                        String::new(),
+                        String::new(),
+                    )],
+                    retries: 0,
+                    raw_result_count: 0,
+                };
+                filter_response(
+                    query,
+                    &QueryPlan::parse(query, QuerySyntax::Portable).unwrap(),
+                    &mut response,
+                );
+                Ok(response)
+            },
+        )
+        .await
+        .unwrap();
+        assert!(results.is_empty());
+        let entries = diagnostics.lock().unwrap();
+        assert_eq!(entries[0].outcome, "filtered_empty");
+        assert_eq!(entries[0].filtered_count, 1);
+        assert_eq!(entries[0].raw_result_count, 1);
+        assert_eq!(entries[0].result_count, 0);
+    }
+
+    #[tokio::test]
+    async fn rejected_phrase_results_do_not_cancel_matching_provider() {
+        type Outcome = (usize, Result<Vec<SearchResult>, KestrelError>);
+        let pending: FuturesUnordered<futures_util::future::BoxFuture<'static, Outcome>> =
+            FuturesUnordered::new();
+        for (index, title) in [(0, "Machine Mart"), (1, "Machine learning")] {
+            pending.push(Box::pin(async move {
+                if index == 1 {
+                    tokio::time::sleep(Duration::from_millis(10)).await;
+                }
+                let query = r#""machine learning""#;
+                let plan = QueryPlan::parse(query, QuerySyntax::Portable).unwrap();
+                let mut response = ProviderResponse {
+                    results: vec![SearchResult::parsed(
+                        title.into(),
+                        "https://example.com".into(),
+                        String::new(),
+                        String::new(),
+                    )],
+                    retries: 0,
+                    raw_result_count: 0,
+                };
+                filter_response(query, &plan, &mut response);
+                (index, Ok(response.results))
+            }));
+        }
+        let (completed, cancelled) = collect_fanout(pending, Some(1)).await;
+        assert_eq!(cancelled, 0);
+        assert_eq!(completed.len(), 2);
+        assert!(completed[0].as_ref().unwrap().is_empty());
+        assert_eq!(completed[1].as_ref().unwrap()[0].title, "Machine learning");
+    }
+
+    #[test]
     fn bing_request_preserves_complete_query_and_region() {
         let client = reqwest::Client::new();
         for query in [
+            "\"machine learning\"",
+            "machine AND learning",
+            "machine learning",
             "why does the moon cause ocean tides",
             "Rust E0382 use of moved value fix borrowing clone",
             "tokio watch Receiver borrow_and_update changed deadlock Ref across await",
@@ -2037,14 +2237,25 @@ mod tests {
         assert_eq!(results[1].snippet, "Watch the official music video.");
     }
 
-    // Document the orchestration impact without introducing a relevance heuristic.
+    // Native passthrough still accepts provider results without lexical checks.
     #[tokio::test]
-    async fn bing_unrelated_results_currently_satisfy_quorum() {
+    async fn native_bing_unrelated_results_satisfy_quorum() {
         type Outcome = (usize, Result<Vec<SearchResult>, KestrelError>);
         let pending: FuturesUnordered<futures_util::future::BoxFuture<'static, Outcome>> =
             FuturesUnordered::new();
         pending.push(Box::pin(async {
-            (0, parse_provider_response(Engine::Bing, BING_UNRELATED))
+            let mut response = ProviderResponse {
+                results: parse_provider_response(Engine::Bing, BING_UNRELATED).unwrap(),
+                retries: 0,
+                raw_result_count: 0,
+            };
+            let query = "why does the moon cause ocean tides";
+            filter_response(
+                query,
+                &QueryPlan::parse(query, QuerySyntax::Native).unwrap(),
+                &mut response,
+            );
+            (0, Ok(response.results))
         }));
         pending.push(Box::pin(std::future::pending()));
         let (completed, cancelled) = collect_fanout(pending, Some(1)).await;
@@ -2352,6 +2563,7 @@ mod tests {
             Arc::clone(&diagnostics),
             "",
             TimeFilter::Any,
+            QuerySyntax::Portable,
             Some(tokio::time::Instant::now() + Duration::from_millis(5)),
             None,
         )
@@ -2400,6 +2612,7 @@ mod tests {
                         entries,
                         "",
                         TimeFilter::Any,
+                        QuerySyntax::Portable,
                         Some(tokio::time::Instant::now() + Duration::from_millis(5)),
                         None,
                     )
