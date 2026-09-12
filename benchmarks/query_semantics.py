@@ -54,7 +54,8 @@ def main():
             if result.returncode:
                 row["outcome"] = "error"
             else:
-                row["results"] = json.loads(result.stdout)
+                payload = json.loads(result.stdout)
+                row["results"] = payload["results"] if isinstance(payload, dict) else payload
                 row["outcome"] = "results" if row["results"] else "empty"
         except (subprocess.TimeoutExpired, json.JSONDecodeError) as error:
             row = {"outcome": "harness_error", "error": str(error)}

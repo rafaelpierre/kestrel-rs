@@ -64,6 +64,8 @@ def capture(binary, query, args, directory, timeout, trace):
     elapsed = time.perf_counter() - start
     try:
         results = json.loads(stdout)
+        if isinstance(results, dict):
+            results = results["results"]
         if not isinstance(results, list):
             raise ValueError('expected result list')
     except (ValueError, TypeError):

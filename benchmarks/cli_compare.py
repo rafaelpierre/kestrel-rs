@@ -131,6 +131,8 @@ def run_search(
             f"{name} failed for {task['id']} trial {trial}: {completed.stderr.strip()}"
         )
     results = json.loads(completed.stdout)
+    if isinstance(results, dict):
+        results = results["results"]
     artifact_path = next(artifact_dir.glob(f"{run_id}-*.json"), None)
     if artifact_path is None:
         raise RuntimeError(f"{name} did not write an artifact for run {run_id}")
