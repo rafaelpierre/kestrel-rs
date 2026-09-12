@@ -132,6 +132,8 @@ impl SearchResult {
 /// Controls provider orchestration.
 #[derive(Clone, Debug)]
 pub struct SearchOptions {
+    /// Portable title/snippet constraints, or provider-native passthrough.
+    pub query_syntax: crate::QuerySyntax,
     pub engines: Vec<Engine>,
     pub mode: SearchMode,
     pub region: String,
@@ -146,6 +148,7 @@ pub struct SearchOptions {
 impl Default for SearchOptions {
     fn default() -> Self {
         Self {
+            query_syntax: crate::QuerySyntax::default(),
             engines: vec![Engine::Duckduckgo, Engine::Bing, Engine::Yahoo],
             mode: SearchMode::Fanout,
             region: String::new(),

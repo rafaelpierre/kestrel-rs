@@ -51,6 +51,10 @@ struct SearchArgs {
     /// Primary search query.
     query: String,
 
+    /// Query syntax: portable checks titles/snippets; native passes provider syntax through.
+    #[arg(long, value_enum, default_value = "portable")]
+    query_syntax: kestrelsearch::QuerySyntax,
+
     /// Additional query to run. Repeat for multiple queries.
     #[arg(short = 'q', long = "query", value_name = "QUERY")]
     additional_queries: Vec<String>,
@@ -172,6 +176,7 @@ impl SearchArgs {
     fn search_options(&self) -> SearchOptions {
         let budgeted_default = self.mode.is_none() && self.search_budget.is_some();
         SearchOptions {
+            query_syntax: self.query_syntax,
             engines: self.engines.clone(),
             mode: self.mode.unwrap_or_default(),
             region: self.region.clone(),
@@ -368,6 +373,13 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
         }
     };
     let provider_diagnostics = search_report.providers;
+    let filtered: usize = provider_diagnostics
+        .iter()
+        .map(|provider| provider.filtered_count)
+        .sum();
+    if filtered > 0 {
+        eprintln!("[kestrel] Excluded {filtered} result(s) by query constraints.");
+    }
     let provider_cancellations = search_report.cancelled;
     let mut results = search_report.results;
     let mut candidate_counts = BTreeMap::from([("after_search".into(), results.len())]);
@@ -810,6 +822,36 @@ fn positive_f64(value: &str) -> Result<f64, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn query_syntax_preserves_shell_argument_and_additional_queries() {
+        for (flags, syntax) in [
+            (vec![], kestrelsearch::QuerySyntax::Portable),
+            (
+                vec!["--query-syntax", "native"],
+                kestrelsearch::QuerySyntax::Native,
+            ),
+        ] {
+            let cli = Cli::try_parse_from(
+                [
+                    "kestrel",
+                    "search",
+                    r#""machine learning""#,
+                    "--query",
+                    "C++ AND Rust",
+                ]
+                .into_iter()
+                .chain(flags),
+            )
+            .unwrap();
+            let Commands::Search(args) = cli.command else {
+                panic!("search expected")
+            };
+            assert_eq!(args.query, r#""machine learning""#);
+            assert_eq!(args.additional_queries, ["C++ AND Rust"]);
+            assert_eq!(args.search_options().query_syntax, syntax);
+        }
+    }
 
     #[test]
     fn search_budget_defaults_and_overrides() {

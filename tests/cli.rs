@@ -152,6 +152,9 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(target.exists());
     let skill = fs::read_to_string(&target).unwrap();
     assert!(skill.contains("name: kestrelsearch"));
+    assert!(skill.contains("--query-syntax"));
+    assert!(skill.contains("Portable query syntax is the default for every provider"));
+    assert!(skill.contains("accepted results after query constraints"));
     for subcommand in ["search", "fetch"] {
         let help = Command::cargo_bin("kestrel")
             .unwrap()
@@ -189,4 +192,21 @@ fn skill_install_and_uninstall_use_compatible_paths() {
         .success()
         .stdout(predicate::str::contains("Removed:"));
     assert!(!target.exists());
+}
+
+#[test]
+fn malformed_primary_and_additional_queries_fail_before_search() {
+    for args in [
+        vec!["search", "\"machine"],
+        vec!["search", "machine", "--query", "learning AND"],
+        vec!["search", "filetype:pdf"],
+    ] {
+        Command::cargo_bin("kestrel")
+            .unwrap()
+            .args(args)
+            .assert()
+            .failure()
+            .stderr(predicate::str::contains("Invalid portable query"))
+            .stderr(predicate::str::contains("--query-syntax native"));
+    }
 }

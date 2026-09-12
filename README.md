@@ -319,5 +319,14 @@ benchmark are described in [HTTP/2 transport tuning](docs/http2.md).
 ### Experimental providers and latency controls
 
 Opt-in adapters now include Dogpile, Ecosia, Swisscows, Yep, Qwant and Mojeek.
+Search defaults to portable query constraints across all nine providers:
+`kestrel search '"machine learning"'` requires the phrase in a title or snippet;
+`machine AND learning` requires both terms. Plain space-separated terms also use
+AND. `OR`, `NOT`, exclusions, parentheses and `site:hostname` are supported.
+Checks happen before quorum and work with `--no-fetch` and `--no-rank`.
+These checks use search-result metadata, not full-page evidence; they can exclude
+pages whose snippets omit the requested terms. Use `--query-syntax native` for
+provider-specific syntax and the previous passthrough behavior.
+
 See [provider contracts, query syntax, randomized headers and pooled HTTP/2 transport](docs/search-providers.md)
 and the [quality/latency benchmark workflow](benchmarks/README.md).
