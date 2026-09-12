@@ -81,7 +81,11 @@ async fn fetch_extracts_a_known_url_as_text_or_json() {
             .clone();
         assert!(completion_seconds(&output.stderr, "Fetch") >= 0.1);
         let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-        assert_eq!(value.as_object().unwrap().len(), 2);
+        assert_eq!(value.as_object().unwrap().len(), 3);
+        let seconds = value["elapsed_seconds"].as_f64().unwrap();
+        assert!(seconds.is_finite() && seconds >= 0.1);
+        // Stderr rounds its later sample to milliseconds.
+        assert!(seconds <= completion_seconds(&output.stderr, "Fetch") + 0.001);
         assert_eq!(value["url"], url);
         let content = value["content"].as_str().unwrap();
         assert!(content.starts_with(&format!("Source: {url}\n")));
@@ -179,6 +183,10 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(skill.contains("defaults to 1,000,000 decoded body bytes"));
     assert_eq!(skill.matches("[default: 1000000]").count(), 2);
     assert!(skill.contains("name: kestrelsearch"));
+    assert!(skill.contains("elapsed_seconds"));
+    assert!(skill.contains("jq '.results[]'"));
+    assert!(skill.contains("before JSON serialization/output"));
+    assert!(!skill.contains("returns an array"));
     assert!(skill.contains("Search completed in 1.234 seconds."));
     assert!(skill.contains("Fetch completed in 0.125 seconds."));
     assert!(skill.contains("Empty successful searches also report time"));
@@ -326,7 +334,9 @@ async fn capped_fetch_returns_successful_text_and_json_with_stderr_notice() {
                 .clone();
             let text = if format == "json" {
                 let value: serde_json::Value = serde_json::from_slice(&output).unwrap();
-                assert_eq!(value.as_object().unwrap().len(), 2);
+                assert_eq!(value.as_object().unwrap().len(), 3);
+                let seconds = value["elapsed_seconds"].as_f64().unwrap();
+                assert!(seconds.is_finite() && seconds >= 0.0);
                 assert_eq!(value["url"], url);
                 value["content"].as_str().unwrap().to_owned()
             } else {

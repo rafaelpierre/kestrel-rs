@@ -6,7 +6,9 @@ processes, records external wall time and Kestrel's search/fetch/rank artifact
 timings, and runs a separate `--help` startup benchmark.
 Rust artifacts also retain provider-level and page-phase diagnostics for
 subsequent bottleneck analysis; older Python artifacts simply leave those
-fields empty.
+fields empty. The CLI comparison, quality/latency and query-semantics runners accept
+both the current search JSON envelope (`results` plus `elapsed_seconds`) and legacy
+result arrays. Stored benchmark schemas and external timing measurements are unchanged.
 
 ```bash
 python3 benchmarks/cli_compare.py \

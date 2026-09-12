@@ -24,7 +24,13 @@ Kestrel Search — web search, page extraction, and relevance ranking for AI age
 const SCHEMA_AND_NOTES: &str = r#"
 ## Search JSON output schema
 
-`--output json` returns an array (empty when no results are found). Each result has
+`search --output json` returns an object with `results` (an array, empty when no
+results are found) and `elapsed_seconds` (a finite, nonnegative number in seconds).
+Example: `{"results": [], "elapsed_seconds": 0.125}`.
+This is a breaking change from the previous top-level array. Read `.results`
+instead of the root array (for example, migrate `jq '.[]'` to `jq '.results[]'`).
+There is no legacy-output flag; the library result types are unchanged.
+Each result in `results` has
 `title`, `url`, `display_url`, `snippet`, and `content`; optional fields are omitted
 when unavailable, rather than serialized as null:
 
@@ -49,7 +55,8 @@ page text is unavailable, including searches with `--no-fetch`.
 
 - This `SKILL.md` is compatible with Claude Code, Codex, and GitHub Copilot in VS Code.
 - Progress logs go to **stderr**; use `--output json` for machine-readable **stdout**.
-- Successful `search` and `fetch` commands report elapsed wall-clock seconds to three decimal places on stderr, e.g. `[kestrel] Search completed in 1.234 seconds.` or `[kestrel] Fetch completed in 0.125 seconds.` This includes initialization, retrieval, extraction, optional ranking, and result output; it excludes argument parsing and process startup. Empty successful searches also report time. Text/JSON stdout schemas are unchanged, and failures do not print a success completion line.
+- Successful `search` and `fetch` commands report elapsed wall-clock seconds to three decimal places on stderr, e.g. `[kestrel] Search completed in 1.234 seconds.` or `[kestrel] Fetch completed in 0.125 seconds.` This includes initialization, retrieval, extraction, optional ranking, and result output; it excludes argument parsing and process startup. Empty successful searches also report time. Text output is unchanged, and failures do not print a success completion line.
+- JSON `elapsed_seconds` uses a monotonic clock from command-handler entry through initialization, retrieval, extraction and optional ranking. It is captured before JSON serialization/output, so it may differ from the final stderr timing. Fractional seconds are retained without rounding to three decimal places. Process startup and argument parsing are excluded. Errors keep their existing exit status and stderr diagnostics without a JSON error envelope.
 - Numeric counts and sizes must be positive integers; durations must be finite and greater than zero.
 - PDFs are skipped during content fetching.
 - Page bodies stop at `--max-response-bytes` decoded bytes and the retained prefix is extracted, even when Content-Length exceeds the cap. Reaching the cap alone is not an error; content may be incomplete. Network and parsing concurrency are independent.
@@ -179,7 +186,7 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
 
 `kestrel fetch <URL>` accepts one full HTTP or HTTPS URL. Text output contains
 `Source: <url>` followed by the extracted main-body text. `--output json` returns
-one object: `{"url": "https://example.com/page", "content": "Source: ..."}`.
+one object: `{"url": "https://example.com/page", "content": "Source: ...", "elapsed_seconds": 0.125}`.
 The default extraction limit is 20,000 characters; increase `--content-limit`
 for longer pages. Fetch uses the existing HTML/text extractor and does not render
 JavaScript. Unsupported content (including PDFs), failed requests, or pages with

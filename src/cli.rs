@@ -163,7 +163,7 @@ struct SearchArgs {
     #[arg(long, default_value_t = 10, value_parser = positive_usize, value_name = "N")]
     parse_concurrency: usize,
 
-    /// Output format. Use json for agent/programmatic consumption.
+    /// Output format. JSON returns an object with results and elapsed_seconds.
     #[arg(long, default_value = "text")]
     output: Output,
 }
@@ -211,7 +211,7 @@ struct FetchArgs {
     #[arg(long, default_value_t = 10.0, value_parser = positive_f64, value_name = "SECS")]
     timeout: f64,
 
-    /// Output format. JSON returns an object with url and content fields.
+    /// Output format. JSON returns an object with url, content and elapsed_seconds.
     #[arg(long, default_value = "text")]
     output: Output,
 }
@@ -336,8 +336,9 @@ async fn run_fetch(arguments: FetchArgs) -> ExitCode {
             serde_json::to_string_pretty(&serde_json::json!({
                 "url": arguments.url,
                 "content": content,
+                "elapsed_seconds": command_started.elapsed().as_secs_f64(),
             }))
-            .expect("strings serialize to JSON")
+            .expect("strings and finite elapsed seconds serialize to JSON")
         ),
     }
     print_completion("Fetch", command_started);
@@ -423,14 +424,16 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             },
         );
         eprintln!("[kestrel] No results found.");
-        println!(
-            "{}",
-            if arguments.output == Output::Json {
-                "[]"
-            } else {
-                "No results found."
-            }
-        );
+        match arguments.output {
+            Output::Json => match search_json(&results, command_started) {
+                Ok(json) => println!("{json}"),
+                Err(error) => {
+                    eprintln!("[kestrel] JSON output failed: {error}");
+                    return ExitCode::FAILURE;
+                }
+            },
+            Output::Text => println!("No results found."),
+        }
         print_completion("Search", command_started);
         return ExitCode::SUCCESS;
     }
@@ -502,7 +505,7 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
     );
     eprintln!("[kestrel] Returning top {} results.", results.len());
     match arguments.output {
-        Output::Json => match serde_json::to_string_pretty(&results) {
+        Output::Json => match search_json(&results, command_started) {
             Ok(json) => println!("{json}"),
             Err(error) => {
                 eprintln!("[kestrel] JSON output failed: {error}");
@@ -513,6 +516,19 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
     }
     print_completion("Search", command_started);
     ExitCode::SUCCESS
+}
+
+// Borrow results so adding command metadata does not clone page content.
+fn search_json(results: &[SearchResult], started: Instant) -> Result<String, serde_json::Error> {
+    #[derive(serde::Serialize)]
+    struct SearchOutput<'a> {
+        results: &'a [SearchResult],
+        elapsed_seconds: f64,
+    }
+    serde_json::to_string_pretty(&SearchOutput {
+        results,
+        elapsed_seconds: started.elapsed().as_secs_f64(),
+    })
 }
 
 fn print_completion(command: &str, started: Instant) {
@@ -1272,6 +1288,17 @@ mod tests {
         ]))
         .unwrap();
         let complete = serde_json::to_value(&result).unwrap();
+        let started = Instant::now() - Duration::from_millis(1250);
+        for results in [std::slice::from_ref(&result), &[]] {
+            let json: serde_json::Value =
+                serde_json::from_str(&search_json(results, started).unwrap()).unwrap();
+            assert_eq!(json.as_object().unwrap().len(), 2);
+            assert_eq!(json["results"], serde_json::to_value(results).unwrap());
+            let seconds = json["elapsed_seconds"].as_f64().unwrap();
+            assert!(seconds.is_finite() && seconds >= 1.25);
+            assert!(seconds <= started.elapsed().as_secs_f64());
+        }
+
         let documented_fields: Vec<_> = skill
             .lines()
             .filter_map(|line| line.strip_prefix("| `"))

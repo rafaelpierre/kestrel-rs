@@ -8,9 +8,10 @@ results with BM25.
 
 This crate is the Rust port of the original Python `kestrelsearch` package. The
 library crate is named `kestrelsearch` and the executable is named `kestrel`, so
-the two implementations can coexist. Search flags, result JSON, provider
+the two implementations can coexist. Search flags, per-result fields, provider
 ordering, agent-skill locations, diagnostics, and benchmark artifacts remain
-compatible with the Python implementation.
+compatible with the Python implementation, except for the CLI search JSON envelope
+documented below.
 
 ## Highlights
 
@@ -110,7 +111,7 @@ kestrel fetch "https://www.rust-lang.org/learn" --output json --content-limit 40
 to 20,000 characters, a 10-second timeout, and a 1 MB (1,000,000-byte) response
 limit (adjust with `--content-limit`, `--timeout`, and `--max-response-bytes`).
 JSON output is an
-object with `url` and `content` fields. Failed requests, unsupported content such
+object with `url`, `content`, and numeric `elapsed_seconds` fields. Failed requests, unsupported content such
 as PDFs, and empty extractions exit unsuccessfully with an error on stderr.
 At `--max-response-bytes`, fetching stops and the retained prefix is extracted
 instead of rejecting the page, even if its declared size exceeds the cap. The cap
@@ -186,7 +187,7 @@ decimal places on stderr, for example `[kestrel] Search completed in 1.234 secon
 or `[kestrel] Fetch completed in 0.125 seconds.` This includes initialization,
 retrieval, extraction, optional ranking, and result output, but excludes CLI
 argument parsing and process startup. Empty successful searches also report time.
-Both text and JSON modes use the same timing diagnostic; stdout formats are unchanged.
+Both text and JSON modes use the same timing diagnostic; text output is unchanged.
 Failed commands retain their error diagnostics without a success completion line.
 
 Progress is written to stderr and results to stdout, making `--output json`
@@ -194,6 +195,26 @@ safe to pipe into another program. Each JSON result can include `title`, `url`,
 `display_url`, `snippet`, extracted `content`, `bm25_score`, primary
 provider/query fields, and a `sources` list containing every deduplicated
 occurrence.
+
+JSON output includes command-level `elapsed_seconds`, a finite, nonnegative number
+that preserves fractional seconds without rounding to three decimal places:
+
+```json
+{"results": [], "elapsed_seconds": 0.125}
+```
+
+Search always returns this object, including when `results` is empty. Fetch returns
+`{"url": "https://example.com/page", "content": "Source: ...", "elapsed_seconds": 0.125}`.
+The JSON timer uses a monotonic clock from command-handler entry through client
+initialization, retrieval, extraction and optional ranking. It is sampled before
+JSON serialization/output, so it can differ from the final stderr timing. Process
+startup and argument parsing are excluded. Errors retain their existing exit status
+and stderr diagnostics without a JSON error envelope.
+
+**Breaking JSON migration:** search previously returned a top-level array; read
+`.results` now. For example, change `jq '.[]'` to `jq '.results[]'`, or Python
+`json.loads(stdout)` to `json.loads(stdout)["results"]`. No legacy-output flag is
+provided. Library result types and benchmark artifact schemas are unchanged.
 
 Run `kestrel search --help` for all provider filters, concurrency controls, and
 resource limits.
