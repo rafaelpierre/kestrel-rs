@@ -170,6 +170,14 @@ Quorum counts nonempty responses,
 not semantic relevance. `--search-budget` covers provider search; page fetching
 has its own `--fetch-budget`. Use `--no-fetch` when only search results are needed.
 
+Successful `search` and `fetch` commands print elapsed wall-clock seconds to three
+decimal places on stderr, for example `[kestrel] Search completed in 1.234 seconds.`
+or `[kestrel] Fetch completed in 0.125 seconds.` This includes initialization,
+retrieval, extraction, optional ranking, and result output, but excludes CLI
+argument parsing and process startup. Empty successful searches also report time.
+Both text and JSON modes use the same timing diagnostic; stdout formats are unchanged.
+Failed commands retain their error diagnostics without a success completion line.
+
 Progress is written to stderr and results to stdout, making `--output json`
 safe to pipe into another program. Each JSON result can include `title`, `url`,
 `display_url`, `snippet`, extracted `content`, `bm25_score`, primary
