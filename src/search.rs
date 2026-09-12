@@ -28,12 +28,22 @@ fn record_attempt(attempt: usize) {
 
 const SEARCH_TIMEOUT: Duration = Duration::from_secs(15);
 
+/// Maximum decompressed response bytes accepted from any search provider.
+/// Independent of page-fetch limits; applies to success and HTTP error bodies.
+pub const MAX_PROVIDER_RESPONSE_BYTES: usize = 4 * 1024 * 1024;
+
 #[derive(Debug, Error)]
 pub enum KestrelError {
     #[error("{0}")]
     InvalidRequest(String),
     #[error("{0}")]
     Search(String),
+    #[error("{engine} response exceeds {limit_bytes} decoded bytes (HTTP {status})")]
+    ProviderResponseTooLarge {
+        engine: Engine,
+        limit_bytes: usize,
+        status: u16,
+    },
     #[error("HTTP request failed: {0}")]
     Http(#[from] reqwest::Error),
     #[error("Yahoo request failed: {0}")]
@@ -440,7 +450,9 @@ async fn run_one(
             }
             Err(error) => {
                 let message = error.to_string();
-                entry.outcome = if message.contains("deadline exceeded") {
+                entry.outcome = if matches!(error, KestrelError::ProviderResponseTooLarge { .. }) {
+                    "response_too_large"
+                } else if message.contains("deadline exceeded") {
                     "deadline"
                 } else if message.contains("bot challenge") {
                     "challenge"
@@ -673,39 +685,56 @@ async fn search_yahoo(
     if time_filter != TimeFilter::Any {
         params.push(("btf", time_filter.as_str()));
     }
-    let mut last_error = None;
-    for attempt in 1..=3 {
-        record_attempt(attempt);
-        match client
+    let (html, retries) = request_yahoo_with_retries(query, || {
+        client
             .get("https://search.yahoo.com/search")
             .query(&params)
             .timeout(SEARCH_TIMEOUT)
-            .send()
-            .await
-        {
-            Ok(response) if response.status().is_success() => {
-                let status = response.status().as_u16();
+    })
+    .await?;
+    Ok(ProviderResponse {
+        results: parse_provider_response(Engine::Yahoo, &html)?,
+        retries,
+        raw_result_count: 0,
+    })
+}
+
+async fn request_yahoo_with_retries<F>(
+    query: &str,
+    build: F,
+) -> Result<(String, usize), KestrelError>
+where
+    F: Fn() -> primp::RequestBuilder,
+{
+    let mut last_error = None;
+    for attempt in 1..=3 {
+        record_attempt(attempt);
+        match build().send().await {
+            Ok(response) => {
+                let status = response.status();
                 let final_url = response.url().to_string();
                 let http_version = format!("{:?}", response.version());
-                let html = response.text().await?;
+                let html = match read_yahoo_body(response).await {
+                    Ok(html) => html,
+                    // An unreadable HTTP error body must not override the known
+                    // status or suppress its retries. Size-limit errors still exit.
+                    Err(KestrelError::Yahoo(_)) if !status.is_success() => String::new(),
+                    Err(error) => return Err(error),
+                };
                 crate::benchmarking::capture_provider(
                     Engine::Yahoo,
                     query,
                     &final_url,
-                    status,
+                    status.as_u16(),
                     &http_version,
                     attempt,
                     &html,
                 );
-                return Ok(ProviderResponse {
-                    results: parse_provider_response(Engine::Yahoo, &html)?,
-                    retries: attempt - 1,
-                    raw_result_count: 0,
-                });
-            }
-            Ok(response) => {
-                let status = response.status().as_u16();
-                let retryable = status == 408 || status == 429 || status >= 500;
+                if status.is_success() {
+                    return Ok((html, attempt - 1));
+                }
+                let retryable =
+                    status.as_u16() == 408 || status.as_u16() == 429 || status.is_server_error();
                 let error = KestrelError::Search(format!("Yahoo returned HTTP {status}"));
                 if !retryable || attempt == 3 {
                     return Err(error);
@@ -740,26 +769,15 @@ where
         match build().send().await {
             Ok(response) => {
                 let status = response.status();
-                if status.is_success() {
-                    let final_url = response.url().to_string();
-                    let http_version = format!("{:?}", response.version());
-                    let html = response.text().await?;
-                    crate::benchmarking::capture_provider(
-                        engine,
-                        query,
-                        &final_url,
-                        status.as_u16(),
-                        &http_version,
-                        attempt,
-                        &html,
-                    );
-                    return Ok((html, attempt - 1));
-                }
-                let retryable =
-                    status.as_u16() == 408 || status.as_u16() == 429 || status.is_server_error();
                 let final_url = response.url().to_string();
                 let http_version = format!("{:?}", response.version());
-                let html = response.text().await.unwrap_or_default();
+                let html = match read_standard_body(response, engine).await {
+                    Ok(html) => html,
+                    // An unreadable HTTP error body must not override the known
+                    // status or suppress its retries. Size-limit errors still exit.
+                    Err(KestrelError::Http(_)) if !status.is_success() => String::new(),
+                    Err(error) => return Err(error),
+                };
                 crate::benchmarking::capture_provider(
                     engine,
                     query,
@@ -769,6 +787,11 @@ where
                     attempt,
                     &html,
                 );
+                if status.is_success() {
+                    return Ok((html, attempt - 1));
+                }
+                let retryable =
+                    status.as_u16() == 408 || status.as_u16() == 429 || status.is_server_error();
                 let error =
                     KestrelError::Search(format!("{engine} returned HTTP {}", status.as_u16()));
                 if !retryable || attempt == 3 {
@@ -788,6 +811,106 @@ where
         retry_delay(attempt).await;
     }
     Err(last_error.unwrap_or_else(|| KestrelError::Search("request failed".into())))
+}
+
+// Both transports expose decompressed chunks. Check before appending, including
+// when Content-Length is absent (chunked transfer or automatic decompression).
+async fn read_standard_body(
+    mut response: reqwest::Response,
+    engine: Engine,
+) -> Result<String, KestrelError> {
+    let mut body = ProviderBody::new(
+        engine,
+        response.status().as_u16(),
+        response.content_length(),
+        response
+            .headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok()),
+    )?;
+    while let Some(chunk) = response.chunk().await? {
+        body.push(&chunk)?;
+    }
+    Ok(body.text())
+}
+
+async fn read_yahoo_body(mut response: primp::Response) -> Result<String, KestrelError> {
+    let mut body = ProviderBody::new(
+        Engine::Yahoo,
+        response.status().as_u16(),
+        response.content_length(),
+        response
+            .headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok()),
+    )?;
+    while let Some(chunk) = response.chunk().await? {
+        body.push(&chunk)?;
+    }
+    Ok(body.text())
+}
+
+struct ProviderBody {
+    bytes: Vec<u8>,
+    encoding: &'static encoding_rs::Encoding,
+    engine: Engine,
+    status: u16,
+}
+
+impl ProviderBody {
+    fn new(
+        engine: Engine,
+        status: u16,
+        content_length: Option<u64>,
+        content_type: Option<&str>,
+    ) -> Result<Self, KestrelError> {
+        let mime = content_type.and_then(|value| value.parse::<mime::Mime>().ok());
+        let encoding = mime
+            .as_ref()
+            .and_then(|mime| mime.get_param("charset"))
+            .and_then(|charset| encoding_rs::Encoding::for_label(charset.as_str().as_bytes()))
+            .unwrap_or(encoding_rs::UTF_8);
+        let body = Self {
+            bytes: Vec::new(),
+            encoding,
+            engine,
+            status,
+        };
+        if content_length.is_some_and(|length| length > MAX_PROVIDER_RESPONSE_BYTES as u64) {
+            return Err(body.too_large());
+        }
+        Ok(body)
+    }
+
+    fn too_large(&self) -> KestrelError {
+        KestrelError::ProviderResponseTooLarge {
+            engine: self.engine,
+            limit_bytes: MAX_PROVIDER_RESPONSE_BYTES,
+            status: self.status,
+        }
+    }
+
+    fn push(&mut self, chunk: &[u8]) -> Result<(), KestrelError> {
+        if chunk.len() > MAX_PROVIDER_RESPONSE_BYTES - self.bytes.len() {
+            return Err(self.too_large());
+        }
+        let required = self.bytes.len() + chunk.len();
+        if required > self.bytes.capacity() {
+            // Retain amortized growth without asking Vec to grow past the cap.
+            let capacity = required
+                .max(self.bytes.capacity().saturating_mul(2))
+                .min(MAX_PROVIDER_RESPONSE_BYTES);
+            self.bytes.reserve_exact(capacity - self.bytes.len());
+        }
+        self.bytes.extend_from_slice(chunk);
+        Ok(())
+    }
+
+    fn text(self) -> String {
+        // Match Response::text's charset/BOM handling and replacement semantics.
+        // UTF-8 expansion and parser allocations remain proportional to the cap.
+        self.encoding.decode(&self.bytes).0.into_owned()
+    }
 }
 
 fn log_retry(engine: Engine, query: &str, attempt: usize, error: Option<&KestrelError>) {
@@ -1243,6 +1366,331 @@ mod tests {
       <h2 class="result__title"><a class="result__a" href="https://example.com">Example</a></h2>
       <a class="result__url">example.com</a><a class="result__snippet">A useful result</a>
     </div><div class="result results_links results_links_deep web-result"><h2></h2></div>"#;
+
+    fn assert_oversized(error: KestrelError, engine: Engine, expected_status: u16) {
+        assert!(
+            matches!(
+                error,
+                KestrelError::ProviderResponseTooLarge { engine: actual_engine, limit_bytes, status }
+                    if actual_engine == engine && limit_bytes == MAX_PROVIDER_RESPONSE_BYTES
+                        && status == expected_status
+            ),
+            "unexpected error: {error}"
+        );
+    }
+
+    #[test]
+    fn provider_buffer_checks_capacity_before_appending() {
+        let mut body = ProviderBody::new(Engine::Bing, 200, None, None).unwrap();
+        // Uneven chunks exercise growth near the limit rather than powers of two.
+        let chunk = vec![b'x'; 100_003];
+        while body.bytes.len() + chunk.len() <= MAX_PROVIDER_RESPONSE_BYTES {
+            body.push(&chunk).unwrap();
+            assert!(body.bytes.capacity() <= MAX_PROVIDER_RESPONSE_BYTES);
+        }
+        body.push(&vec![b'x'; MAX_PROVIDER_RESPONSE_BYTES - body.bytes.len()])
+            .unwrap();
+        let capacity = body.bytes.capacity();
+        assert_oversized(body.push(b"x").unwrap_err(), Engine::Bing, 200);
+        assert_eq!(body.bytes.len(), MAX_PROVIDER_RESPONSE_BYTES);
+        assert_eq!(body.bytes.capacity(), capacity);
+        assert!(capacity <= MAX_PROVIDER_RESPONSE_BYTES);
+        assert_eq!(body.text().len(), MAX_PROVIDER_RESPONSE_BYTES);
+    }
+
+    async fn raw_provider_request(
+        yahoo: bool,
+        response: Vec<u8>,
+        hold_open: bool,
+    ) -> Result<(String, usize), KestrelError> {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}/", listener.local_addr().unwrap());
+        let server = tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.unwrap();
+            let mut request = Vec::new();
+            let mut chunk = [0; 1024];
+            while !request.windows(4).any(|bytes| bytes == b"\r\n\r\n") {
+                let read = socket.read(&mut chunk).await.unwrap();
+                assert!(read > 0, "client closed before sending request headers");
+                request.extend_from_slice(&chunk[..read]);
+                assert!(request.len() <= 16_384, "unexpectedly large test request");
+            }
+            let _ = socket.write_all(&response).await;
+            if hold_open {
+                std::future::pending::<()>().await;
+            }
+        });
+        let attempts = Arc::new(AtomicUsize::new(0));
+        let result = tokio::time::timeout(
+            Duration::from_secs(3),
+            PROVIDER_ATTEMPTS.scope(Arc::clone(&attempts), async {
+                if yahoo {
+                    let client = primp::Client::builder().no_proxy().build().unwrap();
+                    request_yahoo_with_retries("test", || client.get(&url)).await
+                } else {
+                    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+                    request_standard_with_retries(&client, Engine::Bing, "test", || {
+                        client.get(&url)
+                    })
+                    .await
+                }
+            }),
+        )
+        .await;
+        server.abort();
+        assert_eq!(
+            attempts.load(Ordering::Relaxed),
+            1,
+            "oversize must not retry"
+        );
+        result.expect("reader must not wait for an oversized declared body")
+    }
+
+    #[tokio::test]
+    async fn provider_transports_bound_declared_chunked_and_compressed_bodies() {
+        use std::io::Write;
+        let oversized = vec![b'x'; MAX_PROVIDER_RESPONSE_BYTES + 1];
+        let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+        encoder.write_all(&oversized).unwrap();
+        let compressed = encoder.finish().unwrap();
+        assert!(compressed.len() < MAX_PROVIDER_RESPONSE_BYTES);
+        for yahoo in [false, true] {
+            let engine = if yahoo { Engine::Yahoo } else { Engine::Bing };
+            for status in [200, 403, 429, 500] {
+                // No body is sent: the Content-Length check must reject immediately.
+                let response = format!(
+                    "HTTP/1.1 {status} Test\r\nContent-Length: {}\r\n\r\n",
+                    oversized.len()
+                );
+                assert_oversized(
+                    raw_provider_request(yahoo, response.into_bytes(), true)
+                        .await
+                        .unwrap_err(),
+                    engine,
+                    status,
+                );
+
+                let mut response =
+                    format!("HTTP/1.1 {status} Test\r\nTransfer-Encoding: chunked\r\n\r\n")
+                        .into_bytes();
+                for chunk in oversized.chunks(16_384) {
+                    response.extend_from_slice(format!("{:x}\r\n", chunk.len()).as_bytes());
+                    response.extend_from_slice(chunk);
+                    response.extend_from_slice(b"\r\n");
+                }
+                response.extend_from_slice(b"0\r\n\r\n");
+                assert_oversized(
+                    raw_provider_request(yahoo, response, false)
+                        .await
+                        .unwrap_err(),
+                    engine,
+                    status,
+                );
+
+                let mut response = format!("HTTP/1.1 {status} Test\r\nContent-Encoding: gzip\r\nContent-Length: {}\r\n\r\n", compressed.len()).into_bytes();
+                response.extend_from_slice(&compressed);
+                assert_oversized(
+                    raw_provider_request(yahoo, response, false)
+                        .await
+                        .unwrap_err(),
+                    engine,
+                    status,
+                );
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn provider_transports_accept_boundary_and_preserve_text_decoding() {
+        use std::io::Write;
+        for yahoo in [false, true] {
+            for bytes in [
+                Vec::new(),
+                vec![b'x'; MAX_PROVIDER_RESPONSE_BYTES],
+                vec![b'c', b'a', b'f', 0xe9],
+            ] {
+                let mut response = format!("HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=windows-1252\r\nContent-Length: {}\r\n\r\n", bytes.len()).into_bytes();
+                response.extend_from_slice(&bytes);
+                let (text, retries) = raw_provider_request(yahoo, response, false).await.unwrap();
+                assert_eq!(text, encoding_rs::WINDOWS_1252.decode(&bytes).0);
+                assert_eq!(retries, 0);
+            }
+            let mut encoder =
+                flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
+            encoder.write_all(DDG.as_bytes()).unwrap();
+            let compressed = encoder.finish().unwrap();
+            let mut response = format!(
+                "HTTP/1.1 200 OK\r\nContent-Encoding: gzip\r\nContent-Length: {}\r\n\r\n",
+                compressed.len()
+            )
+            .into_bytes();
+            response.extend_from_slice(&compressed);
+            let (html, _) = raw_provider_request(yahoo, response, false).await.unwrap();
+            assert_eq!(html, DDG);
+            assert_eq!(parse_duckduckgo_response(&html).unwrap().len(), 1);
+        }
+    }
+
+    #[tokio::test]
+    async fn provider_http_errors_keep_retry_policy_under_limit() {
+        use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+        for yahoo in [false, true] {
+            for status in [403, 503] {
+                let server = MockServer::start().await;
+                let calls = Arc::new(AtomicUsize::new(0));
+                let count = Arc::clone(&calls);
+                Mock::given(method("GET"))
+                    .respond_with(move |_: &wiremock::Request| {
+                        let call = count.fetch_add(1, Ordering::Relaxed);
+                        if call == 0 {
+                            ResponseTemplate::new(status).set_body_string("unavailable")
+                        } else {
+                            ResponseTemplate::new(200).set_body_string(DDG)
+                        }
+                    })
+                    .mount(&server)
+                    .await;
+                let result = if yahoo {
+                    let client = primp::Client::builder().no_proxy().build().unwrap();
+                    request_yahoo_with_retries("test", || client.get(server.uri())).await
+                } else {
+                    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+                    request_standard_with_retries(&client, Engine::Bing, "test", || {
+                        client.get(server.uri())
+                    })
+                    .await
+                };
+                if status == 403 {
+                    assert!(result.unwrap_err().to_string().contains("HTTP 403"));
+                    assert_eq!(calls.load(Ordering::Relaxed), 1);
+                } else {
+                    let (text, retries) = result.unwrap();
+                    assert_eq!(text, DDG);
+                    assert_eq!(retries, 1);
+                    assert_eq!(calls.load(Ordering::Relaxed), 2);
+                }
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn provider_body_failures_preserve_status_retries() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        for yahoo in [false, true] {
+            for status in [200, 403, 408, 429, 503] {
+                for failure in ["truncated", "gzip", "timeout", "exhausted"] {
+                    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+                    let url = format!("http://{}/", listener.local_addr().unwrap());
+                    let calls = Arc::new(AtomicUsize::new(0));
+                    let count = Arc::clone(&calls);
+                    let server = tokio::spawn(async move {
+                        let mut connections = tokio::task::JoinSet::new();
+                        loop {
+                            let (mut socket, _) = listener.accept().await.unwrap();
+                            let count = Arc::clone(&count);
+                            connections.spawn(async move {
+                                let mut request = Vec::new();
+                                let mut chunk = [0; 1024];
+                                while !request.windows(4).any(|bytes| bytes == b"\r\n\r\n") {
+                                    let read = socket.read(&mut chunk).await.unwrap();
+                                    assert!(read > 0);
+                                    request.extend_from_slice(&chunk[..read]);
+                                }
+                                let call = count.fetch_add(1, Ordering::Relaxed);
+                                let response = if call > 0 && failure != "exhausted" {
+                                    "HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok".to_owned()
+                                } else if failure == "gzip" {
+                                    format!("HTTP/1.1 {status} Test\r\nContent-Encoding: gzip\r\nContent-Length: 4\r\nConnection: close\r\n\r\noops")
+                                } else {
+                                    format!("HTTP/1.1 {status} Test\r\nContent-Length: 100\r\nConnection: close\r\n\r\nx")
+                                };
+                                socket.write_all(response.as_bytes()).await.unwrap();
+                                if failure == "timeout" && call == 0 {
+                                    std::future::pending::<()>().await;
+                                }
+                            });
+                        }
+                    });
+                    let result = tokio::time::timeout(Duration::from_secs(5), async {
+                        if yahoo {
+                            let client = primp::Client::builder().no_proxy().build().unwrap();
+                            request_yahoo_with_retries("test", || {
+                                client.get(&url).timeout(Duration::from_millis(300))
+                            })
+                            .await
+                        } else {
+                            let client = reqwest::Client::builder().no_proxy().build().unwrap();
+                            request_standard_with_retries(&client, Engine::Bing, "test", || {
+                                client.get(&url).timeout(Duration::from_millis(300))
+                            })
+                            .await
+                        }
+                    })
+                    .await;
+                    server.abort();
+                    let result = result.expect("retry sequence must finish");
+                    let retryable = matches!(status, 408 | 429 | 503);
+                    let expected_calls = if !retryable {
+                        1
+                    } else if failure == "exhausted" {
+                        3
+                    } else {
+                        2
+                    };
+                    assert_eq!(
+                        calls.load(Ordering::Relaxed),
+                        expected_calls,
+                        "yahoo={yahoo}, status={status}, failure={failure}"
+                    );
+                    if retryable && failure != "exhausted" {
+                        assert_eq!(result.unwrap(), ("ok".into(), 1));
+                    } else if status == 200 {
+                        assert!(matches!(
+                            result.unwrap_err(),
+                            KestrelError::Http(_) | KestrelError::Yahoo(_)
+                        ));
+                    } else {
+                        assert!(
+                            result
+                                .unwrap_err()
+                                .to_string()
+                                .contains(&format!("HTTP {status}"))
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn oversized_provider_preserves_fallback_and_partial_success() {
+        let oversized = || KestrelError::ProviderResponseTooLarge {
+            engine: Engine::Bing,
+            limit_bytes: MAX_PROVIDER_RESPONSE_BYTES,
+            status: 200,
+        };
+        let mut calls = Vec::new();
+        let results = collect_fallback("query", &[Engine::Bing, Engine::Duckduckgo], |engine| {
+            calls.push(engine);
+            std::future::ready(if engine == Engine::Bing {
+                Err(oversized())
+            } else {
+                Ok(parse_duckduckgo_response(DDG).unwrap())
+            })
+        })
+        .await
+        .unwrap();
+        assert_eq!(calls, [Engine::Bing, Engine::Duckduckgo]);
+        assert_eq!(results.len(), 1);
+        let merged =
+            merge_outcomes(vec![Err(oversized()), Ok(results)], SearchMode::Fanout).unwrap();
+        assert_eq!(merged.len(), 1);
+        let error = merge_outcomes(vec![Err(oversized())], SearchMode::Fanout)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("bing response exceeds 4194304 decoded bytes (HTTP 200)"));
+    }
 
     #[test]
     fn parses_duckduckgo() {
