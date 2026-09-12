@@ -2,7 +2,7 @@
 
 use std::collections::{HashMap, HashSet};
 use std::future::Future;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -22,9 +22,17 @@ use crate::query::{QueryPlan, QuerySyntax};
 
 use crate::provider_diagnostics::{Challenge, Phase, Recorder, TransportKind};
 
+mod streaming;
+
+// Per-query cancellation reason, shared with provider lifecycle guards.
+const FANOUT_RUNNING: u8 = 0;
+const FANOUT_QUORUM: u8 = 1;
+const FANOUT_MIN_RESULTS: u8 = 2;
+
 tokio::task_local! {
     static PROVIDER_RECORDER: Arc<Mutex<Recorder>>;
     static DIAGNOSTIC_RUN_ID: String;
+    static PROVIDER_DIAGNOSTIC: (Arc<Mutex<Vec<ProviderSearchDiagnostic>>>, usize);
 }
 
 fn record_attempt() {
@@ -147,6 +155,8 @@ pub enum KestrelError {
     InvalidRequest(String),
     #[error("{0}")]
     Search(String),
+    #[error("search deadline exceeded")]
+    SearchDeadline,
     #[error("{engine} response exceeds {limit_bytes} decoded bytes (HTTP {status})")]
     ProviderResponseTooLarge {
         engine: Engine,
@@ -341,6 +351,7 @@ async fn search_many_with_clients_in_run(
             options.time_filter,
             options.query_syntax,
             options.provider_quorum,
+            Some(options.min_results.unwrap_or(5)),
             deadline,
         )
     });
@@ -373,10 +384,12 @@ fn run_fanout_query<'a>(
     time_filter: TimeFilter,
     query_syntax: QuerySyntax,
     provider_quorum: Option<usize>,
+    min_results: Option<usize>,
     deadline: Option<tokio::time::Instant>,
 ) -> impl Future<Output = (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)> + 'a {
     let pending = FuturesUnordered::new();
-    let quorum_cancelled = Arc::new(AtomicBool::new(false));
+    let (sender, receiver) = tokio::sync::mpsc::channel(1);
+    let fanout_cancelled = Arc::new(AtomicU8::new(FANOUT_RUNNING));
     for (index, engine) in engines.iter().copied().enumerate() {
         let semaphore = Arc::clone(&semaphore);
         let diagnostics = Arc::clone(&diagnostics);
@@ -390,11 +403,39 @@ fn run_fanout_query<'a>(
             time_filter,
             query_syntax,
             deadline,
-            Some(Arc::clone(&quorum_cancelled)),
+            Some(Arc::clone(&fanout_cancelled)),
         );
-        pending.push(async move { (index, job.await) });
+        let publisher = streaming::Publisher {
+            sender: sender.clone(),
+            index,
+            engine,
+            query: query.to_owned(),
+            query_syntax,
+        };
+        pending.push(async move {
+            let outcome = if min_results.is_some() {
+                streaming::PUBLISHER.scope(publisher, job).await
+            } else {
+                job.await
+            };
+            (index, outcome)
+        });
     }
-    async move { collect_fanout_signalled(pending, provider_quorum, Some(quorum_cancelled)).await }
+    drop(sender);
+    async move {
+        streaming::collect(
+            pending,
+            provider_quorum,
+            min_results,
+            Some(fanout_cancelled),
+            if min_results.is_some() {
+                Some(receiver)
+            } else {
+                None
+            },
+        )
+        .await
+    }
 }
 
 #[cfg(test)]
@@ -405,38 +446,27 @@ async fn collect_fanout<F>(
 where
     F: Future<Output = (usize, Result<Vec<SearchResult>, KestrelError>)>,
 {
-    collect_fanout_signalled(pending, provider_quorum, None).await
+    collect_fanout_signalled(pending, provider_quorum, None, None).await
 }
 
+#[cfg(test)]
 async fn collect_fanout_signalled<F>(
-    mut pending: FuturesUnordered<F>,
+    pending: FuturesUnordered<F>,
     provider_quorum: Option<usize>,
-    quorum_cancelled: Option<Arc<AtomicBool>>,
+    min_results: Option<usize>,
+    fanout_cancelled: Option<Arc<AtomicU8>>,
 ) -> (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)
 where
     F: Future<Output = (usize, Result<Vec<SearchResult>, KestrelError>)>,
 {
-    let mut completed = Vec::with_capacity(pending.len());
-    let mut useful = 0;
-    let mut cancelled = 0;
-    while let Some((index, outcome)) = pending.next().await {
-        if outcome.as_ref().is_ok_and(|results| !results.is_empty()) {
-            useful += 1;
-        }
-        completed.push((index, outcome));
-        if provider_quorum.is_some_and(|quorum| useful >= quorum) {
-            cancelled = pending.len();
-            if let Some(signal) = &quorum_cancelled {
-                signal.store(true, Ordering::Relaxed);
-            }
-            break;
-        }
-    }
-    completed.sort_by_key(|(index, _)| *index);
-    (
-        completed.into_iter().map(|(_, outcome)| outcome).collect(),
-        cancelled,
+    streaming::collect(
+        pending,
+        provider_quorum,
+        min_results,
+        fanout_cancelled,
+        None,
     )
+    .await
 }
 
 fn validate_request(
@@ -478,13 +508,10 @@ fn validate_request(
             "search budget must be greater than zero".into(),
         ));
     }
-    if let Some(quorum) = options.provider_quorum
-        && (quorum == 0 || quorum > clean_engines.len())
-    {
-        return Err(KestrelError::InvalidRequest(format!(
-            "provider_quorum must be between 1 and the {} selected engines",
-            clean_engines.len()
-        )));
+    if options.min_results == Some(0) {
+        return Err(KestrelError::InvalidRequest(
+            "min_results must be at least 1".into(),
+        ));
     }
     for query in &clean_queries {
         QueryPlan::parse(query, options.query_syntax)?;
@@ -503,7 +530,7 @@ fn run_one<'a>(
     time_filter: TimeFilter,
     query_syntax: QuerySyntax,
     deadline: Option<tokio::time::Instant>,
-    quorum_cancelled: Option<Arc<AtomicBool>>,
+    fanout_cancelled: Option<Arc<AtomicU8>>,
 ) -> impl Future<Output = Result<Vec<SearchResult>, KestrelError>> + 'a {
     let job = run_one_job(
         query,
@@ -511,7 +538,7 @@ fn run_one<'a>(
         semaphore,
         diagnostics,
         deadline,
-        quorum_cancelled,
+        fanout_cancelled,
         run_provider(query, engine, region, time_filter, clients, query_syntax),
     );
     async move {
@@ -526,7 +553,7 @@ fn run_one_job<'a>(
     semaphore: Arc<Semaphore>,
     diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
     deadline: Option<tokio::time::Instant>,
-    quorum_cancelled: Option<Arc<AtomicBool>>,
+    fanout_cancelled: Option<Arc<AtomicU8>>,
     provider: impl Future<Output = Result<ProviderResponse, KestrelError>> + 'a,
 ) -> impl Future<Output = Result<Vec<SearchResult>, KestrelError>> + 'a {
     let started = Instant::now();
@@ -559,7 +586,7 @@ fn run_one_job<'a>(
         recorder: Arc::clone(&recorder),
         completed: false,
         deadline: false,
-        quorum_cancelled,
+        fanout_cancelled,
     };
     async move {
         let mut timer = timer;
@@ -570,18 +597,20 @@ fn run_one_job<'a>(
         let job = PROVIDER_RECORDER.scope(Arc::clone(&recorder), async {
             let _permit = semaphore.acquire().await.expect("semaphore remains open");
             record_phase(Phase::Processing);
-            provider.await
+            PROVIDER_DIAGNOSTIC
+                .scope((Arc::clone(&diagnostics), index), provider)
+                .await
         });
         let outcome = match deadline {
             Some(deadline) if deadline <= tokio::time::Instant::now() => {
                 timer.deadline = true;
-                Err(KestrelError::Search("search deadline exceeded".into()))
+                Err(KestrelError::SearchDeadline)
             }
             Some(deadline) => tokio::time::timeout_at(deadline, job)
                 .await
                 .unwrap_or_else(|_| {
                     timer.deadline = true;
-                    Err(KestrelError::Search("search deadline exceeded".into()))
+                    Err(KestrelError::SearchDeadline)
                 }),
             None => job.await,
         };
@@ -644,7 +673,7 @@ struct DiagnosticTimer {
     recorder: Arc<Mutex<Recorder>>,
     completed: bool,
     deadline: bool,
-    quorum_cancelled: Option<Arc<AtomicBool>>,
+    fanout_cancelled: Option<Arc<AtomicU8>>,
 }
 impl Drop for DiagnosticTimer {
     fn drop(&mut self) {
@@ -653,14 +682,14 @@ impl Drop for DiagnosticTimer {
             let entry = &mut entries[self.index];
             entry.elapsed_ms = elapsed_millis(self.started);
             if !self.completed {
-                entry.outcome = if self
-                    .quorum_cancelled
+                entry.outcome = match self
+                    .fanout_cancelled
                     .as_ref()
-                    .is_some_and(|s| s.load(Ordering::Relaxed))
+                    .map_or(FANOUT_RUNNING, |s| s.load(Ordering::Relaxed))
                 {
-                    "cancelled_quorum"
-                } else {
-                    "cancelled_caller"
+                    FANOUT_MIN_RESULTS => "cancelled_min_results",
+                    FANOUT_QUORUM => "cancelled_quorum",
+                    _ => "cancelled_caller",
                 }
                 .into();
             }
@@ -713,6 +742,8 @@ async fn run_provider(
     record_phase(Phase::Processing);
     if let Ok(response) = &mut result {
         filter_response(query, &plan, response);
+        #[cfg(test)]
+        streaming::probe::results(engine, &response.results);
     }
     if let Err(error) = &result {
         crate::log_event!(
@@ -733,10 +764,14 @@ async fn run_provider(
 
 fn filter_response(query: &str, plan: &QueryPlan, response: &mut ProviderResponse) {
     response.raw_result_count = response.results.len();
-    for (index, result) in response.results.iter_mut().enumerate() {
+    normalize_provider_results(&mut response.results, query, plan);
+}
+
+fn normalize_provider_results(results: &mut Vec<SearchResult>, query: &str, plan: &QueryPlan) {
+    for (index, result) in results.iter_mut().enumerate() {
         result.engine_rank = Some(index + 1);
     }
-    response.results.retain(|result| {
+    results.retain(|result| {
         if plan.is_native() {
             result_allowed(query, &result.url)
         } else {
@@ -1084,9 +1119,23 @@ async fn read_standard_body(
             .get("content-type")
             .and_then(|v| v.to_str().ok()),
     )?;
+    #[cfg(test)]
+    streaming::probe::headers(
+        body.engine,
+        format!("{:?}", response.version()),
+        body.status,
+    );
+    let mut incremental = streaming::Incremental::for_body(&body);
     while let Some(chunk) = response.chunk().await? {
         body.push(&chunk)?;
+        #[cfg(test)]
+        streaming::probe::bytes(body.engine, chunk.len());
+        if let Some(parser) = &mut incremental {
+            parser.push(&chunk).await?;
+        }
     }
+    #[cfg(test)]
+    streaming::probe::eof(body.engine);
     Ok(body.text())
 }
 
@@ -1100,9 +1149,23 @@ async fn read_yahoo_body(mut response: primp::Response) -> Result<String, Kestre
             .get("content-type")
             .and_then(|v| v.to_str().ok()),
     )?;
+    #[cfg(test)]
+    streaming::probe::headers(
+        body.engine,
+        format!("{:?}", response.version()),
+        body.status,
+    );
+    let mut incremental = streaming::Incremental::for_body(&body);
     while let Some(chunk) = response.chunk().await? {
         body.push(&chunk)?;
+        #[cfg(test)]
+        streaming::probe::bytes(body.engine, chunk.len());
+        if let Some(parser) = &mut incremental {
+            parser.push(&chunk).await?;
+        }
     }
+    #[cfg(test)]
+    streaming::probe::eof(body.engine);
     Ok(body.text())
 }
 
@@ -2357,24 +2420,13 @@ mod tests {
     }
 
     #[test]
-    fn validates_provider_quorum_against_engine_count() {
-        let options = SearchOptions {
-            provider_quorum: Some(1),
-            ..SearchOptions::default()
-        };
-        assert!(validate_request(&["query".into()], &options).is_ok());
+    fn provider_quorum_is_ignored_by_result_count_fanout() {
         for quorum in [0, 3] {
-            let invalid = SearchOptions {
-                engines: vec![Engine::Duckduckgo, Engine::Bing],
+            let options = SearchOptions {
                 provider_quorum: Some(quorum),
                 ..SearchOptions::default()
             };
-            assert!(
-                validate_request(&["query".into()], &invalid)
-                    .unwrap_err()
-                    .to_string()
-                    .contains("between 1 and the 2 selected engines")
-            );
+            assert!(validate_request(&["query".into()], &options).is_ok());
         }
     }
 
@@ -2529,7 +2581,7 @@ mod tests {
                 recorder: Arc::clone(&task_recorder),
                 completed: false,
                 deadline: false,
-                quorum_cancelled: Some(Arc::new(AtomicBool::new(true))),
+                fanout_cancelled: Some(Arc::new(AtomicU8::new(FANOUT_QUORUM))),
             };
             PROVIDER_RECORDER
                 .scope(task_recorder, async {
@@ -2682,3 +2734,6 @@ mod bing_fidelity;
 #[cfg(test)]
 #[path = "search/diagnostic_tests.rs"]
 mod diagnostic_tests;
+
+#[cfg(test)]
+mod min_results_tests;

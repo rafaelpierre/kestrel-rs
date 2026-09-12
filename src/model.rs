@@ -140,8 +140,11 @@ pub struct SearchOptions {
     pub region: String,
     pub time_filter: TimeFilter,
     pub max_concurrency: usize,
-    /// Stop fanout after this many providers per query return non-empty results.
+    /// Legacy compatibility setting, ignored by result-count fanout.
     pub provider_quorum: Option<usize>,
+    /// Stop fanout after this many unique candidates per query (None means 5).
+    /// Takes precedence over provider_quorum. This is not an output cap.
+    pub min_results: Option<usize>,
     /// Total search budget including queueing and retries; disabled by default.
     pub search_budget: Option<Duration>,
 }
@@ -156,6 +159,7 @@ impl Default for SearchOptions {
             time_filter: TimeFilter::Any,
             max_concurrency: 10,
             provider_quorum: None,
+            min_results: None,
             search_budget: None,
         }
     }
@@ -259,7 +263,7 @@ pub struct ProviderSearchDiagnostic {
 pub struct SearchReport {
     pub results: Vec<SearchResult>,
     pub providers: Vec<ProviderSearchDiagnostic>,
-    /// Provider/query searches dropped after a fanout quorum was reached.
+    /// Provider/query searches dropped after a fanout stopping threshold was reached.
     pub cancelled: usize,
 }
 

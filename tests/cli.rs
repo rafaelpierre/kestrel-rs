@@ -179,7 +179,9 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(skill.contains("Empty successful searches also report time"));
     assert!(skill.contains("--query-syntax"));
     assert!(skill.contains("Portable query syntax is the default for every provider"));
-    assert!(skill.contains("accepted results after query constraints"));
+    assert!(skill.contains("Query constraints apply before counting"));
+    assert!(skill.contains("--min-results"));
+    assert!(skill.contains("Provider quorum is ignored"));
     assert!(
         skill
             .contains("[default: duckduckgo bing yahoo dogpile ecosia swisscows yep qwant mojeek]")
@@ -240,6 +242,27 @@ fn malformed_primary_and_additional_queries_fail_before_search() {
             .stderr(predicate::str::contains("Invalid portable query"))
             .stderr(predicate::str::contains("--query-syntax native"));
     }
+}
+
+#[test]
+fn search_min_results_is_documented_and_validated() {
+    Command::cargo_bin("kestrel")
+        .unwrap()
+        .args(["search", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("--min-results <N>"));
+    Command::cargo_bin("kestrel")
+        .unwrap()
+        .args(["search", "test", "--mode", "fanout", "--min-results", "0"])
+        .assert()
+        .failure();
+    Command::cargo_bin("kestrel")
+        .unwrap()
+        .args(["search", "test", "--mode", "fallback", "--min-results", "5"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("invalid value 'fallback'"));
 }
 
 #[test]

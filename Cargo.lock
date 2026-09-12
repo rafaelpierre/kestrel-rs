@@ -1260,6 +1260,7 @@ dependencies = [
  "futures-util",
  "home",
  "html-escape",
+ "html5ever",
  "http-body-util",
  "hyper",
  "hyper-util",
