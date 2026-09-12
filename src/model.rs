@@ -134,6 +134,7 @@ impl SearchResult {
 pub struct SearchOptions {
     /// Portable title/snippet constraints, or provider-native passthrough.
     pub query_syntax: crate::QuerySyntax,
+    /// Providers searched concurrently; defaults to all nine supported engines in declaration order.
     pub engines: Vec<Engine>,
     pub mode: SearchMode,
     pub region: String,
@@ -149,7 +150,7 @@ impl Default for SearchOptions {
     fn default() -> Self {
         Self {
             query_syntax: crate::QuerySyntax::default(),
-            engines: vec![Engine::Duckduckgo, Engine::Bing, Engine::Yahoo],
+            engines: Engine::value_variants().to_vec(),
             mode: SearchMode::Fanout,
             region: String::new(),
             time_filter: TimeFilter::Any,
