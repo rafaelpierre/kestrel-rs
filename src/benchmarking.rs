@@ -264,7 +264,7 @@ mod tests {
             &BTreeMap::from([("search".into(), 12)]),
             &["example query".into()],
             &[],
-            SearchMode::Fallback,
+            SearchMode::Fanout,
             &[],
             0,
             None,
@@ -273,6 +273,7 @@ mod tests {
         )
         .unwrap();
         let artifact: Value = serde_json::from_slice(&fs::read(target).unwrap()).unwrap();
+        assert_eq!(artifact["mode"], "fanout");
         assert_eq!(artifact["returned_chars"], "Some page text".chars().count());
         assert_eq!(artifact["results"][0]["content"], "Some page text");
         assert!(

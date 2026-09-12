@@ -55,12 +55,12 @@ struct SearchArgs {
     #[arg(short = 'q', long = "query", value_name = "QUERY")]
     additional_queries: Vec<String>,
 
-    /// Search engine. Repeat to set fanout engines or fallback order.
+    /// Search engine. Repeat to select providers to search concurrently.
     #[arg(short = 'e', long = "engine", default_values = ["duckduckgo", "bing", "yahoo"], action = ArgAction::Append)]
     engines: Vec<Engine>,
 
-    /// Use engines in order on failure, or run every engine/query pair.
-    #[arg(long, default_value = "fallback")]
+    /// Compatibility option: fanout is the only supported search mode.
+    #[arg(long, default_value = "fanout")]
     mode: SearchMode,
 
     /// Maximum concurrent search-engine requests.
@@ -802,6 +802,8 @@ mod tests {
             };
             assert_eq!(args.engines, SearchOptions::default().engines);
             assert_eq!(args.engines.len(), 3);
+            assert_eq!(args.mode, SearchMode::Fanout);
+            assert_eq!(args.mode, SearchOptions::default().mode);
         }
         let cli = Cli::try_parse_from([
             "kestrel", "search", "test", "--engine", "yahoo", "--engine", "bing",
@@ -811,6 +813,15 @@ mod tests {
             panic!("expected search");
         };
         assert_eq!(args.engines, [Engine::Yahoo, Engine::Bing]);
+    }
+
+    #[test]
+    fn fallback_mode_is_rejected() {
+        let error =
+            Cli::try_parse_from(["kestrel", "search", "test", "--mode", "fallback"]).unwrap_err();
+        assert_eq!(error.kind(), clap::error::ErrorKind::InvalidValue);
+        assert!(error.to_string().contains("fanout"));
+        assert!(serde_json::from_str::<SearchMode>(r#""fallback""#).is_err());
     }
 
     #[test]

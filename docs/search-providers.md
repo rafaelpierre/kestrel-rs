@@ -39,8 +39,8 @@ are checked incrementally before appending to the retained buffer.
 
 An oversized response returns `KestrelError::ProviderResponseTooLarge`, including
 the engine, limit and HTTP status. It is not retried. Provider diagnostics record
-`response_too_large`; fallback can try the next engine, and fanout retains other
-successful providers. Oversized bodies are not written to provider trace files.
+`response_too_large`; fanout retains results from other successful providers.
+Oversized bodies are not written to provider trace files.
 This fixed provider limit is independent of page-fetch response limits. It bounds
 the retained response bytes, not total process memory: transport chunks, charset
 conversion, parsers and concurrent searches require additional memory.

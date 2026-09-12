@@ -14,8 +14,8 @@ use tokio::sync::Semaphore;
 use url::Url;
 
 use crate::model::{
-    Engine, ProviderSearchDiagnostic, SearchMode, SearchOptions, SearchReport, SearchResult,
-    SourceOccurrence, TimeFilter,
+    Engine, ProviderSearchDiagnostic, SearchOptions, SearchReport, SearchResult, SourceOccurrence,
+    TimeFilter,
 };
 
 use crate::provider_diagnostics::{Challenge, Phase, Recorder, TransportKind};
@@ -320,48 +320,26 @@ async fn search_many_with_clients_in_run(
         .search_budget
         .map(|budget| tokio::time::Instant::now() + budget);
 
-    let (outcomes, cancelled) = match options.mode {
-        SearchMode::Fanout => {
-            let jobs = queries.iter().map(|query| {
-                run_fanout_query(
-                    query,
-                    &engines,
-                    clients,
-                    Arc::clone(&semaphore),
-                    Arc::clone(&diagnostics),
-                    &options.region,
-                    options.time_filter,
-                    options.provider_quorum,
-                    deadline,
-                )
-            });
-            let query_outcomes = join_all(jobs).await;
-            let cancelled = query_outcomes.iter().map(|(_, count)| count).sum();
-            (
-                query_outcomes
-                    .into_iter()
-                    .flat_map(|(outcomes, _)| outcomes)
-                    .collect(),
-                cancelled,
-            )
-        }
-        SearchMode::Fallback => {
-            let jobs = queries.iter().map(|query| {
-                run_with_fallback(
-                    query,
-                    &engines,
-                    clients,
-                    Arc::clone(&semaphore),
-                    Arc::clone(&diagnostics),
-                    &options.region,
-                    options.time_filter,
-                    deadline,
-                )
-            });
-            (join_all(jobs).await, 0)
-        }
-    };
-    let results = merge_outcomes(outcomes, options.mode)?;
+    let jobs = queries.iter().map(|query| {
+        run_fanout_query(
+            query,
+            &engines,
+            clients,
+            Arc::clone(&semaphore),
+            Arc::clone(&diagnostics),
+            &options.region,
+            options.time_filter,
+            options.provider_quorum,
+            deadline,
+        )
+    });
+    let query_outcomes = join_all(jobs).await;
+    let cancelled = query_outcomes.iter().map(|(_, count)| count).sum();
+    let outcomes = query_outcomes
+        .into_iter()
+        .flat_map(|(outcomes, _)| outcomes)
+        .collect();
+    let results = merge_outcomes(outcomes)?;
     let providers = Arc::try_unwrap(diagnostics)
         .expect("all search diagnostic references dropped")
         .into_inner()
@@ -487,18 +465,13 @@ fn validate_request(
             "search budget must be greater than zero".into(),
         ));
     }
-    if let Some(quorum) = options.provider_quorum {
-        if options.mode != SearchMode::Fanout {
-            return Err(KestrelError::InvalidRequest(
-                "provider_quorum is only valid in fanout mode".into(),
-            ));
-        }
-        if quorum == 0 || quorum > clean_engines.len() {
-            return Err(KestrelError::InvalidRequest(format!(
-                "provider_quorum must be between 1 and the {} selected engines",
-                clean_engines.len()
-            )));
-        }
+    if let Some(quorum) = options.provider_quorum
+        && (quorum == 0 || quorum > clean_engines.len())
+    {
+        return Err(KestrelError::InvalidRequest(format!(
+            "provider_quorum must be between 1 and the {} selected engines",
+            clean_engines.len()
+        )));
     }
     Ok((clean_queries, clean_engines))
 }
@@ -689,65 +662,6 @@ impl Drop for DiagnosticTimer {
             crate::benchmarking::capture_provider_lifecycle(&diagnostic, lifecycle.as_ref());
         }
     }
-}
-
-#[allow(clippy::too_many_arguments)]
-async fn run_with_fallback(
-    query: &str,
-    engines: &[Engine],
-    clients: &SearchClients,
-    semaphore: Arc<Semaphore>,
-    diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
-    region: &str,
-    time_filter: TimeFilter,
-    deadline: Option<tokio::time::Instant>,
-) -> Result<Vec<SearchResult>, KestrelError> {
-    collect_fallback(query, engines, |engine| {
-        run_one(
-            query,
-            engine,
-            clients,
-            Arc::clone(&semaphore),
-            Arc::clone(&diagnostics),
-            region,
-            time_filter,
-            deadline,
-            None,
-        )
-    })
-    .await
-}
-
-async fn collect_fallback<F, Fut>(
-    query: &str,
-    engines: &[Engine],
-    mut run: F,
-) -> Result<Vec<SearchResult>, KestrelError>
-where
-    F: FnMut(Engine) -> Fut,
-    Fut: Future<Output = Result<Vec<SearchResult>, KestrelError>>,
-{
-    let mut errors = Vec::new();
-    let mut had_empty = false;
-    for engine in engines {
-        match run(*engine).await {
-            Ok(results) if !results.is_empty() => return Ok(results),
-            Ok(_) => {
-                had_empty = true;
-            }
-            Err(error) => {
-                crate::log_event!("search_fallback", "query" => query, "failed_engine" => engine.as_str(), "error" => error.to_string());
-                errors.push(error.to_string());
-            }
-        }
-    }
-    if had_empty {
-        return Ok(Vec::new());
-    }
-    Err(KestrelError::Search(format!(
-        "All engines failed for query {query:?}: {}",
-        errors.join("; ")
-    )))
 }
 
 fn elapsed_millis(started: Instant) -> u64 {
@@ -1262,7 +1176,6 @@ fn with_provenance(results: Vec<SearchResult>, engine: Engine, query: &str) -> V
 
 fn merge_outcomes(
     outcomes: Vec<Result<Vec<SearchResult>, KestrelError>>,
-    mode: SearchMode,
 ) -> Result<Vec<SearchResult>, KestrelError> {
     let mut buckets = Vec::new();
     let mut failures = Vec::new();
@@ -1285,7 +1198,7 @@ fn merge_outcomes(
     if !failures.is_empty() {
         crate::log_event!(
             "search_partial_failure",
-            "mode" => mode.to_string(),
+            "mode" => "fanout",
             "failure_count" => failures.len(),
             "success_count" => buckets.len(),
         );
@@ -1971,30 +1884,17 @@ mod tests {
         }
     }
 
-    #[tokio::test]
-    async fn oversized_provider_preserves_fallback_and_partial_success() {
+    #[test]
+    fn oversized_provider_preserves_partial_success() {
         let oversized = || KestrelError::ProviderResponseTooLarge {
             engine: Engine::Bing,
             limit_bytes: MAX_PROVIDER_RESPONSE_BYTES,
             status: 200,
         };
-        let mut calls = Vec::new();
-        let results = collect_fallback("query", &[Engine::Bing, Engine::Duckduckgo], |engine| {
-            calls.push(engine);
-            std::future::ready(if engine == Engine::Bing {
-                Err(oversized())
-            } else {
-                Ok(parse_duckduckgo_response(DDG).unwrap())
-            })
-        })
-        .await
-        .unwrap();
-        assert_eq!(calls, [Engine::Bing, Engine::Duckduckgo]);
-        assert_eq!(results.len(), 1);
-        let merged =
-            merge_outcomes(vec![Err(oversized()), Ok(results)], SearchMode::Fanout).unwrap();
+        let results = parse_duckduckgo_response(DDG).unwrap();
+        let merged = merge_outcomes(vec![Err(oversized()), Ok(results)]).unwrap();
         assert_eq!(merged.len(), 1);
-        let error = merge_outcomes(vec![Err(oversized())], SearchMode::Fanout)
+        let error = merge_outcomes(vec![Err(oversized())])
             .unwrap_err()
             .to_string();
         assert!(error.contains("bing response exceeds 4194304 decoded bytes (HTTP 200)"));
@@ -2183,29 +2083,25 @@ mod tests {
     }
 
     #[test]
-    fn validates_provider_quorum_against_mode_and_engine_count() {
-        let fallback = SearchOptions {
+    fn validates_provider_quorum_against_engine_count() {
+        let options = SearchOptions {
             provider_quorum: Some(1),
             ..SearchOptions::default()
         };
-        assert!(
-            validate_request(&["query".into()], &fallback)
-                .unwrap_err()
-                .to_string()
-                .contains("fanout mode")
-        );
-        let too_large = SearchOptions {
-            engines: vec![Engine::Duckduckgo, Engine::Bing],
-            mode: SearchMode::Fanout,
-            provider_quorum: Some(3),
-            ..SearchOptions::default()
-        };
-        assert!(
-            validate_request(&["query".into()], &too_large)
-                .unwrap_err()
-                .to_string()
-                .contains("between 1 and the 2 selected engines")
-        );
+        assert!(validate_request(&["query".into()], &options).is_ok());
+        for quorum in [0, 3] {
+            let invalid = SearchOptions {
+                engines: vec![Engine::Duckduckgo, Engine::Bing],
+                provider_quorum: Some(quorum),
+                ..SearchOptions::default()
+            };
+            assert!(
+                validate_request(&["query".into()], &invalid)
+                    .unwrap_err()
+                    .to_string()
+                    .contains("between 1 and the 2 selected engines")
+            );
+        }
     }
 
     #[tokio::test]
@@ -2239,20 +2135,17 @@ mod tests {
     #[test]
     fn outcome_merging_keeps_partial_success_and_rejects_total_failure() {
         let success = with_provenance(parse_duckduckgo_results(DDG), Engine::Duckduckgo, "one");
-        let merged = merge_outcomes(
-            vec![Ok(success), Err(KestrelError::Search("offline".into()))],
-            SearchMode::Fanout,
-        )
+        let merged = merge_outcomes(vec![
+            Ok(success),
+            Err(KestrelError::Search("offline".into())),
+        ])
         .unwrap();
         assert_eq!(merged.len(), 1);
         assert!(
-            merge_outcomes(
-                vec![Err(KestrelError::Search("offline".into()))],
-                SearchMode::Fallback,
-            )
-            .unwrap_err()
-            .to_string()
-            .contains("Every search failed")
+            merge_outcomes(vec![Err(KestrelError::Search("offline".into()))])
+                .unwrap_err()
+                .to_string()
+                .contains("Every search failed")
         );
     }
     #[test]
@@ -2286,29 +2179,55 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn fallback_continues_after_empty_or_failed_provider() {
-        let mut calls = Vec::new();
-        let results = collect_fallback(
-            "query",
-            &[Engine::Bing, Engine::Duckduckgo, Engine::Yahoo],
-            |engine| {
-                calls.push(engine);
-                std::future::ready(match engine {
-                    Engine::Bing => Ok(Vec::new()),
-                    Engine::Duckduckgo => Err(KestrelError::Search("challenge".into())),
-                    _ => Ok(vec![SearchResult::parsed(
-                        "useful".into(),
-                        "https://example.org".into(),
-                        String::new(),
-                        String::new(),
-                    )]),
-                })
-            },
-        )
-        .await
-        .unwrap();
-        assert_eq!(calls.len(), 3);
-        assert_eq!(results.len(), 1);
+    async fn fanout_quorum_ignores_empty_and_failed_providers() {
+        let pending = FuturesUnordered::new();
+        for (index, outcome) in [
+            Ok(Vec::new()),
+            Err(KestrelError::Search("challenge".into())),
+            Ok(parse_duckduckgo_response(DDG).unwrap()),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            pending.push(std::future::ready((index, outcome)));
+        }
+        let (outcomes, cancelled) = collect_fanout(pending, Some(1)).await;
+        assert_eq!(outcomes.len(), 3);
+        assert_eq!(cancelled, 0);
+        assert_eq!(merge_outcomes(outcomes).unwrap().len(), 1);
+    }
+
+    #[tokio::test]
+    async fn fanout_polls_all_providers_and_supports_single_provider() {
+        for count in [1, 3] {
+            let barrier = Arc::new(tokio::sync::Barrier::new(count));
+            let pending = FuturesUnordered::new();
+            for index in 0..count {
+                let barrier = Arc::clone(&barrier);
+                pending.push(async move {
+                    barrier.wait().await;
+                    (
+                        index,
+                        Ok(vec![SearchResult::parsed(
+                            format!("provider {index}"),
+                            format!("https://example.org/{index}"),
+                            String::new(),
+                            String::new(),
+                        )]),
+                    )
+                });
+            }
+            let (outcomes, cancelled) =
+                tokio::time::timeout(Duration::from_secs(1), collect_fanout(pending, None))
+                    .await
+                    .expect("all providers must be polled concurrently");
+            assert_eq!(cancelled, 0);
+            let results = merge_outcomes(outcomes).unwrap();
+            assert_eq!(results.len(), count);
+            for (index, result) in results.iter().enumerate() {
+                assert_eq!(result.title, format!("provider {index}"));
+            }
+        }
     }
 
     #[tokio::test]
