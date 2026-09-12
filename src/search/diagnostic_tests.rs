@@ -166,7 +166,7 @@ async fn queued_and_never_polled_jobs_finalize_on_drop() {
                         Arc::new(Semaphore::new(0)),
                         Arc::clone(&diagnostics),
                         None,
-                        Some(Arc::new(AtomicBool::new(quorum))),
+                        Some(Arc::new(AtomicU8::new(u8::from(quorum)))),
                         provider,
                     ));
                     assert_eq!(diagnostics.lock().unwrap().len(), 1);
@@ -251,13 +251,22 @@ async fn deadline_during_backoff_keeps_completed_attempt() {
 
 #[tokio::test]
 async fn quorum_drops_inflight_send_and_preserves_shared_run_id() {
+    threshold_drops_inflight_send(None, "cancelled_quorum").await;
+}
+
+#[tokio::test]
+async fn minimum_drops_inflight_send_and_preserves_shared_run_id() {
+    threshold_drops_inflight_send(Some(1), "cancelled_min_results").await;
+}
+
+async fn threshold_drops_inflight_send(min_results: Option<usize>, expected: &str) {
     let directory = tempfile::tempdir().unwrap();
     TEST_TRACE_DIRECTORY
         .scope(Some(directory.path().to_owned()), async {
             DIAGNOSTIC_RUN_ID
                 .scope("shared-run".into(), async {
                     let diagnostics = Arc::new(Mutex::new(Vec::new()));
-                    let signal = Arc::new(AtomicBool::new(false));
+                    let signal = Arc::new(AtomicU8::new(0));
                     let semaphore = Arc::new(Semaphore::new(2));
                     let slow = run_one_job(
                         "test",
@@ -301,7 +310,7 @@ async fn quorum_drops_inflight_send_and_preserves_shared_run_id() {
                     pending.push(Box::pin(async { (0_usize, slow.await) }) as Job<'_>);
                     pending.push(Box::pin(async { (1_usize, fast.await) }) as Job<'_>);
                     let (_, cancelled) =
-                        collect_fanout_signalled(pending, Some(1), Some(signal)).await;
+                        collect_fanout_signalled(pending, Some(1), min_results, Some(signal)).await;
                     assert_eq!(cancelled, 1);
                     assert_eq!(diagnostics.lock().unwrap().len(), 2);
                 })
@@ -311,7 +320,7 @@ async fn quorum_drops_inflight_send_and_preserves_shared_run_id() {
     let records = json_files(directory.path());
     assert_eq!(records.len(), 2);
     let slow = &records.iter().find(|r| r["engine"] == "bing").unwrap()["lifecycle"];
-    assert_eq!(slow["logical_outcome"], "cancelled_quorum");
+    assert_eq!(slow["logical_outcome"], expected);
     assert_eq!(slow["cancellation_phase"], "send");
     assert_eq!(slow["attempts"][0]["outcome"], "cancelled");
     assert!(
@@ -515,7 +524,7 @@ async fn quorum_during_real_retry_backoff_does_not_cancel_completed_response() {
                     Duration::from_secs(60),
                     TEST_BACKOFF_ENTERED.scope(Arc::clone(&notify), async {
                         let diagnostics = Arc::new(Mutex::new(Vec::new()));
-                        let signal = Arc::new(AtomicBool::new(false));
+                        let signal = Arc::new(AtomicU8::new(0));
                         let slow = run_one_job(
                             "test",
                             Engine::Bing,
@@ -551,7 +560,7 @@ async fn quorum_during_real_retry_backoff_does_not_cancel_completed_response() {
                         }) as Job<'_>);
                         let (_, cancelled) = tokio::time::timeout(
                             Duration::from_secs(3),
-                            collect_fanout_signalled(pending, Some(1), Some(signal)),
+                            collect_fanout_signalled(pending, Some(1), None, Some(signal)),
                         )
                         .await
                         .unwrap();

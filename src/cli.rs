@@ -71,11 +71,15 @@ struct SearchArgs {
     #[arg(long, default_value_t = 10, value_parser = positive_usize)]
     search_concurrency: usize,
 
-    /// Stop fanout after N nonempty responses (default: 1 with implicit budgeted fanout).
+    /// Legacy compatibility option; ignored by result-count fanout.
     #[arg(long, value_parser = positive_usize, value_name = "N")]
     provider_quorum: Option<usize>,
 
-    /// Total search seconds, including queueing and retries (default: 5).
+    /// Stop fanout after N unique candidates per query (default: 5; overrides provider quorum).
+    #[arg(long, value_parser = positive_usize, value_name = "N")]
+    min_results: Option<usize>,
+
+    /// Total search seconds, including provider queueing and retries (default: 5).
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     search_budget: Option<f64>,
 
@@ -183,6 +187,7 @@ impl SearchArgs {
             time_filter: self.time_filter,
             max_concurrency: self.search_concurrency,
             provider_quorum: self.provider_quorum.or(budgeted_default.then_some(1)),
+            min_results: self.min_results,
             search_budget: self.effective_search_budget(),
         }
     }
@@ -388,7 +393,9 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
     let mut candidate_counts = BTreeMap::from([("after_search".into(), results.len())]);
     timings.insert("search".into(), elapsed_millis(started));
     if provider_cancellations > 0 {
-        eprintln!("[kestrel] Search stopped; cancelled {provider_cancellations} straggler(s).");
+        eprintln!(
+            "[kestrel] Search stopped; cancelled {provider_cancellations} unfinished provider request(s)."
+        );
     }
 
     if results.is_empty() {
@@ -1026,6 +1033,16 @@ mod tests {
     fn selections_reject_invalid_entries() {
         let paths = vec![PathBuf::from("one"), PathBuf::from("two")];
         assert_eq!(select_installations("2,2,nope,3", &paths), [&paths[1]]);
+    }
+
+    #[test]
+    fn generated_skill_documents_result_minimum_precedence() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("--min-results"));
+        assert!(skill.contains("Provider quorum is ignored"));
+        assert!(skill.contains("five\n  unique accepted candidates"));
+        assert!(skill.contains("Query constraints apply before counting"));
+        assert!(!skill.contains("selects quorum 1"));
     }
 
     #[test]

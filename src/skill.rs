@@ -57,7 +57,7 @@ page text is unavailable, including searches with `--no-fetch`.
 - BM25 filtering removes zero-relevance results unless an entire query group scores zero.
 - Use `--no-fetch` for a fast, low-cost keyword search.
 - Portable query syntax is the default for every provider: quoted phrases require adjacency in one title/snippet; unquoted terms use AND. Uppercase AND/OR/NOT, exclusions, parentheses and site:hostname are supported.
-- Query constraints filter title/snippet evidence before provider quorum, independently of fetching/ranking. Missing positive evidence excludes a result; NOT checks metadata absence, not the full page.
+- Query constraints filter title/snippet evidence before counting toward the result minimum, independently of fetching/ranking. Missing positive evidence excludes a result; NOT checks metadata absence, not the full page.
 - Use --query-syntax native for provider-specific syntax such as filetype:pdf and the previous passthrough behavior. Do not claim complete-page relevance from metadata matches.
 - All nine supported engines are selected by default. Explicit `--engine` selections replace this list; use `-e duckduckgo -e bing -e yahoo` to retain the previous provider set.
 - Provider failures, bot challenges, and unsupported region/recency filters retain results from successful providers; including an engine does not guarantee results.
@@ -152,12 +152,16 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
   `snippet` uses titles/snippets; `body` uses content-only BM25 and requires fetching;
   `hybrid` combines title/snippet/body evidence and retains results without bodies;
   `rrf` combines provider ranks. Snippet, hybrid, and RRF also work with `--no-fetch`.
-- Search defaults to a five-second total deadline with no provider quorum.
-  Explicit `--search-budget` without `--mode` selects quorum 1; explicit
-  `--provider-quorum` overrides it. `--mode fanout` suppresses that implicit quorum.
-  Quorum counts provider responses with accepted results after query constraints,
-  not semantic relevance or the number of results.
-  `--no-search-budget` disables the total search deadline; request timeouts remain.
+- Search streams normalized results from concurrent providers and stops at five
+  unique accepted candidates per query by default. `--min-results N` changes this
+  minimum. Provider quorum is ignored, including explicit `--provider-quorum`.
+  Duplicate URLs, errors, challenges, and empty responses do not advance the count.
+  Query constraints apply before counting. Remaining requests are cancelled and
+  their unread results ignored; fusion preserves provenance already received.
+  The minimum may be met by one provider; provider diversity is not guaranteed.
+- Search defaults to a five-second total deadline and can return fewer results if
+  providers finish or the deadline expires. `--no-search-budget` disables this
+  deadline but keeps result-count early stopping and individual request timeouts.
 - The search budget excludes page fetching. `--fetch-budget` separately bounds the
   candidate-fetch stage and retains completed pages; it is unset by default.
   `--timeout` controls individual page requests, not the total search duration.

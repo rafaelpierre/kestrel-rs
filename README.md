@@ -22,7 +22,7 @@ compatible with the Python implementation.
   extracted-content limits.
 - BM25 ranking over extracted page content, with optional title/snippet
   pre-ranking before fetching.
-- Optional provider quorum, total fetch budget, and TTL disk cache.
+- Result-count early stopping, total fetch budget, and TTL disk cache.
 - Async and blocking library APIs, reusable HTTP connection pools, and detailed
   provider/page diagnostics.
 
@@ -143,10 +143,10 @@ kestrel search "python typing" \
 kestrel search "rust ownership" \
   --mode fanout --provider-quorum 1 --search-budget 3 --no-fetch
 
-# Return after two providers per query produce results and cancel stragglers
+# Return after five unique results per query and cancel unfinished requests
 kestrel search "python typing" \
   --engine duckduckgo --engine bing --engine yahoo \
-  --provider-quorum 2
+  --mode fanout --min-results 5
 
 # Pre-rank title/snippet candidates before deciding which pages to fetch
 kestrel search "rust async patterns" --pre-rank
@@ -191,8 +191,8 @@ resource limits.
 
 CLI fanout searches have a five-second total search budget, including provider
 queueing and retries. Completed results are retained when the deadline expires.
-Use `--search-budget SECS` to change it or `--no-search-budget` to wait for all
-providers to finish their attempts. The library has no total search deadline
+Use `--search-budget SECS` to change it or `--no-search-budget` to disable the total deadline
+while retaining result-count early stopping. The library has no total search deadline
 unless one is supplied. Per-request timeouts still apply.
 This budget does not include page fetching or ranking.
 
@@ -205,9 +205,34 @@ Two measured optimizations remain explicit opt-ins:
 - `--pre-rank` scores titles and snippets before page fetching. In a 24-pair
   live ablation it slightly reduced requests and downloaded bytes, but did not
   establish a semantic-quality improvement.
-- `--provider-quorum N` avoids waiting for a slow provider after `N` providers
-  per query return non-empty results. It improves fanout tail latency but may
-  reduce provider diversity.
+- `--min-results N` controls the unique-result target for fanout.
+  `--provider-quorum` is accepted for compatibility but ignored.
+
+`kestrel search "what is ML" --mode fanout` now stops each query after **five
+valid, unique search candidates**. Change the target with `--min-results N`.
+Challenges, failed requests, empty responses, invalid URLs, and filtered-out
+records contribute zero. Duplicate URLs count once. There is no separate
+streaming flag and no requirement to wait for every provider.
+
+All adapters publish the same `SearchResult` contract: title, URL, display URL,
+snippet, provider, query, original provider rank, and source provenance. HTML
+adapters emit closed result cards; JSON adapters emit complete result items.
+Providers with encoded envelopes or unrecognized incremental layouts deliver a
+completed batch through the same collector. Once the target is reached, pending
+requests for that query are cancelled and their unread tails are ignored. Shared
+HTTP/2 connections remain available for other searches.
+
+One provider can supply all five valid results, even if `--provider-quorum 2`
+is supplied. Fusion combines whatever has arrived without imposing a minimum
+number of providers. The result minimum
+is not an output cap or a promise of five successfully fetched pages: a chunk
+can contain extra candidates, and exhausted providers or the search deadline
+can return fewer. Complete streamed records survive a deadline. Existing fusion
+and ranking apply to the retained candidates.
+
+`SearchOptions::min_results` controls the library target; `None` uses five in
+fanout mode. External struct literals must add the field or use
+`..Default::default()`. See [streaming behavior and measurements](docs/streaming-fanout.md).
 
 `--fetch-budget` is likewise an explicit latency/coverage tradeoff: pages that
 finish within the total budget are retained and outstanding fetches are

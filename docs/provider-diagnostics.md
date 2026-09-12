@@ -74,7 +74,8 @@ censor the active phase; client timeouts censor the affected send/body phase.
 Earlier intervals and completed attempts stay complete. Cancellation in queue
 or before polling creates no send; cancellation during backoff creates no extra
 attempt. `cancellation_phase` identifies the interrupted logical phase, and
-`logical_outcome` distinguishes `deadline`, `cancelled_quorum` and
+`logical_outcome` distinguishes `deadline`, `cancelled_quorum`,
+`cancelled_min_results` (the unique-result threshold was met; quorum is ignored), and
 `cancelled_caller` from completed results, empty results and errors.
 
 Do not combine censored intervals with completed latency samples. Also separate
@@ -94,3 +95,11 @@ Mocked tests exercise both HTTP backends, correlation, redirects, retry recovery
 and exhaustion, typed errors, challenges, interrupted bodies, backoff, queueing,
 never-polled jobs, deadlines and quorum cancellation. No live-provider availability
 claim follows from those tests.
+
+Streaming fanout can return records from a provider whose body was cancelled.
+For `cancelled_min_results`, `result_count`, `raw_result_count`, and
+`filtered_count` describe the last published snapshot; `success` remains false
+because the response did not finish. Its attempt is censored in the body phase.
+A deadline retains previously completed records, while a malformed or failed
+response before the stopping threshold retracts that provider's snapshot.
+Error and challenge responses never add results to the accumulator.
