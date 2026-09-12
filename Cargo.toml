@@ -46,6 +46,7 @@ url = "2"
 uuid = { version = "1", features = ["v4"] }
 
 [dev-dependencies]
+flate2 = "1"
 rcgen = { version = "0.14", default-features = false, features = ["aws_lc_rs"] }
 tokio-rustls = "0.26"
 hyper = { version = "1", features = ["server", "http1", "http2"] }

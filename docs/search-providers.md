@@ -29,6 +29,22 @@ Yep varied between an access block and a valid empty response. Those observation
 are not availability guarantees. Ecosia's success markup fixture is provisional;
 its parser must be confirmed against a successful live result page before promotion.
 
+## Response size limit
+
+All providers, including Yahoo's impersonated transport, enforce a 4 MiB
+(4,194,304 byte) response limit after HTTP decompression and before text decoding
+or HTML/JSON parsing. The same limit applies to HTTP error bodies. Declared
+oversized responses are rejected before reading; chunked and compressed bodies
+are checked incrementally before appending to the retained buffer.
+
+An oversized response returns `KestrelError::ProviderResponseTooLarge`, including
+the engine, limit and HTTP status. It is not retried. Provider diagnostics record
+`response_too_large`; fallback can try the next engine, and fanout retains other
+successful providers. Oversized bodies are not written to provider trace files.
+This fixed provider limit is independent of page-fetch response limits. It bounds
+the retained response bytes, not total process memory: transport chunks, charset
+conversion, parsers and concurrent searches require additional memory.
+
 ## Query language
 
 Kestrel transports the complete native query unchanged, using form/URL/JSON
