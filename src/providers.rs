@@ -413,6 +413,29 @@ fn parse_qwant(text: &str) -> Result<Vec<SearchResult>, KestrelError> {
 fn parse_mojeek(text: &str) -> Result<Vec<SearchResult>, KestrelError> {
     let doc = Html::parse_document(text);
     let select = |s| Selector::parse(s).expect("constant selector");
+    // The observed challenge has both a page-level title and a dedicated wrapper.
+    // Never classify CAPTCHA mentions in ordinary result titles/snippets as blocking.
+    let captcha_title = doc.select(&select("head > title")).any(|title| {
+        title
+            .text()
+            .collect::<String>()
+            .trim()
+            .eq_ignore_ascii_case("captcha")
+    });
+    let challenge_message = doc.select(&select(".captcha-wrap > p")).any(|message| {
+        message
+            .text()
+            .flat_map(str::split_whitespace)
+            .collect::<Vec<_>>()
+            .join(" ")
+            .to_ascii_lowercase()
+            .contains("javascript is required to complete this challenge.")
+    });
+    if captcha_title && challenge_message {
+        return Err(KestrelError::Search(
+            "mojeek returned a bot challenge".into(),
+        ));
+    }
     let mut results = Vec::new();
     for item in doc.select(&select("ul.results-standard > li")) {
         let Some(link) = item.select(&select("a.ob")).next() else {
@@ -456,6 +479,60 @@ fn parse_mojeek(text: &str) -> Result<Vec<SearchResult>, KestrelError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn mojeek_distinguishes_challenges_results_empty_and_unknown() {
+        let challenge = include_str!("../tests/fixtures/providers/mojeek-challenge.html");
+        assert!(
+            parse(Engine::Mojeek, challenge)
+                .unwrap_err()
+                .to_string()
+                .contains("bot challenge")
+        );
+        assert!(
+            parse(
+                Engine::Mojeek,
+                "<div class='top-info'>No results found.</div>"
+            )
+            .unwrap()
+            .is_empty()
+        );
+        for unknown in [
+            "<html><body>Service unavailable</body></html>".to_owned(),
+            "<ul class='results-standard'></ul>".to_owned(),
+            challenge.replace("<title>Captcha</title>", "<title>Search</title>"),
+            challenge.replace("captcha-wrap", "article"),
+            challenge.replace(
+                "JavaScript is required to complete this challenge.",
+                "CAPTCHA documentation",
+            ),
+        ] {
+            assert!(
+                parse(Engine::Mojeek, &unknown)
+                    .unwrap_err()
+                    .to_string()
+                    .contains("unrecognized search page")
+            );
+        }
+        let results = r#"<html><head><title>Captcha</title></head><body>
+            <ul class="results-standard"><li>
+            <h2><a class="ob" href="https://example.com/captcha">Captcha</a></h2>
+            <p class="s">JavaScript is required to complete this challenge. CAPTCHA troubleshooting.</p>
+            </li></ul></body></html>"#;
+        assert_eq!(parse(Engine::Mojeek, results).unwrap().len(), 1);
+        // A challenge must not be accepted as explicit empty or partial results.
+        for suffix in [results, "<div class='top-info'>No results found.</div>"] {
+            assert!(
+                parse(
+                    Engine::Mojeek,
+                    &challenge.replace("</body>", &format!("{suffix}</body>"))
+                )
+                .unwrap_err()
+                .to_string()
+                .contains("bot challenge")
+            );
+        }
+    }
 
     #[test]
     fn exact_queries_survive_browser_and_transport_encoding() {
