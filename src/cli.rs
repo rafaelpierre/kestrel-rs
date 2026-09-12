@@ -967,6 +967,132 @@ mod tests {
     }
 
     #[test]
+    fn generated_skill_examples_parse_with_current_cli() {
+        let skill = generate_skill_md(&mut Cli::command());
+        let mut count = 0;
+        for block in skill.split("```bash\n").skip(1) {
+            for line in block.split("```").next().unwrap().lines() {
+                if !line.starts_with("kestrel ") {
+                    continue;
+                }
+                let args = shlex::split(line).expect("valid shell quoting in skill example");
+                let cli = Cli::try_parse_from(args)
+                    .unwrap_or_else(|error| panic!("Invalid example: {line}\n{error}"));
+                if let Commands::Search(args) = cli.command {
+                    assert!(
+                        !(args.no_fetch
+                            && matches!(
+                                args.ranking_policy,
+                                Some(kestrelsearch::ranking::RankingPolicy::Body)
+                            ))
+                    );
+                }
+                count += 1;
+            }
+        }
+        assert!(
+            count >= 12,
+            "expected search, fetch, and skill refresh examples"
+        );
+    }
+
+    #[test]
+    fn generated_skill_documents_parser_conflicts_and_cache_requirements() {
+        let skill = generate_skill_md(&mut Cli::command());
+        for (left, right) in [
+            (vec!["--fetch"], vec!["--no-fetch"]),
+            (vec!["--rank"], vec!["--no-rank"]),
+            (vec!["--search-budget", "3"], vec!["--no-search-budget"]),
+            (vec!["--ranking-policy", "snippet"], vec!["--no-rank"]),
+        ] {
+            let mut command = Cli::command();
+            command.build();
+            let search = command.find_subcommand("search").unwrap();
+            let syntax = |flag: &str| {
+                search
+                    .get_arguments()
+                    .find(|arg| arg.get_long() == flag.strip_prefix("--"))
+                    .unwrap()
+                    .to_string()
+            };
+            let mut pair = [syntax(left[0]), syntax(right[0])];
+            pair.sort();
+            assert!(skill.contains(&format!("- `{}` and `{}`", pair[0], pair[1])));
+            let error = Cli::try_parse_from(
+                ["kestrel", "search", "test"]
+                    .into_iter()
+                    .chain(left)
+                    .chain(right),
+            )
+            .unwrap_err();
+            assert_eq!(error.kind(), clap::error::ErrorKind::ArgumentConflict);
+        }
+        for option in [["--cache-dir", "cache"], ["--cache-max-entries", "10"]] {
+            let error =
+                Cli::try_parse_from(["kestrel", "search", "test"].into_iter().chain(option))
+                    .unwrap_err();
+            assert_eq!(
+                error.kind(),
+                clap::error::ErrorKind::MissingRequiredArgument
+            );
+            assert!(skill.contains(&format!("`{}`", option[0])));
+            assert!(skill.contains("require `--cache-ttl`"));
+        }
+    }
+
+    #[test]
+    fn generated_skill_schema_matches_serialized_results() {
+        let skill = generate_skill_md(&mut Cli::command());
+        let mut result = SearchResult {
+            title: "Example".into(),
+            url: "https://example.com/".into(),
+            display_url: "example.com".into(),
+            snippet: "Example snippet".into(),
+            content: None,
+            bm25_score: None,
+            engine: None,
+            query: None,
+            engine_rank: None,
+            sources: vec![],
+        };
+        let minimal = serde_json::to_value(&result).unwrap();
+        assert!(minimal["content"].is_null());
+        result.bm25_score = Some(1.0);
+        result.engine = Some(Engine::Bing);
+        result.query = Some("example".into());
+        result.engine_rank = Some(1);
+        result.sources = serde_json::from_value(serde_json::json!([
+            {"engine": "bing", "query": "example", "rank": 1}
+        ]))
+        .unwrap();
+        let complete = serde_json::to_value(&result).unwrap();
+        let documented_fields: Vec<_> = skill
+            .lines()
+            .filter_map(|line| line.strip_prefix("| `"))
+            .map(|line| line.split('`').next().unwrap())
+            .collect();
+        assert_eq!(documented_fields.len(), complete.as_object().unwrap().len());
+        for field in complete.as_object().unwrap().keys() {
+            let row = skill
+                .lines()
+                .find(|line| line.starts_with(&format!("| `{field}` |")))
+                .unwrap_or_else(|| panic!("Undocumented JSON field: {field}"));
+            assert_eq!(
+                row.contains(", optional |"),
+                minimal.get(field).is_none(),
+                "{field}"
+            );
+        }
+        assert_eq!(
+            complete["sources"][0],
+            serde_json::json!({
+                "engine": "bing", "query": "example", "rank": 1
+            })
+        );
+        assert!(skill.contains(&format!("cargo install {}", env!("CARGO_PKG_NAME"))));
+    }
+
+    #[test]
     fn generated_skill_reflects_cli() {
         let skill = generate_skill_md(&mut Cli::command());
         assert!(skill.contains("name: kestrelsearch"));

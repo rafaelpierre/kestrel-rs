@@ -150,11 +150,34 @@ fn skill_install_and_uninstall_use_compatible_paths() {
         .success();
     let target = project.path().join(".codex/skills/kestrelsearch/SKILL.md");
     assert!(target.exists());
-    assert!(
-        fs::read_to_string(&target)
+    let skill = fs::read_to_string(&target).unwrap();
+    assert!(skill.contains("name: kestrelsearch"));
+    for subcommand in ["search", "fetch"] {
+        let help = Command::cargo_bin("kestrel")
             .unwrap()
-            .contains("name: kestrelsearch")
-    );
+            .args([subcommand, "--help"])
+            .assert()
+            .success()
+            .get_output()
+            .stdout
+            .clone();
+        let help = String::from_utf8(help).unwrap();
+        assert!(
+            skill.contains(help.trim()),
+            "installed skill must include live {subcommand} help"
+        );
+    }
+    fs::write(&target, "stale skill").unwrap();
+    Command::cargo_bin("kestrel")
+        .unwrap()
+        .current_dir(project.path())
+        .env("HOME", user_home.path())
+        .args([
+            "skill", "install", "--agent", "codex", "--scope", "project", "--force",
+        ])
+        .assert()
+        .success();
+    assert_eq!(fs::read_to_string(&target).unwrap(), skill);
 
     Command::cargo_bin("kestrel")
         .unwrap()
