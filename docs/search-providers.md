@@ -107,6 +107,8 @@ measures three searches through one client without confusing this with startup.
 - `KESTRELSEARCH_PROVIDER_TRACE_DIR` captures response bodies, final URL, status,
   negotiated HTTP version and generated browser profiles. Treat traces as local
   debugging artifacts; they can contain query text and provider identifiers.
+  See [provider diagnostic records](provider-diagnostics.md) for attempt IDs,
+  status/challenge semantics, censored timings and cancellation accounting.
 - Existing benchmark artifact variables capture candidates, stage counts and
   provider outcomes, including cancellations and deadline expiry.
 

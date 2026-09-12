@@ -2,7 +2,7 @@
 
 use std::collections::{HashMap, HashSet};
 use std::future::Future;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -18,12 +18,119 @@ use crate::model::{
     SourceOccurrence, TimeFilter,
 };
 
+use crate::provider_diagnostics::{Challenge, Phase, Recorder, TransportKind};
+
 tokio::task_local! {
-    static PROVIDER_ATTEMPTS: Arc<AtomicUsize>;
+    static PROVIDER_RECORDER: Arc<Mutex<Recorder>>;
+    static DIAGNOSTIC_RUN_ID: String;
 }
 
-fn record_attempt(attempt: usize) {
-    let _ = PROVIDER_ATTEMPTS.try_with(|count| count.store(attempt, Ordering::Relaxed));
+fn record_attempt() {
+    let _ =
+        PROVIDER_RECORDER.try_with(|state| state.lock().expect("recorder lock").start_attempt());
+}
+
+fn record_phase(phase: Phase) {
+    let _ =
+        PROVIDER_RECORDER.try_with(|state| state.lock().expect("recorder lock").transition(phase));
+}
+
+fn observe(update: impl FnOnce(&mut Recorder)) {
+    let _ = PROVIDER_RECORDER.try_with(|state| update(&mut state.lock().expect("recorder lock")));
+}
+
+pub(crate) fn current_correlation() -> Option<serde_json::Value> {
+    PROVIDER_RECORDER
+        .try_with(|state| state.lock().expect("recorder lock").correlation())
+        .ok()
+        .flatten()
+}
+
+fn classify_challenge(engine: Engine, text: &str) -> Challenge {
+    if text.trim().is_empty() {
+        return Challenge::Unknown;
+    }
+    let document = Html::parse_document(text);
+    if document.select(&selector("#b_captcha, #captcha, form[action*='captcha'], .g-recaptcha, #challenge-form, #cf-challenge-running, form[action*='anomaly.js'], .anomaly-modal")).next().is_some() {
+        return Challenge::Detected;
+    }
+    if engine == Engine::Mojeek && crate::providers::mojeek_challenge(&document) {
+        return Challenge::Detected;
+    }
+    if engine == Engine::Ecosia
+        && document
+            .select(&selector("title"))
+            .any(|e| e.text().collect::<String>().contains("Firewall"))
+    {
+        return Challenge::Detected;
+    }
+    if engine == Engine::Qwant
+        && serde_json::from_str::<serde_json::Value>(text)
+            .ok()
+            .is_some_and(|v| v.get("url").and_then(|v| v.as_str()).is_some())
+    {
+        return Challenge::Detected;
+    }
+    // This means no known marker was detected, not proof the provider is usable.
+    Challenge::NotDetected
+}
+
+fn is_tls_error(error: &(dyn std::error::Error + 'static)) -> bool {
+    let mut source = Some(error);
+    for _ in 0..64 {
+        let Some(error) = source else { break };
+        if error.is::<rustls::Error>() || error.is::<primp_tls::Error>() {
+            return true;
+        }
+        // io::Error::source skips the wrapped error itself. Inspect get_ref()
+        // first so a TLS error directly wrapped by the transport is not lost.
+        source = error
+            .downcast_ref::<std::io::Error>()
+            .and_then(|io| {
+                io.get_ref()
+                    .map(|inner| inner as &(dyn std::error::Error + 'static))
+            })
+            .or_else(|| error.source());
+    }
+    false
+}
+
+fn standard_transport(error: &reqwest::Error) -> TransportKind {
+    if error.is_timeout() {
+        TransportKind::Timeout
+    } else if is_tls_error(error) {
+        TransportKind::Tls
+    } else if error.is_connect() {
+        TransportKind::Connect
+    } else if error.is_decode() {
+        TransportKind::Decode
+    } else if error.is_body() {
+        TransportKind::Body
+    } else if error.is_request() {
+        TransportKind::Request
+    } else {
+        TransportKind::Unknown
+    }
+}
+
+fn yahoo_transport(error: &primp::Error) -> TransportKind {
+    if error.is_timeout() {
+        TransportKind::Timeout
+    } else if is_tls_error(error) {
+        TransportKind::Tls
+    } else if error.is_dns() {
+        TransportKind::Dns
+    } else if error.is_connect() {
+        TransportKind::Connect
+    } else if error.is_decode() {
+        TransportKind::Decode
+    } else if error.is_body() {
+        TransportKind::Body
+    } else if error.is_request() {
+        TransportKind::Request
+    } else {
+        TransportKind::Unknown
+    }
 }
 
 const SEARCH_TIMEOUT: Duration = Duration::from_secs(15);
@@ -109,9 +216,20 @@ pub(crate) async fn search_with_clients(
     time_filter: TimeFilter,
     clients: &SearchClients,
 ) -> Result<Vec<SearchResult>, KestrelError> {
-    run_provider(query, engine, region, time_filter, clients)
+    DIAGNOSTIC_RUN_ID
+        .scope(uuid::Uuid::new_v4().to_string(), async {
+            run_one_job(
+                query,
+                engine,
+                Arc::new(Semaphore::new(1)),
+                Arc::new(Mutex::new(Vec::new())),
+                None,
+                None,
+                run_provider(query, engine, region, time_filter, clients),
+            )
+            .await
+        })
         .await
-        .map(|response| response.results)
 }
 
 struct ProviderResponse {
@@ -182,6 +300,20 @@ async fn search_many_with_clients_detailed(
     options: &SearchOptions,
     clients: &SearchClients,
 ) -> Result<SearchReport, KestrelError> {
+    DIAGNOSTIC_RUN_ID
+        .scope(
+            uuid::Uuid::new_v4().to_string(),
+            search_many_with_clients_in_run(queries, engines, options, clients),
+        )
+        .await
+}
+
+async fn search_many_with_clients_in_run(
+    queries: Vec<String>,
+    engines: Vec<Engine>,
+    options: &SearchOptions,
+    clients: &SearchClients,
+) -> Result<SearchReport, KestrelError> {
     let semaphore = Arc::new(Semaphore::new(options.max_concurrency));
     let diagnostics = Arc::new(Mutex::new(Vec::new()));
     let deadline = options
@@ -242,65 +374,53 @@ async fn search_many_with_clients_detailed(
 }
 
 #[allow(clippy::too_many_arguments)]
-async fn run_fanout_query(
-    query: &str,
+fn run_fanout_query<'a>(
+    query: &'a str,
     engines: &[Engine],
-    clients: &SearchClients,
+    clients: &'a SearchClients,
     semaphore: Arc<Semaphore>,
     diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
-    region: &str,
+    region: &'a str,
     time_filter: TimeFilter,
     provider_quorum: Option<usize>,
     deadline: Option<tokio::time::Instant>,
-) -> (Vec<Result<Vec<SearchResult>, KestrelError>>, usize) {
+) -> impl Future<Output = (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)> + 'a {
     let pending = FuturesUnordered::new();
+    let quorum_cancelled = Arc::new(AtomicBool::new(false));
     for (index, engine) in engines.iter().copied().enumerate() {
         let semaphore = Arc::clone(&semaphore);
         let diagnostics = Arc::clone(&diagnostics);
-        pending.push(async move {
-            (
-                index,
-                run_one(
-                    query,
-                    engine,
-                    clients,
-                    semaphore,
-                    diagnostics,
-                    region,
-                    time_filter,
-                    deadline,
-                )
-                .await,
-            )
-        });
+        let job = run_one(
+            query,
+            engine,
+            clients,
+            semaphore,
+            diagnostics,
+            region,
+            time_filter,
+            deadline,
+            Some(Arc::clone(&quorum_cancelled)),
+        );
+        pending.push(async move { (index, job.await) });
     }
-    let outcome = collect_fanout(pending, provider_quorum).await;
-    let mut entries = diagnostics.lock().expect("diagnostic lock");
-    for engine in engines {
-        if !entries
-            .iter()
-            .any(|entry| entry.engine == *engine && entry.query == query)
-        {
-            entries.push(ProviderSearchDiagnostic {
-                engine: *engine,
-                query: query.to_owned(),
-                elapsed_ms: 0,
-                result_count: 0,
-                retries: 0,
-                success: false,
-                outcome: "cancelled_before_start".into(),
-                error: None,
-                raw_result_count: 0,
-                filtered_count: 0,
-            });
-        }
-    }
-    outcome
+    async move { collect_fanout_signalled(pending, provider_quorum, Some(quorum_cancelled)).await }
 }
 
+#[cfg(test)]
 async fn collect_fanout<F>(
+    pending: FuturesUnordered<F>,
+    provider_quorum: Option<usize>,
+) -> (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)
+where
+    F: Future<Output = (usize, Result<Vec<SearchResult>, KestrelError>)>,
+{
+    collect_fanout_signalled(pending, provider_quorum, None).await
+}
+
+async fn collect_fanout_signalled<F>(
     mut pending: FuturesUnordered<F>,
     provider_quorum: Option<usize>,
+    quorum_cancelled: Option<Arc<AtomicBool>>,
 ) -> (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)
 where
     F: Future<Output = (usize, Result<Vec<SearchResult>, KestrelError>)>,
@@ -315,6 +435,9 @@ where
         completed.push((index, outcome));
         if provider_quorum.is_some_and(|quorum| useful >= quorum) {
             cancelled = pending.len();
+            if let Some(signal) = &quorum_cancelled {
+                signal.store(true, Ordering::Relaxed);
+            }
             break;
         }
     }
@@ -381,16 +504,41 @@ fn validate_request(
 }
 
 #[allow(clippy::too_many_arguments)]
-async fn run_one(
-    query: &str,
+fn run_one<'a>(
+    query: &'a str,
     engine: Engine,
-    clients: &SearchClients,
+    clients: &'a SearchClients,
     semaphore: Arc<Semaphore>,
     diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
-    region: &str,
+    region: &'a str,
     time_filter: TimeFilter,
     deadline: Option<tokio::time::Instant>,
-) -> Result<Vec<SearchResult>, KestrelError> {
+    quorum_cancelled: Option<Arc<AtomicBool>>,
+) -> impl Future<Output = Result<Vec<SearchResult>, KestrelError>> + 'a {
+    let job = run_one_job(
+        query,
+        engine,
+        semaphore,
+        diagnostics,
+        deadline,
+        quorum_cancelled,
+        run_provider(query, engine, region, time_filter, clients),
+    );
+    async move {
+        job.await
+            .map(|results| with_provenance(results, engine, query))
+    }
+}
+
+fn run_one_job<'a>(
+    query: &'a str,
+    engine: Engine,
+    semaphore: Arc<Semaphore>,
+    diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
+    deadline: Option<tokio::time::Instant>,
+    quorum_cancelled: Option<Arc<AtomicBool>>,
+    provider: impl Future<Output = Result<ProviderResponse, KestrelError>> + 'a,
+) -> impl Future<Output = Result<Vec<SearchResult>, KestrelError>> + 'a {
     let started = Instant::now();
     let index = {
         let mut entries = diagnostics.lock().expect("diagnostic lock");
@@ -402,7 +550,7 @@ async fn run_one(
             result_count: 0,
             retries: 0,
             success: false,
-            outcome: "cancelled_quorum".into(),
+            outcome: "cancelled_caller".into(),
             error: None,
             raw_result_count: 0,
             filtered_count: 0,
@@ -410,57 +558,81 @@ async fn run_one(
         index
     };
     // Also records elapsed time when a quorum drops this future mid-request.
-    let _timer = DiagnosticTimer {
+    let run_id = DIAGNOSTIC_RUN_ID
+        .try_with(Clone::clone)
+        .unwrap_or_else(|_| uuid::Uuid::new_v4().to_string());
+    let recorder = Arc::new(Mutex::new(Recorder::with_run(run_id)));
+    let timer = DiagnosticTimer {
         diagnostics: Arc::clone(&diagnostics),
         index,
         started,
+        recorder: Arc::clone(&recorder),
+        completed: false,
+        deadline: false,
+        quorum_cancelled,
     };
-    let attempts = Arc::new(AtomicUsize::new(0));
-    let job = PROVIDER_ATTEMPTS.scope(Arc::clone(&attempts), async {
-        let _permit = semaphore.acquire().await.expect("semaphore remains open");
-        run_provider(query, engine, region, time_filter, clients).await
-    });
-    let outcome = match deadline {
-        Some(deadline) => tokio::time::timeout_at(deadline, job)
-            .await
-            .unwrap_or_else(|_| Err(KestrelError::Search("search deadline exceeded".into()))),
-        None => job.await,
-    };
-    {
-        let mut entries = diagnostics.lock().expect("diagnostic lock");
-        let entry = &mut entries[index];
-        entry.success = outcome.is_ok();
-        entry.retries = attempts.load(Ordering::Relaxed).saturating_sub(1);
-        match &outcome {
-            Ok(response) => {
-                entry.result_count = response.results.len();
-                entry.raw_result_count = response.raw_result_count;
-                entry.filtered_count = response.raw_result_count - response.results.len();
-                entry.retries = response.retries;
-                entry.outcome = if response.results.is_empty() {
-                    if entry.filtered_count > 0 {
-                        "filtered_empty"
-                    } else {
-                        "empty"
-                    }
-                } else {
-                    "results"
-                }
-                .into();
+    async move {
+        let mut timer = timer;
+        recorder
+            .lock()
+            .expect("recorder lock")
+            .transition(Phase::Queue);
+        let job = PROVIDER_RECORDER.scope(Arc::clone(&recorder), async {
+            let _permit = semaphore.acquire().await.expect("semaphore remains open");
+            record_phase(Phase::Processing);
+            provider.await
+        });
+        let outcome = match deadline {
+            Some(deadline) if deadline <= tokio::time::Instant::now() => {
+                timer.deadline = true;
+                Err(KestrelError::Search("search deadline exceeded".into()))
             }
-            Err(error) => {
-                let message = error.to_string();
-                entry.outcome = if matches!(error, KestrelError::ProviderResponseTooLarge { .. }) {
-                    "response_too_large"
-                } else {
-                    provider_error_outcome(&message)
+            Some(deadline) => tokio::time::timeout_at(deadline, job)
+                .await
+                .unwrap_or_else(|_| {
+                    timer.deadline = true;
+                    Err(KestrelError::Search("search deadline exceeded".into()))
+                }),
+            None => job.await,
+        };
+        timer.completed = true;
+        {
+            let mut entries = diagnostics.lock().expect("diagnostic lock");
+            let entry = &mut entries[index];
+            entry.success = outcome.is_ok();
+            entry.retries = recorder.lock().expect("recorder lock").retries();
+            match &outcome {
+                Ok(response) => {
+                    entry.result_count = response.results.len();
+                    entry.raw_result_count = response.raw_result_count;
+                    entry.filtered_count = response.raw_result_count - response.results.len();
+                    entry.retries = response.retries;
+                    entry.outcome = if response.results.is_empty() {
+                        if entry.filtered_count > 0 {
+                            "filtered_empty"
+                        } else {
+                            "empty"
+                        }
+                    } else {
+                        "results"
+                    }
+                    .into();
                 }
-                .into();
-                entry.error = Some(message);
+                Err(error) => {
+                    let message = error.to_string();
+                    entry.outcome =
+                        if matches!(error, KestrelError::ProviderResponseTooLarge { .. }) {
+                            "response_too_large"
+                        } else {
+                            provider_error_outcome(&message)
+                        }
+                        .into();
+                    entry.error = Some(message);
+                }
             }
         }
+        outcome.map(|response| response.results)
     }
-    outcome.map(|response| with_provenance(response.results, engine, query))
 }
 
 fn provider_error_outcome(message: &str) -> &'static str {
@@ -479,12 +651,42 @@ struct DiagnosticTimer {
     diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
     index: usize,
     started: Instant,
+    recorder: Arc<Mutex<Recorder>>,
+    completed: bool,
+    deadline: bool,
+    quorum_cancelled: Option<Arc<AtomicBool>>,
 }
 impl Drop for DiagnosticTimer {
     fn drop(&mut self) {
-        if let Ok(mut entries) = self.diagnostics.lock() {
-            entries[self.index].elapsed_ms = elapsed_millis(self.started);
-            crate::benchmarking::capture_provider_diagnostic(&entries[self.index]);
+        let cancelled = !self.completed || self.deadline;
+        let diagnostic = self.diagnostics.lock().ok().map(|mut entries| {
+            let entry = &mut entries[self.index];
+            entry.elapsed_ms = elapsed_millis(self.started);
+            if !self.completed {
+                entry.outcome = if self
+                    .quorum_cancelled
+                    .as_ref()
+                    .is_some_and(|s| s.load(Ordering::Relaxed))
+                {
+                    "cancelled_quorum"
+                } else {
+                    "cancelled_caller"
+                }
+                .into();
+            }
+            if let Ok(recorder) = self.recorder.lock() {
+                entry.retries = recorder.retries();
+            }
+            entry.clone()
+        });
+        if let Some(diagnostic) = diagnostic {
+            let lifecycle = self
+                .recorder
+                .lock()
+                .ok()
+                .map(|mut recorder| recorder.finish_outcome(&diagnostic.outcome, cancelled));
+            // Both locks are released before handing the owned snapshot to persistence.
+            crate::benchmarking::capture_provider_lifecycle(&diagnostic, lifecycle.as_ref());
         }
     }
 }
@@ -510,6 +712,7 @@ async fn run_with_fallback(
             region,
             time_filter,
             deadline,
+            None,
         )
     })
     .await
@@ -574,6 +777,7 @@ async fn run_provider(
         }
         _ => search_additional(query, engine, region, time_filter, &clients.standard).await,
     };
+    record_phase(Phase::Processing);
     if let Ok(response) = &mut result {
         response.raw_result_count = response.results.len();
         for (index, result) in response.results.iter_mut().enumerate() {
@@ -712,54 +916,87 @@ async fn request_yahoo_with_retries<F>(
 where
     F: Fn() -> primp::RequestBuilder,
 {
+    let engine = Engine::Yahoo;
     let mut last_error = None;
     for attempt in 1..=3 {
-        record_attempt(attempt);
-        match build().send().await {
+        record_attempt();
+        let response = build().send().await;
+        observe(|r| {
+            r.transition_censored(
+                Phase::Processing,
+                response.as_ref().err().is_some_and(|e| e.is_timeout()),
+            )
+        });
+        match response {
             Ok(response) => {
-                let status = response.status();
+                let status = response.status().as_u16();
+                let retry_after = response
+                    .headers()
+                    .get("retry-after")
+                    .and_then(|v| v.to_str().ok())
+                    .map(str::to_owned);
+                observe(|r| r.headers(status, retry_after));
                 let final_url = response.url().to_string();
                 let http_version = format!("{:?}", response.version());
-                let html = match read_yahoo_body(response).await {
-                    Ok(html) => html,
-                    // An unreadable HTTP error body must not override the known
-                    // status or suppress its retries. Size-limit errors still exit.
-                    Err(KestrelError::Yahoo(_)) if !status.is_success() => String::new(),
-                    Err(error) => return Err(error),
-                };
-                crate::benchmarking::capture_provider(
-                    Engine::Yahoo,
-                    query,
-                    &final_url,
-                    status.as_u16(),
-                    &http_version,
-                    attempt,
-                    &html,
-                );
-                if status.is_success() {
-                    return Ok((html, attempt - 1));
+                record_phase(Phase::Body);
+                let body = read_yahoo_body(response).await;
+                observe(|r| {
+                    r.transition_censored(
+                        Phase::Processing,
+                        body.as_ref().err().is_some_and(body_read_censored),
+                    )
+                });
+                match body {
+                    Ok(html) => {
+                        record_phase(Phase::Parse);
+                        let challenge = classify_challenge(engine, &html);
+                        observe(|r| r.response(challenge));
+                        record_phase(Phase::Processing);
+                        crate::benchmarking::capture_provider(
+                            engine,
+                            query,
+                            &final_url,
+                            status,
+                            &http_version,
+                            attempt,
+                            &html,
+                        );
+                        if (200..300).contains(&status) {
+                            record_phase(Phase::Parse);
+                            return Ok((html, attempt - 1));
+                        }
+                    }
+                    Err(error) => {
+                        record_body_error(&error);
+                        // Preserve the successful-status body failure policy. For error
+                        // statuses retain status-based retries, while keeping the body error.
+                        if (200..300).contains(&status)
+                            || matches!(error, KestrelError::ProviderResponseTooLarge { .. })
+                        {
+                            return Err(error);
+                        }
+                    }
                 }
-                let retryable =
-                    status.as_u16() == 408 || status.as_u16() == 429 || status.is_server_error();
-                let error = KestrelError::Search(format!("Yahoo returned HTTP {status}"));
+                let retryable = status == 408 || status == 429 || status >= 500;
+                let error = KestrelError::Search(format!("{engine} returned HTTP {status}"));
                 if !retryable || attempt == 3 {
                     return Err(error);
                 }
                 last_error = Some(error);
             }
             Err(error) => {
+                observe(|r| r.error(yahoo_transport(&error), false));
                 if attempt == 3 {
                     return Err(error.into());
                 }
                 last_error = Some(error.into());
             }
         }
-        log_retry(Engine::Yahoo, query, attempt, last_error.as_ref());
+        log_retry(engine, query, attempt, last_error.as_ref());
         retry_delay(attempt).await;
     }
-    Err(last_error.unwrap_or_else(|| KestrelError::Search("Yahoo request failed".into())))
+    Err(last_error.unwrap_or_else(|| KestrelError::Search("request failed".into())))
 }
-
 async fn request_standard_with_retries<F>(
     _client: &reqwest::Client,
     engine: Engine,
@@ -771,41 +1008,73 @@ where
 {
     let mut last_error = None;
     for attempt in 1..=3 {
-        record_attempt(attempt);
-        match build().send().await {
+        record_attempt();
+        let response = build().send().await;
+        observe(|r| {
+            r.transition_censored(
+                Phase::Processing,
+                response.as_ref().err().is_some_and(|e| e.is_timeout()),
+            )
+        });
+        match response {
             Ok(response) => {
-                let status = response.status();
+                let status = response.status().as_u16();
+                let retry_after = response
+                    .headers()
+                    .get("retry-after")
+                    .and_then(|v| v.to_str().ok())
+                    .map(str::to_owned);
+                observe(|r| r.headers(status, retry_after));
                 let final_url = response.url().to_string();
                 let http_version = format!("{:?}", response.version());
-                let html = match read_standard_body(response, engine).await {
-                    Ok(html) => html,
-                    // An unreadable HTTP error body must not override the known
-                    // status or suppress its retries. Size-limit errors still exit.
-                    Err(KestrelError::Http(_)) if !status.is_success() => String::new(),
-                    Err(error) => return Err(error),
-                };
-                crate::benchmarking::capture_provider(
-                    engine,
-                    query,
-                    &final_url,
-                    status.as_u16(),
-                    &http_version,
-                    attempt,
-                    &html,
-                );
-                if status.is_success() {
-                    return Ok((html, attempt - 1));
+                record_phase(Phase::Body);
+                let body = read_standard_body(response, engine).await;
+                observe(|r| {
+                    r.transition_censored(
+                        Phase::Processing,
+                        body.as_ref().err().is_some_and(body_read_censored),
+                    )
+                });
+                match body {
+                    Ok(html) => {
+                        record_phase(Phase::Parse);
+                        let challenge = classify_challenge(engine, &html);
+                        observe(|r| r.response(challenge));
+                        record_phase(Phase::Processing);
+                        crate::benchmarking::capture_provider(
+                            engine,
+                            query,
+                            &final_url,
+                            status,
+                            &http_version,
+                            attempt,
+                            &html,
+                        );
+                        if (200..300).contains(&status) {
+                            record_phase(Phase::Parse);
+                            return Ok((html, attempt - 1));
+                        }
+                    }
+                    Err(error) => {
+                        record_body_error(&error);
+                        // Preserve the successful-status body failure policy. For error
+                        // statuses retain status-based retries, while keeping the body error.
+                        if (200..300).contains(&status)
+                            || matches!(error, KestrelError::ProviderResponseTooLarge { .. })
+                        {
+                            return Err(error);
+                        }
+                    }
                 }
-                let retryable =
-                    status.as_u16() == 408 || status.as_u16() == 429 || status.is_server_error();
-                let error =
-                    KestrelError::Search(format!("{engine} returned HTTP {}", status.as_u16()));
+                let retryable = status == 408 || status == 429 || status >= 500;
+                let error = KestrelError::Search(format!("{engine} returned HTTP {status}"));
                 if !retryable || attempt == 3 {
                     return Err(error);
                 }
                 last_error = Some(error);
             }
             Err(error) => {
+                observe(|r| r.error(standard_transport(&error), false));
                 let retryable = error.is_timeout() || error.is_connect() || error.is_request();
                 if !retryable || attempt == 3 {
                     return Err(error.into());
@@ -817,6 +1086,24 @@ where
         retry_delay(attempt).await;
     }
     Err(last_error.unwrap_or_else(|| KestrelError::Search("request failed".into())))
+}
+
+fn body_read_censored(error: &KestrelError) -> bool {
+    match error {
+        KestrelError::Http(error) => error.is_timeout(),
+        KestrelError::Yahoo(error) => error.is_timeout(),
+        KestrelError::ProviderResponseTooLarge { .. } => true,
+        _ => false,
+    }
+}
+
+fn record_body_error(error: &KestrelError) {
+    observe(|recorder| match error {
+        KestrelError::Http(error) => recorder.error(standard_transport(error), true),
+        KestrelError::Yahoo(error) => recorder.error(yahoo_transport(error), true),
+        KestrelError::ProviderResponseTooLarge { .. } => recorder.response_too_large(),
+        _ => recorder.error(TransportKind::Unknown, true),
+    });
 }
 
 // Both transports expose decompressed chunks. Check before appending, including
@@ -930,7 +1217,21 @@ fn log_retry(engine: Engine, query: &str, attempt: usize, error: Option<&Kestrel
     );
 }
 
+#[cfg(test)]
+tokio::task_local! {
+    static TEST_RETRY_DELAY: Duration;
+    static TEST_BACKOFF_ENTERED: Arc<tokio::sync::Notify>;
+}
+
 async fn retry_delay(attempt: usize) {
+    record_phase(Phase::Backoff);
+    #[cfg(test)]
+    let _ = TEST_BACKOFF_ENTERED.try_with(|notify| notify.notify_one());
+    #[cfg(test)]
+    if let Ok(delay) = TEST_RETRY_DELAY.try_with(|delay| *delay) {
+        tokio::time::sleep(delay).await;
+        return;
+    }
     #[cfg(test)]
     if attempt > 0 {
         return;
@@ -1366,6 +1667,7 @@ fn element_text(element: ElementRef<'_>, separator: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::AtomicUsize;
 
     const DDG: &str = r#"
     <div class="result results_links results_links_deep web-result">
@@ -1427,10 +1729,10 @@ mod tests {
                 std::future::pending::<()>().await;
             }
         });
-        let attempts = Arc::new(AtomicUsize::new(0));
+        let attempts = Arc::new(Mutex::new(Recorder::new()));
         let result = tokio::time::timeout(
             Duration::from_secs(3),
-            PROVIDER_ATTEMPTS.scope(Arc::clone(&attempts), async {
+            PROVIDER_RECORDER.scope(Arc::clone(&attempts), async {
                 if yahoo {
                     let client = primp::Client::builder().no_proxy().build().unwrap();
                     request_yahoo_with_retries("test", || client.get(&url)).await
@@ -1446,7 +1748,7 @@ mod tests {
         .await;
         server.abort();
         assert_eq!(
-            attempts.load(Ordering::Relaxed),
+            attempts.lock().unwrap().finish(false).send_attempts,
             1,
             "oversize must not retry"
         );
@@ -2010,6 +2312,53 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn dropped_provider_preserves_retries_and_censored_backoff() {
+        let diagnostics = Arc::new(Mutex::new(vec![ProviderSearchDiagnostic {
+            engine: Engine::Bing,
+            query: "test".into(),
+            elapsed_ms: 0,
+            result_count: 0,
+            retries: 0,
+            success: false,
+            outcome: "cancelled_quorum".into(),
+            error: None,
+            raw_result_count: 0,
+            filtered_count: 0,
+        }]));
+        let recorder = Arc::new(Mutex::new(Recorder::new()));
+        let task_recorder = Arc::clone(&recorder);
+        let task_diagnostics = Arc::clone(&diagnostics);
+        let mut job = Box::pin(async move {
+            let _timer = DiagnosticTimer {
+                diagnostics: task_diagnostics,
+                index: 0,
+                started: Instant::now(),
+                recorder: Arc::clone(&task_recorder),
+                completed: false,
+                deadline: false,
+                quorum_cancelled: Some(Arc::new(AtomicBool::new(true))),
+            };
+            PROVIDER_RECORDER
+                .scope(task_recorder, async {
+                    record_attempt();
+                    record_phase(Phase::Backoff);
+                    record_attempt();
+                    record_phase(Phase::Backoff);
+                    std::future::pending::<()>().await;
+                })
+                .await;
+        });
+        assert!(futures_util::poll!(&mut job).is_pending());
+        drop(job);
+        let entries = diagnostics.lock().unwrap();
+        assert_eq!(entries[0].retries, 1);
+        assert_eq!(entries[0].outcome, "cancelled_quorum");
+        let snapshot = recorder.lock().unwrap().finish(false);
+        assert_eq!(snapshot.send_attempts, 2);
+        assert_eq!(snapshot.cancellation_phase, Some(Phase::Backoff));
+    }
+
+    #[tokio::test]
     async fn deadline_includes_provider_queue_and_records_reason() {
         let clients = SearchClients::new(&[Engine::Bing]).unwrap();
         let diagnostics = Arc::new(Mutex::new(Vec::new()));
@@ -2022,6 +2371,7 @@ mod tests {
             "",
             TimeFilter::Any,
             Some(tokio::time::Instant::now() + Duration::from_millis(5)),
+            None,
         )
         .await;
         assert!(result.is_err());
@@ -2061,3 +2411,7 @@ mod tests {
         assert_eq!(results[0].sources[0].rank, 4);
     }
 }
+
+#[cfg(test)]
+#[path = "search/diagnostic_tests.rs"]
+mod diagnostic_tests;
