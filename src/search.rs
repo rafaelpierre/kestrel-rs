@@ -2362,6 +2362,75 @@ mod tests {
         assert!(!entries[0].success);
     }
 
+    #[tokio::test]
+    async fn fanout_deadline_retains_success_and_reports_total_failure() {
+        use std::pin::Pin;
+
+        type Job<'a> =
+            Pin<Box<dyn Future<Output = (usize, Result<Vec<SearchResult>, KestrelError>)> + 'a>>;
+
+        let clients = SearchClients::new(&[Engine::Bing]).unwrap();
+        for has_success in [true, false] {
+            let diagnostics = Arc::new(Mutex::new(Vec::new()));
+            let pending = FuturesUnordered::<Job<'_>>::new();
+            if has_success {
+                pending.push(Box::pin(async {
+                    (
+                        0,
+                        Ok(vec![SearchResult::parsed(
+                            "fast result".into(),
+                            "https://example.com/fast".into(),
+                            String::new(),
+                            "useful snippet".into(),
+                        )]),
+                    )
+                }));
+            }
+            let entries = Arc::clone(&diagnostics);
+            let clients = &clients;
+            // A provider blocked on the queue never performs a network request.
+            pending.push(Box::pin(async move {
+                (
+                    1,
+                    run_one(
+                        "query",
+                        Engine::Bing,
+                        clients,
+                        Arc::new(Semaphore::new(0)),
+                        entries,
+                        "",
+                        TimeFilter::Any,
+                        Some(tokio::time::Instant::now() + Duration::from_millis(5)),
+                        None,
+                    )
+                    .await,
+                )
+            }));
+            let (outcomes, cancelled) =
+                tokio::time::timeout(Duration::from_secs(1), collect_fanout(pending, None))
+                    .await
+                    .expect("fanout must finish at its deadline");
+            assert_eq!(cancelled, 0);
+            let merged = merge_outcomes(outcomes);
+            if has_success {
+                let results = merged.unwrap();
+                assert_eq!(results.len(), 1);
+                assert_eq!(results[0].title, "fast result");
+            } else {
+                assert!(
+                    merged
+                        .unwrap_err()
+                        .to_string()
+                        .contains("Every search failed")
+                );
+            }
+            let entries = diagnostics.lock().unwrap();
+            assert_eq!(entries.len(), 1);
+            assert_eq!(entries[0].outcome, "deadline");
+            assert!(!entries[0].success);
+        }
+    }
+
     #[test]
     fn additional_html_parsers_reject_shells_and_accept_explicit_empty() {
         for engine in [Engine::Bing, Engine::Yahoo] {

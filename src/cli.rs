@@ -64,16 +64,20 @@ struct SearchArgs {
     mode: Option<SearchMode>,
 
     /// Maximum concurrent search-engine requests.
-    #[arg(long, default_value_t = 5, value_parser = positive_usize)]
+    #[arg(long, default_value_t = 10, value_parser = positive_usize)]
     search_concurrency: usize,
 
     /// Stop fanout after N nonempty responses (default: 1 with implicit budgeted fanout).
     #[arg(long, value_parser = positive_usize, value_name = "N")]
     provider_quorum: Option<usize>,
 
-    /// Total search seconds; defaults to fanout quorum 1 unless --mode is explicit.
+    /// Total search seconds, including queueing and retries (default: 5).
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     search_budget: Option<f64>,
+
+    /// Disable the total search deadline; per-request timeouts still apply.
+    #[arg(long, conflicts_with = "search_budget")]
+    no_search_budget: bool,
 
     /// Number of top results to return.
     #[arg(short = 'k', long, default_value_t = 5, value_parser = positive_usize, value_name = "N")]
@@ -144,11 +148,11 @@ struct SearchArgs {
     cache_max_entries: Option<usize>,
 
     /// Maximum concurrent HTTP requests when fetching pages.
-    #[arg(long, default_value_t = 5, value_parser = positive_usize, value_name = "N")]
+    #[arg(long, default_value_t = 10, value_parser = positive_usize, value_name = "N")]
     concurrency: usize,
 
     /// Maximum concurrent HTML parsing jobs.
-    #[arg(long, default_value_t = 2, value_parser = positive_usize, value_name = "N")]
+    #[arg(long, default_value_t = 10, value_parser = positive_usize, value_name = "N")]
     parse_concurrency: usize,
 
     /// Output format. Use json for agent/programmatic consumption.
@@ -157,6 +161,14 @@ struct SearchArgs {
 }
 
 impl SearchArgs {
+    fn effective_search_budget(&self) -> Option<Duration> {
+        if self.no_search_budget {
+            None
+        } else {
+            Some(Duration::from_secs_f64(self.search_budget.unwrap_or(5.0)))
+        }
+    }
+
     fn search_options(&self) -> SearchOptions {
         let budgeted_default = self.mode.is_none() && self.search_budget.is_some();
         SearchOptions {
@@ -166,7 +178,7 @@ impl SearchArgs {
             time_filter: self.time_filter,
             max_concurrency: self.search_concurrency,
             provider_quorum: self.provider_quorum.or(budgeted_default.then_some(1)),
-            search_budget: self.search_budget.map(Duration::from_secs_f64),
+            search_budget: self.effective_search_budget(),
         }
     }
 }
@@ -800,6 +812,55 @@ mod tests {
     use super::*;
 
     #[test]
+    fn search_budget_defaults_and_overrides() {
+        for (extra, expected) in [
+            (vec![], Some(5.0)),
+            (vec!["--mode", "fanout"], Some(5.0)),
+            (
+                vec!["--mode", "fanout", "--search-budget", "12.5"],
+                Some(12.5),
+            ),
+            (vec!["--search-budget", "2"], Some(2.0)),
+            (vec!["--mode", "fanout", "--no-search-budget"], None),
+            (vec!["--no-search-budget"], None),
+        ] {
+            let cli = Cli::try_parse_from(["kestrel", "search", "test"].into_iter().chain(extra))
+                .unwrap();
+            let Commands::Search(args) = cli.command else {
+                panic!("expected search");
+            };
+            assert_eq!(
+                args.effective_search_budget(),
+                expected.map(Duration::from_secs_f64)
+            );
+            assert_eq!(args.search_concurrency, 10);
+            assert_eq!(args.concurrency, 10);
+            assert_eq!(args.parse_concurrency, 10);
+            assert_eq!(
+                args.search_concurrency,
+                SearchOptions::default().max_concurrency
+            );
+            assert_eq!(args.concurrency, FetchOptions::default().max_concurrency);
+            assert_eq!(
+                args.parse_concurrency,
+                FetchOptions::default().parse_concurrency
+            );
+        }
+        assert!(SearchOptions::default().search_budget.is_none());
+        assert!(
+            Cli::try_parse_from([
+                "kestrel",
+                "search",
+                "test",
+                "--search-budget",
+                "5",
+                "--no-search-budget"
+            ])
+            .is_err()
+        );
+    }
+
+    #[test]
     fn search_defaults_match_library_and_explicit_engines_replace_defaults() {
         for extra in [vec![], vec!["--mode", "fanout"]] {
             let cli = Cli::try_parse_from(["kestrel", "search", "test"].into_iter().chain(extra))
@@ -872,7 +933,7 @@ mod tests {
             assert_eq!(options.engines, args.engines);
             assert_eq!(
                 options.search_budget,
-                args.search_budget.map(Duration::from_secs_f64)
+                Some(Duration::from_secs_f64(args.search_budget.unwrap_or(5.0)))
             );
         }
     }
