@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "unauthenticated",
+    "message": "missing authentication: require either API Key or Bearer Token"
+  },
+  "ok": false
+}

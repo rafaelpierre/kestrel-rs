@@ -1,0 +1,8 @@
+[
+  {"id":"general","query":"why is the sky blue"},
+  {"id":"coding","query":"Rust E0382 use of moved value"},
+  {"id":"fresh","query":"latest stable Python release official documentation what's new"},
+  {"id":"phrase","query":"\"use of moved value\" Rust"},
+  {"id":"punctuation-unicode","query":"C++ std::vector café 日本語"},
+  {"id":"site","query":"site:doc.rust-lang.org E0382"}
+]

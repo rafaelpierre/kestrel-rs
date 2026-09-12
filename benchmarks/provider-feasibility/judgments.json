@@ -1,0 +1,266 @@
+[
+  {
+    "query_id": "general",
+    "url": "https://spaceplace.nasa.gov/blue-sky/en/",
+    "relevant": true,
+    "basis": "Direct explanation of sky colour; topical relevance only, not scientific fact verification."
+  },
+  {
+    "query_id": "general",
+    "url": "https://www.nesdis.noaa.gov/about/k-12-education/atmosphere/why-the-sky-blue",
+    "relevant": true,
+    "basis": "Direct explanation of sky colour; topical relevance only, not scientific fact verification."
+  },
+  {
+    "query_id": "general",
+    "url": "https://www.reddit.com/r/explainlikeimfive/comments/1iytxes/eli5_why_is_the_sky_blue/",
+    "relevant": true,
+    "basis": "Direct explanation of sky colour; topical relevance only, not scientific fact verification."
+  },
+  {
+    "query_id": "general",
+    "url": "https://math.ucr.edu/home/baez/physics/General/BlueSky/blue_sky.html",
+    "relevant": true,
+    "basis": "Direct explanation of sky colour; topical relevance only, not scientific fact verification."
+  },
+  {
+    "query_id": "general",
+    "url": "https://www.montrealsciencecentre.com/blog/why-the-sky-blue",
+    "relevant": true,
+    "basis": "Direct explanation of sky colour; topical relevance only, not scientific fact verification."
+  },
+  {
+    "query_id": "general",
+    "url": "https://www.bbc.co.uk/bitesize/articles/zbwwcxs",
+    "relevant": true,
+    "basis": "Direct explanation of sky colour; topical relevance only, not scientific fact verification."
+  },
+  {
+    "query_id": "general",
+    "url": "https://www.mentalfloss.com/science/physics/why-is-the-sky-blue",
+    "relevant": true,
+    "basis": "Direct explanation of sky colour; topical relevance only, not scientific fact verification."
+  },
+  {
+    "query_id": "general",
+    "url": "https://www.britannica.com/story/why-is-the-sky-blue",
+    "relevant": true,
+    "basis": "Direct explanation of sky colour; topical relevance only, not scientific fact verification."
+  },
+  {
+    "query_id": "general",
+    "url": "https://www.skyatnightmagazine.com/space-science/why-is-the-sky-blue",
+    "relevant": true,
+    "basis": "Direct explanation of sky colour; topical relevance only, not scientific fact verification."
+  },
+  {
+    "query_id": "coding",
+    "url": "https://github.com/rust-lang/rust/issues/39070",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "coding",
+    "url": "https://oneuptime.com/blog/post/2026-01-25-fix-use-of-moved-value-rust/view",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "coding",
+    "url": "https://www.reddit.com/r/rust/comments/yg9sez/need_help_errore0382_borrow_of_moved_value_new_to/",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "coding",
+    "url": "https://stackoverflow.com/questions/64612490/how-to-solve-e0382-use-of-moved-value-in-a-for-loop",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "coding",
+    "url": "https://users.rust-lang.org/t/getting-error-e0382-use-of-moved-value-shared-pool/98823",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "coding",
+    "url": "https://rust.facepunch.com/",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "coding",
+    "url": "https://rust-lang.org/",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "coding",
+    "url": "https://store.steampowered.com/app/252490/Rust/",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "coding",
+    "url": "https://en.wikipedia.org/wiki/Rust_(programming_language)",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "coding",
+    "url": "https://rust.facepunch.com/play",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "fresh",
+    "url": "https://docs.python.org/3/whatsnew/index.html",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "fresh",
+    "url": "https://devguide.python.org/versions/",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "fresh",
+    "url": "https://www.python.org/doc/versions/",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "fresh",
+    "url": "https://docs.python.org/3/whatsnew/3.14.html",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "fresh",
+    "url": "https://www.python.org/downloads/release/python-3140/",
+    "relevant": false,
+    "basis": "Historical 3.14.0 release page does not establish the latest patch release."
+  },
+  {
+    "query_id": "fresh",
+    "url": "https://www.bbc.co.uk/news",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "fresh",
+    "url": "https://news.sky.com/uk",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "fresh",
+    "url": "https://news.sky.com/",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "fresh",
+    "url": "https://www.bbc.co.uk/news/uk",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "fresh",
+    "url": "https://www.bbc.com/news/uk",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "phrase",
+    "url": "https://stackoverflow.com/questions/28800121/what-do-i-have-to-do-to-solve-a-use-of-moved-value-error",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "phrase",
+    "url": "https://www.reddit.com/r/rust/comments/y7d1gp/use_of_moved_value_in_control_flow/",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "phrase",
+    "url": "https://oneuptime.com/blog/post/2026-01-25-fix-use-of-moved-value-rust/view",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "phrase",
+    "url": "https://users.rust-lang.org/t/use-of-moved-value-when-using-a-reference-to-a-vector/57873",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "phrase",
+    "url": "https://users.rust-lang.org/t/help-to-fix-build-error-use-of-moved-value/19579",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "phrase",
+    "url": "https://dictionary.cambridge.org/dictionary/english/use",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "phrase",
+    "url": "https://www.merriam-webster.com/dictionary/use",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "phrase",
+    "url": "https://www.dictionary.com/browse/use",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "phrase",
+    "url": "https://dictionary.cambridge.org/us/dictionary/english/use",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "phrase",
+    "url": "https://en.wiktionary.org/wiki/use",
+    "relevant": false,
+    "basis": "Does not address the requested error, phrase, or Python release."
+  },
+  {
+    "query_id": "site",
+    "url": "https://doc.rust-lang.org/error_codes/E0382.html",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "site",
+    "url": "https://doc.rust-lang.org/error_codes/error-index.html",
+    "relevant": false,
+    "basis": "Broad error-code navigation index, not a direct E0382 explanation."
+  },
+  {
+    "query_id": "site",
+    "url": "https://doc.rust-lang.org/book/ch16-02-message-passing.html",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "site",
+    "url": "https://doc.rust-lang.org/stable/book/ch16-02-message-passing.html",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  },
+  {
+    "query_id": "site",
+    "url": "https://doc.rust-lang.org/book/ch16-03-shared-state.html",
+    "relevant": true,
+    "basis": "Relevant error discussion/documentation or official current-version discovery source."
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "detail": {
+    "error_type": "turnstile_session_token_required",
+    "message": "turnstile_session_token is required"
+  }
+}

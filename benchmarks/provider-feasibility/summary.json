@@ -1,0 +1,146 @@
+{
+  "bing": {
+    "scheduled": 24,
+    "logical_requests_attempted": 24,
+    "skipped": 0,
+    "outcomes": {
+      "nonempty": 20,
+      "empty_or_failed": 4
+    },
+    "statuses": {
+      "not_captured": 24
+    },
+    "nonempty": 20,
+    "success_seconds": {
+      "n": 20,
+      "p50": 0.3127361875,
+      "p95_nearest_rank": 0.446816917
+    },
+    "other_seconds": {
+      "n": 4,
+      "p50": 0.245407646,
+      "p95_nearest_rank": 0.446027416
+    },
+    "quality_judged_scheduled": 20,
+    "usable_searches": 4,
+    "p5_scheduled": 0.2,
+    "p5_conditional_nonempty": 0.25,
+    "by_session": {
+      "fresh_client": {
+        "n": 12,
+        "p50": 0.355195625,
+        "p95_nearest_rank": 0.460216875
+      },
+      "reused_client": {
+        "n": 12,
+        "p50": 0.263461021,
+        "p95_nearest_rank": 0.35792325
+      }
+    }
+  },
+  "felo": {
+    "scheduled": 24,
+    "logical_requests_attempted": 14,
+    "skipped": 10,
+    "outcomes": {
+      "challenge": 2,
+      "rate_limited": 12,
+      "skipped_retry_after": 10
+    },
+    "statuses": {
+      "400": 2,
+      "429": 12
+    },
+    "nonempty": 0,
+    "success_seconds": null,
+    "other_seconds": {
+      "n": 14,
+      "p50": 0.4343451465,
+      "p95_nearest_rank": 0.71533325
+    },
+    "quality_judged_scheduled": 20,
+    "usable_searches": 0,
+    "p5_scheduled": 0.0,
+    "p5_conditional_nonempty": null,
+    "by_session": {
+      "fresh_client": {
+        "n": 8,
+        "p50": 0.5322418335,
+        "p95_nearest_rank": 0.71533325
+      },
+      "reused_client": {
+        "n": 6,
+        "p50": 0.28753968799999996,
+        "p95_nearest_rank": 0.479175166
+      }
+    }
+  },
+  "manus": {
+    "scheduled": 24,
+    "logical_requests_attempted": 24,
+    "skipped": 0,
+    "outcomes": {
+      "access_denied": 24
+    },
+    "statuses": {
+      "401": 24
+    },
+    "nonempty": 0,
+    "success_seconds": null,
+    "other_seconds": {
+      "n": 24,
+      "p50": 0.33465077099999996,
+      "p95_nearest_rank": 0.389818625
+    },
+    "quality_judged_scheduled": 20,
+    "usable_searches": 0,
+    "p5_scheduled": 0.0,
+    "p5_conditional_nonempty": null,
+    "by_session": {
+      "fresh_client": {
+        "n": 12,
+        "p50": 0.34336191650000003,
+        "p95_nearest_rank": 0.4320585
+      },
+      "reused_client": {
+        "n": 12,
+        "p50": 0.12089864550000001,
+        "p95_nearest_rank": 0.369687583
+      }
+    }
+  },
+  "swisscows": {
+    "scheduled": 24,
+    "logical_requests_attempted": 24,
+    "skipped": 0,
+    "outcomes": {
+      "nonempty": 24
+    },
+    "statuses": {
+      "not_captured": 24
+    },
+    "nonempty": 24,
+    "success_seconds": {
+      "n": 24,
+      "p50": 0.2004393955,
+      "p95_nearest_rank": 1.009327541
+    },
+    "other_seconds": null,
+    "quality_judged_scheduled": 20,
+    "usable_searches": 20,
+    "p5_scheduled": 0.92,
+    "p5_conditional_nonempty": 0.92,
+    "by_session": {
+      "fresh_client": {
+        "n": 12,
+        "p50": 0.5363394585,
+        "p95_nearest_rank": 1.040404917
+      },
+      "reused_client": {
+        "n": 12,
+        "p50": 0.11041833300000001,
+        "p95_nearest_rank": 0.300537459
+      }
+    }
+  }
+}

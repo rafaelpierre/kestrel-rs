@@ -101,3 +101,14 @@ Sources for frontend wire-format inspection: live Swisscows JavaScript/responses
 Qwant initial props, and the independently maintained
 [SearXNG adapters](https://github.com/searxng/searxng/tree/master/searx/engines).
 Synthetic fixtures test contracts; they do not establish live success.
+
+## Felo and Manus feasibility
+
+The [September 12 feasibility investigation](investigations/issue-40-felo-manus.md)
+recommends **no-go** for both within the current keyless HTTP provider contract.
+Felo exposes sources on completed browser-created pages, but new searches require
+a browser security token and anonymous use reached a guest limit. Manus redirects
+anonymous prompt submissions to login; its API requires credentials and runs
+asynchronous tasks. Neither is registered as a Kestrel engine. Sanitized fixtures,
+an extraction proof of concept, matched measurements and limitations accompany
+the report.
