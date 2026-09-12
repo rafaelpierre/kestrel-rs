@@ -107,11 +107,22 @@ kestrel fetch "https://www.rust-lang.org/learn" --output json --content-limit 40
 ```
 
 `fetch <URL>` extracts one HTTP/HTTPS page without search or ranking. It defaults
-to 20,000 characters, a 10-second timeout, and a 2 MB response limit (adjust with
-`--content-limit`, `--timeout`, and `--max-response-bytes`). JSON output is an
+to 20,000 characters, a 10-second timeout, and a 1 MB (1,000,000-byte) response
+limit (adjust with `--content-limit`, `--timeout`, and `--max-response-bytes`).
+JSON output is an
 object with `url` and `content` fields. Failed requests, unsupported content such
 as PDFs, and empty extractions exit unsuccessfully with an error on stderr.
-The extractor does not render JavaScript.
+At `--max-response-bytes`, fetching stops and the retained prefix is extracted
+instead of rejecting the page, even if its declared size exceeds the cap. The cap
+applies to decoded body bytes, independently of the extracted character limit.
+Usable partial content succeeds with the existing output schema and a notice on
+stderr; a prefix without extractable text still fails. Reaching the cap exactly
+is conservatively treated as potentially incomplete. Increase the byte cap to
+retrieve more of a large page. Use `--max-response-bytes 2000000` to restore the
+previous 2 MB allowance. This also applies to fetched search candidates; search
+reports the number of successfully extracted pages that reached the cap on stderr.
+Search-provider response limits are unchanged. Byte-capped extractions are not
+cached. The extractor does not render JavaScript.
 
 Fanout is the only search mode. `--mode fanout` remains accepted for compatibility;
 `--mode fallback` is no longer supported. In the library, `SearchMode::Fanout`

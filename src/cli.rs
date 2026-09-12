@@ -127,7 +127,7 @@ struct SearchArgs {
     #[arg(long, default_value_t = 2_000, value_parser = positive_usize, value_name = "CHARS")]
     content_limit: usize,
 
-    /// Maximum response body accepted per fetched page.
+    /// Maximum decoded body bytes per page; stop at the cap and extract the prefix.
     #[arg(long, default_value_t = DEFAULT_MAX_RESPONSE_BYTES, value_parser = positive_usize, value_name = "BYTES")]
     max_response_bytes: usize,
 
@@ -198,7 +198,7 @@ struct FetchArgs {
     #[arg(long, default_value_t = 20_000, value_parser = positive_usize, value_name = "CHARS")]
     content_limit: usize,
 
-    /// Maximum response body accepted.
+    /// Maximum decoded body bytes; stop at the cap and extract the prefix.
     #[arg(long, default_value_t = DEFAULT_MAX_RESPONSE_BYTES, value_parser = positive_usize, value_name = "BYTES")]
     max_response_bytes: usize,
 
@@ -314,6 +314,15 @@ async fn run_fetch(arguments: FetchArgs) -> ExitCode {
         eprintln!("[kestrel] Fetch failed for {}: {reason}", arguments.url);
         return ExitCode::FAILURE;
     };
+    if report
+        .pages
+        .first()
+        .is_some_and(|page| page.response_bytes >= arguments.max_response_bytes)
+    {
+        eprintln!(
+            "[kestrel] Reached --max-response-bytes; returning extracted content from the retained prefix (page may be incomplete)"
+        );
+    }
     let content = format!("Source: {}\n\n{content}", arguments.url);
     match arguments.output {
         Output::Text => println!("{content}"),
@@ -439,13 +448,14 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             results.truncate(candidate_limit);
         }
         let fetch_started = Instant::now();
-        fetch_diagnostics = match attach_page_content(&client, &mut results, &arguments).await {
-            Ok(report) => Some(report),
-            Err(error) => {
-                eprintln!("[kestrel] Fetch failed: {error}");
-                return ExitCode::FAILURE;
-            }
-        };
+        fetch_diagnostics =
+            match attach_page_content(&client, &mut results, &arguments, &mut io::stderr()).await {
+                Ok(report) => Some(report),
+                Err(error) => {
+                    eprintln!("[kestrel] Fetch failed: {error}");
+                    return ExitCode::FAILURE;
+                }
+            };
         timings.insert("fetch".into(), elapsed_millis(fetch_started));
     }
 
@@ -509,6 +519,7 @@ async fn attach_page_content(
     client: &KestrelClient,
     results: &mut [SearchResult],
     arguments: &SearchArgs,
+    diagnostics: &mut impl Write,
 ) -> Result<FetchReport, kestrelsearch::search::KestrelError> {
     let fetchable: Vec<(usize, String)> = results
         .iter()
@@ -516,7 +527,8 @@ async fn attach_page_content(
         .filter(|(_, result)| !result.url.to_ascii_lowercase().contains(".pdf"))
         .map(|(index, result)| (index, result.url.clone()))
         .collect();
-    eprintln!(
+    let _ = writeln!(
+        diagnostics,
         "[kestrel] Fetching {} pages (concurrency={})...",
         fetchable.len(),
         arguments.concurrency
@@ -543,6 +555,20 @@ async fn attach_page_content(
     } else {
         client.fetch_all_detailed(&urls, &options, budget).await?
     };
+    let capped_count = report
+        .pages
+        .iter()
+        .filter(|page| {
+            page.outcome == kestrelsearch::FetchOutcome::Success
+                && page.response_bytes >= options.max_response_bytes
+        })
+        .count();
+    if capped_count > 0 {
+        let _ = writeln!(
+            diagnostics,
+            "[kestrel] {capped_count} fetched page(s) reached --max-response-bytes; search results may contain incomplete page content."
+        );
+    }
     let fetched_count = report
         .contents
         .iter()
@@ -552,7 +578,8 @@ async fn attach_page_content(
         let content = content.take();
         results[index].content = content.map(|content| format!("Source: {url}\n\n{content}"));
     }
-    eprintln!(
+    let _ = writeln!(
+        diagnostics,
         "[kestrel] Successfully fetched {fetched_count}/{} pages.",
         urls.len()
     );
@@ -1028,6 +1055,106 @@ mod tests {
         assert_eq!(select_installations("2,2,nope,3", &paths), [&paths[1]]);
     }
 
+    #[tokio::test]
+    async fn search_fetch_warns_for_successful_capped_pages_including_cache_misses() {
+        use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
+        let server = MockServer::start().await;
+        let short = "<p>This short response has readable content.</p>";
+        for (path_name, body) in [
+            ("/short", short.to_owned()),
+            (
+                "/capped",
+                format!("<p>{}</p>", "Readable page content. ".repeat(50)),
+            ),
+            ("/empty", format!("<script>{}</script>", "x".repeat(500))),
+        ] {
+            Mock::given(path(path_name))
+                .respond_with(ResponseTemplate::new(200).set_body_string(body))
+                .mount(&server)
+                .await;
+        }
+        let client = KestrelClient::new().unwrap();
+        let Commands::Search(mut args) = Cli::try_parse_from([
+            "kestrel",
+            "search",
+            "readable",
+            "--max-response-bytes",
+            "100",
+        ])
+        .unwrap()
+        .command
+        else {
+            panic!("expected search");
+        };
+        let directory = tempfile::tempdir().unwrap();
+        args.cache_ttl = Some(60.0);
+        args.cache_dir = Some(directory.path().to_owned());
+        let candidate = |path: &str| SearchResult {
+            title: "Page".into(),
+            url: format!("{}{path}", server.uri()),
+            display_url: String::new(),
+            snippet: "Snippet".into(),
+            content: None,
+            bm25_score: None,
+            engine: None,
+            query: None,
+            engine_rank: None,
+            sources: Vec::new(),
+        };
+        for expected_hits in [0, 1] {
+            let mut results: Vec<_> = ["/short", "/capped", "/empty"]
+                .into_iter()
+                .map(candidate)
+                .collect();
+            let mut diagnostics = Vec::new();
+            let report = attach_page_content(&client, &mut results, &args, &mut diagnostics)
+                .await
+                .unwrap();
+            let diagnostics = String::from_utf8(diagnostics).unwrap();
+            assert!(diagnostics.contains("1 fetched page(s) reached --max-response-bytes"));
+            assert!(diagnostics.contains("search results may contain incomplete page content"));
+            assert!(!diagnostics.contains("2 fetched page(s)"));
+            assert_eq!(report.cache_hits, expected_hits);
+            assert!(results[0].content.is_some());
+            assert!(results[1].content.is_some());
+            assert!(results[2].content.is_none());
+        }
+        let mut results = [candidate("/short")];
+        let mut diagnostics = Vec::new();
+        attach_page_content(&client, &mut results, &args, &mut diagnostics)
+            .await
+            .unwrap();
+        assert!(
+            !String::from_utf8(diagnostics)
+                .unwrap()
+                .contains("reached --max-response-bytes")
+        );
+    }
+
+    #[test]
+    fn page_fetch_defaults_match_library_and_preserve_character_limits() {
+        let library = FetchOptions::default();
+        assert_eq!(library.max_response_bytes, 1_000_000);
+        assert_eq!(library.content_limit, 2_000);
+        let Commands::Search(search) = Cli::try_parse_from(["kestrel", "search", "test"])
+            .unwrap()
+            .command
+        else {
+            panic!("expected search");
+        };
+        let Commands::Fetch(fetch) =
+            Cli::try_parse_from(["kestrel", "fetch", "https://example.com"])
+                .unwrap()
+                .command
+        else {
+            panic!("expected fetch");
+        };
+        assert_eq!(search.max_response_bytes, library.max_response_bytes);
+        assert_eq!(fetch.max_response_bytes, library.max_response_bytes);
+        assert_eq!(search.content_limit, 2_000);
+        assert_eq!(fetch.content_limit, 20_000);
+    }
+
     #[test]
     fn generated_skill_examples_parse_with_current_cli() {
         let skill = generate_skill_md(&mut Cli::command());
@@ -1166,5 +1293,12 @@ mod tests {
         assert!(skill.contains("Do not use `search \"site:<full-url-to-page>\"`"));
         assert!(skill.contains("## Fetch output"));
         assert!(skill.contains("20000"));
+        assert!(skill.contains("retained prefix"));
+        assert!(skill.contains("Search reports the number of successfully extracted pages"));
+        assert!(skill.contains("exit status zero"));
+        assert!(skill.contains("not cached"));
+        assert!(skill.contains("--max-response-bytes 65536"));
+        assert!(skill.contains("defaults to 1,000,000 decoded body bytes"));
+        assert_eq!(skill.matches("[default: 1000000]").count(), 2);
     }
 }

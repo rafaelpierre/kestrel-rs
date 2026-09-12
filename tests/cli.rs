@@ -173,6 +173,11 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     let target = project.path().join(".codex/skills/kestrelsearch/SKILL.md");
     assert!(target.exists());
     let skill = fs::read_to_string(&target).unwrap();
+    assert!(skill.contains("retained prefix"));
+    assert!(skill.contains("not cached"));
+    assert!(skill.contains("--max-response-bytes 65536"));
+    assert!(skill.contains("defaults to 1,000,000 decoded body bytes"));
+    assert_eq!(skill.matches("[default: 1000000]").count(), 2);
     assert!(skill.contains("name: kestrelsearch"));
     assert!(skill.contains("Search completed in 1.234 seconds."));
     assert!(skill.contains("Fetch completed in 0.125 seconds."));
@@ -263,4 +268,86 @@ fn failed_search_has_no_success_completion_line() {
             .stderr(predicate::str::contains("Every search failed"))
             .stderr(predicate::str::contains("completed in").not());
     }
+}
+
+#[tokio::test]
+async fn capped_fetch_returns_successful_text_and_json_with_stderr_notice() {
+    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(200).set_body_string(
+            "<main><p>This readable content survives the byte cutoff.</p><p>".to_owned()
+                + &"later text ".repeat(100),
+        ))
+        .expect(2)
+        .mount(&server)
+        .await;
+    let url = server.uri();
+    tokio::task::spawn_blocking(move || {
+        for format in ["text", "json"] {
+            let output = Command::cargo_bin("kestrel")
+                .unwrap()
+                .args([
+                    "fetch",
+                    &url,
+                    "--max-response-bytes",
+                    "65",
+                    "--output",
+                    format,
+                ])
+                .assert()
+                .success()
+                .stderr(predicate::str::contains("page may be incomplete"))
+                .get_output()
+                .stdout
+                .clone();
+            let text = if format == "json" {
+                let value: serde_json::Value = serde_json::from_slice(&output).unwrap();
+                assert_eq!(value.as_object().unwrap().len(), 2);
+                assert_eq!(value["url"], url);
+                value["content"].as_str().unwrap().to_owned()
+            } else {
+                String::from_utf8(output).unwrap()
+            };
+            assert!(text.contains("This readable content survives the byte cutoff."));
+            assert!(!text.contains("later text"));
+        }
+    })
+    .await
+    .unwrap();
+}
+
+#[tokio::test]
+async fn default_byte_cap_stops_at_one_mb_and_can_be_overridden() {
+    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+    let server = MockServer::start().await;
+    let body = "<main><p>This readable prefix is before the default cutoff.</p><!--".to_owned()
+        + &"x".repeat(1_000_000)
+        + "--><p>This readable tail is after the default cutoff.</p></main>";
+    Mock::given(method("GET"))
+        .respond_with(ResponseTemplate::new(200).set_body_string(body))
+        .expect(2)
+        .mount(&server)
+        .await;
+    let url = server.uri();
+    tokio::task::spawn_blocking(move || {
+        Command::cargo_bin("kestrel")
+            .unwrap()
+            .args(["fetch", &url])
+            .assert()
+            .success()
+            .stdout(predicate::str::contains("This readable prefix"))
+            .stdout(predicate::str::contains("This readable tail").not())
+            .stderr(predicate::str::contains("page may be incomplete"));
+        Command::cargo_bin("kestrel")
+            .unwrap()
+            .args(["fetch", &url, "--max-response-bytes", "2000000"])
+            .assert()
+            .success()
+            .stdout(predicate::str::contains("This readable prefix"))
+            .stdout(predicate::str::contains("This readable tail"))
+            .stderr(predicate::str::contains("page may be incomplete").not());
+    })
+    .await
+    .unwrap();
 }

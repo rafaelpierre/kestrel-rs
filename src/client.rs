@@ -1,5 +1,6 @@
 //! Reusable search and fetch clients for connection pooling across calls.
 
+use std::collections::HashSet;
 use std::time::Duration;
 
 use futures_util::future::join_all;
@@ -116,31 +117,10 @@ impl KestrelClient {
         cache: &PageCache,
         budget: Option<Duration>,
     ) -> Result<Vec<Option<String>>, KestrelError> {
-        if budget.is_some_and(|duration| duration.is_zero()) {
-            return Err(KestrelError::InvalidRequest(
-                "fetch budget must be greater than zero".into(),
-            ));
-        }
-        let cached = join_all(urls.iter().map(|url| cache.get(url, options.content_limit))).await;
-        let mut results = cached;
-        let misses: Vec<(usize, String)> = results
-            .iter()
-            .enumerate()
-            .filter(|(_, content)| content.is_none())
-            .map(|(index, _)| (index, urls[index].clone()))
-            .collect();
-        let missing_urls: Vec<String> = misses.iter().map(|(_, url)| url.clone()).collect();
-        let fetched =
-            fetch_all_reusing_client_with_budget(&missing_urls, options, &self.fetch, budget)
-                .await?;
-        for ((index, url), content) in misses.into_iter().zip(fetched) {
-            if let Some(content) = content {
-                let _ = cache.put(&url, options.content_limit, &content).await;
-                results[index] = Some(content);
-            }
-        }
-        let _ = cache.prune().await;
-        Ok(results)
+        Ok(self
+            .fetch_all_cached_detailed(urls, options, cache, budget)
+            .await?
+            .contents)
     }
 
     /// Use cached text first and return cache plus phase-level fetch diagnostics.
@@ -169,9 +149,19 @@ impl KestrelClient {
         let mut report =
             fetch_all_reusing_client_with_diagnostics(&missing_urls, options, &self.fetch, budget)
                 .await?;
+        let capped_urls: HashSet<&str> = report
+            .pages
+            .iter()
+            .filter(|page| page.response_bytes >= options.max_response_bytes)
+            .map(|page| page.url.as_str())
+            .collect();
         for ((index, url), content) in misses.into_iter().zip(report.contents) {
             if let Some(content) = content {
-                let _ = cache.put(&url, options.content_limit, &content).await;
+                // A cap-sized body may be partial, even if it ended exactly at
+                // the cap. Do not let it satisfy a later, larger byte budget.
+                if !capped_urls.contains(url.as_str()) {
+                    let _ = cache.put(&url, options.content_limit, &content).await;
+                }
                 results[index] = Some(content);
             }
         }

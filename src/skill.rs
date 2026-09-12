@@ -52,7 +52,9 @@ page text is unavailable, including searches with `--no-fetch`.
 - Successful `search` and `fetch` commands report elapsed wall-clock seconds to three decimal places on stderr, e.g. `[kestrel] Search completed in 1.234 seconds.` or `[kestrel] Fetch completed in 0.125 seconds.` This includes initialization, retrieval, extraction, optional ranking, and result output; it excludes argument parsing and process startup. Empty successful searches also report time. Text/JSON stdout schemas are unchanged, and failures do not print a success completion line.
 - Numeric counts and sizes must be positive integers; durations must be finite and greater than zero.
 - PDFs are skipped during content fetching.
-- Page bodies are streamed up to `--max-response-bytes`; network and parsing concurrency are independent.
+- Page bodies stop at `--max-response-bytes` decoded bytes and the retained prefix is extracted, even when Content-Length exceeds the cap. Reaching the cap alone is not an error; content may be incomplete. Network and parsing concurrency are independent.
+- Search reports the number of successfully extracted pages that reached the byte cap on stderr; results may contain incomplete page content.
+- Byte-capped page extractions are not cached, so a later larger byte budget can fetch more content. This page-fetch cutoff does not change search-provider response limits.
 - By default, at most three times `--top-k` candidates are fetched before BM25 ranking.
 - BM25 filtering removes zero-relevance results unless an entire query group scores zero.
 - Use `--no-fetch` for a fast, low-cost keyword search.
@@ -124,6 +126,7 @@ pub fn generate_skill_md(root: &mut Command) -> String {
 ```bash
 kestrel fetch "https://www.rust-lang.org/learn" --output json
 kestrel fetch "https://example.com/article" --content-limit 40000 --timeout 20
+kestrel fetch "https://example.com/article" --max-response-bytes 65536 --output json
 kestrel search "python async patterns" -k 3
 kestrel search "rust ownership" --no-fetch --output json
 kestrel search "rust ownership" --search-budget 3 --no-fetch
@@ -177,6 +180,18 @@ The default extraction limit is 20,000 characters; increase `--content-limit`
 for longer pages. Fetch uses the existing HTML/text extractor and does not render
 JavaScript. Unsupported content (including PDFs), failed requests, or pages with
 no extractable text produce a nonzero exit status and an error on stderr.
+`--max-response-bytes` defaults to 1,000,000 decoded body bytes. At the cap,
+fetch stops reading without waiting for the rest of the response and extracts
+the retained prefix, subject to `--content-limit`. Usable partial content returns
+exit status zero with the same text/JSON schema and a notice on stderr. An exact
+cap-sized body is conservatively treated as potentially incomplete. If the prefix
+contains no extractable text, fetch still fails. Increase the byte cap to retrieve
+more of a large page; increasing only `--content-limit` cannot recover unread bytes.
+Search page fetching uses the same 1,000,000-byte default and extracts up to
+2,000 characters per page. Direct fetch retains its 20,000-character default.
+Use `--max-response-bytes 2000000` to restore the previous 2 MB allowance.
+Cancellation affects only the current HTTP/2 response stream; HTTP/1.1 is also
+supported. In-flight transport bytes may exceed the retained-body cap.
 "#,
     );
     rendered.push_str(SCHEMA_AND_NOTES);

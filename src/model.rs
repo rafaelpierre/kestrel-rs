@@ -174,6 +174,7 @@ pub struct FetchOptions {
     pub content_limit: usize,
     pub max_concurrency: usize,
     pub parse_concurrency: usize,
+    /// Stop at this many decoded body bytes and extract the retained prefix.
     pub max_response_bytes: usize,
 }
 
@@ -184,6 +185,7 @@ pub enum FetchOutcome {
     Success,
     NoContent,
     UnsupportedContentType,
+    /// Legacy outcome retained for compatibility; page byte caps now extract a prefix.
     ResponseTooLarge,
     RequestFailed,
     CacheHit,
@@ -201,6 +203,7 @@ pub struct PageFetchDiagnostic {
     pub parse_queue_ms: u64,
     pub parse_ms: u64,
     pub total_ms: u64,
+    /// Retained decoded body bytes. Reaching the byte cap means content may be partial.
     pub response_bytes: usize,
     /// Negotiated protocol; absent for cache hits or failures before headers.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -270,7 +273,7 @@ impl Default for FetchOptions {
             content_limit: 2_000,
             max_concurrency: 10,
             parse_concurrency: 10,
-            max_response_bytes: 2_000_000,
+            max_response_bytes: crate::fetcher::DEFAULT_MAX_RESPONSE_BYTES,
         }
     }
 }
