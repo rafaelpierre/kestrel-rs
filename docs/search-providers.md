@@ -1,7 +1,12 @@
 # Search providers and query semantics
 
-New opt-in providers are tracked in [issue #6](https://github.com/rafaelpierre/kestrel-rs/issues/6).
-AOL is excluded. Defaults remain DuckDuckGo, Bing and Yahoo.
+Adapter validation is tracked in [issue #6](https://github.com/rafaelpierre/kestrel-rs/issues/6).
+AOL is excluded. CLI and library search defaults are DuckDuckGo, Bing, Yahoo,
+Dogpile, Ecosia, Swisscows, Yep, Qwant and Mojeek, in that order. Explicit engine
+selections replace the list; `-e duckduckgo -e bing -e yahoo` restores the previous
+set. This expands request fanout within existing concurrency and budget limits;
+it does not establish a quality, latency or availability improvement. Failed or
+unsupported-filter providers retain results from successful providers.
 
 ```sh
 kestrel search 'site:postgresql.org EXPLAIN ANALYZE BUFFERS' --engine swisscows --no-fetch --no-rank --search-budget 3 --output json
@@ -27,7 +32,7 @@ On September 11, 2026, the Swisscows endpoint returned PostgreSQL documentation.
 Dogpile, Ecosia and Mojeek returned access blocks from this environment. Qwant succeeded in one of three randomized-header smoke trials; the other two were blocked.
 Yep varied between an access block and a valid empty response. Those observations
 are not availability guarantees. Ecosia's success markup fixture is provisional;
-its parser must be confirmed against a successful live result page before promotion.
+its parser still needs confirmation against a successful live result page.
 
 ## Response size limit
 
@@ -48,7 +53,7 @@ conversion, parsers and concurrent searches require additional memory.
 ## Query language
 
 The default `--query-syntax portable` uses the same lexical contract for **all
-nine providers**, including opt-in engines. Constraints are checked against each
+nine providers**. Constraints are checked against each
 result's title and snippet **before quorum, merging, fetching and ranking**.
 The complete original query is still encoded and sent as a retrieval hint; we do
 not assume a provider honors its operators. This does not repair upstream

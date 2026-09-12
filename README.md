@@ -1,8 +1,9 @@
 # Kestrel Search for Rust
 
 Kestrel Search is a keyless web-search, page-extraction, and relevance-ranking
-tool for applications and AI agents. It searches DuckDuckGo, Bing, and Yahoo,
-fetches candidate pages concurrently, extracts readable text, and ranks the
+tool for applications and AI agents. It searches DuckDuckGo, Bing, Yahoo,
+Dogpile, Ecosia, Swisscows, Yep, Qwant, and Mojeek, fetches candidate pages
+concurrently, extracts readable text, and ranks the
 results with BM25.
 
 This crate is the Rust port of the original Python `kestrelsearch` package. The
@@ -14,7 +15,7 @@ compatible with the Python implementation.
 ## Highlights
 
 - No API key or hosted search service required.
-- DuckDuckGo, Bing, and Yahoo searched concurrently in fanout mode.
+- All nine supported engines searched concurrently in fanout mode.
 - Multiple queries with round-robin merging across query/provider buckets.
 - Canonical-URL deduplication with provider and query provenance retained.
 - Bounded concurrent downloads and HTML parsing, with response-size and
@@ -88,7 +89,8 @@ Silicon macOS only. Linux users can build from source with Cargo.
 
 ## Use the CLI
 
-The default command searches DuckDuckGo, Bing, and Yahoo concurrently, retaining
+The default command searches DuckDuckGo, Bing, Yahoo, Dogpile, Ecosia, Swisscows,
+Yep, Qwant, and Mojeek concurrently, retaining
 results from successful providers when others fail (including bot challenges).
 It fetches up to three times `--top-k` candidates, extracts up to 2,000 characters
 per page, ranks them with BM25, and returns the best five results:
@@ -117,9 +119,13 @@ is the default and only variant; migrate uses of `SearchMode::Fallback` to it.
 
 Common variants:
 
-Search runs all three default providers concurrently. Use
+Search runs all nine default providers concurrently. Use
 `--engine` to select specific providers. For example,
 `kestrel search "test" --engine bing --no-fetch` searches only Bing.
+Use `-e duckduckgo -e bing -e yahoo` to retain the previous default provider set.
+The library’s `SearchOptions::default()` uses the same nine-engine order.
+More engines increase provider requests; existing budgets and concurrency limits
+still apply. Availability and region/recency filter support vary by provider.
 
 ```bash
 # Machine-readable results
@@ -318,7 +324,7 @@ benchmark are described in [HTTP/2 transport tuning](docs/http2.md).
 
 ### Experimental providers and latency controls
 
-Opt-in adapters now include Dogpile, Ecosia, Swisscows, Yep, Qwant and Mojeek.
+Default adapters include Dogpile, Ecosia, Swisscows, Yep, Qwant and Mojeek.
 Search defaults to portable query constraints across all nine providers:
 `kestrel search '"machine learning"'` requires the phrase in a title or snippet;
 `machine AND learning` requires both terms. Plain space-separated terms also use

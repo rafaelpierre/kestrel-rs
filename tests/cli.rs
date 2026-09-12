@@ -155,6 +155,12 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(skill.contains("--query-syntax"));
     assert!(skill.contains("Portable query syntax is the default for every provider"));
     assert!(skill.contains("accepted results after query constraints"));
+    assert!(
+        skill
+            .contains("[default: duckduckgo bing yahoo dogpile ecosia swisscows yep qwant mojeek]")
+    );
+    assert!(skill.contains("All nine supported engines are selected by default"));
+    assert!(!skill.contains("Additional opt-in engines"));
     for subcommand in ["search", "fetch"] {
         let help = Command::cargo_bin("kestrel")
             .unwrap()

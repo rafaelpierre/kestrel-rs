@@ -60,7 +60,7 @@ struct SearchArgs {
     additional_queries: Vec<String>,
 
     /// Search engine. Repeat to select providers to search concurrently.
-    #[arg(short = 'e', long = "engine", default_values = ["duckduckgo", "bing", "yahoo"], action = ArgAction::Append)]
+    #[arg(short = 'e', long = "engine", default_values = ["duckduckgo", "bing", "yahoo", "dogpile", "ecosia", "swisscows", "yep", "qwant", "mojeek"], action = ArgAction::Append)]
     engines: Vec<Engine>,
 
     /// Compatibility option: fanout is the only supported search mode.
@@ -911,7 +911,15 @@ mod tests {
                 panic!("expected search");
             };
             assert_eq!(args.engines, SearchOptions::default().engines);
-            assert_eq!(args.engines.len(), 3);
+            assert_eq!(
+                args.engines
+                    .iter()
+                    .map(|engine| engine.as_str())
+                    .collect::<Vec<_>>(),
+                "duckduckgo bing yahoo dogpile ecosia swisscows yep qwant mojeek"
+                    .split_whitespace()
+                    .collect::<Vec<_>>()
+            );
             assert_eq!(args.search_options().mode, SearchMode::Fanout);
             assert_eq!(args.search_options().mode, SearchOptions::default().mode);
         }

@@ -58,7 +58,8 @@ page text is unavailable, including searches with `--no-fetch`.
 - Portable query syntax is the default for every provider: quoted phrases require adjacency in one title/snippet; unquoted terms use AND. Uppercase AND/OR/NOT, exclusions, parentheses and site:hostname are supported.
 - Query constraints filter title/snippet evidence before provider quorum, independently of fetching/ranking. Missing positive evidence excludes a result; NOT checks metadata absence, not the full page.
 - Use --query-syntax native for provider-specific syntax such as filetype:pdf and the previous passthrough behavior. Do not claim complete-page relevance from metadata matches.
-- Additional opt-in engines: dogpile, ecosia, swisscows, yep, qwant, mojeek.
+- All nine supported engines are selected by default. Explicit `--engine` selections replace this list; use `-e duckduckgo -e bing -e yahoo` to retain the previous provider set.
+- Provider failures, bot challenges, and unsupported region/recency filters retain results from successful providers; including an engine does not guarantee results.
 - Fanout defaults to a five-second search budget, including queueing and retries. Use --search-budget to change it or --no-search-budget to disable the total deadline.
 - Search, page fetching, and parsing concurrency each default to 10.
 - Search/fetch clients select random browser headers and reuse HTTP/2 or HTTP/1.1 connections within the process.
@@ -74,7 +75,7 @@ pub fn generate_skill_md(root: &mut Command) -> String {
     );
     rendered.push_str(r#"## Choosing a command
 
-- Use `kestrel search "keywords"` to discover pages about a topic. Search runs DuckDuckGo, Bing, and Yahoo concurrently by default.
+- Use `kestrel search "keywords"` to discover pages about a topic. Search runs DuckDuckGo, Bing, Yahoo, Dogpile, Ecosia, Swisscows, Yep, Qwant, and Mojeek concurrently by default.
 - Use `kestrel fetch "https://example.com/path/to/page"` when you already have a page URL and need its contents. Fetch requests that URL directly, without a search provider or BM25 filtering.
 - Do not use `search "site:<full-url-to-page>"` as a substitute for fetching a known page. Use `site:example.com keywords` only to discover pages within a site.
 
