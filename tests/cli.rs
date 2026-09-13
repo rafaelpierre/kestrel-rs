@@ -234,6 +234,9 @@ fn skill_install_and_uninstall_use_compatible_paths() {
             "installed skill must include live {subcommand} help"
         );
     }
+    let unrelated = project.path().join(".claude/skills/kestrelsearch/SKILL.md");
+    fs::create_dir_all(unrelated.parent().unwrap()).unwrap();
+    fs::write(&unrelated, "unrelated installation").unwrap();
     fs::write(&target, "stale skill").unwrap();
     Command::cargo_bin("kestrel")
         .unwrap()
@@ -256,6 +259,10 @@ fn skill_install_and_uninstall_use_compatible_paths() {
         .success()
         .stdout(predicate::str::contains("Removed:"));
     assert!(!target.exists());
+    assert_eq!(
+        fs::read_to_string(unrelated).unwrap(),
+        "unrelated installation"
+    );
 }
 
 #[test]
@@ -510,6 +517,104 @@ fn overflowing_numeric_arguments_are_usage_errors() {
         .code(2)
         .stdout("")
         .stderr(predicate::str::contains("--fetch-candidates"));
+}
+
+#[tokio::test]
+async fn installed_skill_reading_recipe_handles_evidence_and_capture() {
+    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
+
+    let server = MockServer::start().await;
+    for (route, body) in [
+        (
+            "/article",
+            "<main><p>Ownership keeps Rust memory safe.</p></main>".to_owned(),
+        ),
+        ("/empty", "<script>nothing readable</script>".to_owned()),
+        (
+            "/capped",
+            format!(
+                "<main><p>{}</p></main>",
+                "Ownership evidence. ".repeat(120_000)
+            ),
+        ),
+    ] {
+        Mock::given(path(route))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(body, "text/html"))
+            .expect(1)
+            .mount(&server)
+            .await;
+    }
+    let base = server.uri();
+    tokio::task::spawn_blocking(move || {
+        let project = tempfile::tempdir().unwrap();
+        let user_home = tempfile::tempdir().unwrap();
+        Command::cargo_bin("kestrel")
+            .unwrap()
+            .current_dir(project.path())
+            .env("HOME", user_home.path())
+            .args(["skill", "install", "--agent", "codex", "--scope", "project"])
+            .assert()
+            .success();
+        let skill = fs::read_to_string(project.path().join(".codex/skills/kestrelsearch/SKILL.md"))
+            .unwrap();
+        let workflow = skill
+            .split("## Task workflow:")
+            .nth(1)
+            .unwrap()
+            .split("## `search` subcommand")
+            .next()
+            .unwrap();
+        let recipe = workflow
+            .lines()
+            .find(|line| line.starts_with("kestrel fetch "))
+            .unwrap();
+        let recipe = shlex::split(recipe).unwrap();
+        let trace = project.path().join("trace");
+        let artifacts = project.path().join("artifacts");
+        for route in ["/article", "/empty", "/capped"] {
+            let mut args = recipe[1..].to_vec();
+            args[1] = format!("{base}{route}");
+            let output = Command::cargo_bin("kestrel")
+                .unwrap()
+                .current_dir(project.path())
+                .env("HOME", user_home.path())
+                .env("KESTRELSEARCH_PROVIDER_TRACE_DIR", &trace)
+                .env("KESTRELSEARCH_BENCHMARK_ARTIFACT_DIR", &artifacts)
+                .env("KESTRELSEARCH_BENCHMARK_RUN_ID", "lookup")
+                .args(args)
+                .output()
+                .unwrap();
+            if route == "/empty" {
+                assert!(!output.status.success());
+                assert!(output.stdout.is_empty());
+                continue;
+            }
+            assert!(
+                output.status.success(),
+                "{}",
+                String::from_utf8_lossy(&output.stderr)
+            );
+            let json: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+            assert!(json["content"].as_str().unwrap().contains("Ownership"));
+            assert!(json["elapsed_seconds"].as_f64().unwrap() >= 0.0);
+            if route == "/capped" {
+                assert!(String::from_utf8_lossy(&output.stderr).contains("--max-response-bytes"));
+            }
+        }
+        // Direct fetch can capture generated client headers, but not search artifacts.
+        assert!(!artifacts.exists());
+        let captures: Vec<_> = fs::read_dir(trace)
+            .unwrap()
+            .map(|entry| entry.unwrap().path())
+            .collect();
+        assert!(!captures.is_empty());
+        for file in captures {
+            let json: serde_json::Value = serde_json::from_slice(&fs::read(file).unwrap()).unwrap();
+            assert!(json["headers"].is_object());
+        }
+    })
+    .await
+    .unwrap();
 }
 
 #[tokio::test]
