@@ -1,0 +1,554 @@
+[
+  {
+    "id": "music-duet",
+    "url": "https://www.trustatrader.com/plumbers-in-suffolk",
+    "content_sha256": "bd3e7036ef5ecc227535ccdb2b84c982f33f7528bc06317272d34bbc6e32e365",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Plumbing listings address neither musician nor their collaboration."
+  },
+  {
+    "id": "music-duet",
+    "url": "https://www.plumbersup.co.uk/suffolk",
+    "content_sha256": "1bc08a04eea03bba952abacf1b947df4375a80dd21c9374bf65c5c9cd4c727a1",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Plumbing listings address neither musician nor their collaboration."
+  },
+  {
+    "id": "music-duet",
+    "url": "https://ukplumberspot.com/sfk/plumbers",
+    "content_sha256": "996ef16765271239a91c275175ad83b6b93fb0c8f407bdbde009db4c871000cf",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Plumbing listings address neither musician nor their collaboration."
+  },
+  {
+    "id": "music-duet",
+    "url": "https://topratedplumbers.co.uk/england/suffolk/",
+    "content_sha256": "38083fbc69e41783e98106c8bd7aad4ffc0df2670ea0477c8a267ce08c4b909f",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Plumbing listings address neither musician nor their collaboration."
+  },
+  {
+    "id": "music-duet",
+    "url": "https://www.yell.com/s/plumbers-suffolk.html",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Plumbing listings address neither musician nor their collaboration. No page body was returned."
+  },
+  {
+    "id": "q01",
+    "url": "https://www.mapsofworld.com/answers/world/what-is-the-capital-of-australia/",
+    "content_sha256": "983885df71532da111a0f2a7fc66315d524da0b0085bc64896831a915d5e7c20",
+    "relevance": 2,
+    "evidence": 1,
+    "rationale": "National-capital sources directly identify Canberra; tax content does not address the question. Only retained text explicitly identifying the capital earns evidence."
+  },
+  {
+    "id": "q01",
+    "url": "https://www.mappr.co/capital-cities/australia/",
+    "content_sha256": "b115e9f003f1c072f38241e02e2fb239b6071e8d81c9308d12d1dfa78cc2b3b3",
+    "relevance": 2,
+    "evidence": 1,
+    "rationale": "National-capital sources directly identify Canberra; tax content does not address the question. Only retained text explicitly identifying the capital earns evidence."
+  },
+  {
+    "id": "q01",
+    "url": "https://www.britannica.com/place/Canberra",
+    "content_sha256": "a84647614ad6cb041050492ec461f32a36dd8f3530ba4372ed3937f9c7f10b40",
+    "relevance": 2,
+    "evidence": 1,
+    "rationale": "National-capital sources directly identify Canberra; tax content does not address the question. Only retained text explicitly identifying the capital earns evidence."
+  },
+  {
+    "id": "q01",
+    "url": "https://en.wikipedia.org/wiki/List_of_Australian_capital_cities",
+    "content_sha256": "86a8e36b2a021af4b8f6a7ab6a6150d54db5f8a08b7c77cc7d8237e1ea3916ad",
+    "relevance": 2,
+    "evidence": 1,
+    "rationale": "National-capital sources directly identify Canberra; tax content does not address the question. Only retained text explicitly identifying the capital earns evidence."
+  },
+  {
+    "id": "q01",
+    "url": "https://en.wikipedia.org/wiki/Capital_gains_tax_in_Australia",
+    "content_sha256": "a228575ec6fcf9af9f2158b6b822abfea99d93e3578bfe67b28db05de140c0f4",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "National-capital sources directly identify Canberra; tax content does not address the question. Only retained text explicitly identifying the capital earns evidence."
+  },
+  {
+    "id": "q01",
+    "url": "https://www.jagranjosh.com/general-knowledge/capital-of-australia-1820003355-1",
+    "content_sha256": "7b6721c4e4d1410de351e6a678b71db976385a341f86f4d84c3d0d391ecef636",
+    "relevance": 2,
+    "evidence": 1,
+    "rationale": "National-capital sources directly identify Canberra; tax content does not address the question. Only retained text explicitly identifying the capital earns evidence."
+  },
+  {
+    "id": "q01",
+    "url": "https://ovolohotels.com/ovolo/blog/sydney-isnt-the-capital-of-australia/",
+    "content_sha256": "9596e08797af4e56499b99ebf97bd80d8faf3dc63d1fb995d2760a8850d62661",
+    "relevance": 2,
+    "evidence": 1,
+    "rationale": "National-capital sources directly identify Canberra; tax content does not address the question. Only retained text explicitly identifying the capital earns evidence."
+  },
+  {
+    "id": "q01",
+    "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-australia.html",
+    "content_sha256": "78d92b9975fdec49c26fb5de8a17a8619ad42c3542da2c27045b567c6dafd7dc",
+    "relevance": 2,
+    "evidence": 1,
+    "rationale": "National-capital sources directly identify Canberra; tax content does not address the question. Only retained text explicitly identifying the capital earns evidence."
+  },
+  {
+    "id": "q01",
+    "url": "https://www.insideaustraliatravel.com/faqs/australia-capital-city",
+    "content_sha256": "39d064d67b006d4f78857cdeae600c4e510db79702717ed36c351b65edd7748b",
+    "relevance": 2,
+    "evidence": 1,
+    "rationale": "National-capital sources directly identify Canberra; tax content does not address the question. Only retained text explicitly identifying the capital earns evidence."
+  },
+  {
+    "id": "q01",
+    "url": "https://en.wikipedia.org/wiki/Canberra",
+    "content_sha256": "744447b6f9977fbf897eb6588475dcb9610dc8d011518f2379ced5aa60a22383",
+    "relevance": 2,
+    "evidence": 1,
+    "rationale": "National-capital sources directly identify Canberra; tax content does not address the question. Only retained text explicitly identifying the capital earns evidence."
+  },
+  {
+    "id": "q01",
+    "url": "https://www.insideaustraliatravel.com/faqs/australia-capital-city",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 2,
+    "evidence": 0,
+    "rationale": "National-capital sources directly identify Canberra; tax content does not address the question. Only retained text explicitly identifying the capital earns evidence. No page body was returned."
+  },
+  {
+    "id": "q02",
+    "url": "https://en.wikipedia.org/wiki/Rayleigh_scattering",
+    "content_sha256": "a6ce41bbdf78fae01c064f2379670fc883c70d260b93f84a2c044bb5bb3fa68d",
+    "relevance": 2,
+    "evidence": 1,
+    "rationale": "Scattering articles are relevant; dictionaries and songs are off-topic. Evidence requires retained Rayleigh/blue-light preferential scattering explanation; model/polarization context and truncated Britannica chrome alone fail."
+  },
+  {
+    "id": "q02",
+    "url": "https://simple.wikipedia.org/wiki/Sky",
+    "content_sha256": "79f9ca4cda84e0adea9248fd765a3e83dc1606e20b689a0271aee1c67331fdb5",
+    "relevance": 1,
+    "evidence": 1,
+    "rationale": "Scattering articles are relevant; dictionaries and songs are off-topic. Evidence requires retained Rayleigh/blue-light preferential scattering explanation; model/polarization context and truncated Britannica chrome alone fail."
+  },
+  {
+    "id": "q02",
+    "url": "https://en.wikipedia.org/wiki/Diffuse_sky_radiation",
+    "content_sha256": "9dd570b7945d65cf50d219e5c8072792e7886ce3dcd6a4308a0a7a7bd29e50ae",
+    "relevance": 2,
+    "evidence": 1,
+    "rationale": "Scattering articles are relevant; dictionaries and songs are off-topic. Evidence requires retained Rayleigh/blue-light preferential scattering explanation; model/polarization context and truncated Britannica chrome alone fail."
+  },
+  {
+    "id": "q02",
+    "url": "https://en.wikipedia.org/wiki/Rayleigh_sky_model",
+    "content_sha256": "419e8f5c8e70984f42f9ce6b567e75fd115b6c0e8009d2bf4b4e0002709bff07",
+    "relevance": 2,
+    "evidence": 0,
+    "rationale": "Scattering articles are relevant; dictionaries and songs are off-topic. Evidence requires retained Rayleigh/blue-light preferential scattering explanation; model/polarization context and truncated Britannica chrome alone fail."
+  },
+  {
+    "id": "q02",
+    "url": "https://www.britannica.com/science/Rayleigh-scattering",
+    "content_sha256": "0adaa15ef1c7d097af9b131f9c64632348d05e6c92e1dafc25bb682189b9bd9e",
+    "relevance": 2,
+    "evidence": 0,
+    "rationale": "Scattering articles are relevant; dictionaries and songs are off-topic. Evidence requires retained Rayleigh/blue-light preferential scattering explanation; model/polarization context and truncated Britannica chrome alone fail."
+  },
+  {
+    "id": "q02",
+    "url": "https://www.encyclopedia.com/science-and-technology/astronomy-and-space-exploration/astronomy-general/rayleigh-scattering",
+    "content_sha256": "888fde6ef276ae2b788188767de2ab16f99ee56ce2ec2ab0607054ac8649809f",
+    "relevance": 2,
+    "evidence": 1,
+    "rationale": "Scattering articles are relevant; dictionaries and songs are off-topic. Evidence requires retained Rayleigh/blue-light preferential scattering explanation; model/polarization context and truncated Britannica chrome alone fail."
+  },
+  {
+    "id": "q02",
+    "url": "https://www.merriam-webster.com/dictionary/why",
+    "content_sha256": "d9083b04f971b31df86b9bb6bed4d4cda29e4a5a7deee21c298787cbdd840831",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Scattering articles are relevant; dictionaries and songs are off-topic. Evidence requires retained Rayleigh/blue-light preferential scattering explanation; model/polarization context and truncated Britannica chrome alone fail."
+  },
+  {
+    "id": "q02",
+    "url": "https://dictionary.cambridge.org/dictionary/english/why",
+    "content_sha256": "3f71127b6202c36ff935a1ed36ac56e55dd25e5d327298cc190df251b114898f",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Scattering articles are relevant; dictionaries and songs are off-topic. Evidence requires retained Rayleigh/blue-light preferential scattering explanation; model/polarization context and truncated Britannica chrome alone fail."
+  },
+  {
+    "id": "q02",
+    "url": "https://www.youtube.com/watch?v=4qeaBFFq3to",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Scattering articles are relevant; dictionaries and songs are off-topic. Evidence requires retained Rayleigh/blue-light preferential scattering explanation; model/polarization context and truncated Britannica chrome alone fail. No page body was returned."
+  },
+  {
+    "id": "q04",
+    "url": "https://www.postgresql.org/message-id/CAApHDvprmkqPF-k2dDc30rOJ%3Do27RQt1CPjnEcouskRbp%3DE1uw%40mail.gmail.com",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Official reference pages are direct, mailing-list/bug discussions are background. Returned bodies are missing, navigation-only, or truncated before the needed ANALYZE/BUFFERS explanation. No page body was returned."
+  },
+  {
+    "id": "q04",
+    "url": "https://www.postgresql.org/message-id/CAJgoLkLCCKy1hAFpoUzwaRq91cA%3Dm%3D-J03MBpUo-d7-oXy6MzA%40mail.gmail.com",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Official reference pages are direct, mailing-list/bug discussions are background. Returned bodies are missing, navigation-only, or truncated before the needed ANALYZE/BUFFERS explanation. No page body was returned."
+  },
+  {
+    "id": "q04",
+    "url": "https://www.postgresql.org/message-id/CA+TgmobLpsPt4mZ9j2CR_GUdmbjWZA786sxZie6ntRo-Z9zv0Q@mail.gmail.com",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Official reference pages are direct, mailing-list/bug discussions are background. Returned bodies are missing, navigation-only, or truncated before the needed ANALYZE/BUFFERS explanation. No page body was returned."
+  },
+  {
+    "id": "q04",
+    "url": "https://www.postgresql.org/message-id/CAEepm%3D21xgihg%3DWaG%2BO5MFotEZfN6kFETpfw%2BRkSnEqNQqGn2Q%40mail.gmail.com",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Official reference pages are direct, mailing-list/bug discussions are background. Returned bodies are missing, navigation-only, or truncated before the needed ANALYZE/BUFFERS explanation. No page body was returned."
+  },
+  {
+    "id": "q04",
+    "url": "https://www.postgresql.org/message-id/CA%2BTgmobLpsPt4mZ9j2CR_GUdmbjWZA786sxZie6ntRo-Z9zv0Q%40mail.gmail.com",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Official reference pages are direct, mailing-list/bug discussions are background. Returned bodies are missing, navigation-only, or truncated before the needed ANALYZE/BUFFERS explanation. No page body was returned."
+  },
+  {
+    "id": "q04",
+    "url": "https://www.postgresql.org/message-id/E1tLJ8I-002ApU-7t%40gemulon.postgresql.org",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Official reference pages are direct, mailing-list/bug discussions are background. Returned bodies are missing, navigation-only, or truncated before the needed ANALYZE/BUFFERS explanation. No page body was returned."
+  },
+  {
+    "id": "q04",
+    "url": "https://www.postgresql.org/message-id/407d949e1002091654g400b1af3s70be0477e9acd5c0@mail.gmail.com",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Official reference pages are direct, mailing-list/bug discussions are background. Returned bodies are missing, navigation-only, or truncated before the needed ANALYZE/BUFFERS explanation. No page body was returned."
+  },
+  {
+    "id": "q04",
+    "url": "https://www.postgresql.org/message-id/20091015201252.A2EC.52131E4D%40oss.ntt.co.jp",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Official reference pages are direct, mailing-list/bug discussions are background. Returned bodies are missing, navigation-only, or truncated before the needed ANALYZE/BUFFERS explanation. No page body was returned."
+  },
+  {
+    "id": "q04",
+    "url": "https://commitfest.postgresql.org/patch/1326/",
+    "content_sha256": "aaeda36646c0228f8743ed8869e448fbb5dedf848c8f332ebd7ee14e6d8bddd8",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Official reference pages are direct, mailing-list/bug discussions are background. Returned bodies are missing, navigation-only, or truncated before the needed ANALYZE/BUFFERS explanation."
+  },
+  {
+    "id": "q04",
+    "url": "https://www.postgresql.org/docs/current/using-explain.html",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 2,
+    "evidence": 0,
+    "rationale": "Official reference pages are direct, mailing-list/bug discussions are background. Returned bodies are missing, navigation-only, or truncated before the needed ANALYZE/BUFFERS explanation. No page body was returned."
+  },
+  {
+    "id": "q04",
+    "url": "https://wiki.postgresql.org/wiki/Slow_Query_Questions",
+    "content_sha256": "252abf07f3cde432839fe9aae0dfb0c14c20a65ebc16894fa12e2b9eb1b6da83",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Official reference pages are direct, mailing-list/bug discussions are background. Returned bodies are missing, navigation-only, or truncated before the needed ANALYZE/BUFFERS explanation."
+  },
+  {
+    "id": "q04",
+    "url": "https://www.postgresql.org/docs/current/sql-explain.html",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 2,
+    "evidence": 0,
+    "rationale": "Official reference pages are direct, mailing-list/bug discussions are background. Returned bodies are missing, navigation-only, or truncated before the needed ANALYZE/BUFFERS explanation. No page body was returned."
+  },
+  {
+    "id": "q07",
+    "url": "https://github.com/rust-lang/rust/issues/121466",
+    "content_sha256": "d8bfb0398dfb77066bdae9ba60ff2095fd9f1f92383b84cbaab6ca0ec26319a4",
+    "relevance": 2,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://academy.fpblock.com/blog/when-rust-is-safer-than-haskell/",
+    "content_sha256": "c229c0f6b7e84d4c4159f441c034b888782186eb883be44b6729801fd798d778",
+    "relevance": 2,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://stanford-cs242.github.io/f18/lectures/05-1-rust-memory-safety.html",
+    "content_sha256": "8d5048b52be213faa984a60d13ac6f9ea6f20cae4d8b24671f96a656a207600b",
+    "relevance": 2,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://github.com/leynos/rust-skill",
+    "content_sha256": "8441e815e2642e0dac7b47cc6e25d1231c7d09d7a1d6284d07413a509ee2da2c",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://speakerdeck.com/mitsuhiko/rust-for-serious-developers",
+    "content_sha256": "9b879cb92dba15eaec26d2c82e9f94087034f1c752125b40c2306510029fea29",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://dekgenius.com/script-code-example/rust_example_rust-armanriazi-error-e0382-use-of-moved-value-counter-value-moved-into-closure-here-in-previous-iteration-of-loop.html",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 2,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair. No page body was returned."
+  },
+  {
+    "id": "q07",
+    "url": "https://speakerdeck.com/mitsuhiko/rust-for-serious-developers",
+    "content_sha256": "54ff9f97a347706e645a2151aa146c82c3f83e6eb5fc14318d16ac9181cb5351",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://community.ebay.com/",
+    "content_sha256": "dbc8e761704950f85c274cf4587d3084d08cccc116e5dfc3b5c0050928c36b69",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://community.ebay.de/",
+    "content_sha256": "d60910f0a718f5aed9ad913f2711f12ee66a9cbdf916e46bef93431285bbbf48",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://community.ebay.co.uk/forum/technical-issues-15/topic/having-problems-and-cant-access-my-account-says-invalid-access-token-retry-34027/",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair. No page body was returned."
+  },
+  {
+    "id": "q07",
+    "url": "https://speakerdeck.com/mitsuhiko/rust-for-serious-developers",
+    "content_sha256": "b901b234a4219d00e463526206217eb38fbcda88a44b6c76f7cb5c757851fe25",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://speakerdeck.com/mitsuhiko/rust-for-serious-developers",
+    "content_sha256": "4132703d5888b007f1c14d6a6a9c5315b691836855bde93ff23bc08bacf17630",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://community.ebay.com/",
+    "content_sha256": "9075c2e839c3fcb0ba72ce2ee6254c0039b7f0cee275b95432c8a8b535055697",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://community.ebay.de/",
+    "content_sha256": "3e450b57cc44e02291d5f3d6c55f2854a0bed53c36766c747979ff88b7d03b64",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://speakerdeck.com/mitsuhiko/rust-for-serious-developers",
+    "content_sha256": "fb7666a16d919cda7c144a4463ba62c1dcc5e2d3766823b2f601593943965845",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://speakerdeck.com/mitsuhiko/rust-for-serious-developers",
+    "content_sha256": "5cf538b0aca98383e6c07106f63d8a75f13a278d60dc61fe7d8aa5063825a53f",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q07",
+    "url": "https://community.ebay.de/",
+    "content_sha256": "883c421fcdf03e983eaf62f922380488a8579d3989604a1b2f39fc6cefedca00",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Rust error/ownership sources are direct or background as indicated; eBay is off-topic. Retained Rust bodies are introductions, skill catalogs, deck chrome, or an error example without an applicable repair."
+  },
+  {
+    "id": "q09",
+    "url": "http://www1.apc.gov.eg/ar/default.aspx",
+    "content_sha256": "ac820db4dfeab486ea72f75b469c7575a404fedfb97784d13eb29a64ba853c70",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Agriculture, pesticide and economics results are unrelated to Tempo 3.0."
+  },
+  {
+    "id": "q09",
+    "url": "https://www.youm7.com/story/2026/9/8/%D9%84%D9%85%D8%A7%D8%B0%D8%A7-%D8%AA%D8%AA%D8%B5%D8%AF%D8%B1-%D8%A7%D9%84%D8%A8%D8%B7%D8%A7%D8%B7%D8%B3-%D8%A7%D9%84%D9%85%D8%AD%D8%A7%D8%B5%D9%8A%D9%84-%D8%A7%D9%84%D9%85%D8%B5%D8%B1%D9%8A%D8%A9-%D8%A7%D9%84%D9%85%D9%88%D8%AC%D9%87%D8%A9-%D9%84%D9%84%D8%A3%D8%B3%D9%88%D8%A7%D9%82-%D8%A7%D9%84%D8%B9%D8%A7%D9%84%D9%85%D9%8A%D8%A9-%D8%AA%D9%86%D8%A7%D9%85%D9%8A-%D8%A7%D9%84%D8%B7%D9%84%D8%A8/7533833",
+    "content_sha256": "7e9ae2d42187601a0fbcb7a80bc7e1e71258588d23924f68f1942e6ef9ce2def",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Agriculture, pesticide and economics results are unrelated to Tempo 3.0."
+  },
+  {
+    "id": "q09",
+    "url": "https://site.capq.gov.eg/ImportingProcedure/Index",
+    "content_sha256": "e94f7196f384ca5a1ad6031b21b0453266eb2e5a6fbf574d06cfbd641982c0c0",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Agriculture, pesticide and economics results are unrelated to Tempo 3.0."
+  },
+  {
+    "id": "q09",
+    "url": "http://www.apc.gov.eg/",
+    "content_sha256": "cc891413760b75dacd8db6cc8ec050486d65bfb85481874474594f6d29851584",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Agriculture, pesticide and economics results are unrelated to Tempo 3.0."
+  },
+  {
+    "id": "q09",
+    "url": "https://www.goeic.gov.eg/ar/originCertifications/list",
+    "content_sha256": "28b24abe48b3da529a45e95aac069311be487f90a9de6ba13e7b87ae81c0e032",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Agriculture, pesticide and economics results are unrelated to Tempo 3.0."
+  },
+  {
+    "id": "q09",
+    "url": "https://www.goeic.gov.eg/ar/originCertifications/list",
+    "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Agriculture, pesticide and economics results are unrelated to Tempo 3.0. No page body was returned."
+  },
+  {
+    "id": "q10",
+    "url": "https://www.visitlondon.com/things-to-do/place/52747-science-museum",
+    "content_sha256": "b21d0e639a7307a46ee69263161e4ab9f17acf0f14adabb92954837a11125339",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Science Museum listings are background; London general pages and the Natural History Museum are off-topic. Retained Science Museum text omits opening hours; another museum’s hours do not count."
+  },
+  {
+    "id": "q10",
+    "url": "https://en.wikipedia.org/wiki/Science_Museum,_London",
+    "content_sha256": "479e926efa431c49aa21ed8a175f3d0cd54a8d32260f36522c7f7564dbb09ba2",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Science Museum listings are background; London general pages and the Natural History Museum are off-topic. Retained Science Museum text omits opening hours; another museum’s hours do not count."
+  },
+  {
+    "id": "q10",
+    "url": "https://www.britannica.com/topic/Science-Museum-London",
+    "content_sha256": "cd019515b0bf7c4c574f518915e03feb92e3c8d5ac629b885b8fc175543207a3",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Science Museum listings are background; London general pages and the Natural History Museum are off-topic. Retained Science Museum text omits opening hours; another museum’s hours do not count."
+  },
+  {
+    "id": "q10",
+    "url": "https://www.nhm.ac.uk/visit.html",
+    "content_sha256": "faf9dbadc8736eb686b7977b3e1832ff71efecc558839f7c7292c16c99429f77",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Science Museum listings are background; London general pages and the Natural History Museum are off-topic. Retained Science Museum text omits opening hours; another museum’s hours do not count."
+  },
+  {
+    "id": "q10",
+    "url": "https://www.nhm.ac.uk/",
+    "content_sha256": "64736266de4baabb4de1dee65f9504dbcfe9917da6f5e7ad5e882234447739c8",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Science Museum listings are background; London general pages and the Natural History Museum are off-topic. Retained Science Museum text omits opening hours; another museum’s hours do not count."
+  },
+  {
+    "id": "q10",
+    "url": "https://www.visitlondon.com/things-to-do/sightseeing/london-attraction/museum/top-10-best-science-museums-in-london",
+    "content_sha256": "5cf2aabcaa0bfaebc3e333239ae1088cc7a404d451c16a14d49f4030c6fe9329",
+    "relevance": 1,
+    "evidence": 0,
+    "rationale": "Science Museum listings are background; London general pages and the Natural History Museum are off-topic. Retained Science Museum text omits opening hours; another museum’s hours do not count."
+  },
+  {
+    "id": "q10",
+    "url": "https://www.visitlondon.com/",
+    "content_sha256": "c9def07d2726a1671113ab719be5d8b01852490c889974be9c9292ad744485e7",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Science Museum listings are background; London general pages and the Natural History Museum are off-topic. Retained Science Museum text omits opening hours; another museum’s hours do not count."
+  },
+  {
+    "id": "q10",
+    "url": "https://www.visitlondon.com/things-to-do/best-things-to-do-in-london",
+    "content_sha256": "146a3323f51482c8be4917db9030db0cee484dc4bfba33bf1cc2bb601feeaf7a",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Science Museum listings are background; London general pages and the Natural History Museum are off-topic. Retained Science Museum text omits opening hours; another museum’s hours do not count."
+  },
+  {
+    "id": "q10",
+    "url": "https://en.m.wikipedia.org/wiki/London",
+    "content_sha256": "8732ae174cf244b3faa5565db4c3a9adcca9e4dc17fd8d78f492c9872c04ccff",
+    "relevance": 0,
+    "evidence": 0,
+    "rationale": "Science Museum listings are background; London general pages and the Natural History Museum are off-topic. Retained Science Museum text omits opening hours; another museum’s hours do not count."
+  }
+]
