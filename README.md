@@ -129,8 +129,8 @@ HTML extraction preserves document order and inline word boundaries, including
 short answers, nested lists, code and tables. Blocks use line breaks, table cells
 use tabs, and `pre` retains code indentation and repeated lines. Headings are
 included once per source occurrence without an implicit BM25 boost. Character
-limits count retained whitespace and separators; old cache entries keep their
-previous extraction until expiry or a fresh fetch. See the
+limits count retained whitespace and separators; legacy unversioned cache entries
+are invalidated by the conservative, versioned page-cache identity. See the
 [HTML extraction contract](docs/page-extraction.md#ordered-readable-text-issue-22).
 
 Page extraction removes structural chrome (such as navigation and sidebars)
@@ -385,8 +385,12 @@ The corresponding `*_detailed` APIs return `SearchReport` and `FetchReport`
 values. These report provider latency, retries, result counts and cancellations,
 plus per-page queue, request/TTFB, download, parse, byte-count, cache, outcome,
 and deadline data without changing normal result objects. Cache entries are
-keyed by canonical URL and content limit so differently truncated extractions
+keyed by conservative request URL, extraction version and content limit so differently truncated extractions
 cannot be mixed.
+Page keys preserve trailing slashes, encoded paths and every query parameter
+(including order and tracking parameters), while ignoring URL fragments. Legacy
+unversioned entries are misses and are not migrated. Search deduplication is
+unchanged. See [page-cache identity](docs/page-cache-identity.md).
 
 ## OpenTelemetry / Honeycomb
 

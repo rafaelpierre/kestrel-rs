@@ -5,9 +5,12 @@ use std::time::{Duration, SystemTime};
 
 use sha2::{Digest, Sha256};
 
-use crate::search::{KestrelError, canonical_url};
+use crate::search::KestrelError;
 
-/// A TTL-bound disk cache keyed by canonical URL and extraction limit.
+// Bump when extraction semantics or the persistent identity contract changes.
+const EXTRACTION_CACHE_VERSION: &str = "page-text-v2";
+
+/// A TTL-bound disk cache keyed by conservative request URL, extraction version and limit.
 #[derive(Clone, Debug)]
 pub struct PageCache {
     directory: PathBuf,
@@ -107,13 +110,20 @@ impl PageCache {
     }
 
     fn target(&self, url: &str, content_limit: usize) -> PathBuf {
-        let canonical = canonical_url(url);
-        let key_url = if canonical.is_empty() {
-            url
-        } else {
-            &canonical
+        // Search deduplication is a heuristic, not proof of HTTP resource identity.
+        // Fragments are not sent to the server. Preserve query order, tracking
+        // parameters, encoded paths and trailing slashes. URL parsing applies only
+        // standard URL normalization (for example default ports and host case).
+        let key_url = match url::Url::parse(url) {
+            Ok(mut parsed) => {
+                parsed.set_fragment(None);
+                parsed.to_string()
+            }
+            Err(_) => url.to_owned(),
         };
-        let digest = Sha256::digest(format!("{key_url}\0{content_limit}").as_bytes());
+        let digest = Sha256::digest(
+            format!("{EXTRACTION_CACHE_VERSION}\0{key_url}\0{content_limit}").as_bytes(),
+        );
         self.directory.join(format!("{digest:x}.txt"))
     }
 
@@ -127,12 +137,12 @@ mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn keys_by_canonical_url_and_content_limit() {
+    async fn keys_preserve_resource_distinctions_and_extraction_limit() {
         let _telemetry = crate::telemetry::test_export_guard();
         let directory = tempfile::tempdir().unwrap();
         let cache = PageCache::new(directory.path(), Duration::from_secs(60)).unwrap();
         cache
-            .put("https://example.com/page?utm_source=test", 2_000, "cached")
+            .put("https://example.com/page#one", 2_000, "cached")
             .await
             .unwrap();
         assert_eq!(
@@ -143,5 +153,43 @@ mod tests {
             Some("cached")
         );
         assert_eq!(cache.get("https://example.com/page", 1_000).await, None);
+    }
+    #[test]
+    fn conservative_identity_and_legacy_invalidation() {
+        let cache = PageCache::new("cache", Duration::from_secs(60)).unwrap();
+        let base = "https://example.com/page";
+        for distinct in [
+            "https://example.com/page/",
+            "https://example.com/page?utm_source=test",
+            "https://example.com/page?a=1",
+            "http://example.com/page",
+        ] {
+            assert_ne!(cache.target(base, 2000), cache.target(distinct, 2000));
+        }
+        for (left, right) in [
+            ("https://example.com/a%2Fb", "https://example.com/a/b"),
+            ("https://example.com/%70age", base),
+            (
+                "https://example.com/page?a=1&b=2",
+                "https://example.com/page?b=2&a=1",
+            ),
+            (
+                "https://example.com/page?a=1&a=2",
+                "https://example.com/page?a=2&a=1",
+            ),
+        ] {
+            assert_ne!(cache.target(left, 2000), cache.target(right, 2000));
+        }
+        for equivalent in [
+            "https://EXAMPLE.com:443/page",
+            "https://example.com/page#section",
+        ] {
+            assert_eq!(cache.target(base, 2000), cache.target(equivalent, 2000));
+        }
+        let legacy = Sha256::digest(format!("{base}\0{}", 2000).as_bytes());
+        assert_ne!(
+            cache.target(base, 2000),
+            cache.directory.join(format!("{legacy:x}.txt"))
+        );
     }
 }

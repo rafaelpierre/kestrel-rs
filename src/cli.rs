@@ -154,6 +154,7 @@ struct SearchArgs {
     fetch_budget: Option<f64>,
 
     /// Cache extracted page text for this many seconds (disabled by default).
+    /// Keys preserve request URL distinctions; legacy unversioned entries are misses.
     /// Must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     cache_ttl: Option<f64>,
@@ -1836,6 +1837,14 @@ mod tests {
         assert_eq!(fetch.max_response_bytes, library.max_response_bytes);
         assert_eq!(search.content_limit, 2_000);
         assert_eq!(fetch.content_limit, 20_000);
+    }
+
+    #[test]
+    fn generated_skill_documents_conservative_cache_identity() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("Cache keys preserve"));
+        assert!(skill.contains("Legacy unversioned entries are misses"));
+        assert!(skill.contains("deduplication remains unchanged"));
     }
 
     #[test]
