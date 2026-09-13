@@ -24,7 +24,8 @@ owns the comparative workflow evaluation.
 | Batch/cached direct APIs: [client.rs](../src/client.rs) | Search uses batch fetch internally; direct fetch takes one URL | Checked: selective reads use individual fetches. No batch/cache flags invented. |
 | Offline rank replay: [rank_replay.rs](../examples/rank_replay.rs) | Cargo example, not a CLI subcommand | Defer specialized experiment guidance to #78; existing CLI ranking policies documented. |
 | Streaming probes: [probe.rs](../src/search/streaming/probe.rs) | Test-only, not ordinary diagnostics | Defer research to #29/#46; no production observability claim. |
-| Quality classification, automated recovery, find/passages | No current CLI capability | State current extraction limits; #77/#79/#83 own implementations. Workflow recovery is an agent decision, not a new command. |
+| Advisory content quality: [content_quality.rs](../src/content_quality.rs) | Library assessment methods; opt-in search artifact assessments; no ordinary CLI field or control | Whole-message shell detection and bounded first-article recovery are documented in the generated skill and [quality policy](content-quality.md). No useful-evidence certification, rejection or ranking penalty. |
+| Automated search recovery, find/passages | No current CLI capability | #79/#83 own implementations. Workflow recovery is an agent decision, not a new command. |
 
 ## Validation and task review
 
@@ -47,7 +48,7 @@ Task review:
 - Empty results: report the limited retrieval outcome, not nonexistence of sources;
   do not silently relax constraints.
 - Unusable body: try another source or a bounded larger-prefix refetch; report
-  uncertainty when the task budget is exhausted. No classifier/find feature assumed.
+  uncertainty when the task budget is exhausted. No semantic usefulness classifier or find feature assumed.
 
 The generated skill is self-contained because installation currently writes only
 `SKILL.md`; this repository audit is a maintainer reference, not a runtime dependency.

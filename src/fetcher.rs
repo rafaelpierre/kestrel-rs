@@ -492,7 +492,25 @@ pub(crate) fn parse_content(html: &str, content_limit: usize) -> Option<String> 
     remove_page_chrome(&mut document);
     let root = main_content(&document);
     let weighted = extract_weighted_text(root);
-    clean_text(&weighted, content_limit)
+    let content = clean_text(&weighted, content_limit);
+    // Only reconsider an entirely recognized shell. Inspect at most the first
+    // explicit article, and assess the bounded retained text without truncating
+    // an over-limit assessment. Ordinary root selection remains unchanged.
+    if crate::assess_content_quality(content.as_deref()).state
+        == crate::ContentQualityState::BoilerplateOnly
+        && let Some(article) = document.select(&ARTICLE).next()
+        && article.id() != root.id()
+    {
+        let alternative = clean_text(&extract_weighted_text(article), content_limit);
+        let quality = crate::assess_content_quality(alternative.as_deref());
+        if alternative.is_some()
+            && (quality.state == crate::ContentQualityState::Unflagged
+                || quality.reasons == [crate::ContentQualityReason::MixedContent])
+        {
+            return alternative;
+        }
+    }
+    content
 }
 
 fn remove_page_chrome(document: &mut Html) {
@@ -827,3 +845,6 @@ mod tests {
 
 #[cfg(test)]
 mod cutoff_tests;
+
+#[cfg(test)]
+mod quality_tests;

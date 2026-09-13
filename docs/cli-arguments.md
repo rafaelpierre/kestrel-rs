@@ -90,3 +90,13 @@ including empty input and cached fetch paths. Cached fetch validates before
 cache I/O. Transport and warm-up durations also validate deadline capacity.
 These representability checks are not practical memory or latency budgets;
 callers should still choose limits appropriate to their workload.
+
+## Advisory content quality
+
+Successful fetch means text was extracted, not that it supplies useful evidence.
+Known shell-only bodies remain successful text/JSON responses; search retains
+body, title, snippet, URL and provenance and applies its existing ranking policy.
+No quality control flag or normal JSON field is added. The library and opt-in
+search benchmark artifacts expose versioned advisory assessments. HTML extraction
+may recover the first explicit article when the originally selected body consists
+entirely of recognized shell messages. See [policy and evaluation](content-quality.md).

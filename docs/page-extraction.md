@@ -21,7 +21,9 @@ are not clutter markers. A matching class or ID still removes the container and
 its descendants. This is a conservative naming heuristic, not general semantic
 classification: an unrecognized compound name can retain boilerplate, and a
 content container using an exact clutter name can still be removed. Structural
-extraction, limits, output schemas, caching and CLI options are unchanged.
+extraction still uses the existing selected tags and limits. See the bounded
+[root-selection recovery and advisory quality policy](content-quality.md) added
+for #77. Output schemas, cache keys and CLI options are unchanged.
 
 ## Regression evidence for issue #20
 
