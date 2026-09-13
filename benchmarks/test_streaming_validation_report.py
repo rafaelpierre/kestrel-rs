@@ -19,6 +19,14 @@ class ReportTests(unittest.TestCase):
                 "collector": {"first_five_unique_ms": None, "threshold_observed_ms": None}, "contributing_providers": [],
                 "threshold_met_at_return": False, "final_keys": list(urls), "final_results": [{"url": url} for url in urls]}
 
+    def test_passthrough_metadata_is_preserved_and_mislabeling_rejected(self):
+        metadata = dict(self.metadata(), schema_version=2, query_syntax="passthrough")
+        summary = summarize(metadata, [self.sample_run()])
+        self.assertEqual(summary["input_schema_version"], 2)
+        self.assertEqual(summary["query_syntax"], "passthrough")
+        with self.assertRaises(ValueError):
+            summarize(dict(metadata, query_syntax="portable"), [self.sample_run()])
+
     def test_missing_measurements_and_empty_overlap_are_not_success(self):
         # No observations must remain null; unseen providers remain in the matrix.
         self.assertEqual(distribution([]), {"n": 0, "p50": None, "p95": None})

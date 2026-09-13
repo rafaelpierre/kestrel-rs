@@ -51,10 +51,6 @@ struct SearchArgs {
     /// Primary search query.
     query: String,
 
-    /// Query syntax: portable checks titles/snippets; native passes provider syntax through.
-    #[arg(long, value_enum, default_value = "portable")]
-    query_syntax: kestrelsearch::QuerySyntax,
-
     /// Additional query to run. Repeat for multiple queries.
     #[arg(short = 'q', long = "query", value_name = "QUERY")]
     additional_queries: Vec<String>,
@@ -97,7 +93,7 @@ struct SearchArgs {
     fetch_candidates: Option<usize>,
 
     /// Minimum positive-IDF title/snippet BM25 before the fetch cap (disabled by default).
-    /// Inclusive, finite and nonnegative; zero keeps zero scores. Portable syntax only.
+    /// Inclusive, finite and nonnegative; zero keeps zero scores. Uses tokenized query text.
     #[arg(long, value_parser = nonnegative_f64, value_name = "SCORE")]
     min_fetch_score: Option<f64>,
 
@@ -216,7 +212,6 @@ impl SearchArgs {
     fn search_options(&self) -> SearchOptions {
         let budgeted_default = self.mode.is_none() && self.search_budget.is_some();
         SearchOptions {
-            query_syntax: self.query_syntax,
             engines: self.engines.clone(),
             mode: self.mode.unwrap_or_default(),
             region: self.region.clone(),
@@ -401,14 +396,6 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
                 "--ranking-policy body cannot be used with --no-fetch; remove --no-fetch or choose provider, snippet, hybrid, or rrf",
             )
             .exit();
-    }
-    if arguments.min_fetch_score.is_some()
-        && arguments.query_syntax == kestrelsearch::QuerySyntax::Native
-    {
-        Cli::command().error(
-            clap::error::ErrorKind::ArgumentConflict,
-            "--min-fetch-score requires --query-syntax portable; remove the threshold or use portable syntax",
-        ).exit();
     }
     arguments.candidate_limit().unwrap_or_else(|message| {
         Cli::command()
@@ -634,7 +621,7 @@ async fn select_fetch_candidates(
         if report.bypassed_queries > 0 {
             let _ = writeln!(
                 diagnostics,
-                "[kestrel] Fetch score threshold bypassed for {} query(s) without affirmative lexical terms.",
+                "[kestrel] Fetch score threshold bypassed for {} query(s) without lexical terms.",
                 report.bypassed_queries
             );
         }
@@ -1141,32 +1128,23 @@ mod tests {
     }
 
     #[test]
-    fn query_syntax_preserves_shell_argument_and_additional_queries() {
-        for (flags, syntax) in [
-            (vec![], kestrelsearch::QuerySyntax::Portable),
+    fn shell_quoting_only_groups_the_query_argument() {
+        for (command, expected) in [
+            (r#"kestrel search "machine learning""#, "machine learning"),
             (
-                vec!["--query-syntax", "native"],
-                kestrelsearch::QuerySyntax::Native,
+                r#"kestrel search '"machine learning"'"#,
+                r#""machine learning""#,
+            ),
+            (
+                r#"kestrel search "filetype:pdf a OR b""#,
+                "filetype:pdf a OR b",
             ),
         ] {
-            let cli = Cli::try_parse_from(
-                [
-                    "kestrel",
-                    "search",
-                    r#""machine learning""#,
-                    "--query",
-                    "C++ AND Rust",
-                ]
-                .into_iter()
-                .chain(flags),
-            )
-            .unwrap();
-            let Commands::Search(args) = cli.command else {
-                panic!("search expected")
+            let argv = shlex::split(command).unwrap();
+            let Commands::Search(args) = Cli::try_parse_from(argv).unwrap().command else {
+                panic!("expected search");
             };
-            assert_eq!(args.query, r#""machine learning""#);
-            assert_eq!(args.additional_queries, ["C++ AND Rust"]);
-            assert_eq!(args.search_options().query_syntax, syntax);
+            assert_eq!(args.queries(), [expected]);
         }
     }
 
@@ -1588,17 +1566,16 @@ mod tests {
         let mut diagnostics = Vec::new();
         let mut input = input;
         for hit in &mut input {
-            hit.query = Some("site:example.com".into());
+            hit.query = Some("!!!".into());
         }
-        let selected =
-            select_fetch_candidates(input, &args, &["site:example.com".into()], &mut diagnostics)
-                .await
-                .unwrap();
+        let selected = select_fetch_candidates(input, &args, &["!!!".into()], &mut diagnostics)
+            .await
+            .unwrap();
         assert_eq!(selected.counts["fetch_score_bypassed_queries"], 1);
         assert!(
             String::from_utf8(diagnostics)
                 .unwrap()
-                .contains("without affirmative lexical terms")
+                .contains("without lexical terms")
         );
     }
 

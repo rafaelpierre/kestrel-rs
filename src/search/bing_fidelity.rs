@@ -156,31 +156,15 @@ async fn isolated(
 }
 
 fn paired_views(query: &str, raw: &[SearchResult]) -> Value {
-    let mut views = json!({});
-    for (name, syntax) in [
-        ("native", QuerySyntax::Native),
-        ("portable", QuerySyntax::Portable),
-    ] {
-        let mut results = raw.to_vec();
-        normalize_provider_results(
-            &mut results,
-            query,
-            &QueryPlan::parse(query, syntax).unwrap(),
-        );
-        clean_results(&mut results);
-        views[name] = json!({"results":results,"raw_result_count":raw.len()});
-    }
-    views
+    let mut results = raw.to_vec();
+    normalize_provider_results(&mut results, query);
+    clean_results(&mut results);
+    json!({"passthrough": {"results": results, "raw_result_count": raw.len()}})
 }
 
 fn fanout_options(variant: &str, budget: Duration) -> SearchOptions {
     SearchOptions {
-        query_syntax: if variant == "fanout-native-min5" {
-            QuerySyntax::Native
-        } else {
-            QuerySyntax::Portable
-        },
-        min_results: Some(if variant == "fanout-portable-min20" {
+        min_results: Some(if variant == "fanout-passthrough-min20" {
             20
         } else {
             5
@@ -230,9 +214,8 @@ async fn capture_live_matrix() {
     // Alternate configuration order by query to reduce order/time confounding.
     let normal_variants = [
         "bing-standard",
-        "fanout-native-min5",
-        "fanout-portable-min5",
-        "fanout-portable-min20",
+        "fanout-passthrough-min5",
+        "fanout-passthrough-min20",
     ];
     let variants: &[&str] = if std::env::var_os("KESTREL_BING_ENCODING_ONLY").is_some() {
         &["bing-standard", "bing-percent-space"]
@@ -282,10 +265,9 @@ async fn capture_live_matrix() {
                 }
             };
             if variant.starts_with("bing-") && row.get("paired_views").is_none() {
-                // Failed captures still belong in both replay denominators.
+                // Failed captures still belong in the replay denominator.
                 row["paired_views"] = json!({
-                    "native":{"results":[],"raw_result_count":null},
-                    "portable":{"results":[],"raw_result_count":null}
+                    "passthrough":{"results":[],"raw_result_count":null}
                 });
             }
             row["id"] = json!(format!("{}-{variant}", case["id"].as_str().unwrap()));
@@ -298,10 +280,7 @@ async fn capture_live_matrix() {
             row["observation_kind"] = json!("network");
             if !variant.starts_with("bing-") {
                 let options = fanout_options(variant, budget);
-                row["query_syntax"] = json!(match options.query_syntax {
-                    QuerySyntax::Native => "native",
-                    QuerySyntax::Portable => "portable",
-                });
+                row["query_syntax"] = json!("passthrough");
                 row["min_results"] = json!(options.min_results);
                 row["engines"] = json!(options.engines);
                 row["max_concurrency"] = json!(options.max_concurrency);
@@ -318,7 +297,7 @@ async fn capture_live_matrix() {
             fs::write(&output, serde_json::to_vec_pretty(&json!({
                 "schema":1,"expected_rows": cases.len() * variants.len(),
                 "completed": rows.len() == cases.len() * variants.len(), "headers":headers,"region":"","session":"reused clients, no cookie jar",
-                "experiment_revision":2,
+                "experiment_revision":3,
                 "environment_label":std::env::var("KESTREL_BING_ENVIRONMENT").unwrap_or_else(|_| "local-unverified".into()),
                 "network_context":"local host; browser egress equivalence not verified",
                 "isolated_policy":"single attempt; orchestration uses production retries",
@@ -352,30 +331,30 @@ fn paired_filter_views_preserve_raw_evidence_and_distinguish_native() {
     ));
     let views = paired_views("why does the moon cause ocean tides", &raw);
     assert_eq!(raw.len(), 2);
-    assert_eq!(views["native"]["results"].as_array().unwrap().len(), 2);
-    assert!(views["portable"]["results"].as_array().unwrap().is_empty());
-    assert_eq!(views["portable"]["raw_result_count"], 2);
+    assert_eq!(views["passthrough"]["results"].as_array().unwrap().len(), 2);
+    assert_eq!(views["passthrough"]["raw_result_count"], 2);
 
     let site = parse_bing_results(include_str!(
         "../../tests/fixtures/providers/bing-live-site.html"
     ));
     let views = paired_views("site:docs.rs tokio watch Receiver borrow_and_update", &site);
-    for name in ["native", "portable"] {
-        assert!(views[name]["results"].as_array().unwrap().is_empty());
-        assert_eq!(views[name]["raw_result_count"], 2);
-    }
+    assert!(
+        views["passthrough"]["results"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(views["passthrough"]["raw_result_count"], 2);
 }
 
 #[test]
 fn current_matrix_uses_result_minima_and_matched_budgets() {
     let budget = Duration::from_secs(5);
-    for (variant, syntax, minimum) in [
-        ("fanout-native-min5", QuerySyntax::Native, 5),
-        ("fanout-portable-min5", QuerySyntax::Portable, 5),
-        ("fanout-portable-min20", QuerySyntax::Portable, 20),
+    for (variant, minimum) in [
+        ("fanout-passthrough-min5", 5),
+        ("fanout-passthrough-min20", 20),
     ] {
         let options = fanout_options(variant, budget);
-        assert_eq!(options.query_syntax, syntax);
         assert_eq!(options.min_results, Some(minimum));
         assert_eq!(options.search_budget, Some(budget));
         assert_eq!(options.provider_quorum, None);

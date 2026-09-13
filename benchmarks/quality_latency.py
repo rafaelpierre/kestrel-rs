@@ -152,7 +152,7 @@ def main():
     parser.add_argument('--min-results', type=int, default=15, help='Fixed collection target outside the minimum sweep')
     parser.add_argument('--candidate-pool', type=int, default=15)
     parser.add_argument('--top-k', type=int, default=5)
-    parser.add_argument('--query-syntax', choices=['portable', 'native'], default='portable')
+    parser.add_argument('--query-syntax', choices=['passthrough', 'portable', 'native'], default='passthrough', help='Use portable/native only with historical executables that support the removed flag')
     parser.add_argument('--limit', type=int)
     parser.add_argument('--query-id', action='append', help='Select versioned queries by ID, repeatable')
     parser.add_argument('--resume', action='store_true')

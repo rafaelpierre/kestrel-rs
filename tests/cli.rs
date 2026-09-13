@@ -228,7 +228,7 @@ fn skill_install_and_uninstall_use_compatible_paths() {
         "--min-fetch-score",
         "score >= SCORE",
         "zero keeps zero",
-        "affirmative lexical terms",
+        "without lexical terms",
         "fetch_score_bypassed_queries",
         "whitespace-only queries are dropped",
         "fetching AND final",
@@ -248,7 +248,10 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(skill.contains("--min-results 15 --fetch-candidates 15"));
     assert!(skill.contains("usage status 2 before requests"));
     assert!(skill.contains("Choose either `--rank` or `--ranking-policy`, never both"));
-    assert!(skill.contains("Portable query syntax is the default for every provider"));
+    assert!(skill.contains("Provider-native passthrough is the default"));
+    assert!(skill.contains("Portable mode and --query-syntax have been removed"));
+    assert!(!skill.contains("--query-syntax <"));
+    assert!(!skill.contains("[default: portable]"));
     assert!(skill.contains("Query constraints apply before counting"));
     assert!(skill.contains("--min-results"));
     assert!(skill.contains("Provider quorum is ignored"));
@@ -305,19 +308,37 @@ fn skill_install_and_uninstall_use_compatible_paths() {
 }
 
 #[test]
-fn malformed_primary_and_additional_queries_fail_before_search() {
-    for args in [
-        vec!["search", "\"machine"],
-        vec!["search", "machine", "--query", "learning AND"],
-        vec!["search", "filetype:pdf"],
-    ] {
+fn removed_query_syntax_option_fails_before_requests() {
+    for syntax in ["portable", "native"] {
         Command::cargo_bin("kestrel")
             .unwrap()
-            .args(args)
+            .args(["search", "machine learning", "--query-syntax", syntax])
+            .assert()
+            .code(2)
+            .stdout("")
+            .stderr(predicate::str::contains(
+                "unexpected argument '--query-syntax'",
+            ));
+    }
+}
+
+#[test]
+fn passthrough_accepts_provider_syntax_without_local_parser_errors() {
+    for query in ["filetype:pdf", "learning AND", "\"machine", "a|b"] {
+        Command::cargo_bin("kestrel")
+            .unwrap()
+            .args([
+                "search",
+                query,
+                "--no-fetch",
+                "--search-budget",
+                "0.000000001",
+                "--output",
+                "json",
+            ])
             .assert()
             .failure()
-            .stderr(predicate::str::contains("Invalid portable query"))
-            .stderr(predicate::str::contains("--query-syntax native"));
+            .stderr(predicate::str::contains("search deadline exceeded"));
     }
 }
 

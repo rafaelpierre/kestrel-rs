@@ -1,0 +1,146 @@
+[
+  {
+    "id": "q02-s2",
+    "args": [
+      "search",
+      "Rayleigh scattering blue sky",
+      "--no-fetch",
+      "-k",
+      "5",
+      "--min-results",
+      "10",
+      "--search-budget",
+      "5",
+      "--output",
+      "json"
+    ]
+  },
+  {
+    "id": "q03-s2",
+    "args": [
+      "search",
+      "site:docs.python.org TaskGroup ExceptionGroup",
+      "--no-fetch",
+      "-k",
+      "5",
+      "--min-results",
+      "10",
+      "--search-budget",
+      "5",
+      "--output",
+      "json"
+    ]
+  },
+  {
+    "id": "q04-s2",
+    "args": [
+      "search",
+      "site:postgresql.org EXPLAIN BUFFERS",
+      "--no-fetch",
+      "-k",
+      "5",
+      "--min-results",
+      "10",
+      "--search-budget",
+      "5",
+      "--output",
+      "json"
+    ]
+  },
+  {
+    "id": "q05-s2",
+    "args": [
+      "search",
+      "site:grafana.com TraceQL structural",
+      "--no-fetch",
+      "-k",
+      "5",
+      "--min-results",
+      "10",
+      "--search-budget",
+      "5",
+      "--output",
+      "json"
+    ]
+  },
+  {
+    "id": "q06-s2",
+    "args": [
+      "search",
+      "site:learn.chatgpt.com trace_exporter",
+      "--no-fetch",
+      "-k",
+      "5",
+      "--min-results",
+      "10",
+      "--search-budget",
+      "5",
+      "--output",
+      "json"
+    ]
+  },
+  {
+    "id": "q07-s2",
+    "args": [
+      "search",
+      "E0382",
+      "--no-fetch",
+      "-k",
+      "5",
+      "--min-results",
+      "10",
+      "--search-budget",
+      "5",
+      "--output",
+      "json"
+    ]
+  },
+  {
+    "id": "q08-s2",
+    "args": [
+      "search",
+      "TRAPPIST-1 b atmosphere 2025",
+      "--no-fetch",
+      "-k",
+      "5",
+      "--min-results",
+      "10",
+      "--search-budget",
+      "5",
+      "--output",
+      "json"
+    ]
+  },
+  {
+    "id": "q09-s2",
+    "args": [
+      "search",
+      "\"Tempo 3.0\" release",
+      "--no-fetch",
+      "-k",
+      "5",
+      "--min-results",
+      "10",
+      "--search-budget",
+      "5",
+      "--output",
+      "json"
+    ]
+  },
+  {
+    "id": "q10-s2",
+    "args": [
+      "search",
+      "\"Science Museum\" opening hours",
+      "--no-fetch",
+      "-k",
+      "5",
+      "--min-results",
+      "10",
+      "--search-budget",
+      "5",
+      "--output",
+      "json"
+    ]
+  }
+]

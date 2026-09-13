@@ -77,9 +77,8 @@ page text is unavailable, including searches with `--no-fetch`.
 - By default, at most three times `--top-k` candidates are fetched before BM25 ranking.
 - BM25 filtering removes zero-relevance results unless an entire query group scores zero.
 - Use `--no-fetch` for a fast, low-cost keyword search.
-- Portable query syntax is the default for every provider: quoted phrases require adjacency in one title/snippet; unquoted terms use AND. Uppercase AND/OR/NOT, exclusions, parentheses and site:hostname are supported.
-- Query constraints filter title/snippet evidence before counting toward the result minimum, independently of fetching/ranking. Missing positive evidence excludes a result; NOT checks metadata absence, not the full page.
-- Use --query-syntax native for provider-specific syntax such as filetype:pdf and the previous passthrough behavior. Do not claim complete-page relevance from metadata matches.
+- Provider-native passthrough is the default and only query behavior: shell quotes group one argument without adding local AND or phrase checks. Literal quotes and operators are sent unchanged; provider support varies. Missing title/snippet terms do not reject results. Existing standalone hostname restrictions and HTTP(S) URL validation remain. BM25/ranking handles relevance.
+- Portable mode and --query-syntax have been removed. Remove that flag from saved commands; there is no replacement local Boolean/phrase filter. Do not infer full-page relevance from a snippet.
 - All nine supported engines are selected by default. Explicit `--engine` selections replace this list; use `-e duckduckgo -e bing -e yahoo` to retain the previous provider set.
 - Provider failures, bot challenges, and unsupported region/recency filters retain results from successful providers; including an engine does not guarantee results.
 - Fanout defaults to a five-second search budget, including queueing and retries. Use --search-budget to change it or --no-search-budget to disable the total deadline.
@@ -118,8 +117,8 @@ pub fn generate_skill_md(root: &mut Command) -> String {
    task/budget. If discovery is empty or weak, use the remaining call to clarify
    terms or increase the collection minimum/search budget. Preserve requested
    phrases and Boolean constraints; explain any proposed relaxation instead of
-   silently switching to native syntax. Metadata constraints can reject a useful
-   page when its snippet omits required evidence. Empty results do not prove that
+   silently changing the query intent. Inspect candidate evidence for relevance;
+   a snippet may omit important page content. Empty results do not prove that
    no sources exist; ordinary JSON does not identify every completion reason.
    If a page fails or is unusable, try an alternative. If evidence was truncated,
    one bounded refetch with larger character/byte limits counts toward the ceiling.
@@ -240,8 +239,7 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
 - `--pre-rank` scores titles/snippets before selecting fetch candidates, and only
   takes effect when fetching and the candidate count exceeds the fetch limit.
 - `--min-fetch-score SCORE` is an opt-in metadata gate, disabled by default.
-  It requires portable query syntax and page fetching; native syntax and
-  `--no-fetch` conflict with it (usage status 2 before requests, empty stdout).
+  It requires page fetching; `--no-fetch` conflicts with it (usage status 2 before requests, empty stdout).
   SCORE must be finite and nonnegative; negative values, NaN and infinities are
   invalid. The comparison is inclusive (`score >= SCORE`), so zero keeps zero
   scores. This is positive-IDF BM25 over doubled title plus snippet, not the
@@ -251,10 +249,11 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
   With the gate enabled, search and later stages share trimmed, deduplicated
   queries; whitespace-only queries are dropped and at least one nonempty query
   is required. This keeps score groups aligned with provider provenance.
-  Scoring uses affirmative portable query text (phrases tokenized as words),
-  excluding Boolean operators, negated text and site constraints; double negation
-  restores affirmative text. A query without affirmative lexical terms bypasses
-  the gate with a stderr diagnostic. A shared URL survives if any contributing
+  Scoring tokenizes the original query text without parsing Boolean operators,
+  exclusions or site expressions. Those words can contribute scores, as in other
+  lexical ranking. Queries without lexical terms bypass the gate with a stderr
+  diagnostic. This replaces the former affirmative-only scoring; site-only and
+  exclusion-only queries no longer automatically bypass it. A shared URL survives if any contributing
   query qualifies or bypasses, with all provenance preserved.
   The gate runs before `--pre-rank` and the fetch cap, even for small pools and
   without `--pre-rank`; it removes rejected candidates from fetching AND final
@@ -333,7 +332,7 @@ These are separate stages, not aliases for one count:
 | --- | --- | --- |
 | `--min-results N` | Stop provider collection at N unique accepted candidates **per query** | 5; a larger threshold gives later results a chance but can take longer. Deadlines or exhausted providers may leave fewer. |
 | `--fetch-candidates N` | Maximum candidates selected for page fetching across the merged queries | 3 × top-k; does not request more provider results. More candidates can supply alternatives when pages fail or rank poorly, at greater fetch/parse cost. |
-| `--min-fetch-score SCORE` | Inclusive metadata BM25 gate before the fetch cap | Disabled; finite nonnegative, portable syntax only. Rejected candidates also leave final output; no universal cutoff. |
+| `--min-fetch-score SCORE` | Inclusive metadata BM25 gate before the fetch cap | Disabled; finite nonnegative, tokenized query text. Rejected candidates also leave final output; no universal cutoff. |
 | `-k N`, `--top-k N` | Same option: maximum final results across all queries | 5; not a guaranteed result count, collection threshold, or fetch count. |
 | `--content-limit CHARS` | Maximum extracted body characters **per page**, before body ranking | Search: 2,000; standalone fetch: 20,000. Shorter text reduces output and ranking input but can omit relevant passages. Not a token limit or total-output cap. |
 | `--max-response-bytes BYTES` | Maximum retained decoded response bytes **per page** | 1,000,000; reaching the cap extracts the prefix. A smaller cap reduces retained/downloaded body work but may cut off the article entirely. |

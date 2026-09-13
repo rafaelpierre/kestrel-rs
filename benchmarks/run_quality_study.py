@@ -25,7 +25,7 @@ def main():
         command = [sys.executable, str(ROOT/'quality_latency.py'), '--binary', str(args.binary.resolve()),
                    '--output', str(output.resolve()), '--stage', stage, '--rounds', str(rounds),
                    '--min-results', str(minimum), '--candidate-pool', '15', '--top-k', '5',
-                   '--pace', '0.25', '--timeout', '50', '--cache', 'off', '--trace']
+                   '--query-syntax', 'portable', '--pace', '0.25', '--timeout', '50', '--cache', 'off', '--trace']
         for query in QUERY_IDS:
             command += ['--query-id', query]
         if args.resume and output.exists():

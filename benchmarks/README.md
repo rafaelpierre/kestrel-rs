@@ -180,3 +180,9 @@ coverage, canonical overlap and optional explicitly versioned relevance judgment
 The ignored live test writes only to a new, explicitly requested output directory;
 `streaming_validation_report.py` produces a summary without overwriting evidence.
 See the methodology for measurement gaps and the work still required by #46.
+
+Current quality/latency runs default to passthrough query text. The runner retains
+`--query-syntax portable|native` only for historical executable replays; current
+Kestrel rejects that removed CLI option. The pinned 4.0.0 study explicitly requests
+its original portable semantics. Effective policies record this distinction; do
+not compare those configurations as identical.
