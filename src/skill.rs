@@ -456,6 +456,23 @@ records. Its selection prompt defaults to all: choose numbered paths to remove
 only intended copies. It does not discover unrecorded copies or remove the binary,
 and has no agent/scope/force switches. Restart the agent after removal.
 
+Installation records use a persistent `config.toml.lock` beside the config
+(or its resolved symlink destination). Do not delete this lock file. Cooperating
+Kestrel processes serialize config updates; lock contention fails after ten seconds
+with an error on stderr and a nonzero exit status. Retry after the other installation
+finishes. Config writes use atomic replacement and preserve unrelated TOML and
+existing file permissions. Invalid TOML returns an error without overwriting it;
+repair or restore the config before retrying. Existing config symlinks are followed;
+dangling symlinks are rejected.
+
+Staged contents are synced before replacement; on Unix the directory is synced
+afterwards. Errors before replacement preserve the previous config. A directory-sync
+error can occur after the new config is already visible. This does not guarantee
+power-loss durability on every filesystem. Older binaries and external editors
+that ignore the lock are not protected. Skill file creation/removal and config
+bookkeeping are separate operations: an error may leave a skill file unrecorded
+or a stale record. Inspect the intended paths before retrying.
+
 ## Advanced diagnostics (optional)
 
 Use these environment interfaces to investigate a specific failure, not for every
