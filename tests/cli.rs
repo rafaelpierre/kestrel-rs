@@ -182,6 +182,11 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(skill.contains("Semaphore::MAX_PERMITS"));
     assert!(skill.contains("checked `3 * top-k`"));
     assert!(skill.contains("whole class tokens"));
+    assert!(skill.contains("Content-quality assessment is advisory"));
+    assert!(skill.contains("32,768 UTF-8 bytes"));
+    assert!(skill.contains("comments-only `main`"));
+    assert!(skill.contains("diagnostics.candidate_content_quality"));
+    assert!(skill.contains("No quality flag, rejection, ranking penalty, or normal JSON field"));
     assert!(skill.contains("support `text/plain`"));
     assert!(skill.contains("literal markup/entities"));
     assert!(skill.contains("whitespace-only retained plain text"));
@@ -653,6 +658,62 @@ async fn fetch_plain_text_preserves_body_in_text_and_json() {
                 );
             }
             completion_seconds(&output.stderr, "Fetch");
+        }
+    })
+    .await
+    .unwrap();
+}
+
+#[tokio::test]
+async fn quality_keeps_shell_fetch_successful_and_recovers_explicit_article() {
+    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
+    let server = MockServer::start().await;
+    for (route, html) in [
+        (
+            "/shell",
+            "<main><h1>Your browser is not supported</h1></main>",
+        ),
+        (
+            "/recover",
+            "<main><h2>Post a comment</h2><p>Your email address will not be published.</p></main><article><p>The singer joined the group before its second album.</p></article>",
+        ),
+    ] {
+        Mock::given(path(route))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(html, "text/html"))
+            .mount(&server)
+            .await;
+    }
+    let base = server.uri();
+    tokio::task::spawn_blocking(move || {
+        let user_home = tempfile::tempdir().unwrap();
+        for (route, expected) in [
+            ("/shell", "Your browser is not supported"),
+            (
+                "/recover",
+                "The singer joined the group before its second album.",
+            ),
+        ] {
+            for json in [false, true] {
+                let mut command = Command::cargo_bin("kestrel").unwrap();
+                command
+                    .env("HOME", user_home.path())
+                    .args(["fetch", &format!("{base}{route}")]);
+                if json {
+                    command.args(["--output", "json"]);
+                }
+                let output = command.assert().success().get_output().clone();
+                completion_seconds(&output.stderr, "Fetch");
+                if json {
+                    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+                    assert_eq!(
+                        value["content"],
+                        format!("Source: {base}{route}\n\n{expected}")
+                    );
+                    assert!(value.get("content_quality").is_none());
+                } else {
+                    assert!(String::from_utf8(output.stdout).unwrap().contains(expected));
+                }
+            }
         }
     })
     .await

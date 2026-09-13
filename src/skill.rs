@@ -68,6 +68,8 @@ page text is unavailable, including searches with `--no-fetch`.
   before requests, with stderr diagnostics and empty stdout. Defaults and JSON
   schemas are unchanged; replace formerly accepted overflowing values in scripts.
 - PDFs are skipped during content fetching.
+- Content-quality assessment is advisory: `boilerplate_only` recognizes a limited English whole-message vocabulary; `unflagged` does not certify useful evidence; `unknown` covers missing, mixed, insufficient, or over-limit text. Assessment examines at most 32,768 UTF-8 bytes and describes only retained text, separately from HTTP success and truncation. No quality flag, rejection, ranking penalty, or normal JSON field is added. Library assessment methods and opt-in search artifacts expose the signal; ordinary CLI users must inspect the text.
+- When the selected HTML body consists entirely of recognized shell messages, extraction checks at most the first explicit `article` for non-shell or mixed text. Otherwise root selection is unchanged. This can recover an article hidden by a comments-only `main`; it does not repair arbitrary missing text or render JavaScript. Warm cache entries retain their stored text until expiry; assessments are recomputed, not cached.
 - Direct fetch and search HTML/XHTML extraction remove structural chrome and explicit clutter markers using whole class tokens and scoped ID names, not arbitrary substrings. Containers named `download`, `reader`, `shadow`, and `thread` retain their content. Unrecognized compound names may retain clutter; extraction remains heuristic.
 - Page bodies stop at `--max-response-bytes` decoded bytes and the retained prefix is extracted, even when Content-Length exceeds the cap. Reaching the cap alone is not an error; content may be incomplete. Network and parsing concurrency are independent.
 - Search reports the number of successfully extracted pages that reached the byte cap on stderr; results may contain incomplete page content.
@@ -476,7 +478,11 @@ KESTRELSEARCH_PROVIDER_TRACE_DIR="$trace_dir" KESTRELSEARCH_BENCHMARK_ARTIFACT_D
   and `KESTRELSEARCH_BENCHMARK_RUN_ID`. Use a simple filename label such as `lookup`.
   Successful search handling writes `<run-id>-<uuid>.json` in the chosen directory,
   with candidate snapshots, phase timings and provider/fetch reports. This is a
-  separate diagnostic schema, not the ordinary stdout JSON envelope. Standalone
+  separate diagnostic schema, not the ordinary stdout JSON envelope. Each returned
+  artifact result includes `content_quality` (`version`, `state`, `reasons`);
+  `diagnostics.candidate_content_quality` aligns with the artifact's `candidates`
+  array, not result ranks or fetch-page diagnostics. Version 1 is an advisory
+  whole-message check, not an evidence score. Standalone
   fetch does not write these search artifacts. Failed searches can still produce
   provider lifecycle traces without a search artifact.
 - Traces/artifacts may contain queries, URLs and raw responses or extracted content;

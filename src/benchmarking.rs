@@ -85,6 +85,7 @@ fn write_artifact_to(
                 "bm25_score": result.bm25_score,
                 "content": result.content,
                 "content_chars": content.chars().count(),
+                "content_quality": result.content_quality(),
                 "content_sha256": format!("{:x}", Sha256::digest(content.as_bytes())),
                 "engine": result.engine,
                 "query": result.query,
@@ -132,6 +133,7 @@ fn write_artifact_to(
         "diagnostics": {
             "providers": providers,
             "provider_cancellations": provider_cancellations,
+            "candidate_content_quality": candidates.iter().map(SearchResult::content_quality).collect::<Vec<_>>(),
             "fetch": fetch_diagnostics,
         },
     });
@@ -260,7 +262,7 @@ mod tests {
             directory.path(),
             "run-123",
             "example query",
-            &[result],
+            std::slice::from_ref(&result),
             &BTreeMap::from([("search".into(), 12)]),
             &["example query".into()],
             &[],
@@ -268,11 +270,32 @@ mod tests {
             &[],
             0,
             None,
-            &[],
+            &[
+                SearchResult::parsed(
+                    "Not fetched".into(),
+                    "https://example.test/missing".into(),
+                    String::new(),
+                    String::new(),
+                ),
+                result.clone(),
+            ],
             None,
         )
         .unwrap();
         let artifact: Value = serde_json::from_slice(&fs::read(target).unwrap()).unwrap();
+        assert_eq!(
+            artifact["results"][0]["content_quality"],
+            json!({
+                "version": 1, "state": "unflagged", "reasons": ["no_known_shell"]
+            })
+        );
+        assert_eq!(
+            artifact["diagnostics"]["candidate_content_quality"],
+            json!([
+                {"version": 1, "state": "unknown", "reasons": ["no_text"]},
+                {"version": 1, "state": "unflagged", "reasons": ["no_known_shell"]}
+            ])
+        );
         assert_eq!(artifact["mode"], "fanout");
         assert_eq!(artifact["returned_chars"], "Some page text".chars().count());
         assert_eq!(artifact["results"][0]["content"], "Some page text");

@@ -1,0 +1,134 @@
+[
+  {
+    "id": "short-answer",
+    "text": "42",
+    "state": "unflagged",
+    "judgment": "useful",
+    "cause": "Length alone is never a negative signal."
+  },
+  {
+    "id": "music-metadata",
+    "text": "Artist: Metric\nAlbum: Fantasies\nYear: 2009",
+    "state": "unflagged",
+    "judgment": "useful",
+    "cause": "Compact factual metadata."
+  },
+  {
+    "id": "multilingual",
+    "text": "東京は日本の首都です。\nA música está disponível em português.\nمرحبا بالعالم",
+    "state": "unflagged",
+    "judgment": "useful",
+    "cause": "Non-English text is preserved; no language confidence claim."
+  },
+  {
+    "id": "code",
+    "text": "if unsupported {\n    return \"Your browser is not supported.\";\n}\n",
+    "state": "unflagged",
+    "judgment": "useful",
+    "cause": "Code punctuation and quotation marks prevent whole-message matching."
+  },
+  {
+    "id": "error-documentation",
+    "html": "<article><h1>Browser troubleshooting</h1><p>Your browser is not supported.</p><p>This message appears when the browser lacks the required codec.</p></article>",
+    "extracted": "Browser troubleshooting Your browser is not supported. This message appears when the browser lacks the required codec.",
+    "state": "unknown",
+    "judgment": "useful",
+    "cause": "An article discussing errors is mixed, not rejected."
+  },
+  {
+    "id": "quoted-message",
+    "text": "\"Your browser is not supported.\"",
+    "state": "unflagged",
+    "judgment": "useful",
+    "cause": "Quotation marks are not removed."
+  },
+  {
+    "id": "generic-failure",
+    "text": "Something went wrong.",
+    "state": "unknown",
+    "judgment": "unusable",
+    "cause": "A single generic phrase is insufficient evidence."
+  },
+  {
+    "id": "repeated-generic",
+    "text": "Something went wrong. Something went wrong.",
+    "state": "unknown",
+    "judgment": "unusable",
+    "cause": "Repeated text cannot manufacture independent signals."
+  },
+  {
+    "id": "two-failures",
+    "text": "Something went wrong.\nPlease try again later.",
+    "state": "boilerplate_only",
+    "judgment": "unusable",
+    "cause": "Two distinct whole failure messages and no other text."
+  },
+  {
+    "id": "case-whitespace",
+    "text": "YOUR BROWSER IS NOT SUPPORTED.\tPlease\nupdate your browser.",
+    "state": "boilerplate_only",
+    "judgment": "unusable",
+    "cause": "ASCII case and whitespace variants."
+  },
+  {
+    "id": "unknown-error-language",
+    "text": "Votre navigateur n’est pas pris en charge.",
+    "state": "unflagged",
+    "judgment": "unusable",
+    "cause": "Known false negative: English-only vocabulary."
+  },
+  {
+    "id": "unknown-navigation",
+    "text": "Home | About | Contact",
+    "state": "unflagged",
+    "judgment": "unusable",
+    "cause": "Known false negative: arbitrary navigation not recognized."
+  },
+  {
+    "id": "single-prompt",
+    "text": "Leave a Reply",
+    "state": "unknown",
+    "judgment": "useful",
+    "cause": "A short answer naming a UI control must not be rejected."
+  },
+  {
+    "id": "article-before-comment-main",
+    "html": "<article><h1>Music credits</h1><p>The album credits list the performers and recording engineer.</p></article><main><h2>Leave a Reply</h2><p>Your email address will not be published.</p></main>",
+    "extracted": "Music credits The album credits list the performers and recording engineer.",
+    "state": "unflagged",
+    "judgment": "useful",
+    "cause": "Recovery independent of article/main document order."
+  },
+  {
+    "id": "two-shell-roots",
+    "html": "<main><h1>Your browser is not supported</h1></main><article><h2>Post a comment</h2><p>Your email address will not be published.</p></article>",
+    "extracted": "Your browser is not supported",
+    "state": "boilerplate_only",
+    "judgment": "unusable",
+    "cause": "An alternative article that is itself a shell does not replace the selected body."
+  },
+  {
+    "id": "article-with-inline-error",
+    "html": "<article><h1>Playback troubleshooting</h1><p>If you see an unsupported browser error, install the missing media codec.</p><nav>Go back</nav></article>",
+    "extracted": "Playback troubleshooting If you see an unsupported browser error, install the missing media codec.",
+    "state": "unflagged",
+    "judgment": "useful",
+    "cause": "No broad substring rules."
+  },
+  {
+    "id": "short-html-answer",
+    "html": "<main><p>42</p></main>",
+    "extracted": null,
+    "state": "unknown",
+    "judgment": "useful",
+    "cause": "Inherited selected-tag paragraph minimum loses the answer; #22 owns traversal/readability. NoText is not a shell verdict."
+  },
+  {
+    "id": "html-code-block",
+    "html": "<main><pre><code>let answer = 42;</code></pre></main>",
+    "extracted": null,
+    "state": "unknown",
+    "judgment": "useful",
+    "cause": "Inherited selected-tag extraction omits pre/code; #22 owns this. Plain-text code remains preserved."
+  }
+]

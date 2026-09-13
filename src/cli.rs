@@ -1305,6 +1305,53 @@ mod tests {
         );
     }
 
+    #[tokio::test]
+    async fn quality_does_not_reject_search_bodies_or_change_ranking() {
+        use kestrelsearch::{
+            ContentQualityState,
+            ranking::{RankingPolicy, rank_with_policy},
+        };
+        use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
+        let server = MockServer::start().await;
+        Mock::given(path("/shell"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_raw("Your browser is not supported.", "text/plain"),
+            )
+            .mount(&server)
+            .await;
+        let mut results: Vec<SearchResult> = serde_json::from_value(serde_json::json!([{
+            "title": "Browser", "url": format!("{}/shell", server.uri()),
+            "display_url": "example.test", "snippet": "Browser help", "content": null
+        }]))
+        .unwrap();
+        let Commands::Search(args) = Cli::try_parse_from(["kestrel", "search", "browser"])
+            .unwrap()
+            .command
+        else {
+            panic!("expected search");
+        };
+        attach_page_content(
+            &KestrelClient::new().unwrap(),
+            &mut results,
+            &args,
+            &mut Vec::new(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            results[0].content_quality().state,
+            ContentQualityState::BoilerplateOnly
+        );
+        for policy in [RankingPolicy::Body, RankingPolicy::Hybrid] {
+            let ranked = rank_with_policy(results.clone(), &["browser".into()], policy);
+            assert_eq!(ranked.len(), 1);
+            assert_eq!(ranked[0].content, results[0].content);
+            assert_eq!(ranked[0].title, "Browser");
+            assert_eq!(ranked[0].snippet, "Browser help");
+        }
+    }
+
     #[test]
     fn page_fetch_defaults_match_library_and_preserve_character_limits() {
         let library = FetchOptions::default();

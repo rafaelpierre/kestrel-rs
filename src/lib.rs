@@ -4,6 +4,7 @@ pub mod benchmarking;
 pub mod cache;
 pub mod client;
 pub mod config;
+pub mod content_quality;
 pub mod fetcher;
 mod http_client;
 pub mod logging;
@@ -23,6 +24,9 @@ pub use warmup::WarmupResult;
 
 pub use cache::PageCache;
 pub use client::KestrelClient;
+pub use content_quality::{
+    ContentQuality, ContentQualityReason, ContentQualityState, assess_content_quality,
+};
 pub use fetcher::{fetch_all, fetch_all_detailed};
 pub use model::{
     Engine, FetchOptions, FetchOutcome, FetchReport, PageFetchDiagnostic, ProviderSearchDiagnostic,

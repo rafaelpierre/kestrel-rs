@@ -425,3 +425,62 @@ async fn plain_text_empty_or_whitespace_only_prefix_has_no_content() {
         }
     }
 }
+
+#[tokio::test]
+async fn quality_is_advisory_and_recomputed_for_cached_and_failed_bodies() {
+    use kestrelsearch::ContentQualityState;
+    let server = MockServer::start().await;
+    let shell = "Your browser is not supported.";
+    Mock::given(path("/shell"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(shell, "text/plain"))
+        .expect(1)
+        .mount(&server)
+        .await;
+    Mock::given(path("/failed"))
+        .respond_with(ResponseTemplate::new(404))
+        .mount(&server)
+        .await;
+    let directory = tempfile::tempdir().unwrap();
+    let cache = PageCache::new(directory.path(), Duration::from_secs(60)).unwrap();
+    let client = KestrelClient::new().unwrap();
+    let urls = [
+        format!("{}/shell", server.uri()),
+        format!("{}/failed", server.uri()),
+    ];
+    for expected_hits in [0, 1] {
+        let report = client
+            .fetch_all_cached_detailed(&urls, &FetchOptions::default(), &cache, None)
+            .await
+            .unwrap();
+        assert_eq!(report.cache_hits, expected_hits);
+        assert_eq!(report.contents, [Some(shell.to_owned()), None]);
+        assert_eq!(
+            report.content_quality(0).unwrap().state,
+            ContentQualityState::BoilerplateOnly
+        );
+        assert_eq!(
+            report.content_quality(1).unwrap().state,
+            ContentQualityState::Unknown
+        );
+        let shell_page = report
+            .pages
+            .iter()
+            .find(|page| page.url == urls[0])
+            .unwrap();
+        assert_eq!(
+            shell_page.outcome,
+            if expected_hits == 0 {
+                FetchOutcome::Success
+            } else {
+                FetchOutcome::CacheHit
+            }
+        );
+        // Existing public structs/serialization stay compatible; quality is a method.
+        assert!(
+            serde_json::to_value(&report)
+                .unwrap()
+                .get("content_quality")
+                .is_none()
+        );
+    }
+}

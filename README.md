@@ -131,6 +131,13 @@ Names such as `download`, `reader`, `shadow`, and `thread` retain their content;
 arbitrary substrings are not treated as advertisements. Both direct fetch and
 search candidate fetching use this rule. See the
 [extraction contract and fixture evidence](docs/page-extraction.md).
+If the chosen HTML body is entirely recognized shell messages, extraction may
+recover text from the first explicit article. Content-quality assessment remains
+advisory: library methods and opt-in search artifacts identify known shell-only
+text, mixed/unknown text, or text with no known shell indicators. No state
+certifies usefulness. Fetch still returns flagged text successfully, and ranking
+still uses it; normal CLI JSON and flags are unchanged. See the
+[quality policy and evaluation](docs/content-quality.md).
 
 Direct fetch and search candidate fetching support `text/plain` as well as
 HTML/XHTML. Plain text is decoded using the declared supported charset (UTF-8

@@ -113,6 +113,18 @@ pub struct SearchResult {
 }
 
 impl SearchResult {
+    /// Advisory assessment of retained body text; metadata and ranking are unchanged.
+    /// Recognizes the exact provenance wrapper added by CLI candidate fetching.
+    pub fn content_quality(&self) -> crate::ContentQuality {
+        let body = self.content.as_deref().map(|body| {
+            body.strip_prefix("Source: ")
+                .and_then(|rest| rest.strip_prefix(self.url.as_str()))
+                .and_then(|rest| rest.strip_prefix("\n\n"))
+                .unwrap_or(body)
+        });
+        crate::assess_content_quality(body)
+    }
+
     pub(crate) fn parsed(title: String, url: String, display_url: String, snippet: String) -> Self {
         Self {
             title: title.trim().to_owned(),
@@ -240,6 +252,17 @@ pub struct FetchReport {
     pub cancelled: usize,
     pub cache_hits: usize,
     pub cache_misses: usize,
+}
+
+impl FetchReport {
+    /// Assess retained text at its original input index, including cache hits.
+    /// Returns None for an invalid index. A missing body has an Unknown assessment.
+    /// This does not use `pages`, whose order/length may differ after caching or cancellation.
+    pub fn content_quality(&self, index: usize) -> Option<crate::ContentQuality> {
+        self.contents
+            .get(index)
+            .map(|body| crate::assess_content_quality(body.as_deref()))
+    }
 }
 
 /// Timing and outcome for one provider/query request.
