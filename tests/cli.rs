@@ -217,6 +217,17 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     ] {
         assert!(skill.contains(guidance), "missing FTS guidance: {guidance}");
     }
+    for guidance in [
+        "clones share an aggregate parser capacity",
+        "with_parser_capacity(n)",
+        "larger per-call limits do not raise the shared cap",
+        "runtime shutdown may still wait",
+    ] {
+        assert!(
+            skill.contains(guidance),
+            "missing parser capacity guidance: {guidance}"
+        );
+    }
     assert!(skill.contains("retained prefix"));
     assert!(skill.contains("Completed HTML validation and extraction share one document"));
     assert!(skill.contains("embedded CAPTCHA markup does not by itself"));

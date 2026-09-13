@@ -1,31 +1,34 @@
 //! Reusable search and fetch clients for connection pooling across calls.
 
 use std::collections::HashSet;
+use std::sync::Arc;
 use std::time::Duration;
 
 use futures_util::future::join_all;
 
 use crate::cache::PageCache;
-use crate::fetcher::{
-    build_client_with_transport, fetch_all_reusing_client, fetch_all_reusing_client_with_budget,
-    fetch_all_reusing_client_with_diagnostics,
-};
+use crate::fetcher::{ParserPool, build_client_with_transport, fetch_all_with_parser_pool};
 use crate::model::{Engine, FetchOptions, FetchReport, SearchOptions, SearchResult, TimeFilter};
 use crate::search::{
     KestrelError, SearchClients, search_many_reusing_clients, search_many_reusing_clients_detailed,
     search_with_clients,
 };
 
-/// A reusable Kestrel client that retains HTTP connection pools across calls.
+/// A reusable client retaining HTTP pools and shared page parser capacity.
+/// Default aggregate page capacity is 10, shared across calls and clones. A batch
+/// obeys both this cap and its own `FetchOptions::parse_concurrency` limit.
+/// Cancellation returns without waiting for blocking parsers; their capacity
+/// remains occupied until they exit. Runtime shutdown may still wait for them.
 ///
-/// Provider parsing has a fixed aggregate limit of ten queued/running blocking
-/// workers shared across this client and its clones. Cancelled calls retain
-/// worker capacity until the work exits. Per-call search concurrency still limits
-/// requests; fetched-page extraction uses its separate parsing configuration.
+/// Provider parsing has a separate fixed aggregate limit of ten queued/running
+/// blocking workers shared across this client and its clones. Cancelled calls
+/// retain worker capacity until the work exits. Per-call search concurrency
+/// still limits requests.
 #[derive(Clone)]
 pub struct KestrelClient {
     pub(crate) search: SearchClients,
     pub(crate) fetch: reqwest::Client,
+    pub(crate) parsing: Arc<ParserPool>,
 }
 
 impl KestrelClient {
@@ -36,6 +39,26 @@ impl KestrelClient {
 
     /// Build retained pools with an explicit transport policy. Clones share the pools.
     pub fn with_transport(transport: crate::TransportOptions) -> Result<Self, KestrelError> {
+        Self::with_transport_and_parser_capacity(
+            transport,
+            FetchOptions::default().parse_concurrency,
+        )
+    }
+
+    /// Build a client with aggregate queued/running page parser capacity.
+    /// Per-call `FetchOptions::parse_concurrency` additionally limits each batch.
+    /// Clones share capacity; separate clients and free functions do not.
+    pub fn with_parser_capacity(capacity: usize) -> Result<Self, KestrelError> {
+        Self::with_transport_and_parser_capacity(crate::TransportOptions::default(), capacity)
+    }
+
+    /// Configure transport and aggregate parser capacity (1..=Semaphore::MAX_PERMITS).
+    /// Capacity remains owned by blocking jobs after cancellation or budget expiry.
+    pub fn with_transport_and_parser_capacity(
+        transport: crate::TransportOptions,
+        capacity: usize,
+    ) -> Result<Self, KestrelError> {
+        crate::numeric::concurrency("parser capacity", capacity)?;
         crate::telemetry::scope_sync("kestrel.initialize", || {
             transport.validate()?;
             Ok(Self {
@@ -44,6 +67,7 @@ impl KestrelClient {
                     &transport,
                 )?,
                 fetch: build_client_with_transport(&transport)?,
+                parsing: Arc::new(ParserPool::new(capacity)),
             })
         })
     }
@@ -83,7 +107,7 @@ impl KestrelClient {
         urls: &[String],
         options: &FetchOptions,
     ) -> Result<Vec<Option<String>>, KestrelError> {
-        fetch_all_reusing_client(urls, options, &self.fetch).await
+        Ok(self.fetch_all_detailed(urls, options, None).await?.contents)
     }
 
     /// Fetch pages up to a total budget, retaining every result completed in time.
@@ -98,7 +122,10 @@ impl KestrelClient {
                 "fetch budget must be greater than zero".into(),
             ));
         }
-        fetch_all_reusing_client_with_budget(urls, options, &self.fetch, Some(budget)).await
+        Ok(self
+            .fetch_all_detailed(urls, options, Some(budget))
+            .await?
+            .contents)
     }
 
     /// Fetch pages and return phase-level diagnostics, with an optional deadline.
@@ -113,7 +140,7 @@ impl KestrelClient {
                 "fetch budget must be greater than zero".into(),
             ));
         }
-        fetch_all_reusing_client_with_diagnostics(urls, options, &self.fetch, budget).await
+        fetch_all_with_parser_pool(urls, options, &self.fetch, budget, Some(&self.parsing)).await
     }
 
     /// Use fresh cached text first, fetching only misses within an optional budget.
@@ -160,11 +187,12 @@ impl KestrelClient {
                 .map(|(index, _)| (index, urls[index].clone()))
                 .collect();
             let missing_urls: Vec<String> = misses.iter().map(|(_, url)| url.clone()).collect();
-            let mut report = fetch_all_reusing_client_with_diagnostics(
+            let mut report = fetch_all_with_parser_pool(
                 &missing_urls,
                 options,
                 &self.fetch,
                 budget,
+                Some(&self.parsing),
             )
             .await?;
             let capped_urls: HashSet<&str> = report

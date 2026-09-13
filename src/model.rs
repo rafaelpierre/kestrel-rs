@@ -186,6 +186,7 @@ pub struct FetchOptions {
     pub timeout: Duration,
     pub content_limit: usize,
     pub max_concurrency: usize,
+    /// Per-batch parser limit, additionally bounded by reusable client capacity.
     pub parse_concurrency: usize,
     /// Stop at this many decoded body bytes and extract the retained prefix.
     pub max_response_bytes: usize,

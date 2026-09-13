@@ -48,7 +48,31 @@ static CONTAINERS: Lazy<Selector> =
 static MAIN: Lazy<Selector> = Lazy::new(|| Selector::parse("main").expect("valid selector"));
 static ARTICLE: Lazy<Selector> = Lazy::new(|| Selector::parse("article").expect("valid selector"));
 static ALL: Lazy<Selector> = Lazy::new(|| Selector::parse("*").expect("valid selector"));
+/// Capacity retained by a reusable client and all of its clones.
+pub(crate) struct ParserPool {
+    semaphore: Arc<Semaphore>,
+    #[cfg(test)]
+    pub(crate) before_parse: Option<Arc<dyn Fn() + Send + Sync>>,
+}
+
+impl ParserPool {
+    pub(crate) fn new(capacity: usize) -> Self {
+        Self {
+            semaphore: Arc::new(Semaphore::new(capacity)),
+            #[cfg(test)]
+            before_parse: None,
+        }
+    }
+}
+
+#[derive(Clone)]
+struct Parsing {
+    local: Arc<Semaphore>,
+    shared: Option<Arc<ParserPool>>,
+}
+
 /// Fetch and parse URLs concurrently while preserving input order.
+/// Each invocation owns independent capacity; reuse `KestrelClient` for a shared bound.
 pub async fn fetch_all(
     urls: &[String],
     options: &FetchOptions,
@@ -91,24 +115,21 @@ pub(crate) async fn fetch_all_reusing_client(
     )
 }
 
-pub(crate) async fn fetch_all_reusing_client_with_budget(
-    urls: &[String],
-    options: &FetchOptions,
-    client: &reqwest::Client,
-    budget: Option<Duration>,
-) -> Result<Vec<Option<String>>, KestrelError> {
-    Ok(
-        fetch_all_reusing_client_with_diagnostics(urls, options, client, budget)
-            .await?
-            .contents,
-    )
-}
-
 pub(crate) async fn fetch_all_reusing_client_with_diagnostics(
     urls: &[String],
     options: &FetchOptions,
     client: &reqwest::Client,
     budget: Option<Duration>,
+) -> Result<FetchReport, KestrelError> {
+    fetch_all_with_parser_pool(urls, options, client, budget, None).await
+}
+
+pub(crate) async fn fetch_all_with_parser_pool(
+    urls: &[String],
+    options: &FetchOptions,
+    client: &reqwest::Client,
+    budget: Option<Duration>,
+    shared: Option<&Arc<ParserPool>>,
 ) -> Result<FetchReport, KestrelError> {
     crate::telemetry::scope_result("kestrel.fetch", async {
         crate::telemetry::payload("fetch.input", urls);
@@ -131,13 +152,16 @@ pub(crate) async fn fetch_all_reusing_client_with_diagnostics(
             .map(|value| crate::numeric::deadline("fetch budget", value))
             .transpose()?;
         let network = Arc::new(Semaphore::new(options.max_concurrency));
-        let parsing = Arc::new(Semaphore::new(options.parse_concurrency));
+        let parsing = Parsing {
+            local: Arc::new(Semaphore::new(options.parse_concurrency)),
+            shared: shared.cloned(),
+        };
         let mut jobs: FuturesUnordered<_> = urls
             .iter()
             .enumerate()
             .map(|(index, url)| {
                 let network = Arc::clone(&network);
-                let parsing = Arc::clone(&parsing);
+                let parsing = parsing.clone();
                 async move {
                     (
                         index,
@@ -234,7 +258,7 @@ async fn fetch_one_detailed(
     url: &str,
     client: &reqwest::Client,
     network: Arc<Semaphore>,
-    parsing: Arc<Semaphore>,
+    parsing: Parsing,
     options: &FetchOptions,
 ) -> FetchItem {
     crate::telemetry::scope("kestrel.page", async {
@@ -297,7 +321,7 @@ async fn fetch_one_inner(
     url: &str,
     client: &reqwest::Client,
     network: Arc<Semaphore>,
-    parsing: Arc<Semaphore>,
+    parsing: Parsing,
     options: &FetchOptions,
     started: Instant,
     http_version: &mut Option<String>,
@@ -421,9 +445,23 @@ async fn fetch_one_inner(
     let limit = options.content_limit;
     let parse_queue_started = Instant::now();
     let parse_permit = parsing
+        .local
         .acquire_owned()
         .await
         .expect("semaphore remains open");
+    // Always acquire local then shared capacity; no path acquires in reverse.
+    // Keep download backpressure until both slots belong to the blocking job.
+    let shared_permit = if let Some(pool) = &parsing.shared {
+        Some(
+            pool.semaphore
+                .clone()
+                .acquire_owned()
+                .await
+                .expect("semaphore remains open"),
+        )
+    } else {
+        None
+    };
     drop(network_permit);
     let parse_queue_ms = elapsed_millis(parse_queue_started);
     let parse_started = Instant::now();
@@ -434,7 +472,16 @@ async fn fetch_one_inner(
             // Blocking work survives cancellation of its async caller. Keep its
             // slot until the body and DOM are released, including while queued.
             let _permit = parse_permit;
+            let _shared_permit = shared_permit;
             let body = body;
+            #[cfg(test)]
+            if let Some(hook) = parsing
+                .shared
+                .as_ref()
+                .and_then(|pool| pool.before_parse.as_ref())
+            {
+                hook();
+            }
             let (text, _, _) = encoding.decode(&body);
             match content_kind {
                 ContentKind::Html => parse_content(&text, limit),
@@ -849,7 +896,17 @@ mod tests {
                     let parsing = parsing.clone();
                     let options = options.clone();
                     jobs.push(tokio::spawn(async move {
-                        fetch_one_detailed(&url, &client, network, parsing, &options).await
+                        fetch_one_detailed(
+                            &url,
+                            &client,
+                            network,
+                            Parsing {
+                                local: parsing,
+                                shared: None,
+                            },
+                            &options,
+                        )
+                        .await
                     }));
                 }
                 let bound = options.max_concurrency + options.parse_concurrency;
@@ -904,6 +961,196 @@ mod tests {
                 assert_eq!(network.available_permits(), options.max_concurrency);
             }
         });
+    }
+
+    #[test]
+    fn client_parser_capacity_survives_started_work_and_repeated_calls() {
+        let _telemetry = crate::telemetry::test_export_guard();
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+            .unwrap();
+        runtime.block_on(async {
+            use std::sync::{
+                Mutex,
+                atomic::{AtomicUsize, Ordering},
+            };
+            use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+
+            let server = MockServer::start().await;
+            Mock::given(method("GET"))
+                .respond_with(ResponseTemplate::new(200).set_body_string(PAGE))
+                .mount(&server)
+                .await;
+            let mut client = crate::KestrelClient::with_parser_capacity(2).unwrap();
+            client.fetch = reqwest::Client::builder().no_proxy().build().unwrap();
+            let started = Arc::new(AtomicUsize::new(0));
+            let (release, gate) = std::sync::mpsc::channel::<()>();
+            let gate = Arc::new(Mutex::new(gate));
+            let mut pool = ParserPool::new(2);
+            pool.before_parse = Some(Arc::new({
+                let started = started.clone();
+                move || {
+                    started.fetch_add(1, Ordering::SeqCst);
+                    // Disconnect on panic also releases every blocked parser.
+                    let _ = gate.lock().unwrap().recv();
+                }
+            }));
+            client.parsing = Arc::new(pool);
+            let options = FetchOptions {
+                parse_concurrency: 1,
+                ..FetchOptions::default()
+            };
+            let urls = vec![server.uri(); 4];
+            let first = tokio::spawn({
+                let client = client.clone();
+                let urls = urls.clone();
+                let options = options.clone();
+                async move {
+                    client
+                        .fetch_all_detailed(&urls, &options, Some(Duration::from_millis(500)))
+                        .await
+                        .unwrap()
+                }
+            });
+            tokio::time::timeout(Duration::from_secs(5), async {
+                while started.load(Ordering::SeqCst) != 1 {
+                    tokio::task::yield_now().await;
+                }
+            })
+            .await
+            .unwrap();
+            tokio::time::sleep(Duration::from_millis(30)).await;
+            assert_eq!(
+                started.load(Ordering::SeqCst),
+                1,
+                "per-call limit still applies"
+            );
+            assert_eq!(client.parsing.semaphore.available_permits(), 1);
+            let wider = FetchOptions {
+                parse_concurrency: 8,
+                ..options.clone()
+            };
+            let second = tokio::spawn({
+                let client = client.clone();
+                let urls = urls.clone();
+                let options = wider.clone();
+                async move { client.fetch_all(&urls, &options).await }
+            });
+            tokio::time::timeout(Duration::from_secs(5), async {
+                while started.load(Ordering::SeqCst) != 2 {
+                    tokio::task::yield_now().await;
+                }
+            })
+            .await
+            .unwrap();
+            second.abort();
+            assert!(second.await.unwrap_err().is_cancelled());
+            // Measure API completion while the actual parsers remain blocked,
+            // independently from runtime shutdown (which happens after release).
+            let report = tokio::time::timeout(Duration::from_secs(2), first)
+                .await
+                .unwrap()
+                .unwrap();
+            assert!(report.budget_exhausted);
+            assert_eq!(report.cancelled, urls.len());
+            assert_eq!(client.parsing.semaphore.available_permits(), 0);
+            let directory = tempfile::tempdir().unwrap();
+            let cache = crate::PageCache::new(directory.path(), Duration::from_secs(60)).unwrap();
+            for _ in 0..3 {
+                let budget = Duration::from_millis(30);
+                assert!(
+                    client
+                        .clone()
+                        .fetch_all_with_budget(&urls, &wider, budget)
+                        .await
+                        .unwrap()
+                        .iter()
+                        .all(Option::is_none)
+                );
+                let report = client
+                    .clone()
+                    .fetch_all_cached_detailed(&urls, &wider, &cache, Some(budget))
+                    .await
+                    .unwrap();
+                assert!(report.budget_exhausted);
+                assert_eq!(started.load(Ordering::SeqCst), 2);
+                assert_eq!(client.parsing.semaphore.available_permits(), 0);
+            }
+            let pending = tokio::spawn({
+                let client = client.clone();
+                let urls = urls.clone();
+                async move { client.fetch_all(&urls, &wider).await.unwrap() }
+            });
+            drop(release);
+            let contents = tokio::time::timeout(Duration::from_secs(5), pending)
+                .await
+                .unwrap()
+                .unwrap();
+            assert!(contents.iter().all(|text| {
+                text.as_ref()
+                    .is_some_and(|text| text.contains("Kestrel heading"))
+            }));
+            assert_eq!(client.parsing.semaphore.available_permits(), 2);
+        });
+        runtime.shutdown_timeout(Duration::from_secs(5));
+    }
+
+    #[test]
+    fn client_parser_capacity_bounds_queued_jobs_across_clones() {
+        let _telemetry = crate::telemetry::test_export_guard();
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .max_blocking_threads(1)
+            .enable_all()
+            .build()
+            .unwrap();
+        runtime.block_on(async {
+            use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+            let server = MockServer::start().await;
+            Mock::given(method("GET"))
+                .respond_with(ResponseTemplate::new(200).set_body_string(PAGE))
+                .mount(&server)
+                .await;
+            let mut client = crate::KestrelClient::with_parser_capacity(2).unwrap();
+            client.fetch = reqwest::Client::builder().no_proxy().build().unwrap();
+            let (release, gate) = std::sync::mpsc::channel::<()>();
+            let (entered, ready) = tokio::sync::oneshot::channel();
+            let blocker = tokio::task::spawn_blocking(move || {
+                entered.send(()).unwrap();
+                let _ = gate.recv();
+            });
+            ready.await.unwrap();
+            let urls = vec![server.uri(); 20];
+            let options = FetchOptions {
+                max_concurrency: 2,
+                parse_concurrency: 1,
+                ..FetchOptions::default()
+            };
+            for _ in 0..4 {
+                let report = client
+                    .clone()
+                    .fetch_all_detailed(&urls, &options, Some(Duration::from_millis(100)))
+                    .await
+                    .unwrap();
+                assert!(report.budget_exhausted);
+            }
+            assert_eq!(client.parsing.semaphore.available_permits(), 0);
+            // Two admitted parsers plus two downloading/waiting bodies per call.
+            assert_eq!(server.received_requests().await.unwrap().len(), 2 + 4 * 2);
+            drop(release);
+            blocker.await.unwrap();
+            tokio::time::timeout(Duration::from_secs(5), async {
+                while client.parsing.semaphore.available_permits() != 2 {
+                    tokio::task::yield_now().await;
+                }
+            })
+            .await
+            .unwrap();
+            assert!(client.fetch_all(&urls[..1], &options).await.unwrap()[0].is_some());
+        });
+        runtime.shutdown_timeout(Duration::from_secs(5));
     }
 
     #[test]

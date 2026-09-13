@@ -111,6 +111,7 @@ page text is unavailable, including searches with `--no-fetch`.
 - Completed HTML validation and extraction share one document. JSON result descriptions are data: embedded CAPTCHA markup does not by itself indicate a page challenge; Qwant's top-level challenge URL remains an error. HTML error responses still receive HTML challenge diagnostics.
 - Fanout defaults to a five-second search budget, including queueing and retries. Use --search-budget to change it or --no-search-budget to disable the total deadline.
 - Search, page fetching, and parsing concurrency each default to 10.
+- `--parse-concurrency` bounds queued/running page extraction jobs for the CLI. Library `KestrelClient` clones share an aggregate parser capacity (default 10), configurable with `with_parser_capacity(n)` or `with_transport_and_parser_capacity(transport, n)`. Each batch also obeys its own `FetchOptions::parse_concurrency`; larger per-call limits do not raise the shared cap. Free fetch functions and separately constructed clients own independent capacity. Download limits remain per call. Cancellation/budget expiry returns without waiting for blocking parsers, whose capacity remains occupied until body/DOM release; runtime shutdown may still wait for them. Provider parsing is separate.
 - Search/fetch clients select random browser headers and reuse HTTP/2 or HTTP/1.1 connections within the process.
 "#;
 
