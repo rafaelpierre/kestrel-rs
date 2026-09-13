@@ -340,7 +340,14 @@ fanout mode. External struct literals must add the field or use
 
 `--fetch-budget` is likewise an explicit latency/coverage tradeoff: pages that
 finish within the total budget are retained and outstanding fetches are
-cancelled. The cache is disabled unless `--cache-ttl` is supplied.
+cancelled. With caching enabled, the same absolute deadline includes cache reads,
+writes and bounded maintenance; returned text survives a persistence timeout.
+Blocking disk operations already admitted may finish after cancellation, bounded
+to four per cache instance and its clones. See [cache deadlines](docs/cache-deadlines.md).
+The cache is disabled unless `--cache-ttl` is supplied. Eligible pages commit while
+other fetches run; a restarted search can reuse committed text even if the prior
+process was killed. Discovery repeats unless provider recovery is also enabled. See [incremental page commits](docs/incremental-page-cache.md)
+for durability, bounded storage and compatibility limits.
 
 The [interrupted-search recovery contract](docs/cache-recovery-contract.md)
 records current cache limitations and the proposed delivery interfaces. Provider
@@ -522,3 +529,9 @@ latency are not guaranteed by this change.
 
 See [provider contracts, query syntax, randomized headers and pooled HTTP/2 transport](docs/search-providers.md)
 and the [quality/latency benchmark workflow](benchmarks/README.md).
+
+Provider work can be recovered independently with `--recovery-ttl 300`,
+`--recovery-dir ./progress` and optional `--recovery-max-entries 1000`, including
+metadata-only searches. Repeat the same command and directory after interruption to replay committed records
+and request only necessary incomplete units.
+See [provider progress storage](docs/provider-progress.md) for initial/retry recipes, commit boundaries and graceful shutdown.

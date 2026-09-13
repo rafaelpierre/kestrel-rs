@@ -131,6 +131,21 @@ pub(crate) async fn fetch_all_with_parser_pool(
     budget: Option<Duration>,
     shared: Option<&Arc<ParserPool>>,
 ) -> Result<FetchReport, KestrelError> {
+    let deadline = budget
+        .map(|value| crate::numeric::deadline("fetch budget", value))
+        .transpose()?;
+    fetch_all_reusing_client_with_cache(urls, options, client, deadline, None, None, shared).await
+}
+
+pub(crate) async fn fetch_all_reusing_client_with_cache(
+    urls: &[String],
+    options: &FetchOptions,
+    client: &reqwest::Client,
+    deadline: Option<tokio::time::Instant>,
+    cache: Option<&crate::cache::PageCache>,
+    cancellation: Option<&crate::SearchRecovery>,
+    shared: Option<&Arc<ParserPool>>,
+) -> Result<FetchReport, KestrelError> {
     crate::telemetry::scope_result("kestrel.fetch", async {
         crate::telemetry::payload("fetch.input", urls);
         crate::telemetry::attribute("kestrel.timeout_seconds", options.timeout.as_secs_f64());
@@ -139,8 +154,13 @@ pub(crate) async fn fetch_all_with_parser_pool(
             "kestrel.parse_concurrency",
             options.parse_concurrency as i64,
         );
-        if let Some(budget) = budget {
-            crate::telemetry::attribute("kestrel.fetch_budget_seconds", budget.as_secs_f64());
+        if let Some(deadline) = deadline {
+            crate::telemetry::attribute(
+                "kestrel.fetch_budget_seconds",
+                deadline
+                    .saturating_duration_since(tokio::time::Instant::now())
+                    .as_secs_f64(),
+            );
         }
         crate::telemetry::attribute("kestrel.content_limit", options.content_limit as i64);
         crate::telemetry::attribute(
@@ -148,9 +168,6 @@ pub(crate) async fn fetch_all_with_parser_pool(
             options.max_response_bytes as i64,
         );
         validate_options(options)?;
-        let deadline = budget
-            .map(|value| crate::numeric::deadline("fetch budget", value))
-            .transpose()?;
         let network = Arc::new(Semaphore::new(options.max_concurrency));
         let parsing = Parsing {
             local: Arc::new(Semaphore::new(options.parse_concurrency)),
@@ -170,33 +187,54 @@ pub(crate) async fn fetch_all_with_parser_pool(
                 }
             })
             .collect();
-        let mut results = vec![None; urls.len()];
-        let mut diagnostics = vec![None; urls.len()];
-        let mut budget_exhausted = false;
-        let mut cancelled = 0;
-        if let Some(deadline) = deadline {
-            let deadline = tokio::time::sleep_until(deadline);
-            tokio::pin!(deadline);
-            loop {
-                tokio::select! {
-                    item = jobs.next() => {
-                        let Some((index, item)) = item else { break };
-                        results[index] = item.content;
-                        diagnostics[index] = Some(item.diagnostic);
+        let (queue, writer) = crate::cache::page_writer(cache, options.content_limit, deadline, cancellation);
+        let collector = async move {
+            let mut results = vec![None; urls.len()];
+            let mut diagnostics = vec![None; urls.len()];
+            let mut budget_exhausted = false;
+            let mut cancelled = 0;
+            while !jobs.is_empty() {
+                let next = tokio::select! {
+                    item = crate::numeric::before_deadline(deadline, jobs.next()) => item,
+                    () = async { match cancellation { Some(store) => store.cancelled().await, None => std::future::pending().await } } => {
+                        cancelled=jobs.len(); break;
                     }
-                    () = &mut deadline => {
-                        budget_exhausted = !jobs.is_empty();
+                };
+                let item = match next {
+                    Ok(Some(item)) => item,
+                    Ok(None) => break,
+                    Err(()) => {
+                        budget_exhausted = true;
                         cancelled = jobs.len();
                         break;
-                    },
-                }
-            }
-        } else {
-            while let Some((index, item)) = jobs.next().await {
+                    }
+                };
+                let (index, item) = item;
+                let eligible = item.diagnostic.response_bytes < options.max_response_bytes;
                 results[index] = item.content;
                 diagnostics[index] = Some(item.diagnostic);
+                if let (Some(queue), Some(content)) = (&queue, &results[index])
+                    && eligible
+                    && tokio::select! {
+                        result = queue.enqueue(&urls[index], content, deadline) => result,
+                        () = async { match cancellation { Some(store) => store.cancelled().await, None => std::future::pending().await } } => Err(()),
+                    }.is_err()
+                {
+                    budget_exhausted |=
+                        deadline.is_some_and(|end| tokio::time::Instant::now() >= end);
+                    cancelled = jobs.len();
+                    break;
+                }
             }
-        }
+            drop(jobs);
+            drop(queue);
+            (results, diagnostics, budget_exhausted, cancelled)
+        };
+        // Both futures are owned by this invocation. Cancellation drops them
+        // together; a bounded blocking commit may still finish independently.
+        let ((results, diagnostics, mut budget_exhausted, cancelled), storage_exhausted) =
+            tokio::join!(collector, writer);
+        budget_exhausted |= storage_exhausted;
         crate::telemetry::attribute("kestrel.budget_exhausted", budget_exhausted);
         crate::telemetry::attribute("kestrel.cancelled_pages", cancelled as i64);
         Ok(FetchReport {
@@ -302,10 +340,6 @@ async fn fetch_one_detailed(
             }
         };
         item.diagnostic.http_version = http_version;
-        #[cfg(test)]
-        if let Some(content) = &item.content {
-            crate::recovery_audit::observe("page-extracted", content);
-        }
         crate::telemetry::payload("page.output", &item.content);
         crate::telemetry::payload("page.diagnostic", &item.diagnostic);
         crate::telemetry::attribute("kestrel.outcome", format!("{:?}", item.diagnostic.outcome));

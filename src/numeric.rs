@@ -30,3 +30,14 @@ pub(crate) fn deadline(name: &str, value: Duration) -> Result<tokio::time::Insta
             KestrelError::InvalidRequest(format!("{name} exceeds the monotonic clock range"))
         })
 }
+
+pub(crate) async fn before_deadline<T>(
+    deadline: Option<tokio::time::Instant>,
+    work: impl std::future::Future<Output = T>,
+) -> Result<T, ()> {
+    match deadline {
+        Some(end) if tokio::time::Instant::now() >= end => Err(()),
+        Some(end) => tokio::time::timeout_at(end, work).await.map_err(|_| ()),
+        None => Ok(work.await),
+    }
+}

@@ -155,7 +155,7 @@ pub struct SearchOptions {
     /// Stop fanout after this many unique candidates per query (None means 5).
     /// Takes precedence over provider_quorum. This is not an output cap.
     pub min_results: Option<usize>,
-    /// Total search budget including queueing and retries; disabled by default.
+    /// Total search budget including enabled recovery I/O, queueing and retries; disabled by default.
     pub search_budget: Option<Duration>,
 }
 

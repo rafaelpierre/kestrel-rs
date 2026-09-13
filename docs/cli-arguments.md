@@ -17,7 +17,7 @@ search defaults to 2,000 extracted characters per page and fetch to 20,000.
 | `--pre-rank` | Orders titles/snippets before limiting fetch candidates, only when candidates exceed the limit. Independent of final ranking. |
 | `--fetch`, `--no-fetch` | Enable switch (already the default) versus disabling page retrieval and default body ranking. Mutually exclusive. |
 | `--rank`, `--no-rank`, `--ranking-policy` | Choose at most one explicit final-ranking control. Default is content BM25 with fetching. Provider policy preserves candidate order, like no-rank. |
-| `--timeout`, `--fetch-budget` | Individual page-request timeout versus total candidate-fetch budget. Both may apply; standalone fetch only needs the request timeout. Neither sets provider-request timeouts. |
+| `--timeout`, `--fetch-budget` | Individual page-request timeout versus total candidate-fetch budget, including enabled cache I/O. Both may apply; standalone fetch only needs the request timeout. Neither sets provider-request timeouts. |
 | `--content-limit`, `--max-response-bytes` | Extracted character ceiling versus downloaded byte ceiling. Neither implies the other. |
 | `--concurrency`, `--parse-concurrency` | Concurrent page requests versus HTML parsing jobs. Standalone fetch reads one URL, so exposes neither. |
 | `--cache-ttl`, `--cache-dir`, `--cache-max-entries` | Search page-cache lifetime, location, and capacity. Directory/capacity require TTL; standalone fetch does not use the cache. |

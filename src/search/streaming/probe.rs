@@ -123,6 +123,7 @@ async fn live_streaming_feasibility() {
                                 &[(*query).to_owned()],
                                 &options,
                                 clients,
+                                None,
                             ),
                         ),
                     )
@@ -238,6 +239,7 @@ async fn live_fusion_latency_evidence() {
                                     &[(*query).to_owned()],
                                     &options,
                                     clients,
+                                    None,
                                 ),
                             ),
                         )
