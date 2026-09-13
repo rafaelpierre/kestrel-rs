@@ -67,8 +67,8 @@ struct SearchArgs {
     #[arg(long)]
     mode: Option<SearchMode>,
 
-    /// Maximum concurrent search-engine requests.
-    #[arg(long, default_value_t = 10, value_parser = positive_usize)]
+    /// Maximum concurrent search-engine requests (1 through Tokio MAX_PERMITS).
+    #[arg(long, default_value_t = 10, value_parser = concurrency_usize)]
     search_concurrency: usize,
 
     /// Legacy compatibility option; ignored by result-count fanout.
@@ -80,6 +80,7 @@ struct SearchArgs {
     min_results: Option<usize>,
 
     /// Total search seconds, including provider queueing and retries (default: 5).
+    /// Must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     search_budget: Option<f64>,
 
@@ -91,7 +92,7 @@ struct SearchArgs {
     #[arg(short = 'k', long, default_value_t = 5, value_parser = positive_usize, value_name = "N")]
     top_k: usize,
 
-    /// Maximum candidates to fetch before ranking (default: 3 x top-k).
+    /// Maximum candidates to fetch before ranking (default: checked 3 x top-k).
     #[arg(long, value_parser = positive_usize, value_name = "N")]
     fetch_candidates: Option<usize>,
 
@@ -140,14 +141,17 @@ struct SearchArgs {
     max_response_bytes: usize,
 
     /// HTTP timeout in seconds when fetching pages.
+    /// Must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, default_value_t = 10.0, value_parser = positive_f64, value_name = "SECS")]
     timeout: f64,
 
     /// Total seconds allowed for all candidate page fetches; completed pages are retained.
+    /// Must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     fetch_budget: Option<f64>,
 
     /// Cache extracted page text for this many seconds (disabled by default).
+    /// Must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     cache_ttl: Option<f64>,
 
@@ -159,12 +163,12 @@ struct SearchArgs {
     #[arg(long, value_parser = positive_usize, value_name = "N", requires = "cache_ttl")]
     cache_max_entries: Option<usize>,
 
-    /// Maximum concurrent HTTP requests when fetching pages.
-    #[arg(long, default_value_t = 10, value_parser = positive_usize, value_name = "N")]
+    /// Maximum concurrent HTTP requests when fetching pages (1 through Tokio MAX_PERMITS).
+    #[arg(long, default_value_t = 10, value_parser = concurrency_usize, value_name = "N")]
     concurrency: usize,
 
-    /// Maximum concurrent HTML parsing jobs.
-    #[arg(long, default_value_t = 10, value_parser = positive_usize, value_name = "N")]
+    /// Maximum concurrent HTML parsing jobs (1 through Tokio MAX_PERMITS).
+    #[arg(long, default_value_t = 10, value_parser = concurrency_usize, value_name = "N")]
     parse_concurrency: usize,
 
     /// Output format. JSON returns an object with results and elapsed_seconds.
@@ -173,6 +177,18 @@ struct SearchArgs {
 }
 
 impl SearchArgs {
+    fn candidate_limit(&self) -> Result<usize, &'static str> {
+        if self.no_fetch {
+            Ok(0)
+        } else if let Some(limit) = self.fetch_candidates {
+            Ok(limit)
+        } else {
+            self.top_k.checked_mul(3).ok_or(
+                "three times --top-k exceeds the candidate-count range; lower --top-k or supply --fetch-candidates",
+            )
+        }
+    }
+
     fn effective_search_budget(&self) -> Option<Duration> {
         if self.no_search_budget {
             None
@@ -211,7 +227,7 @@ struct FetchArgs {
     #[arg(long, default_value_t = DEFAULT_MAX_RESPONSE_BYTES, value_parser = positive_usize, value_name = "BYTES")]
     max_response_bytes: usize,
 
-    /// HTTP timeout in seconds.
+    /// HTTP timeout in seconds; must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, default_value_t = 10.0, value_parser = positive_f64, value_name = "SECS")]
     timeout: f64,
 
@@ -370,6 +386,11 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             )
             .exit();
     }
+    let candidate_limit = arguments.candidate_limit().unwrap_or_else(|message| {
+        Cli::command()
+            .error(clap::error::ErrorKind::ValueValidation, message)
+            .exit()
+    });
     let mut queries = vec![arguments.query.clone()];
     queries.extend(arguments.additional_queries.clone());
     let query_label = queries.join(" | ");
@@ -457,7 +478,6 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
     let should_rank = !arguments.no_rank;
     let mut fetch_diagnostics = None;
     if should_fetch {
-        let candidate_limit = arguments.fetch_candidates.unwrap_or(arguments.top_k * 3);
         if arguments.pre_rank && results.len() > candidate_limit {
             eprintln!("[kestrel] Pre-ranking candidates from titles and snippets...");
             let pre_rank_started = Instant::now();
@@ -884,20 +904,72 @@ fn positive_usize(value: &str) -> Result<usize, String> {
         })
 }
 
+fn concurrency_usize(value: &str) -> Result<usize, String> {
+    let value = positive_usize(value)?;
+    if value > tokio::sync::Semaphore::MAX_PERMITS {
+        return Err(format!(
+            "must be at most {}",
+            tokio::sync::Semaphore::MAX_PERMITS
+        ));
+    }
+    Ok(value)
+}
+
 fn positive_f64(value: &str) -> Result<f64, String> {
-    value
-        .parse::<f64>()
-        .map_err(|error| error.to_string())
-        .and_then(|value| {
-            (value > 0.0 && value.is_finite())
-                .then_some(value)
-                .ok_or_else(|| "must be greater than zero".into())
-        })
+    let value = value.parse::<f64>().map_err(|error| error.to_string())?;
+    let duration = Duration::try_from_secs_f64(value)
+        .map_err(|_| "must be finite, positive, and representable as a duration".to_string())?;
+    if duration.is_zero() || Instant::now().checked_add(duration).is_none() {
+        return Err(
+            "must round to at least one nanosecond and fit a monotonic clock deadline".into(),
+        );
+    }
+    // All subsequent from_secs_f64 conversions use this validated, unchanged value.
+    Ok(value)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn numeric_boundaries_and_candidate_defaults() {
+        for value in [
+            "0",
+            "NaN",
+            "inf",
+            "-inf",
+            "1e-100",
+            "1e100",
+            "18446744073709551615",
+        ] {
+            assert!(positive_f64(value).is_err(), "{value}");
+        }
+        for value in ["0.000000001", "0.5", "10"] {
+            assert!(positive_f64(value).is_ok(), "{value}");
+        }
+        let maximum = tokio::sync::Semaphore::MAX_PERMITS;
+        assert!(concurrency_usize(&maximum.to_string()).is_ok());
+        for value in [0, maximum + 1, usize::MAX] {
+            assert!(concurrency_usize(&value.to_string()).is_err());
+        }
+        let Commands::Search(mut args) = Cli::try_parse_from(["kestrel", "search", "test"])
+            .unwrap()
+            .command
+        else {
+            panic!("expected search");
+        };
+        args.top_k = usize::MAX / 3;
+        assert_eq!(args.candidate_limit().unwrap(), (usize::MAX / 3) * 3);
+        args.top_k += 1;
+        assert!(args.candidate_limit().is_err());
+        args.top_k = usize::MAX;
+        args.fetch_candidates = Some(1);
+        assert_eq!(args.candidate_limit().unwrap(), 1);
+        args.fetch_candidates = None;
+        args.no_fetch = true;
+        assert_eq!(args.candidate_limit().unwrap(), 0);
+    }
 
     #[test]
     fn compatible_stage_options_remain_accepted() {

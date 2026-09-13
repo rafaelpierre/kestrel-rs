@@ -8,6 +8,7 @@ pub mod fetcher;
 mod http_client;
 pub mod logging;
 pub mod model;
+mod numeric;
 mod provider_diagnostics;
 pub mod providers;
 mod query;

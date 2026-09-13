@@ -110,12 +110,7 @@ fn search_origin(engine: Engine) -> &'static str {
 }
 
 fn validate_timeout(timeout: Duration) -> Result<(), KestrelError> {
-    if timeout.is_zero() {
-        return Err(KestrelError::InvalidRequest(
-            "warm-up timeout must be positive".into(),
-        ));
-    }
-    Ok(())
+    crate::numeric::duration("warm-up timeout", timeout)
 }
 
 fn origins(urls: &[String]) -> Result<Vec<String>, KestrelError> {

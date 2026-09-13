@@ -237,6 +237,13 @@ Run `kestrel search --help` for all provider filters, concurrency controls, and
 resource limits. See the [argument interaction reference](docs/cli-arguments.md)
 for stage boundaries and compatible combinations.
 
+Numeric inputs are checked before requests: durations must round to at least one
+nanosecond and fit a monotonic deadline; concurrency cannot exceed Tokio's
+semaphore capacity. Overflowing default candidate counts require a smaller
+`--top-k` or explicit `--fetch-candidates`. Invalid CLI values exit with status 2;
+library search/fetch options return `InvalidRequest`. See the
+[numeric boundaries](docs/cli-arguments.md#numeric-boundaries).
+
 Explicit fetch-stage settings (such as `--timeout`, `--pre-rank`, and cache
 options) now conflict with `--no-fetch` instead of being silently ignored.
 Choose at most one of `--rank`, `--no-rank`, or `--ranking-policy`; explicit

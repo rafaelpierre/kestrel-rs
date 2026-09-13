@@ -178,6 +178,9 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(target.exists());
     let skill = fs::read_to_string(&target).unwrap();
     assert!(skill.contains("retained prefix"));
+    assert!(skill.contains("round to at least one nanosecond"));
+    assert!(skill.contains("Semaphore::MAX_PERMITS"));
+    assert!(skill.contains("checked `3 * top-k`"));
     assert!(skill.contains("whole class tokens"));
     assert!(skill.contains("support `text/plain`"));
     assert!(skill.contains("literal markup/entities"));
@@ -450,6 +453,63 @@ async fn default_byte_cap_stops_at_one_mb_and_can_be_overridden() {
     })
     .await
     .unwrap();
+}
+
+#[test]
+fn overflowing_numeric_arguments_are_usage_errors() {
+    for flag in [
+        "--timeout",
+        "--search-budget",
+        "--fetch-budget",
+        "--cache-ttl",
+    ] {
+        for value in [
+            "0",
+            "NaN",
+            "inf",
+            "-inf",
+            "1e-100",
+            "1e100",
+            "18446744073709551615",
+        ] {
+            Command::cargo_bin("kestrel")
+                .unwrap()
+                .args(["search", "test", &format!("{flag}={value}")])
+                .assert()
+                .code(2)
+                .stdout("")
+                .stderr(predicate::str::contains("panicked").not());
+        }
+    }
+    for value in ["1e-100", "1e100", "NaN", "inf"] {
+        Command::cargo_bin("kestrel")
+            .unwrap()
+            .args(["fetch", "http://127.0.0.1:9", "--timeout", value])
+            .assert()
+            .code(2)
+            .stdout("");
+    }
+    for flag in [
+        "--search-concurrency",
+        "--concurrency",
+        "--parse-concurrency",
+    ] {
+        for value in [0, tokio::sync::Semaphore::MAX_PERMITS + 1, usize::MAX] {
+            Command::cargo_bin("kestrel")
+                .unwrap()
+                .args(["search", "test", flag, &value.to_string()])
+                .assert()
+                .code(2)
+                .stdout("");
+        }
+    }
+    Command::cargo_bin("kestrel")
+        .unwrap()
+        .args(["search", "test", "--top-k", &usize::MAX.to_string()])
+        .assert()
+        .code(2)
+        .stdout("")
+        .stderr(predicate::str::contains("--fetch-candidates"));
 }
 
 #[tokio::test]

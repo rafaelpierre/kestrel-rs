@@ -141,6 +141,9 @@ pub(crate) async fn fetch_all_reusing_client_with_diagnostics(
     budget: Option<Duration>,
 ) -> Result<FetchReport, KestrelError> {
     validate_options(options)?;
+    let deadline = budget
+        .map(|value| crate::numeric::deadline("fetch budget", value))
+        .transpose()?;
     let network = Arc::new(Semaphore::new(options.max_concurrency));
     let parsing = Arc::new(Semaphore::new(options.parse_concurrency));
     let mut jobs: FuturesUnordered<_> = urls
@@ -161,8 +164,8 @@ pub(crate) async fn fetch_all_reusing_client_with_diagnostics(
     let mut diagnostics = vec![None; urls.len()];
     let mut budget_exhausted = false;
     let mut cancelled = 0;
-    if let Some(budget) = budget {
-        let deadline = tokio::time::sleep(budget);
+    if let Some(deadline) = deadline {
+        let deadline = tokio::time::sleep_until(deadline);
         tokio::pin!(deadline);
         loop {
             tokio::select! {
@@ -208,7 +211,7 @@ fn append_body_chunk(body: &mut Vec<u8>, chunk: &[u8], limit: usize) -> bool {
     body.len() < limit
 }
 
-fn validate_options(options: &FetchOptions) -> Result<(), KestrelError> {
+pub(crate) fn validate_options(options: &FetchOptions) -> Result<(), KestrelError> {
     for (name, value) in [
         ("max_concurrency", options.max_concurrency),
         ("parse_concurrency", options.parse_concurrency),
@@ -221,11 +224,9 @@ fn validate_options(options: &FetchOptions) -> Result<(), KestrelError> {
             )));
         }
     }
-    if options.timeout.is_zero() {
-        return Err(KestrelError::InvalidRequest(
-            "timeout must be greater than zero".into(),
-        ));
-    }
+    crate::numeric::concurrency("max_concurrency", options.max_concurrency)?;
+    crate::numeric::concurrency("parse_concurrency", options.parse_concurrency)?;
+    crate::numeric::duration("timeout", options.timeout)?;
     Ok(())
 }
 

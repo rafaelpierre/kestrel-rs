@@ -338,7 +338,8 @@ async fn search_many_with_clients_in_run(
     let diagnostics = Arc::new(Mutex::new(Vec::new()));
     let deadline = options
         .search_budget
-        .map(|budget| tokio::time::Instant::now() + budget);
+        .map(|budget| crate::numeric::deadline("search budget", budget))
+        .transpose()?;
 
     let jobs = queries.iter().map(|query| {
         run_fanout_query(
@@ -498,15 +499,9 @@ fn validate_request(
             "At least one search engine is required".into(),
         ));
     }
-    if options.max_concurrency < 1 {
-        return Err(KestrelError::InvalidRequest(
-            "max_concurrency must be at least 1".into(),
-        ));
-    }
-    if options.search_budget.is_some_and(|budget| budget.is_zero()) {
-        return Err(KestrelError::InvalidRequest(
-            "search budget must be greater than zero".into(),
-        ));
+    crate::numeric::concurrency("max_concurrency", options.max_concurrency)?;
+    if let Some(budget) = options.search_budget {
+        crate::numeric::duration("search budget", budget)?;
     }
     if options.min_results == Some(0) {
         return Err(KestrelError::InvalidRequest(
@@ -1715,6 +1710,16 @@ mod tests {
             ),
             "unexpected error: {error}"
         );
+    }
+
+    #[test]
+    fn numeric_search_concurrency_accepts_semaphore_boundary() {
+        let options = SearchOptions {
+            max_concurrency: Semaphore::MAX_PERMITS,
+            search_budget: Some(Duration::from_nanos(1)),
+            ..Default::default()
+        };
+        assert!(validate_request(&["test".into()], &options).is_ok());
     }
 
     #[test]
