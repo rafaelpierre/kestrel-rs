@@ -53,10 +53,10 @@ async fn isolated(
     impersonated: &primp::Client,
     variant: &str,
 ) -> Result<Value, Box<dyn std::error::Error>> {
-    let region = if variant == "bing-no-region" {
-        ""
-    } else {
+    let region = if variant == "bing-gb-region" {
         "gb-en"
+    } else {
+        ""
     };
     let mut builder = bing_request(standard, query, region);
     if variant == "bing-browser-form" {
@@ -92,9 +92,10 @@ async fn isolated(
             format!("{:?}", response.version()),
             headers,
         );
-        (meta.0, meta.1, meta.2, meta.3, response.text().await?)
+        let html = read_standard_body(response, Engine::Bing).await?;
+        (meta.0, meta.1, meta.2, meta.3, html)
     } else {
-        let response = impersonated.get(initial.as_str()).send().await?;
+        let mut response = impersonated.get(initial.as_str()).send().await?;
         let headers: std::collections::BTreeMap<_, _> = ["age", "cache-control", "via", "x-cache"]
             .into_iter()
             .filter_map(|k| {
@@ -111,7 +112,19 @@ async fn isolated(
             format!("{:?}", response.version()),
             headers,
         );
-        (meta.0, meta.1, meta.2, meta.3, response.text().await?)
+        let mut body = ProviderBody::new(
+            Engine::Bing,
+            meta.0,
+            response.content_length(),
+            response
+                .headers()
+                .get("content-type")
+                .and_then(|v| v.to_str().ok()),
+        )?;
+        while let Some(chunk) = response.chunk().await? {
+            body.push(&chunk)?;
+        }
+        (meta.0, meta.1, meta.2, meta.3, body.text())
     };
     if let Ok(directory) = std::env::var("KESTREL_BING_RAW_DIR") {
         fs::create_dir_all(&directory)?;
@@ -125,6 +138,9 @@ async fn isolated(
         Ok(_) => (vec![], Some(format!("HTTP {status}"))),
         Err(e) => (vec![], Some(e.to_string())),
     };
+    // Apply both contracts to the exact same, unsanitized destinations. These
+    // views issue no requests and are not independent latency observations.
+    capture["paired_views"] = paired_views(query, &results);
     clean_results(&mut results);
     capture["results"] = json!(results);
     capture["error"] = json!(error);
@@ -137,6 +153,41 @@ async fn isolated(
     capture["redirect_chain"] = Value::Null;
     capture["attempts"] = json!(1);
     Ok(capture)
+}
+
+fn paired_views(query: &str, raw: &[SearchResult]) -> Value {
+    let mut views = json!({});
+    for (name, syntax) in [
+        ("native", QuerySyntax::Native),
+        ("portable", QuerySyntax::Portable),
+    ] {
+        let mut results = raw.to_vec();
+        normalize_provider_results(
+            &mut results,
+            query,
+            &QueryPlan::parse(query, syntax).unwrap(),
+        );
+        clean_results(&mut results);
+        views[name] = json!({"results":results,"raw_result_count":raw.len()});
+    }
+    views
+}
+
+fn fanout_options(variant: &str, budget: Duration) -> SearchOptions {
+    SearchOptions {
+        query_syntax: if variant == "fanout-native-min5" {
+            QuerySyntax::Native
+        } else {
+            QuerySyntax::Portable
+        },
+        min_results: Some(if variant == "fanout-portable-min20" {
+            20
+        } else {
+            5
+        }),
+        search_budget: Some(budget),
+        ..Default::default()
+    }
 }
 
 #[tokio::test]
@@ -159,7 +210,7 @@ async fn capture_live_matrix() {
         .iter()
         .filter_map(|(k, v)| v.to_str().ok().map(|v| (k.to_string(), v.to_owned())))
         .collect();
-    let budget = Duration::from_secs(3);
+    let budget = Duration::from_secs(5);
     let standard =
         crate::http_client::standard_builder(profile, &crate::TransportOptions::default())
             .timeout(budget)
@@ -179,14 +230,19 @@ async fn capture_live_matrix() {
     // Alternate configuration order by query to reduce order/time confounding.
     let normal_variants = [
         "bing-standard",
-        "bing-impersonated",
-        "bing-no-region",
-        "bing-browser-form",
-        "fanout-q1",
-        "fanout-all",
+        "fanout-native-min5",
+        "fanout-portable-min5",
+        "fanout-portable-min20",
     ];
     let variants: &[&str] = if std::env::var_os("KESTREL_BING_ENCODING_ONLY").is_some() {
         &["bing-standard", "bing-percent-space"]
+    } else if std::env::var_os("KESTREL_BING_TRANSPORT_ONLY").is_some() {
+        &[
+            "bing-standard",
+            "bing-impersonated",
+            "bing-gb-region",
+            "bing-browser-form",
+        ]
     } else {
         &normal_variants
     };
@@ -208,13 +264,7 @@ async fn capture_live_matrix() {
                     Err(_) => json!({"results":[],"error":"deadline","attempts":1}),
                 }
             } else {
-                let options = SearchOptions {
-                    query_syntax: QuerySyntax::Native,
-                    provider_quorum: (variant == "fanout-q1").then_some(1),
-                    region: "gb-en".into(),
-                    search_budget: Some(budget),
-                    ..Default::default()
-                };
+                let options = fanout_options(variant, budget);
                 match search_many_reusing_clients_detailed(&[query.into()], &options, &clients)
                     .await
                 {
@@ -231,13 +281,32 @@ async fn capture_live_matrix() {
                     Err(_) => json!({"results":[],"error":"all_providers_failed"}),
                 }
             };
+            if variant.starts_with("bing-") && row.get("paired_views").is_none() {
+                // Failed captures still belong in both replay denominators.
+                row["paired_views"] = json!({
+                    "native":{"results":[],"raw_result_count":null},
+                    "portable":{"results":[],"raw_result_count":null}
+                });
+            }
             row["id"] = json!(format!("{}-{variant}", case["id"].as_str().unwrap()));
             row["query_id"] = case["id"].clone();
             row["query"] = json!(query);
             row["variant"] = json!(variant);
             row["started_at"] = json!(timestamp);
             row["elapsed_ms"] = json!(started.elapsed().as_millis() as u64);
-            row["budget_ms"] = json!(3000);
+            row["budget_ms"] = json!(budget.as_millis() as u64);
+            row["observation_kind"] = json!("network");
+            if !variant.starts_with("bing-") {
+                let options = fanout_options(variant, budget);
+                row["query_syntax"] = json!(match options.query_syntax {
+                    QuerySyntax::Native => "native",
+                    QuerySyntax::Portable => "portable",
+                });
+                row["min_results"] = json!(options.min_results);
+                row["engines"] = json!(options.engines);
+                row["max_concurrency"] = json!(options.max_concurrency);
+                row["provider_quorum"] = Value::Null;
+            }
             eprintln!(
                 "{}: {} results in {} ms",
                 row["id"],
@@ -248,7 +317,9 @@ async fn capture_live_matrix() {
             // Persist every scheduled result, including empty/error outcomes.
             fs::write(&output, serde_json::to_vec_pretty(&json!({
                 "schema":1,"expected_rows": cases.len() * variants.len(),
-                "completed": rows.len() == cases.len() * variants.len(), "headers":headers,"region":"gb-en","session":"reused clients, no cookie jar",
+                "completed": rows.len() == cases.len() * variants.len(), "headers":headers,"region":"","session":"reused clients, no cookie jar",
+                "experiment_revision":2,
+                "environment_label":std::env::var("KESTREL_BING_ENVIRONMENT").unwrap_or_else(|_| "local-unverified".into()),
                 "network_context":"local host; browser egress equivalence not verified",
                 "isolated_policy":"single attempt; orchestration uses production retries",
                 "url_sanitization":"search q/cc retained; result query strings and fragments removed; judge original title/snippet alongside path",
@@ -272,6 +343,45 @@ fn evidence_removes_tracking_and_credentials() {
         "https://example.com/path"
     );
     assert_eq!(clean_url("javascript:alert(1)", false), "");
+}
+
+#[test]
+fn paired_filter_views_preserve_raw_evidence_and_distinguish_native() {
+    let raw = parse_bing_results(include_str!(
+        "../../tests/fixtures/providers/bing-unrelated.html"
+    ));
+    let views = paired_views("why does the moon cause ocean tides", &raw);
+    assert_eq!(raw.len(), 2);
+    assert_eq!(views["native"]["results"].as_array().unwrap().len(), 2);
+    assert!(views["portable"]["results"].as_array().unwrap().is_empty());
+    assert_eq!(views["portable"]["raw_result_count"], 2);
+
+    let site = parse_bing_results(include_str!(
+        "../../tests/fixtures/providers/bing-live-site.html"
+    ));
+    let views = paired_views("site:docs.rs tokio watch Receiver borrow_and_update", &site);
+    for name in ["native", "portable"] {
+        assert!(views[name]["results"].as_array().unwrap().is_empty());
+        assert_eq!(views[name]["raw_result_count"], 2);
+    }
+}
+
+#[test]
+fn current_matrix_uses_result_minima_and_matched_budgets() {
+    let budget = Duration::from_secs(5);
+    for (variant, syntax, minimum) in [
+        ("fanout-native-min5", QuerySyntax::Native, 5),
+        ("fanout-portable-min5", QuerySyntax::Portable, 5),
+        ("fanout-portable-min20", QuerySyntax::Portable, 20),
+    ] {
+        let options = fanout_options(variant, budget);
+        assert_eq!(options.query_syntax, syntax);
+        assert_eq!(options.min_results, Some(minimum));
+        assert_eq!(options.search_budget, Some(budget));
+        assert_eq!(options.provider_quorum, None);
+        assert!(options.region.is_empty());
+        assert_eq!(options.engines.len(), 9);
+    }
 }
 
 #[test]

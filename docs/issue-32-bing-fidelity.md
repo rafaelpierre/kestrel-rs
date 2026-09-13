@@ -5,7 +5,15 @@ Issue: https://github.com/rafaelpierre/kestrel-rs/issues/32
 Worktree: `kestrel-rs-issue-32`, branch `codex/issue-32-bing-fidelity`, based on
 `95899d1`. Investigation date: 2026-09-12.
 
-## Follow-up: budgeted CLI default
+## Historical scope
+
+This report describes September 12 code and measurements. Fallback, quorum-based
+stopping and the earlier query policy below have since been superseded by #44,
+#54 and #68. They are not current usage guidance. See
+[the September 13 baseline](issue-32-bing-fidelity-20260913.md) and
+[the updated harness](../benchmarks/bing-fidelity/README.md) for current behavior.
+
+## Historical follow-up: budgeted CLI default
 
 At the user's request, the CLI now selects fanout quorum 1 when `--search-budget`
 is supplied without an explicit `--mode`. An explicit quorum overrides 1.
