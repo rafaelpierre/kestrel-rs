@@ -857,6 +857,14 @@ async fn structured_diagnostics_default_opt_out_and_skill_installation() {
             command
                 .current_dir(project.path())
                 .env("HOME", user_home.path())
+                .env_remove("HTTP_PROXY")
+                .env_remove("HTTPS_PROXY")
+                .env_remove("ALL_PROXY")
+                .env_remove("http_proxy")
+                .env_remove("https_proxy")
+                .env_remove("all_proxy")
+                .env("NO_PROXY", "*")
+                .env("no_proxy", "*")
                 .env_remove("KESTRELSEARCH_PROVIDER_TRACE_DIR")
                 .env_remove("KESTRELSEARCH_BENCHMARK_ARTIFACT_DIR")
                 .args(["fetch", &url, "--output", "json"]);

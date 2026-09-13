@@ -504,41 +504,14 @@ mod tests {
         assert!(!value.to_string().contains("private"));
     }
 
-    #[tokio::test]
-    async fn structured_fetch_joins_failures_quality_cache_and_deadline_by_identity() {
+    #[test]
+    fn structured_fetch_joins_failures_quality_cache_and_deadline_by_identity() {
         let _telemetry = kestrelsearch::telemetry::test_export_guard();
-        use kestrelsearch::{FetchOptions, KestrelClient, PageCache};
-        use std::time::Duration;
-        use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
-        let server = MockServer::start().await;
-        for (route, response) in [
-            (
-                "/shell",
-                ResponseTemplate::new(200)
-                    .set_body_raw("Your browser is not supported.", "text/plain"),
-            ),
-            (
-                "/article",
-                ResponseTemplate::new(200)
-                    .set_body_raw("A concise useful-looking answer.", "text/plain"),
-            ),
-            (
-                "/empty",
-                ResponseTemplate::new(200).set_body_raw("", "text/plain"),
-            ),
-            ("/failure", ResponseTemplate::new(404)),
-        ] {
-            Mock::given(path(route))
-                .respond_with(response)
-                .mount(&server)
-                .await;
-        }
-        let client = KestrelClient::new().unwrap();
-        let cache_dir = tempfile::tempdir().unwrap();
-        let cache = PageCache::new(cache_dir.path(), Duration::from_secs(60)).unwrap();
-        let options = FetchOptions::default();
+        // Report projection needs no transport. These sanitized fixtures also
+        // make cache reordering and cancellation independent of proxy settings.
+        let options = kestrelsearch::FetchOptions::default();
         let urls: Vec<_> = ["/shell", "/article", "/empty", "/failure"]
-            .map(|p| format!("{}{p}", server.uri()))
+            .map(|path| format!("https://example.test{path}"))
             .to_vec();
         let original = report(
             urls.iter()
@@ -551,14 +524,49 @@ mod tests {
             vec![provider("q", "results", 6, 0)],
         );
         for cache_hits in [0, 2] {
-            let fetch = client
-                .fetch_all_cached_detailed(&urls, &options, &cache, None)
-                .await
-                .unwrap();
-            assert_eq!(fetch.cache_hits, cache_hits);
+            let body_outcome = if cache_hits == 0 {
+                FetchOutcome::Success
+            } else {
+                FetchOutcome::CacheHit
+            };
+            let outcomes = [
+                body_outcome,
+                body_outcome,
+                FetchOutcome::NoContent,
+                FetchOutcome::RequestFailed,
+            ];
+            let mut fetch = FetchReport {
+                contents: vec![
+                    Some("Your browser is not supported.".into()),
+                    Some("A concise useful-looking answer.".into()),
+                    None,
+                    None,
+                ],
+                // Deliberately differ from input order, as cached reports can.
+                pages: [2, 0, 3, 1]
+                    .into_iter()
+                    .map(|index| PageFetchDiagnostic {
+                        url: urls[index].clone(),
+                        outcome: outcomes[index],
+                        queue_ms: 0,
+                        request_ms: 0,
+                        download_ms: 0,
+                        parse_queue_ms: 0,
+                        parse_ms: 0,
+                        total_ms: 0,
+                        response_bytes: 0,
+                        http_version: None,
+                    })
+                    .collect(),
+                budget_exhausted: false,
+                cancelled: 0,
+                cache_hits,
+                cache_misses: 4 - cache_hits,
+            };
             let mut candidates = original.results[..5].to_vec();
-            for (r, content) in candidates.iter_mut().zip(&fetch.contents) {
-                r.content = content.clone();
+            // The CLI moves bodies out of FetchReport before projecting diagnostics.
+            for (result, content) in candidates.iter_mut().zip(&mut fetch.contents) {
+                result.content = content.take();
             }
             let returned = vec![candidates[1].clone()];
             let value = SearchDiagnostics::new(&original, &["q".into()], 5).finish(
@@ -592,29 +600,16 @@ mod tests {
                 }
             );
         }
-        // Keep responses pending beyond the budget. An expired nanosecond timer
-        // alone can lose select! to fast completed requests before the timer tick.
-        Mock::given(path("/pending"))
-            .respond_with(ResponseTemplate::new(200).set_delay(Duration::from_secs(60)))
-            .mount(&server)
-            .await;
-        let deadline_urls: Vec<_> = (0..4)
-            .map(|index| format!("{}/pending?index={index}", server.uri()))
-            .collect();
-        let deadline_search = report(
-            deadline_urls
-                .iter()
-                .map(|url| candidate(url, &["q"]))
-                .collect(),
-            vec![provider("q", "results", 4, 0)],
-        );
-        let fetch = client
-            .fetch_all_detailed(&deadline_urls, &options, Some(Duration::from_millis(5)))
-            .await
-            .unwrap();
-        assert!(fetch.budget_exhausted);
-        let value = SearchDiagnostics::new(&deadline_search, &["q".into()], 5).finish(
-            &deadline_search.results,
+        let fetch = FetchReport {
+            contents: vec![None; 4],
+            pages: vec![],
+            budget_exhausted: true,
+            cancelled: 4,
+            cache_hits: 0,
+            cache_misses: 4,
+        };
+        let value = SearchDiagnostics::new(&original, &["q".into()], 5).finish(
+            &original.results[..4],
             &[],
             Some(&fetch),
             false,
