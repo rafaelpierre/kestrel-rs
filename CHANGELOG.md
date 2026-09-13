@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.1](https://github.com/rafaelpierre/kestrel-rs/compare/v6.0.0...v6.0.1) - 2026-09-13
+
+### Fixed
+
+- preserve HTTP resource distinctions in persistent page cache
+- bound page parsers across reusable client calls
+
+### Other
+
+- Merge pull request #163 from rafaelpierre/codex/75-fixed-pool-study
+- Merge pull request #162 from rafaelpierre/codex/148-evidence-gate
+- Merge pull request #161 from rafaelpierre/codex/121-recovery-contract
+- Merge pull request #159 from rafaelpierre/codex/117-provider-parser-workers
+- Merge pull request #158 from rafaelpierre/codex/116-parse-provider-once
+- investigate Yahoo empty-500 redirects and retry costs
+- Merge pull request #152 from rafaelpierre/release-plz-2026-09-13T16-22-00Z
+- preserve exact error wording in keyword queries
+- require keyword FTS queries in generated skill and evidence gate
+
 ## [6.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v5.0.0...v6.0.0) - 2026-09-13
 
 ### Added
