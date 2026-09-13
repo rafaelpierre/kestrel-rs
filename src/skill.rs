@@ -97,7 +97,7 @@ page text is unavailable, including searches with `--no-fetch`.
 - When the selected HTML body consists entirely of recognized shell messages, extraction checks at most the first explicit `article` for non-shell or mixed text. Otherwise root selection is unchanged. This can recover an article hidden by a comments-only `main`; it does not repair arbitrary missing text or render JavaScript. Warm cache entries retain their stored text until expiry; assessments are recomputed, not cached.
 - Direct fetch and search HTML/XHTML extraction remove structural chrome and explicit clutter markers using whole class tokens and scoped ID names, not arbitrary substrings. Containers named `download`, `reader`, `shadow`, and `thread` retain their content. Unrecognized compound names may retain clutter; extraction remains heuristic.
 - HTML text follows document order, with line breaks between blocks and tabs between table cells. Inline emphasis and links preserve word boundaries; short answers, all heading levels, nested lists, code and table text are retained once per source occurrence. Prose whitespace collapses; `pre` preserves indentation, line breaks and repeated lines. Inline `code` uses prose whitespace rules. Entities are decoded once by HTML parsing; literal metadata lines such as `Source:` remain page content. This is plain text, not Markdown or a rendered table; CSS layout and row/column spans are not reconstructed.
-- HTML character limits count Unicode scalar values, including retained whitespace and generated separators, before the CLI source prefix. Truncation can end mid-block or mid-code. HTML headings have no implicit ranking boost: body BM25 uses the extracted tokens once per source occurrence, and existing title/snippet policies keep their ranking weights. New extraction can change scores and which content fits the cap. Old cached extractions retain their prior text until expiry or a fresh fetch; use `--cache-ttl 0` for fresh search page extraction.
+- HTML character limits count Unicode scalar values, including retained whitespace and generated separators, before the CLI source prefix. Truncation can end mid-block or mid-code. HTML headings have no implicit ranking boost: body BM25 uses the extracted tokens once per source occurrence, and existing title/snippet policies keep their ranking weights. New extraction can change scores and which content fits the cap. Old cached extractions retain their prior text until expiry or a fresh fetch; omit cache flags for fresh search page extraction (`--cache-ttl 0` is invalid).
 - Page bodies stop at `--max-response-bytes` decoded bytes and the retained prefix is extracted, even when Content-Length exceeds the cap. Reaching the cap alone is not an error; content may be incomplete. Network and parsing concurrency are independent.
 - Search reports the number of successfully extracted pages that reached the byte cap on stderr; results may contain incomplete page content.
 - Byte-capped page extractions are not cached, so a later larger byte budget can fetch more content. This page-fetch cutoff does not change search-provider response limits.
@@ -224,7 +224,11 @@ CLI calls can each incur initialization and cannot reuse the previous process's
 pool. Search's opt-in extracted-page cache reuses unexpired completed extractions,
 keyed by canonical URL and content limit; provider discovery still runs. Standalone
 fetch does not use that cache, and byte-capped extractions are excluded. It is not
-cross-process search-progress recovery (tracked in #70).
+cross-process search-progress recovery (tracked in #70). Page writes currently
+wait until the fetch batch returns: killing a process while another page is
+blocked can lose already extracted text. Accepted provider records are held only
+in memory. Repeating a command reruns provider discovery; it does not resume it.
+Cache reads, writes and pruning currently sit outside the network fetch budget.
 
 "#);
     for name in ["search", "fetch"] {

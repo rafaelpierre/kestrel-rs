@@ -60,6 +60,8 @@ where
                 match event {
                     Some(batch) => {
                         partial.insert(batch.index, batch.results);
+                        #[cfg(test)]
+                        crate::recovery_audit::observe("provider-accepted", &serde_json::to_string(&partial).unwrap());
                         Some(batch.resume)
                     }
                     None => { receiver = None; continue; }
