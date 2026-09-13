@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v4.1.1...v5.0.0) - 2026-09-13
+
+### Added
+
+- add OpenTelemetry and Honeycomb test tracing
+
+### Fixed
+
+- preserve document order and code in HTML extraction
+- [**breaking**] remove portable query filtering
+- pin portable syntax in streaming validation
+- [**breaking**] restore native query passthrough by default
+
+### Other
+
+- Merge pull request #145 from rafaelpierre/release-plz-2026-09-13T14-42-39Z
+- merge latest main before query filter removal
+- merge main into native query default fix
+
 ## [4.1.1](https://github.com/rafaelpierre/kestrel-rs/compare/v4.1.0...v4.1.1) - 2026-09-13
 
 ### Fixed
