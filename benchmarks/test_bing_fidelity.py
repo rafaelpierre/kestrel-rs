@@ -77,6 +77,54 @@ class ScoringTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'incomplete schedule'):
                 load_runs([path])
 
+    def complete_schedule(self, root):
+        root.mkdir(parents=True, exist_ok=True)
+        (root / 'schedule.json').write_text(json.dumps(dict(
+            completed=True, windows=2,
+            executions=[dict(window=i, exit_code=0) for i in [1, 2]])))
+        paths = []
+        for i in [1, 2]:
+            path = root / f'window-{i}' / 'runs.json'
+            path.parent.mkdir()
+            path.write_text(json.dumps(dict(schema=1, completed=True, expected_rows=1,
+                                            runs=[self.row([])])))
+            paths.append(path)
+        return paths
+
+    def test_requires_exactly_one_artifact_for_every_scheduled_window(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            first, second = self.complete_schedule(root)
+            alias = root / 'alias.json'
+            alias.symlink_to(first)
+            extra = root / 'window-3' / 'runs.json'
+            extra.parent.mkdir()
+            extra.write_text(first.read_text())
+            for paths in [[first], [first, first], [first, alias],
+                          [first, extra], [first, second, extra]]:
+                with self.subTest(paths=paths), self.assertRaises(ValueError):
+                    load_runs(paths)
+            loaded = load_runs([second, first])
+            self.assertEqual(score(loaded, {})['baseline']['scheduled'], 2)
+
+    def test_multiple_schedules_must_each_be_complete(self):
+        with TemporaryDirectory() as directory:
+            first = self.complete_schedule(Path(directory) / 'a')
+            second = self.complete_schedule(Path(directory) / 'b')
+            self.assertEqual(len(load_runs(first + second)), 4)
+            with self.assertRaises(ValueError):
+                load_runs(first + second[:1])
+
+    def test_duplicate_standalone_alias_is_rejected(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / 'runs.json'
+            path.write_text(json.dumps(dict(schema=1, completed=True, expected_rows=1,
+                                            runs=[self.row([])])))
+            alias = path.with_name('alias.json')
+            alias.symlink_to(path)
+            with self.assertRaises(ValueError):
+                load_runs([path, alias])
+
 
 class SanitizerTests(unittest.TestCase):
     def test_retains_organic_structure_and_strips_tracking_and_active_content(self):

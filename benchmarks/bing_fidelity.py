@@ -17,16 +17,32 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def load_runs(paths):
+    paths = list(paths)
+    supplied = set()
+    schedules = defaultdict(set)
+    for path in paths:
+        canonical = Path(path).resolve()
+        if canonical in supplied:
+            raise ValueError(f'{path}: duplicate input artifact')
+        supplied.add(canonical)
+        schedule_path = canonical.parent.parent / 'schedule.json'
+        if schedule_path.exists():
+            schedules[schedule_path].add(canonical)
+    for schedule_path, artifacts in schedules.items():
+        schedule = json.loads(schedule_path.read_text())
+        executions = schedule.get('executions', [])
+        windows = schedule.get('windows')
+        if (schedule.get('completed') is False or type(windows) is not int or windows < 1 or
+                len(executions) != windows or
+                any(e.get('exit_code') != 0 for e in executions) or
+                {e.get('window') for e in executions} != set(range(1, windows + 1))):
+            raise ValueError(f'{schedule_path}: incomplete schedule')
+        expected = {(schedule_path.parent / f'window-{i}' / 'runs.json').resolve()
+                    for i in range(1, windows + 1)}
+        if len(expected) != windows or artifacts != expected:
+            raise ValueError(f'{schedule_path}: supply exactly one distinct artifact for every scheduled window')
     runs = []
     for path in paths:
-        schedule_path = Path(path).parent.parent / 'schedule.json'
-        if schedule_path.exists():
-            schedule = json.loads(schedule_path.read_text())
-            executions = schedule.get('executions', [])
-            if (schedule.get('completed') is False or
-                    len(executions) != schedule.get('windows') or
-                    any(e.get('exit_code') != 0 for e in executions)):
-                raise ValueError(f'{schedule_path}: incomplete schedule')
         artifact = json.loads(Path(path).read_text())
         if artifact.get('schema') != 1:
             raise ValueError(f'{path}: unsupported schema')

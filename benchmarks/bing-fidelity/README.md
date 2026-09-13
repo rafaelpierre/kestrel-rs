@@ -84,7 +84,9 @@ Public provider diagnostics do not establish send counts for queued/cancelled
 work, so the current matrix reports no fanout attempt estimate. Historical
 artifacts retain the old scoring field; do not treat that estimate as wire
 requests. Isolated searches explicitly make one application attempt each. The
-scorer checks an adjacent schedule.json: an incomplete or failed schedule is rejected even when an earlier window finished. When copying evidence, retain
+scorer checks an adjacent schedule.json: an incomplete or failed schedule is rejected even when an earlier window finished. Every scheduled window must be
+supplied exactly once; missing, unexpected and duplicate inputs (including symlink
+aliases) are rejected. When combining schedules, each must be complete. When copying evidence, retain
 the parent schedule and all windows; absence of a parent schedule permits legacy
 standalone artifacts and cannot prove the full schedule was supplied.
 

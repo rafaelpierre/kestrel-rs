@@ -164,9 +164,12 @@ parser; fully controlled attribution and a second network remain outstanding.
 
 - Four focused Rust harness tests pass, including native/portable paired filtering,
   current minima/budgets, and existing sanitized fixture replay.
-- Seven Python scorer/sanitizer tests pass. Regressions keep failed captures in
+- Ten Python scorer/sanitizer tests pass. Regressions keep failed captures in
   paired denominators, prevent replay latency/request double counting, reject
-  missing paired views and reject incomplete parent schedules.
+  missing paired views and reject incomplete parent schedules. Review regressions
+  also require every window exactly once, reject symlink aliases/extra windows,
+  and validate each schedule separately in multi-environment inputs. Re-scoring
+  both saved windows yields the identical published baseline.
 - `cargo fmt --check`, `cargo clippy --all-targets --all-features -- -D warnings`,
   and `cargo test --all-features` pass: 176 tests, four existing live/manual tests
   ignored. The matrix was separately invoked explicitly for the two live windows.
