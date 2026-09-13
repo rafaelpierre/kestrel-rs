@@ -125,6 +125,13 @@ reports the number of successfully extracted pages that reached the cap on stder
 Search-provider response limits are unchanged. Byte-capped extractions are not
 cached. The extractor does not render JavaScript.
 
+Page extraction removes structural chrome (such as navigation and sidebars)
+and explicit clutter markers using whole class tokens and scoped ID names.
+Names such as `download`, `reader`, `shadow`, and `thread` retain their content;
+arbitrary substrings are not treated as advertisements. Both direct fetch and
+search candidate fetching use this rule. See the
+[extraction contract and fixture evidence](docs/page-extraction.md).
+
 Fanout is the only search mode. `--mode fanout` remains accepted for compatibility;
 `--mode fallback` is no longer supported. In the library, `SearchMode::Fanout`
 is the default and only variant; migrate uses of `SearchMode::Fallback` to it.

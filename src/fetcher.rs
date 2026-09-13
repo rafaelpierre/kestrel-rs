@@ -17,7 +17,9 @@ use crate::search::KestrelError;
 
 pub const DEFAULT_MAX_RESPONSE_BYTES: usize = 1_000_000;
 const SUPPORTED_CONTENT_TYPES: &[&str] = &["text/html", "application/xhtml+xml", "text/plain"];
-const CLUTTER_PATTERNS: &[&str] = &[
+// Whole attribute names only: arbitrary substrings (especially "ad") can
+// identify article containers such as "download" and "thread".
+const CLUTTER_MARKERS: &[&str] = &[
     "menu",
     "sidebar",
     "navbar",
@@ -30,6 +32,13 @@ const CLUTTER_PATTERNS: &[&str] = &[
     "banner",
     "nav",
     "breadcrumb",
+    "ad-slot",
+    "ad-container",
+    "ad-banner",
+    "cookie-banner",
+    "cookie-consent",
+    "sidebar-left",
+    "sidebar-right",
 ];
 
 static WHITESPACE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\s+").expect("valid whitespace regex"));
@@ -470,20 +479,19 @@ fn remove_page_chrome(document: &mut Html) {
         .map(|element| element.id())
         .collect();
     ids.extend(document.select(&CONTAINERS).filter_map(|element| {
-        let classes = element
-            .value()
-            .attr("class")
-            .unwrap_or_default()
-            .to_ascii_lowercase();
-        let id = element
-            .value()
-            .attr("id")
-            .unwrap_or_default()
-            .to_ascii_lowercase();
-        CLUTTER_PATTERNS
-            .iter()
-            .any(|pattern| classes.contains(pattern) || id.contains(pattern))
-            .then(|| element.id())
+        let value = element.value();
+        let class_is_chrome = value.classes().any(is_chrome_marker);
+        let id_is_chrome = value.attr("id").is_some_and(|id| {
+            is_chrome_marker(id)
+                || id.rsplit_once(['-', '_']).is_some_and(|(marker, suffix)| {
+                    // Repeated slots may have numeric IDs, e.g. ad-123. Do not
+                    // generalize this to arbitrary words such as ad-supported.
+                    is_chrome_marker(marker)
+                        && !suffix.is_empty()
+                        && suffix.bytes().all(|byte| byte.is_ascii_digit())
+                })
+        });
+        (class_is_chrome || id_is_chrome).then(|| element.id())
     }));
     ids.sort_unstable();
     ids.dedup();
@@ -492,6 +500,12 @@ fn remove_page_chrome(document: &mut Html) {
             node.detach();
         }
     }
+}
+
+fn is_chrome_marker(name: &str) -> bool {
+    CLUTTER_MARKERS
+        .iter()
+        .any(|marker| name.eq_ignore_ascii_case(marker))
 }
 
 fn main_content(document: &Html) -> ElementRef<'_> {
@@ -702,6 +716,81 @@ mod tests {
             parse_content("<html><body><p>short</p></body></html>", 100),
             None
         );
+    }
+
+    #[test]
+    fn legitimate_container_names_retain_nested_main_content() {
+        let text = "This useful download instruction must remain visible in the extracted content.";
+        for name in [
+            "download",
+            "reader",
+            "shadow",
+            "thread",
+            "menuitem-docs",
+            "navigation-guide",
+            "ad-supported",
+            "cookie-api",
+            "modal-theory",
+            "ad-",
+            "ad-12x",
+            "ad_guide",
+            "ad-１２",
+        ] {
+            for attribute in ["class", "id"] {
+                for html in [
+                    format!(r#"<main><div {attribute}="{name}"><p>{text}</p></div></main>"#),
+                    format!(
+                        r#"<section {attribute}="{name}"><div><main><p>{text}</p></main></div></section>"#
+                    ),
+                ] {
+                    assert_eq!(parse_content(&html, 500).as_deref(), Some(text), "{html}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn explicit_chrome_markers_remove_meaningful_nested_text() {
+        let text = "The useful documentation paragraph remains available after chrome removal.";
+        for attributes in [
+            r#"class="ad""#,
+            r#"class="layout AD highlighted""#,
+            r#"class="sidebar""#,
+            r#"class="nav""#,
+            r#"id="advertisement""#,
+            r#"id="ad-slot""#,
+            r#"id="ad-123""#,
+            r#"id="sidebar_2""#,
+            r#"class="cookie-banner""#,
+        ] {
+            let html = format!(
+                r#"<main><div {attributes}><section><p>Unwanted advertising and navigation content must be removed.</p></section></div><p>{text}</p></main>"#
+            );
+            assert_eq!(parse_content(&html, 500).as_deref(), Some(text), "{html}");
+        }
+    }
+
+    #[test]
+    fn documentation_fixtures_retain_body_and_exclude_chrome() {
+        for (html, expected) in [
+            (
+                include_str!("../tests/fixtures/extraction/book.html"),
+                include_str!("../tests/fixtures/extraction/book.txt"),
+            ),
+            (
+                include_str!("../tests/fixtures/extraction/api.html"),
+                include_str!("../tests/fixtures/extraction/api.txt"),
+            ),
+            (
+                include_str!("../tests/fixtures/extraction/download.html"),
+                include_str!("../tests/fixtures/extraction/download.txt"),
+            ),
+        ] {
+            assert_eq!(
+                parse_content(html, 20_000).as_deref(),
+                Some(expected.trim())
+            );
+        }
     }
 
     #[test]

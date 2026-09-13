@@ -67,7 +67,7 @@ async fn fetch_extracts_a_known_url_as_text_or_json() {
         .respond_with(ResponseTemplate::new(200)
             .insert_header("content-type", "text/html")
             .set_delay(Duration::from_millis(100))
-            .set_body_string("<nav>Unwanted navigation</nav><main><h1>Article heading</h1><p>This is meaningful article content fetched directly from a known page URL.</p></main>"))
+            .set_body_string("<nav>Unwanted navigation</nav><main><div class=\"download\"><h1>Article heading</h1><p>This is meaningful article content fetched directly from a known page URL.</p></div></main>"))
         .expect(2)
         .mount(&server).await;
     let url = format!("{}/article", server.uri());
@@ -178,6 +178,8 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(target.exists());
     let skill = fs::read_to_string(&target).unwrap();
     assert!(skill.contains("retained prefix"));
+    assert!(skill.contains("whole class tokens"));
+    assert!(skill.contains("download`, `reader`, `shadow`, and `thread"));
     assert!(skill.contains("not cached"));
     assert!(skill.contains("--max-response-bytes 65536"));
     assert!(skill.contains("defaults to 1,000,000 decoded body bytes"));
