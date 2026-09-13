@@ -208,6 +208,7 @@ async fn capture_live_matrix() {
             .unwrap();
     *impersonated.headers_mut() = profile.headers();
     let clients = SearchClients {
+        parsers: parsing::ParserPool::default(),
         standard: standard.clone(),
         yahoo: Some(impersonated.clone()),
     };
@@ -249,8 +250,13 @@ async fn capture_live_matrix() {
                 }
             } else {
                 let options = fanout_options(variant, budget);
-                match search_many_reusing_clients_detailed(&[query.into()], &options, &clients)
-                    .await
+                match search_many_reusing_clients_detailed(
+                    &[query.into()],
+                    &options,
+                    &clients,
+                    None,
+                )
+                .await
                 {
                     Ok(mut report) => {
                         clean_results(&mut report.results);

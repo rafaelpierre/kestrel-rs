@@ -129,8 +129,8 @@ HTML extraction preserves document order and inline word boundaries, including
 short answers, nested lists, code and tables. Blocks use line breaks, table cells
 use tabs, and `pre` retains code indentation and repeated lines. Headings are
 included once per source occurrence without an implicit BM25 boost. Character
-limits count retained whitespace and separators; old cache entries keep their
-previous extraction until expiry or a fresh fetch. See the
+limits count retained whitespace and separators; legacy unversioned cache entries
+are invalidated by the conservative, versioned page-cache identity. See the
 [HTML extraction contract](docs/page-extraction.md#ordered-readable-text-issue-22).
 
 Page extraction removes structural chrome (such as navigation and sidebars)
@@ -340,12 +340,23 @@ fanout mode. External struct literals must add the field or use
 
 `--fetch-budget` is likewise an explicit latency/coverage tradeoff: pages that
 finish within the total budget are retained and outstanding fetches are
-cancelled. The cache is disabled unless `--cache-ttl` is supplied.
+cancelled. With caching enabled, the same absolute deadline includes cache reads,
+writes and bounded maintenance; returned text survives a persistence timeout.
+Blocking disk operations already admitted may finish after cancellation, bounded
+to four per cache instance and its clones. See [cache deadlines](docs/cache-deadlines.md).
+The cache is disabled unless `--cache-ttl` is supplied. Eligible pages commit while
+other fetches run; a restarted search can reuse committed text even if the prior
+process was killed. Discovery repeats unless provider recovery is also enabled. See [incremental page commits](docs/incremental-page-cache.md)
+for durability, bounded storage and compatibility limits.
+
+The [interrupted-search recovery contract](docs/cache-recovery-contract.md)
+records current cache limitations and the proposed delivery interfaces. Provider
+progress recovery is not yet implemented.
 
 ## Use the library
 
 Reuse a `KestrelClient` across calls to retain its search and fetch connection
-pools:
+pools and aggregate page parser capacity:
 
 ```rust,no_run
 use kestrelsearch::{KestrelClient, SearchOptions};
@@ -362,6 +373,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+Clients default to 10 queued/running page parsers across all calls and clones.
+Use `KestrelClient::with_parser_capacity(n)` (or
+`with_transport_and_parser_capacity(transport, n)`) to configure this shared cap.
+Each batch also obeys `FetchOptions::parse_concurrency`; larger per-call values
+do not raise the client cap. For library callers previously using values above
+10, explicitly configure a larger client capacity to retain that concurrency.
+Cancellation and fetch-budget expiry return without waiting for blocking parsers,
+but their slots remain occupied until the body/DOM is released. Runtime shutdown
+can still wait for those jobs. Free fetch functions and independently constructed
+clients own separate capacity. See [ownership boundaries](docs/page-extraction.md#parser-capacity).
+
 The crate exports typed engine, mode, filter, search, and fetch options;
 `search`, `search_many`, and `search_blocking`; bounded `fetch_all`; optional
 `PageCache`; BM25 ranking helpers; and snippet candidate pre-ranking.
@@ -370,8 +392,12 @@ The corresponding `*_detailed` APIs return `SearchReport` and `FetchReport`
 values. These report provider latency, retries, result counts and cancellations,
 plus per-page queue, request/TTFB, download, parse, byte-count, cache, outcome,
 and deadline data without changing normal result objects. Cache entries are
-keyed by canonical URL and content limit so differently truncated extractions
+keyed by conservative request URL, extraction version and content limit so differently truncated extractions
 cannot be mixed.
+Page keys preserve trailing slashes, encoded paths and every query parameter
+(including order and tracking parameters), while ignoring URL fragments. Legacy
+unversioned entries are misses and are not migrated. Search deduplication is
+unchanged. See [page-cache identity](docs/page-cache-identity.md).
 
 ## OpenTelemetry / Honeycomb
 
@@ -503,3 +529,9 @@ latency are not guaranteed by this change.
 
 See [provider contracts, query syntax, randomized headers and pooled HTTP/2 transport](docs/search-providers.md)
 and the [quality/latency benchmark workflow](benchmarks/README.md).
+
+Provider work can be recovered independently with `--recovery-ttl 300`,
+`--recovery-dir ./progress` and optional `--recovery-max-entries 1000`, including
+metadata-only searches. Repeat the same command and directory after interruption to replay committed records
+and request only necessary incomplete units.
+See [provider progress storage](docs/provider-progress.md) for initial/retry recipes, commit boundaries and graceful shutdown.

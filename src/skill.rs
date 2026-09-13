@@ -97,7 +97,7 @@ page text is unavailable, including searches with `--no-fetch`.
 - When the selected HTML body consists entirely of recognized shell messages, extraction checks at most the first explicit `article` for non-shell or mixed text. Otherwise root selection is unchanged. This can recover an article hidden by a comments-only `main`; it does not repair arbitrary missing text or render JavaScript. Warm cache entries retain their stored text until expiry; assessments are recomputed, not cached.
 - Direct fetch and search HTML/XHTML extraction remove structural chrome and explicit clutter markers using whole class tokens and scoped ID names, not arbitrary substrings. Containers named `download`, `reader`, `shadow`, and `thread` retain their content. Unrecognized compound names may retain clutter; extraction remains heuristic.
 - HTML text follows document order, with line breaks between blocks and tabs between table cells. Inline emphasis and links preserve word boundaries; short answers, all heading levels, nested lists, code and table text are retained once per source occurrence. Prose whitespace collapses; `pre` preserves indentation, line breaks and repeated lines. Inline `code` uses prose whitespace rules. Entities are decoded once by HTML parsing; literal metadata lines such as `Source:` remain page content. This is plain text, not Markdown or a rendered table; CSS layout and row/column spans are not reconstructed.
-- HTML character limits count Unicode scalar values, including retained whitespace and generated separators, before the CLI source prefix. Truncation can end mid-block or mid-code. HTML headings have no implicit ranking boost: body BM25 uses the extracted tokens once per source occurrence, and existing title/snippet policies keep their ranking weights. New extraction can change scores and which content fits the cap. Old cached extractions retain their prior text until expiry or a fresh fetch; use `--cache-ttl 0` for fresh search page extraction.
+- HTML character limits count Unicode scalar values, including retained whitespace and generated separators, before the CLI source prefix. Truncation can end mid-block or mid-code. HTML headings have no implicit ranking boost: body BM25 uses the extracted tokens once per source occurrence, and existing title/snippet policies keep their ranking weights. New extraction can change scores and which content fits the cap. This release invalidates legacy unversioned and page-text-v2 page-cache entries; omit cache flags for fresh search page extraction.
 - Page bodies stop at `--max-response-bytes` decoded bytes and the retained prefix is extracted, even when Content-Length exceeds the cap. Reaching the cap alone is not an error; content may be incomplete. Network and parsing concurrency are independent.
 - Search reports the number of successfully extracted pages that reached the byte cap on stderr; results may contain incomplete page content.
 - Byte-capped page extractions are not cached, so a later larger byte budget can fetch more content. This page-fetch cutoff does not change search-provider response limits.
@@ -108,8 +108,10 @@ page text is unavailable, including searches with `--no-fetch`.
 - Portable mode and --query-syntax have been removed. Remove that flag from saved commands; there is no replacement local Boolean/phrase filter. Do not infer full-page relevance from a snippet.
 - All nine supported engines are selected by default. Explicit `--engine` selections replace this list; use `-e duckduckgo -e bing -e yahoo` to retain the previous provider set.
 - Provider failures, bot challenges, and unsupported region/recency filters retain results from successful providers; including an engine does not guarantee results.
+- Completed HTML validation and extraction share one document. JSON result descriptions are data: embedded CAPTCHA markup does not by itself indicate a page challenge; Qwant's top-level challenge URL remains an error. HTML error responses still receive HTML challenge diagnostics.
 - Fanout defaults to a five-second search budget, including queueing and retries. Use --search-budget to change it or --no-search-budget to disable the total deadline.
 - Search, page fetching, and parsing concurrency each default to 10.
+- `--parse-concurrency` bounds queued/running page extraction jobs for the CLI. Library `KestrelClient` clones share an aggregate parser capacity (default 10), configurable with `with_parser_capacity(n)` or `with_transport_and_parser_capacity(transport, n)`. Each batch also obeys its own `FetchOptions::parse_concurrency`; larger per-call limits do not raise the shared cap. Free fetch functions and separately constructed clients own independent capacity. Download limits remain per call. Cancellation/budget expiry returns without waiting for blocking parsers, whose capacity remains occupied until body/DOM release; runtime shutdown may still wait for them. Provider parsing is separate.
 - Search/fetch clients select random browser headers and reuse HTTP/2 or HTTP/1.1 connections within the process.
 "#;
 
@@ -222,9 +224,122 @@ For a known-URL task, skip the discovery command entirely.
 Connection pools are reused within one process/retained library client. Separate
 CLI calls can each incur initialization and cannot reuse the previous process's
 pool. Search's opt-in extracted-page cache reuses unexpired completed extractions,
-keyed by canonical URL and content limit; provider discovery still runs. Standalone
-fetch does not use that cache, and byte-capped extractions are excluded. It is not
-cross-process search-progress recovery (tracked in #70).
+keyed by conservative request URL, extraction version, content limit and response-byte allowance; provider discovery still runs unless compatible provider recovery is enabled. Standalone
+fetch does not use that cache, and byte-capped extractions are excluded. Eligible pages commit incrementally while other fetches continue. A fresh process can
+reuse committed pages, but accepted or queued text is not yet durable. This is page-only
+recovery; add independent `--recovery-ttl` flags to reuse provider work too. With `--fetch-budget`,
+one deadline covers cache reads, page requests, writes and maintenance. Completed
+text remains available even if persistence times out; `budget_exhausted` may be
+true with all pages extracted. At most four blocking storage jobs are admitted
+per PageCache instance and its clones; dropping callers does not release their
+workers' slots. Cache reads have four in-flight futures and are byte-bounded by
+the requested character limit. Hit-only calls do not prune. Post-write maintenance
+scans at most 4,096 directory entries, so capacity is best effort in oversized
+or concurrently written directories. On cancellation, already-running blocking I/O may finish
+later, within the fixed admission bound; no late commit is guaranteed. These
+cooperative stage deadlines exclude command initialization, output, and runtime
+shutdown. No total fetch deadline applies when `--fetch-budget` is omitted; in that case each
+write/maintenance wait and the final queue drain are bounded to 250 ms. With a
+fetch budget, the writer uses the remaining absolute budget. The writer queue holds
+at most 16 entries and 16 MiB of URL/text, with one additional worker copy; larger
+entries are skipped with a diagnostic. Atomic checksummed entries use a 250 ms
+cross-process lock wait; committed means replacement and file sync succeeded
+(plus directory sync on Unix). Expired, damaged and incompatible entries are misses.
+
+Cache keys preserve
+trailing slashes, all query parameters (including tracking parameters and order),
+and encoded paths; fragments are ignored because HTTP does not send them.
+Legacy unversioned and page-text-v2 entries are misses and are not migrated. Search-result
+deduplication remains unchanged; this fix applies to persistent page text.
+
+## Recovering interrupted searches
+
+Enable provider recovery independently of page caching, including metadata-only
+searches. Repeat the same command after interruption:
+
+```sh
+# Initial invocation
+kestrel search "rust ownership" -q "rust borrowing" --no-fetch --recovery-ttl 300 --recovery-dir ./progress --search-budget 3
+# Retry with a fresh three-second budget
+kestrel search "rust ownership" -q "rust borrowing" --no-fetch --recovery-ttl 300 --recovery-dir ./progress --search-budget 3
+```
+
+For page evidence, enable both stores and repeat both directories and allowances:
+
+```sh
+kestrel search "rust ownership" --recovery-ttl 300 --recovery-dir ./progress --cache-ttl 300 --cache-dir ./pages --content-limit 3000 --max-response-bytes 4000000 --search-budget 3 --fetch-budget 5
+# Retry
+kestrel search "rust ownership" --recovery-ttl 300 --recovery-dir ./progress --cache-ttl 300 --cache-dir ./pages --content-limit 3000 --max-response-bytes 4000000 --search-budget 3 --fetch-budget 5
+```
+
+`--recovery-ttl` must be positive and finite. Directory and capacity flags require
+it; defaults are `~/.cache/kestrel/search-v1` and 1000 provider units. Without it,
+provider storage is untouched and discovery repeats normally. Page cache flags
+remain independent and conflict with `--no-fetch`. Direct single-provider library
+`search` and standalone CLI `fetch` do not use provider recovery. The library
+uses `KestrelClient::with_recovery(SearchRecovery)` for multi-query calls.
+
+## Replay and necessary requests
+
+Validated committed records enter the existing collector in the current query
+and provider order. They retain original ranks/source occurrences and count toward
+the current per-query minimum. Reordered or extended query lists reuse compatible
+units; cross-query/provider duplicates merge through the ordinary collector.
+
+Compatible complete units skip their requests, including completed empty responses.
+Incomplete units retry only if the current minimum is still unmet. A smaller target
+can return from incomplete replay without any request. A larger target retries
+unfinished units with a fresh invocation deadline. Completed first-response coverage
+is not proof that the provider's whole index is exhausted; increasing a target does
+not introduce pagination or re-request an already complete compatible response.
+A new stream snapshot replaces its unit's recovered partial state. Failed/malformed
+outcomes retract that unit; deadline cancellation retains its valid partial records.
+
+Keys include schema/adapter version, exact normalized query, provider, region,
+time filter and built-in endpoint/coverage version. Changed settings safely miss.
+Relative time filters (`d`, `w`, `m`, `y`) always miss because their moving window
+has no stable adapter coverage anchor. Page keys additionally require exact
+character and response-byte allowances; byte-capped pages are never cached.
+No byte-range or compressed-prefix resumption is implemented.
+
+## Commit and cancellation boundaries
+
+Accepted means current collector state; enqueued means bounded storage admission.
+Only an acknowledged atomic commit establishes retained storage. Streaming records
+are queued before provider EOF; batch results are queued when available. Complete
+records and completion metadata occupy one checksummed envelope. Errors write an
+empty invalid tombstone; snapshots replace rather than union obsolete records.
+A crash before a retraction commits can leave the prior incomplete snapshot.
+
+OS locks serialize generation/sequence comparison, replacement and eviction. Older
+generations cannot replace newer state. Temporary-file sync, atomic rename and
+Unix directory sync provide the documented commit boundary; filesystem/hardware
+failures and power-loss behavior on other platforms remain outside that promise.
+Checksums cover metadata and records. Expired, future-dated, invalidated, corrupt,
+oversized, incompatible and evicted/absent entries miss, with stderr reasons.
+
+One joined provider writer admits 16 snapshots and 64 MiB, with a 4 MiB envelope
+cap and at most one additional in-flight copy. The page writer admits 16 entries
+and 16 MiB. Blocking jobs retain four admission permits per store after async
+cancellation. Storage and queue waits consume the same absolute search/fetch
+budget as their operation. Without a total budget, each write/maintenance wait
+and final drain is at most 250 ms. Maintenance scans at most 4096 entries;
+capacity remains best effort. Reads do not refresh TTL, which starts at snapshot
+queue time. No detached async writer is left running.
+
+With provider recovery enabled, Ctrl-C and Unix SIGTERM request cancellation,
+stop provider/page collection and allow at most 250 ms of graceful drain before
+status 130. Already-running filesystem calls can finish later; runtime shutdown
+may wait for them. No late commit is guaranteed or counted as acknowledged.
+Dropping a library future immediately drops its queued work; `SearchRecovery::cancel`
+requests graceful cancellation instead. Construct a new store/client for a fresh
+invocation after explicit cancellation. SIGKILL cannot drain.
+
+Ordinary JSON shapes are unchanged. Provider diagnostics describe requests made in
+this invocation, so a fully recovered run has no new provider request rows. Recovery
+counts, skipped requests, miss reasons and commit failures appear on stderr. A hit
+means compatible retained text, not proof that it answers the search question.
+
 
 "#);
     for name in ["search", "fetch"] {
@@ -346,8 +461,14 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
 - Search defaults to a five-second total deadline and can return fewer results if
   providers finish or the deadline expires. `--no-search-budget` disables this
   deadline but keeps result-count early stopping and individual request timeouts.
+- Provider HTML/JSON parsing, including incremental records and completed envelopes,
+  uses at most ten queued/running blocking workers per retained client, shared by
+  its clones and calls. Cancellation retains capacity until the worker exits.
+  Separate clients/free-function calls have separate limits. `--search-concurrency`
+  still bounds each call's requests; `--parse-concurrency` controls page extraction,
+  not provider workers. Parser queueing is included in the search budget.
 - The search budget excludes page fetching. `--fetch-budget` separately bounds the
-  candidate-fetch stage and retains completed pages; it is unset by default.
+  candidate-fetch stage, including enabled cache I/O, and retains completed pages; it is unset by default.
   `--timeout` controls individual page requests, not the total search duration.
 - Search page caching is disabled unless `--cache-ttl` is set. Both `--cache-dir`
   and `--cache-max-entries` require `--cache-ttl`. With caching enabled, defaults are

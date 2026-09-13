@@ -1,0 +1,212 @@
+{
+  "gate": "NOT PASSED (3/10)",
+  "manifest": {
+    "schema_version": 1,
+    "assessor": "Codex GPT-6, single unblinded assessor",
+    "policy": {
+      "search_flags": [
+        "--no-fetch",
+        "--no-rank",
+        "-k",
+        "20",
+        "--min-results",
+        "20",
+        "--search-budget",
+        "10",
+        "--output",
+        "json"
+      ],
+      "fetch_flags": [
+        "--output",
+        "json",
+        "--timeout",
+        "15",
+        "--content-limit",
+        "100000",
+        "--max-response-bytes",
+        "4000000"
+      ],
+      "process_timeout_seconds": 30,
+      "max_searches": 2,
+      "max_fetches": 3,
+      "cache": "disabled; no page cache flags; upstream caches uncontrolled",
+      "recovery": "One keyword FTS refinement or unchanged-query retry after inspecting all candidates; preserve intent, domain, entity, version and date; record reason before execution.",
+      "selection": "Assessor inspects every returned title, URL and snippet; chooses relevant primary sources. Fetch only discovered URLs. Stop when answer minima are supported, otherwise use remaining bounded recovery.",
+      "assessment": "Manual semantic assessment against frozen AGENTS.md q01-q10 minima. Missing judgments, partial answers and abstentions do not pass. Passage matching checks provenance, not truth or sufficiency.",
+      "timing": "Sum subprocess monotonic wall seconds by search/fetch, including failed/timeout attempts; not agent end-to-end latency. No percentile/causal claims.",
+      "redirects": "Fetch follows CLI redirects. CLI does not expose redirect chains; do not infer official migration from successful extraction. A required undocumented redirect remains a blocker."
+    },
+    "revision": "e7527719feff0265ea34ee7334f289f076162b76",
+    "head_tree": "900eba9b6c8058a0b075ea12c665b3ae0cd434f5",
+    "binary": "/Users/rafaelpierre/projects/kestrel-rs-75-fixed-pool/target/release/kestrel",
+    "binary_sha256": "514df0ef84999eb6cf968e57d49a43a0b9797302cd86cc68c894033874258e36",
+    "version": "kestrel 6.0.0",
+    "dataset_sha256": "cb5887c8cf040603cdc47ff28c070eed6f16eb2251c58333a9656d7abfd0d5c9",
+    "skill_sha256": "4934c1c68e4c4fd56c27f7b205f436f6756e2dd3f4604b4db62d8ffc3290d986",
+    "rubric_sha256": "cde7150965fee4a663da64e9bcf04207779aaa8e8e65ebeee9497a1846085a83",
+    "telemetry": "remote export disabled; local provider traces and benchmark artifacts enabled per search",
+    "source_files_sha256": "3c6a20d8f0ce279b11c6afbdcef849cb7805b870eb482ddafb7f1191bc873196",
+    "raw_directory": "/Users/rafaelpierre/projects/kestrel-rs-75-fixed-pool/benchmarks/results/issue75-gate-v4",
+    "harness_sha256": "2111639b3373ab2e4121e6043b190f650c294268660bf3f588514f95ee9fe01f"
+  },
+  "questions": [
+    {
+      "id": "q01",
+      "verdict": "pass",
+      "layer": "none",
+      "answer": "Canberra is the capital of Australia.",
+      "rationale": "The current run’s Mappr snippet explicitly identifies Canberra as the national capital.",
+      "inspection": "Inspected all ten current titles, URLs and snippets; selected the explicit capital answer.",
+      "fetch_disposition": "Skipped: the complete fact is explicit in the retrieved snippet.",
+      "citations": [
+        {
+          "attempt": "search-1",
+          "url": "https://www.mappr.co/capital-cities/australia/",
+          "passage": "The capital of Australia is Canberra."
+        }
+      ],
+      "search_seconds": 10.163217499968596,
+      "fetch_seconds": 0.0,
+      "total_tool_seconds": 10.163217499968596,
+      "incomplete_attempt": false
+    },
+    {
+      "id": "q02",
+      "verdict": "pass",
+      "layer": "none",
+      "answer": "Air molecules Rayleigh-scatter sunlight. Scattering is stronger at shorter visible wavelengths (approximately inverse wavelength to the fourth power), so blue light is scattered more than red and reaches us from across the sky.",
+      "rationale": "The full retrieved physical explanation explicitly connects molecular Rayleigh scattering and preferential shorter-wavelength scattering to blue sky.",
+      "inspection": "Inspected all ten initial candidates; selected the physical Rayleigh-scattering article, excluding the town, products and fictional character. Read full retained page; no recovery needed.",
+      "fetch_disposition": "Fetched selected relevant source; full returned text inspected.",
+      "citations": [
+        {
+          "attempt": "fetch-1",
+          "url": "https://en.m.wikipedia.org/wiki/Rayleigh_scattering",
+          "passage": "shorter (blue) wavelengths are scattered more strongly than longer (red) wavelengths."
+        }
+      ],
+      "search_seconds": 10.176837040984537,
+      "fetch_seconds": 0.46618229197338223,
+      "total_tool_seconds": 10.64301933295792,
+      "incomplete_attempt": false
+    },
+    {
+      "id": "q03",
+      "verdict": "fail",
+      "layer": "upstream",
+      "answer": "A third-party snippet says TaskGroup wraps non-cancellation failures in ExceptionGroup. The run did not establish the required complete official TaskGroup failure, sibling-cancellation and except* explanation.",
+      "rationale": "Initial results included third-party guides but no official TaskGroup API reference; official-docs recovery returned zero results.",
+      "inspection": "Inspected every returned title, URL and snippet in both attempts; assessed entity/domain/version specificity, not counts.",
+      "fetch_disposition": "Skipped: no retrieved source establishes the missing required official/specific evidence. Irrelevant pages were not fetched.",
+      "citations": [],
+      "search_seconds": 12.277551500999834,
+      "fetch_seconds": 0.0,
+      "total_tool_seconds": 12.277551500999834,
+      "incomplete_attempt": false
+    },
+    {
+      "id": "q04",
+      "verdict": "fail",
+      "layer": "upstream",
+      "answer": "No supported EXPLAIN ANALYZE/BUFFERS answer was retrieved.",
+      "rationale": "Both exact site-restricted searches returned zero candidates; no PostgreSQL source could be selected.",
+      "inspection": "Inspected every returned title, URL and snippet in both attempts; assessed entity/domain/version specificity, not counts.",
+      "fetch_disposition": "Skipped: no retrieved source establishes the missing required official/specific evidence. Irrelevant pages were not fetched.",
+      "citations": [],
+      "search_seconds": 11.829663125041407,
+      "fetch_seconds": 0.0,
+      "total_tool_seconds": 11.829663125041407,
+      "incomplete_attempt": false
+    },
+    {
+      "id": "q05",
+      "verdict": "fail",
+      "layer": "upstream",
+      "answer": "No supported TraceQL immediate-child/descendant operator explanation was retrieved.",
+      "rationale": "Both original and structural-operator recovery searches returned zero candidates.",
+      "inspection": "Inspected every returned title, URL and snippet in both attempts; assessed entity/domain/version specificity, not counts.",
+      "fetch_disposition": "Skipped: no retrieved source establishes the missing required official/specific evidence. Irrelevant pages were not fetched.",
+      "citations": [],
+      "search_seconds": 12.360105208004825,
+      "fetch_seconds": 0.0,
+      "total_tool_seconds": 12.360105208004825,
+      "incomplete_attempt": false
+    },
+    {
+      "id": "q06",
+      "verdict": "fail",
+      "layer": "upstream",
+      "answer": "No supported Codex otel/trace_exporter configuration syntax was retrieved.",
+      "rationale": "Both exact learn.chatgpt.com searches returned zero candidates; no domain substitution or undocumented redirect was used.",
+      "inspection": "Inspected every returned title, URL and snippet in both attempts; assessed entity/domain/version specificity, not counts.",
+      "fetch_disposition": "Skipped: no retrieved source establishes the missing required official/specific evidence. Irrelevant pages were not fetched.",
+      "citations": [],
+      "search_seconds": 12.340452373959124,
+      "fetch_seconds": 0.0,
+      "total_tool_seconds": 12.340452373959124,
+      "incomplete_attempt": false
+    },
+    {
+      "id": "q07",
+      "verdict": "fail",
+      "layer": "upstream",
+      "answer": "No supported official Rust E0382 explanation and repair was retrieved.",
+      "rationale": "Initial results were unrelated adult-site metadata; official Rust FTS recovery returned zero candidates.",
+      "inspection": "Inspected every returned title, URL and snippet in both attempts; assessed entity/domain/version specificity, not counts.",
+      "fetch_disposition": "Skipped: no retrieved source establishes the missing required official/specific evidence. Irrelevant pages were not fetched.",
+      "citations": [],
+      "search_seconds": 12.126138626015745,
+      "fetch_seconds": 0.0,
+      "total_tool_seconds": 12.126138626015745,
+      "incomplete_attempt": false
+    },
+    {
+      "id": "q08",
+      "verdict": "pass",
+      "layer": "none",
+      "answer": "The January 7, 2025 report describes JWST observations of TRAPPIST-1 b as ambiguous: an airless, recently resurfaced world or a thick hazy carbon-dioxide atmosphere could explain them, with the atmospheric interpretation considered less likely. This is not a confirmed atmosphere detection; the report discusses the preceding December study.",
+      "rationale": "Dated January 2025 evidence explicitly identifies planet b, JWST observations, competing atmospheric/surface explanations and uncertainty.",
+      "inspection": "Inspected all ten initial results; selected the January 2025 planet-b discussion over planet-e results and a 2026 study. Read full retained text; no recovery needed.",
+      "fetch_disposition": "Fetched selected relevant source; full returned text inspected.",
+      "citations": [
+        {
+          "attempt": "fetch-1",
+          "url": "https://skyandtelescope.org/astronomy-news/trappist-1b-atmosphere-debated-some-stars-take-their-time-forming-planets/",
+          "passage": "The latter scenario is less likely, the team reports December 16th in Nature Astronomy."
+        }
+      ],
+      "search_seconds": 10.144464917015284,
+      "fetch_seconds": 0.2659679999924265,
+      "total_tool_seconds": 10.41043291700771,
+      "incomplete_attempt": false
+    },
+    {
+      "id": "q09",
+      "verdict": "fail",
+      "layer": "upstream",
+      "answer": "No supported Tempo 3.0 breaking-change/migration answer was retrieved.",
+      "rationale": "Initial results were general Grafana pages or Grafana UI releases, not Tempo 3.0; official-site recovery returned zero candidates.",
+      "inspection": "Inspected every returned title, URL and snippet in both attempts; assessed entity/domain/version specificity, not counts.",
+      "fetch_disposition": "Skipped: no retrieved source establishes the missing required official/specific evidence. Irrelevant pages were not fetched.",
+      "citations": [],
+      "search_seconds": 6.718222543015145,
+      "fetch_seconds": 0.0,
+      "total_tool_seconds": 6.718222543015145,
+      "incomplete_attempt": false
+    },
+    {
+      "id": "q10",
+      "verdict": "fail",
+      "layer": "upstream",
+      "answer": "No supported London Science Museum opening hours were retrieved.",
+      "rationale": "Initial results were unrelated calculator pages; museum-specific official-domain recovery returned zero candidates.",
+      "inspection": "Inspected every returned title, URL and snippet in both attempts; assessed entity/domain/version specificity, not counts.",
+      "fetch_disposition": "Skipped: no retrieved source establishes the missing required official/specific evidence. Irrelevant pages were not fetched.",
+      "citations": [],
+      "search_seconds": 4.270157707971521,
+      "fetch_seconds": 0.0,
+      "total_tool_seconds": 4.270157707971521,
+      "incomplete_attempt": false
+    }
+  ]
+}

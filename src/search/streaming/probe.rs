@@ -125,6 +125,7 @@ async fn live_streaming_feasibility() {
                                 &[(*query).to_owned()],
                                 &options,
                                 clients,
+                                None,
                             ),
                         ),
                     )
@@ -186,6 +187,7 @@ async fn live_fusion_latency_evidence() {
             .unwrap();
         *yahoo.headers_mut() = profile.headers();
         SearchClients {
+            parsers: parsing::ParserPool::default(),
             standard,
             yahoo: Some(yahoo),
         }
@@ -239,6 +241,7 @@ async fn live_fusion_latency_evidence() {
                                     &[(*query).to_owned()],
                                     &options,
                                     clients,
+                                    None,
                                 ),
                             ),
                         )

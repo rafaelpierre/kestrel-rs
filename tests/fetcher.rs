@@ -496,3 +496,45 @@ async fn quality_is_advisory_and_recomputed_for_cached_and_failed_bodies() {
         );
     }
 }
+
+#[tokio::test]
+async fn persistent_cache_keeps_distinct_http_resources_separate() {
+    let server = MockServer::start().await;
+    let directory = tempfile::tempdir().unwrap();
+    let cache = PageCache::new(directory.path(), Duration::from_secs(60)).unwrap();
+    let resources = [
+        ("/page", "Resource without slash"),
+        ("/page/", "Resource with slash"),
+        ("/a%2Fb", "Encoded slash resource"),
+        ("/a/b", "Literal slash resource"),
+    ];
+    for (route, text) in resources {
+        Mock::given(method("GET"))
+            .and(path(route))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .insert_header("content-type", "text/plain")
+                    .set_body_string(text),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+    }
+    for expected_hits in [0, 1] {
+        // A new client models independent pools reading the same persistent store.
+        let client = KestrelClient::new().unwrap();
+        for (route, text) in resources {
+            let report = client
+                .fetch_all_cached_detailed(
+                    &[format!("{}{route}", server.uri())],
+                    &FetchOptions::default(),
+                    &cache,
+                    None,
+                )
+                .await
+                .unwrap();
+            assert_eq!(report.cache_hits, expected_hits);
+            assert_eq!(report.contents[0].as_deref(), Some(text));
+        }
+    }
+}

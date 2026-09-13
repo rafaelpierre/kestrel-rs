@@ -21,6 +21,7 @@ use crate::model::{
 
 use crate::provider_diagnostics::{Challenge, Phase, Recorder, TransportKind};
 
+mod parsing;
 mod streaming;
 
 // Per-query cancellation reason, shared with provider lifecycle guards.
@@ -59,6 +60,21 @@ fn classify_challenge(engine: Engine, text: &str) -> Challenge {
     if text.trim().is_empty() {
         return Challenge::Unknown;
     }
+    if matches!(
+        engine,
+        Engine::Dogpile | Engine::Yep | Engine::Swisscows | Engine::Qwant
+    ) && matches!(text.trim_start().as_bytes().first(), Some(b'{' | b'['))
+    {
+        return if engine == Engine::Qwant
+            && serde_json::from_str::<serde_json::Value>(text)
+                .ok()
+                .is_some_and(|v| v.get("url").and_then(|v| v.as_str()).is_some())
+        {
+            Challenge::Detected
+        } else {
+            Challenge::NotDetected
+        };
+    }
     let document = Html::parse_document(text);
     if document.select(&selector("#b_captcha, #captcha, form[action*='captcha'], .g-recaptcha, #challenge-form, #cf-challenge-running, form[action*='anomaly.js'], .anomaly-modal")).next().is_some() {
         return Challenge::Detected;
@@ -70,13 +86,6 @@ fn classify_challenge(engine: Engine, text: &str) -> Challenge {
         && document
             .select(&selector("title"))
             .any(|e| e.text().collect::<String>().contains("Firewall"))
-    {
-        return Challenge::Detected;
-    }
-    if engine == Engine::Qwant
-        && serde_json::from_str::<serde_json::Value>(text)
-            .ok()
-            .is_some_and(|v| v.get("url").and_then(|v| v.as_str()).is_some())
     {
         return Challenge::Detected;
     }
@@ -178,6 +187,7 @@ pub enum KestrelError {
 pub(crate) struct SearchClients {
     pub(crate) standard: reqwest::Client,
     pub(crate) yahoo: Option<primp::Client>,
+    pub(crate) parsers: parsing::ParserPool,
 }
 
 impl SearchClients {
@@ -205,6 +215,7 @@ impl SearchClients {
         Ok(Self {
             standard,
             yahoo: yahoo.transpose()?,
+            parsers: parsing::ParserPool::default(),
         })
     }
 }
@@ -296,7 +307,7 @@ pub async fn search_many_detailed(
     crate::telemetry::scope_result("kestrel.search", async {
         let (queries, engines) = validate_request(queries, options)?;
         let clients = SearchClients::new(&engines)?;
-        search_many_with_clients_detailed(queries, engines, options, &clients).await
+        search_many_with_clients_detailed(queries, engines, options, &clients, None).await
     })
     .await
 }
@@ -305,9 +316,10 @@ pub(crate) async fn search_many_reusing_clients(
     queries: &[String],
     options: &SearchOptions,
     clients: &SearchClients,
+    recovery: Option<&crate::SearchRecovery>,
 ) -> Result<Vec<SearchResult>, KestrelError> {
     Ok(
-        search_many_reusing_clients_detailed(queries, options, clients)
+        search_many_reusing_clients_detailed(queries, options, clients, recovery)
             .await?
             .results,
     )
@@ -317,10 +329,11 @@ pub(crate) async fn search_many_reusing_clients_detailed(
     queries: &[String],
     options: &SearchOptions,
     clients: &SearchClients,
+    recovery: Option<&crate::SearchRecovery>,
 ) -> Result<SearchReport, KestrelError> {
     crate::telemetry::scope_result("kestrel.search", async {
         let (queries, engines) = validate_request(queries, options)?;
-        search_many_with_clients_detailed(queries, engines, options, clients).await
+        search_many_with_clients_detailed(queries, engines, options, clients, recovery).await
     })
     .await
 }
@@ -330,11 +343,12 @@ async fn search_many_with_clients_detailed(
     engines: Vec<Engine>,
     options: &SearchOptions,
     clients: &SearchClients,
+    recovery: Option<&crate::SearchRecovery>,
 ) -> Result<SearchReport, KestrelError> {
     DIAGNOSTIC_RUN_ID
         .scope(
             uuid::Uuid::new_v4().to_string(),
-            search_many_with_clients_in_run(queries, engines, options, clients),
+            search_many_with_clients_in_run(queries, engines, options, clients, recovery),
         )
         .await
 }
@@ -344,6 +358,7 @@ async fn search_many_with_clients_in_run(
     engines: Vec<Engine>,
     options: &SearchOptions,
     clients: &SearchClients,
+    recovery: Option<&crate::SearchRecovery>,
 ) -> Result<SearchReport, KestrelError> {
     crate::telemetry::payload("search.input", &queries);
     crate::telemetry::attribute("kestrel.query_syntax", "passthrough");
@@ -364,21 +379,31 @@ async fn search_many_with_clients_in_run(
         .map(|budget| crate::numeric::deadline("search budget", budget))
         .transpose()?;
 
-    let jobs = queries.iter().map(|query| {
-        run_fanout_query(
-            query,
-            &engines,
-            clients,
-            Arc::clone(&semaphore),
-            Arc::clone(&diagnostics),
-            &options.region,
-            options.time_filter,
-            options.provider_quorum,
-            Some(options.min_results.unwrap_or(5)),
-            deadline,
-        )
-    });
-    let query_outcomes = join_all(jobs).await;
+    let (progress, writer) = crate::recovery::writer(recovery, deadline);
+    let jobs = queries
+        .iter()
+        .map(|query| {
+            run_fanout_query(
+                query,
+                &engines,
+                clients,
+                Arc::clone(&semaphore),
+                Arc::clone(&diagnostics),
+                &options.region,
+                options.time_filter,
+                options.provider_quorum,
+                Some(options.min_results.unwrap_or(5)),
+                deadline,
+                progress.clone(),
+            )
+        })
+        .collect::<Vec<_>>();
+    let collect = async {
+        let outcomes = join_all(jobs).await;
+        drop(progress);
+        outcomes
+    };
+    let (query_outcomes, ()) = tokio::join!(collect, writer);
     let cancelled = query_outcomes.iter().map(|(_, count)| count).sum();
     let outcomes = query_outcomes
         .into_iter()
@@ -409,61 +434,134 @@ fn run_fanout_query<'a>(
     provider_quorum: Option<usize>,
     min_results: Option<usize>,
     deadline: Option<tokio::time::Instant>,
+    progress: Option<crate::recovery::ProgressQueue>,
 ) -> impl Future<Output = (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)> + 'a {
-    let mut query_span = crate::telemetry::Span::new("kestrel.query");
-    let query_context = query_span.context();
-    let _query_context = query_context.clone().attach();
-    crate::telemetry::payload("query.input", &query);
-    let pending = FuturesUnordered::new();
-    let (sender, receiver) = tokio::sync::mpsc::channel(1);
-    let fanout_cancelled = Arc::new(AtomicU8::new(FANOUT_RUNNING));
-    for (index, engine) in engines.iter().copied().enumerate() {
-        let semaphore = Arc::clone(&semaphore);
-        let diagnostics = Arc::clone(&diagnostics);
-        let job = run_one(
-            query,
-            engine,
-            clients,
-            semaphore,
-            diagnostics,
-            region,
-            time_filter,
-            deadline,
-            Some(Arc::clone(&fanout_cancelled)),
-        );
-        let publisher = streaming::Publisher {
-            sender: sender.clone(),
-            index,
-            engine,
-            query: query.to_owned(),
-        };
-        pending.push(async move {
-            let outcome = if min_results.is_some() {
-                streaming::PUBLISHER.scope(publisher, job).await
-            } else {
-                job.await
-            };
-            (index, outcome)
-        });
-    }
-    drop(sender);
+    let engines = engines.to_vec();
     async move {
-        let output = streaming::collect(
-            pending,
-            provider_quorum,
-            min_results,
-            Some(fanout_cancelled),
-            if min_results.is_some() {
-                Some(receiver)
+        let mut query_span = crate::telemetry::Span::new("kestrel.query");
+        let query_context = query_span.context();
+        let _query_context = query_context.clone().attach();
+        crate::telemetry::payload("query.input", &query);
+        drop(_query_context);
+        let keys: Vec<_> = engines
+            .iter()
+            .map(|engine| crate::recovery::UnitKey::new(query, *engine, region, time_filter))
+            .collect();
+        let mut recovered = std::collections::BTreeMap::new();
+        if let Some(queue) = &progress {
+            // Relative windows change continuously; until adapters expose a stable anchor,
+            // these units conservatively miss on every invocation.
+            if time_filter == TimeFilter::Any {
+                for (index, key) in keys.iter().enumerate() {
+                    let end = deadline
+                        .or_else(|| Some(tokio::time::Instant::now() + Duration::from_millis(250)));
+                    match crate::numeric::before_deadline(end, queue.store.restore(key)).await {
+                        Ok(Ok(snapshot)) => {
+                            recovered.insert(index, snapshot);
+                        }
+                        Ok(Err(reason)) => {
+                            eprintln!("[kestrel] Recovery miss: {reason}; requesting provider.")
+                        }
+                        Err(()) => eprintln!(
+                            "[kestrel] Recovery read deadline; requesting only within remaining budget."
+                        ),
+                    }
+                }
             } else {
-                None
-            },
-        )
-        .await;
-        query_span.finish();
-        output
+                eprintln!(
+                    "[kestrel] Recovery miss: moving recency window has no stable coverage anchor."
+                );
+            }
+            let unique = recovered
+                .values()
+                .flat_map(|s| s.records.iter().map(result_key))
+                .collect::<HashSet<_>>()
+                .len();
+            let complete = recovered
+                .values()
+                .filter(|s| s.state == crate::recovery::State::Complete)
+                .count();
+            eprintln!(
+                "[kestrel] Recovery loaded {} unit(s): {complete} complete, {} incomplete, {unique} unique records.",
+                recovered.len(),
+                recovered.len() - complete
+            );
+        }
+        let target_reached = min_results.is_some_and(|n| {
+            recovered
+                .values()
+                .flat_map(|s| s.records.iter().map(result_key))
+                .collect::<HashSet<_>>()
+                .len()
+                >= n
+        });
+        let pending = FuturesUnordered::new();
+        let (sender, receiver) = tokio::sync::mpsc::channel(1);
+        let fanout_cancelled = Arc::new(AtomicU8::new(FANOUT_RUNNING));
+        for (index, engine) in engines.iter().copied().enumerate() {
+            if progress.as_ref().is_some_and(|p| p.store.is_cancelled())
+                || target_reached
+                || recovered
+                    .get(&index)
+                    .is_some_and(|s| s.state == crate::recovery::State::Complete)
+            {
+                eprintln!(
+                    "[kestrel] Recovery skipped {engine} request: compatible completion or current minimum satisfied."
+                );
+                continue;
+            }
+            let semaphore = Arc::clone(&semaphore);
+            let diagnostics = Arc::clone(&diagnostics);
+            let job = run_one(
+                query,
+                engine,
+                clients,
+                semaphore,
+                diagnostics,
+                region,
+                time_filter,
+                deadline,
+                Some(Arc::clone(&fanout_cancelled)),
+            );
+            let publisher = streaming::Publisher {
+                sender: sender.clone(),
+                index,
+                engine,
+                query: query.to_owned(),
+            };
+            pending.push(async move {
+                let outcome = if min_results.is_some() {
+                    streaming::PUBLISHER.scope(publisher, job).await
+                } else {
+                    job.await
+                };
+                (index, outcome)
+            });
+        }
+        drop(sender);
+        let progress = progress.map(|queue| (queue, keys));
+        async move {
+            let output = streaming::collect_replaying(
+                pending,
+                provider_quorum,
+                min_results,
+                Some(fanout_cancelled),
+                if min_results.is_some() {
+                    Some(receiver)
+                } else {
+                    None
+                },
+                progress,
+                deadline,
+                recovered,
+            )
+            .await;
+            query_span.finish();
+            output
+        }
+        .with_context(query_context)
+        .await
     }
-    .with_context(query_context)
 }
 
 #[cfg(test)]
@@ -766,6 +864,60 @@ async fn run_provider(
     time_filter: TimeFilter,
     clients: &SearchClients,
 ) -> Result<ProviderResponse, KestrelError> {
+    parsing::POOL
+        .scope(
+            clients.parsers.clone(),
+            run_provider_inner(query, engine, region, time_filter, clients),
+        )
+        .await
+}
+
+async fn run_provider_inner(
+    query: &str,
+    engine: Engine,
+    region: &str,
+    time_filter: TimeFilter,
+    clients: &SearchClients,
+) -> Result<ProviderResponse, KestrelError> {
+    #[cfg(feature = "test-fixtures")]
+    if let Ok(endpoint) = std::env::var("KESTREL_TEST_PROVIDER_ENDPOINT") {
+        let mut endpoint =
+            Url::parse(&endpoint).map_err(|e| KestrelError::InvalidRequest(e.to_string()))?;
+        if endpoint.scheme() != "http"
+            || !matches!(endpoint.host_str(), Some("127.0.0.1" | "[::1]"))
+        {
+            return Err(KestrelError::InvalidRequest(
+                "test fixture endpoint must be loopback HTTP".into(),
+            ));
+        }
+        endpoint.set_path(&format!("/{engine}"));
+        let (body, retries) = if engine == Engine::Yahoo {
+            request_yahoo_with_retries(query, || {
+                clients
+                    .yahoo
+                    .as_ref()
+                    .expect("Yahoo client requested")
+                    .get(endpoint.as_str())
+                    .query(&[("q", query)])
+            })
+            .await?
+        } else {
+            request_standard_with_retries(&clients.standard, engine, query, || {
+                clients
+                    .standard
+                    .get(endpoint.as_str())
+                    .query(&[("q", query)])
+            })
+            .await?
+        };
+        let mut response = ProviderResponse {
+            results: parsing::run(move || parse_provider_response(engine, &body)).await??,
+            retries,
+            raw_result_count: 0,
+        };
+        filter_response(query, &mut response);
+        return Ok(response);
+    }
     let mut result = match engine {
         Engine::Duckduckgo => {
             search_duckduckgo(query, region, time_filter, &clients.standard).await
@@ -842,7 +994,7 @@ async fn search_additional(
     })
     .await?;
     Ok(ProviderResponse {
-        results: crate::providers::parse(engine, &text)?,
+        results: parsing::run(move || crate::providers::parse(engine, &text)).await??,
         retries,
         raw_result_count: 0,
     })
@@ -875,7 +1027,7 @@ async fn search_duckduckgo(
     })
     .await?;
     Ok(ProviderResponse {
-        results: parse_duckduckgo_response(&text)?,
+        results: parsing::run(move || parse_duckduckgo_response(&text)).await??,
         retries,
         raw_result_count: 0,
     })
@@ -913,7 +1065,7 @@ async fn search_bing(
     })
     .await?;
     Ok(ProviderResponse {
-        results: parse_provider_response(Engine::Bing, &text)?,
+        results: parsing::run(move || parse_provider_response(Engine::Bing, &text)).await??,
         retries,
         raw_result_count: 0,
     })
@@ -948,7 +1100,7 @@ async fn search_yahoo(
         request_yahoo_with_retries(query, || yahoo_request(client, query, region, time_filter))
             .await?;
     Ok(ProviderResponse {
-        results: parse_provider_response(Engine::Yahoo, &html)?,
+        results: parsing::run(move || parse_provider_response(Engine::Yahoo, &html)).await??,
         retries,
         raw_result_count: 0,
     })
@@ -994,7 +1146,11 @@ where
                 match body {
                     Ok(html) => {
                         record_phase(Phase::Parse);
-                        let challenge = classify_challenge(engine, &html);
+                        let (html, challenge) = parsing::run(move || {
+                            let challenge = classify_challenge(engine, &html);
+                            (html, challenge)
+                        })
+                        .await?;
                         observe(|r| r.response(challenge));
                         record_phase(Phase::Processing);
                         crate::benchmarking::capture_provider(
@@ -1083,7 +1239,11 @@ where
                 match body {
                     Ok(html) => {
                         record_phase(Phase::Parse);
-                        let challenge = classify_challenge(engine, &html);
+                        let (html, challenge) = parsing::run(move || {
+                            let challenge = classify_challenge(engine, &html);
+                            (html, challenge)
+                        })
+                        .await?;
                         observe(|r| r.response(challenge));
                         record_phase(Phase::Processing);
                         crate::benchmarking::capture_provider(
@@ -1187,7 +1347,9 @@ async fn read_standard_body(
     }
     #[cfg(test)]
     streaming::probe::eof(body.engine);
-    Ok(body.text())
+    // Release the persistent stream worker before waiting for completed-body capacity.
+    drop(incremental);
+    parsing::run(move || body.text()).await
 }
 
 async fn read_yahoo_body(mut response: primp::Response) -> Result<String, KestrelError> {
@@ -1221,7 +1383,9 @@ async fn read_yahoo_body(mut response: primp::Response) -> Result<String, Kestre
     }
     #[cfg(test)]
     streaming::probe::eof(body.engine);
-    Ok(body.text())
+    // Release the persistent stream worker before waiting for completed-body capacity.
+    drop(incremental);
+    parsing::run(move || body.text()).await
 }
 
 struct ProviderBody {
@@ -1515,6 +1679,12 @@ fn result_allowed(query: &str, value: &str) -> bool {
 }
 
 fn parse_provider_response(engine: Engine, html: &str) -> Result<Vec<SearchResult>, KestrelError> {
+    if matches!(
+        engine,
+        Engine::Dogpile | Engine::Yep | Engine::Swisscows | Engine::Qwant
+    ) {
+        return crate::providers::parse(engine, html);
+    }
     let document = Html::parse_document(html);
     if document
         .select(&selector(
@@ -1528,10 +1698,10 @@ fn parse_provider_response(engine: Engine, html: &str) -> Result<Vec<SearchResul
         )));
     }
     let results = match engine {
-        Engine::Bing => parse_bing_results(html),
-        Engine::Yahoo => parse_yahoo_results(html),
-        Engine::Duckduckgo => return parse_duckduckgo_response(html),
-        _ => return crate::providers::parse(engine, html),
+        Engine::Bing => parse_bing_document(&document),
+        Engine::Yahoo => parse_yahoo_document(&document),
+        Engine::Duckduckgo => return parse_duckduckgo_document(&document),
+        _ => return crate::providers::parse_html(engine, &document),
     };
     let empty_marker = match engine {
         Engine::Bing => "li.b_no, .b_no",
@@ -1547,7 +1717,10 @@ fn parse_provider_response(engine: Engine, html: &str) -> Result<Vec<SearchResul
 }
 
 fn parse_duckduckgo_response(html: &str) -> Result<Vec<SearchResult>, KestrelError> {
-    let document = Html::parse_document(html);
+    parse_duckduckgo_document(&Html::parse_document(html))
+}
+
+fn parse_duckduckgo_document(document: &Html) -> Result<Vec<SearchResult>, KestrelError> {
     if document
         .select(&selector(
             "form#challenge-form, form[action*='anomaly.js'], .anomaly-modal",
@@ -1559,7 +1732,7 @@ fn parse_duckduckgo_response(html: &str) -> Result<Vec<SearchResult>, KestrelErr
             "DuckDuckGo returned a bot challenge; try --engine bing or --engine yahoo".into(),
         ));
     }
-    let results = parse_duckduckgo_results(html);
+    let results = parse_duckduckgo_document_results(document);
     if results.is_empty() && document.select(&selector(".no-results")).next().is_none() {
         return Err(KestrelError::Search(
             "DuckDuckGo returned an unrecognized search page; try --engine bing or --engine yahoo"
@@ -1569,8 +1742,12 @@ fn parse_duckduckgo_response(html: &str) -> Result<Vec<SearchResult>, KestrelErr
     Ok(results)
 }
 
+#[cfg(test)]
 fn parse_duckduckgo_results(html: &str) -> Vec<SearchResult> {
-    let document = Html::parse_document(html);
+    parse_duckduckgo_document_results(&Html::parse_document(html))
+}
+
+fn parse_duckduckgo_document_results(document: &Html) -> Vec<SearchResult> {
     let item = selector("div.result.results_links.results_links_deep.web-result");
     let title = selector("h2.result__title a.result__a");
     let display = selector("a.result__url");
@@ -1595,8 +1772,12 @@ fn parse_duckduckgo_results(html: &str) -> Vec<SearchResult> {
         .collect()
 }
 
+#[cfg(test)]
 fn parse_bing_results(html: &str) -> Vec<SearchResult> {
-    let document = Html::parse_document(html);
+    parse_bing_document(&Html::parse_document(html))
+}
+
+fn parse_bing_document(document: &Html) -> Vec<SearchResult> {
     let item = selector("li.b_algo");
     let title = selector("h2 a");
     let snippet = selector(".b_caption p");
@@ -1621,6 +1802,9 @@ fn parse_bing_results(html: &str) -> Vec<SearchResult> {
         .collect()
 }
 
+#[cfg(test)]
+mod parse_once_tests;
+
 fn decode_bing_url(value: &str) -> String {
     if !value.contains("/ck/a") && !value.contains("/cr?") {
         return value.to_owned();
@@ -1644,8 +1828,12 @@ fn decode_bing_url(value: &str) -> String {
         .unwrap_or_else(|| value.to_owned())
 }
 
+#[cfg(test)]
 fn parse_yahoo_results(html: &str) -> Vec<SearchResult> {
-    let document = Html::parse_document(html);
+    parse_yahoo_document(&Html::parse_document(html))
+}
+
+fn parse_yahoo_document(document: &Html) -> Vec<SearchResult> {
     let primary = selector("div.dd.algo");
     let fallback = selector("div.compTitle");
     let entries: Vec<_> = document.select(&primary).collect();
@@ -1736,8 +1924,20 @@ fn percent_decode(value: &str) -> String {
         .unwrap_or_else(|| value.to_owned())
 }
 
-fn selector(value: &str) -> Selector {
-    Selector::parse(value).expect("static selector is valid")
+pub(crate) fn selector(value: &'static str) -> Selector {
+    // Only internal constant selectors enter this cache. Each parsing thread reuses
+    // compiled selectors without contending with other provider workers.
+    thread_local! {
+        static SELECTORS: std::cell::RefCell<HashMap<&'static str, Selector>> =
+            std::cell::RefCell::new(HashMap::new());
+    }
+    SELECTORS.with(|selectors| {
+        selectors
+            .borrow_mut()
+            .entry(value)
+            .or_insert_with(|| Selector::parse(value).expect("static selector is valid"))
+            .clone()
+    })
 }
 
 fn element_text(element: ElementRef<'_>, separator: &str) -> String {

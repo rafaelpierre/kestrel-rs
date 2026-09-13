@@ -140,6 +140,7 @@ async fn measured_search(
                 options.provider_quorum,
                 Some(options.min_results.unwrap_or(5)),
                 deadline,
+                None,
             ),
         )
         .await;
@@ -194,7 +195,23 @@ async fn live_streaming_validation() {
     let options = validation_options(Duration::from_secs(budget_seconds as u64));
     let engines = &options.engines;
     let profile = crate::http_client::BrowserProfile::bing_experiment();
-    let build = validation_clients;
+    let build = || {
+        let transport = crate::TransportOptions::default();
+        let standard = crate::http_client::standard_builder(profile, &transport)
+            .timeout(SEARCH_TIMEOUT)
+            .build()
+            .unwrap();
+        let mut yahoo = crate::http_client::impersonated_builder(profile, &transport)
+            .timeout(SEARCH_TIMEOUT)
+            .build()
+            .unwrap();
+        *yahoo.headers_mut() = profile.headers();
+        SearchClients {
+            parsers: parsing::ParserPool::default(),
+            standard,
+            yahoo: Some(yahoo),
+        }
+    };
     let pools: Vec<_> = POLICIES.iter().map(|_| build()).collect();
     use sha2::{Digest, Sha256};
     let executable = std::env::current_exe().unwrap();

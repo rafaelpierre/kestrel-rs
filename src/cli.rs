@@ -77,7 +77,7 @@ struct SearchArgs {
     #[arg(long, value_parser = positive_usize, value_name = "N")]
     min_results: Option<usize>,
 
-    /// Total search seconds, including provider queueing and retries (default: 5).
+    /// Total search seconds, including enabled recovery I/O, provider queueing and retries (default: 5).
     /// Must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     search_budget: Option<f64>,
@@ -148,17 +148,31 @@ struct SearchArgs {
     #[arg(long, default_value_t = 10.0, value_parser = positive_f64, value_name = "SECS")]
     timeout: f64,
 
-    /// Total seconds allowed for all candidate page fetches; completed pages are retained.
+    /// Total seconds for candidate fetches, including enabled cache reads/writes/maintenance.
+    /// Eligible pages commit while other fetches run; completed text survives storage timeout.
     /// Must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     fetch_budget: Option<f64>,
 
     /// Cache extracted page text for this many seconds (disabled by default).
+    /// Keys preserve request URL distinctions; legacy unversioned entries are misses.
     /// Must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     cache_ttl: Option<f64>,
 
-    /// Directory for extracted-page cache entries.
+    /// Replay and record compatible provider progress for this many seconds (opt-in).
+    #[arg(long, value_parser = positive_f64, value_name = "SECS")]
+    recovery_ttl: Option<f64>,
+
+    /// Independent provider-progress directory; also works with --no-fetch.
+    #[arg(long, requires = "recovery_ttl", value_name = "PATH")]
+    recovery_dir: Option<PathBuf>,
+
+    /// Best-effort retained provider units (default 1000).
+    #[arg(long, requires = "recovery_ttl", value_parser = positive_usize, value_name = "N")]
+    recovery_max_entries: Option<usize>,
+
+    /// Directory for incrementally committed extracted-page cache entries.
     #[arg(long, value_name = "PATH", requires = "cache_ttl")]
     cache_dir: Option<PathBuf>,
 
@@ -170,7 +184,7 @@ struct SearchArgs {
     #[arg(long, default_value_t = 10, value_parser = concurrency_usize, value_name = "N")]
     concurrency: usize,
 
-    /// Maximum concurrent HTML parsing jobs (1 through Tokio MAX_PERMITS).
+    /// Maximum queued/running page extraction jobs (1 through Tokio MAX_PERMITS).
     #[arg(long, default_value_t = 10, value_parser = concurrency_usize, value_name = "N")]
     parse_concurrency: usize,
 
@@ -324,7 +338,7 @@ pub async fn run() -> ExitCode {
                 ExitCode::FAILURE
             }
         },
-        Commands::Search(arguments) => run_search(*arguments).await,
+        Commands::Search(arguments) => Box::pin(run_search(*arguments)).await,
         Commands::Fetch(arguments) => run_fetch(arguments).await,
         Commands::Skill { command } => match run_skill(command) {
             Ok(()) => ExitCode::SUCCESS,
@@ -452,16 +466,40 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
 
     let mut timings = BTreeMap::new();
     let initialize_started = Instant::now();
-    let client = match KestrelClient::new() {
+    let client = match KestrelClient::with_parser_capacity(arguments.parse_concurrency) {
         Ok(client) => client,
         Err(error) => {
             eprintln!("[kestrel] Failed to initialize HTTP clients: {error}");
             return ExitCode::FAILURE;
         }
     };
+    let recovery = if let Some(ttl) = arguments.recovery_ttl {
+        let store = arguments.recovery_dir.clone().map_or_else(kestrelsearch::SearchRecovery::default_directory, Ok)
+            .and_then(|path| kestrelsearch::SearchRecovery::new(path, Duration::from_secs_f64(ttl)))
+            .and_then(|store| store.with_max_entries(arguments.recovery_max_entries.unwrap_or(1000)));
+        match store { Ok(store) => Some(store), Err(error) => {
+            eprintln!("[kestrel] Invalid recovery configuration: {error}"); return ExitCode::FAILURE;
+        } }
+    } else { None };
+    let client = match &recovery { Some(store) => client.with_recovery(store.clone()), None => client };
+    let interrupted = async {
+        if recovery.is_none() { std::future::pending::<()>().await; }
+        wait_for_shutdown().await;
+        if let Some(store) = &recovery { store.cancel(); }
+    };
+    tokio::pin!(interrupted);
     timings.insert("initialize".into(), elapsed_millis(initialize_started));
     let started = Instant::now();
-    let search_report = match client.search_many_detailed(&queries, &options).await {
+    let mut search = Box::pin(client.search_many_detailed(&queries, &options));
+    let search_result = tokio::select! {
+        result = &mut search => result,
+        () = &mut interrupted => {
+            eprintln!("[kestrel] Interrupted; draining committed provider work for at most 250 ms.");
+            let _ = tokio::time::timeout(Duration::from_millis(250), &mut search).await;
+            return ExitCode::from(130);
+        }
+    };
+    let search_report = match search_result {
         Ok(report) => report,
         Err(error) => {
             eprintln!("[kestrel] Search failed: {error}");
@@ -551,14 +589,20 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
         timings.extend(selection.timings);
         candidate_counts.extend(selection.counts);
         let fetch_started = Instant::now();
-        fetch_diagnostics =
-            match attach_page_content(&client, &mut results, &arguments, &mut io::stderr()).await {
-                Ok(report) => Some(report),
-                Err(error) => {
-                    eprintln!("[kestrel] Fetch failed: {error}");
-                    return ExitCode::FAILURE;
-                }
-            };
+        let mut stderr = io::stderr();
+        let mut pages = Box::pin(attach_page_content(&client, &mut results, &arguments, &mut stderr));
+        let page_result = tokio::select! {
+            result = &mut pages => result,
+            () = &mut interrupted => {
+                eprintln!("[kestrel] Interrupted; draining page work for at most 250 ms.");
+                let _ = tokio::time::timeout(Duration::from_millis(250), &mut pages).await;
+                return ExitCode::from(130);
+            }
+        };
+        fetch_diagnostics = match page_result {
+            Ok(report) => Some(report),
+            Err(error) => { eprintln!("[kestrel] Fetch failed: {error}"); return ExitCode::FAILURE; }
+        };
         timings.insert("fetch".into(), elapsed_millis(fetch_started));
     }
 
@@ -1839,6 +1883,23 @@ mod tests {
     }
 
     #[test]
+    fn generated_skill_documents_cache_deadline_and_limits() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("cache reads, page requests, writes and maintenance"));
+        assert!(skill.contains("four blocking storage jobs"));
+        assert!(skill.contains("4,096 directory entries"));
+        assert!(skill.contains("already-running blocking I/O may finish"));
+    }
+
+    #[test]
+    fn generated_skill_documents_conservative_cache_identity() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("Cache keys preserve"));
+        assert!(skill.contains("Legacy unversioned and page-text-v2 entries are misses"));
+        assert!(skill.contains("deduplication remains unchanged"));
+    }
+
+    #[test]
     fn generated_skill_documents_result_minimum_precedence() {
         let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let skill = generate_skill_md(&mut Cli::command());
@@ -1847,6 +1908,14 @@ mod tests {
         assert!(skill.contains("five\n  unique accepted candidates"));
         assert!(skill.contains("Query constraints apply before counting"));
         assert!(!skill.contains("selects quorum 1"));
+    }
+
+    #[test]
+    fn generated_skill_documents_provider_worker_ownership() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("ten queued/running blocking workers per retained client"));
+        assert!(skill.contains("Cancellation retains capacity until the worker exits"));
+        assert!(skill.contains("Parser queueing is included in the search budget"));
     }
 
     #[test]
@@ -2067,5 +2136,90 @@ mod tests {
         assert!(skill.contains("--max-response-bytes 65536"));
         assert!(skill.contains("defaults to 1,000,000 decoded body bytes"));
         assert_eq!(skill.matches("[default: 1000000]").count(), 2);
+    }
+}
+
+#[cfg(test)]
+#[path = "cli/recovery_tests.rs"]
+mod recovery_tests;
+
+#[cfg(test)]
+#[test]
+fn skill_documents_incremental_page_recovery() {
+    let skill = kestrelsearch::skill::generate_skill_md(&mut Cli::command());
+    for phrase in [
+        "Eligible pages commit incrementally",
+        "16 entries and 16 MiB",
+        "page-text-v2",
+        "response-byte allowance",
+        "page-only",
+    ] {
+        assert!(skill.contains(phrase), "missing {phrase}");
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn recovery_flags_and_generated_skill_match_replay_contract() {
+    for args in [
+        vec!["--no-fetch", "--recovery-ttl", "60"],
+        vec![
+            "--recovery-ttl",
+            "60",
+            "--recovery-dir",
+            "progress",
+            "--recovery-max-entries",
+            "10",
+        ],
+    ] {
+        assert!(Cli::try_parse_from([vec!["kestrel", "search", "fixture"], args].concat()).is_ok());
+    }
+    for args in [
+        vec!["--recovery-dir", "progress"],
+        vec!["--recovery-max-entries", "10"],
+        vec!["--recovery-ttl", "0"],
+        vec!["--recovery-ttl", "NaN"],
+    ] {
+        assert!(
+            Cli::try_parse_from([vec!["kestrel", "search", "fixture"], args].concat()).is_err()
+        );
+    }
+    let skill = generate_skill_md(&mut Cli::command());
+    for text in [
+        "--recovery-ttl",
+        "--recovery-dir",
+        "--recovery-max-entries",
+        "Recovering interrupted searches",
+        "64 MiB",
+        "invalid tombstone",
+    ] {
+        assert!(skill.contains(text), "missing {text}");
+    }
+}
+
+async fn wait_for_shutdown() {
+    #[cfg(unix)]
+    {
+        let mut terminate =
+            match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+                Ok(signal) => Some(signal),
+                Err(error) => {
+                    eprintln!("[kestrel] SIGTERM handler unavailable: {error}");
+                    None
+                }
+            };
+        let result = tokio::select! {
+            result = tokio::signal::ctrl_c() => result,
+            () = async { match &mut terminate { Some(signal) => { let _ = signal.recv().await; }, None => std::future::pending().await } } => Ok(()),
+        };
+        if let Err(error) = result {
+            eprintln!("[kestrel] Interrupt handler unavailable: {error}");
+            std::future::pending::<()>().await;
+        }
+    }
+    #[cfg(not(unix))]
+    if let Err(error) = tokio::signal::ctrl_c().await {
+        eprintln!("[kestrel] Interrupt handler unavailable: {error}");
+        std::future::pending::<()>().await;
     }
 }

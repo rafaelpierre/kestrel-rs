@@ -3,7 +3,7 @@
 use std::collections::BTreeMap;
 
 use base64::Engine as _;
-use scraper::{Html, Selector};
+use scraper::Html;
 use serde_json::Value;
 use sha2::{Digest, Sha256};
 use url::Url;
@@ -205,15 +205,26 @@ fn swiss_signature(path: &str, params: &BTreeMap<&str, &str>, nonce: &str) -> St
         .encode(Sha256::digest(format!("{path}?{args}{suffix}")))
 }
 
+/// Reuse the completed HTML document for provider validation and extraction.
+pub(crate) fn parse_html(engine: Engine, doc: &Html) -> Result<Vec<SearchResult>, KestrelError> {
+    match engine {
+        Engine::Ecosia => parse_ecosia(doc),
+        Engine::Mojeek => parse_mojeek(doc),
+        _ => Err(KestrelError::Search(format!(
+            "{engine} is not an HTML adapter"
+        ))),
+    }
+}
+
 pub(crate) fn parse(engine: Engine, text: &str) -> Result<Vec<SearchResult>, KestrelError> {
     if engine == Engine::Mojeek {
-        return parse_mojeek(text);
+        return parse_mojeek(&Html::parse_document(text));
     }
     if engine == Engine::Qwant {
         return parse_qwant(text);
     }
     if engine == Engine::Ecosia {
-        return parse_ecosia(text);
+        return parse_ecosia(&Html::parse_document(text));
     }
     let bad = || {
         KestrelError::Search(format!(
@@ -307,9 +318,8 @@ fn parsed(title: &str, value: &str, snippet: &str) -> Option<SearchResult> {
     ))
 }
 
-fn parse_ecosia(text: &str) -> Result<Vec<SearchResult>, KestrelError> {
-    let doc = Html::parse_document(text);
-    let selector = |s| Selector::parse(s).expect("constant selector");
+fn parse_ecosia(doc: &Html) -> Result<Vec<SearchResult>, KestrelError> {
+    let selector = crate::search::selector;
     if doc
         .select(&selector(
             "#challenge-form, #cf-challenge-running, .g-recaptcha",
@@ -411,7 +421,7 @@ fn parse_qwant(text: &str) -> Result<Vec<SearchResult>, KestrelError> {
 }
 
 pub(crate) fn mojeek_challenge(doc: &Html) -> bool {
-    let select = |s| Selector::parse(s).expect("constant selector");
+    let select = crate::search::selector;
     // The observed challenge has both a page-level title and a dedicated wrapper.
     // Never classify CAPTCHA mentions in ordinary result titles/snippets as blocking.
     let captcha_title = doc.select(&select("head > title")).any(|title| {
@@ -433,10 +443,9 @@ pub(crate) fn mojeek_challenge(doc: &Html) -> bool {
     captcha_title && challenge_message
 }
 
-fn parse_mojeek(text: &str) -> Result<Vec<SearchResult>, KestrelError> {
-    let doc = Html::parse_document(text);
-    let select = |s| Selector::parse(s).expect("constant selector");
-    if mojeek_challenge(&doc) {
+fn parse_mojeek(doc: &Html) -> Result<Vec<SearchResult>, KestrelError> {
+    let select = crate::search::selector;
+    if mojeek_challenge(doc) {
         return Err(KestrelError::Search(
             "mojeek returned a bot challenge".into(),
         ));

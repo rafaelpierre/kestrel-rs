@@ -5,6 +5,11 @@ translate conversational requests before searching. Its [dataset revision notes]
 record the corrected inputs and unchanged answer requirements. Historical query
 sets and measurements remain historical; compare scores only with matched inputs.
 
+Use the [repeatable evidence-gate runner](evidence-gate.md) to freeze inputs,
+retain bounded search/fetch attempts and record manual answer judgments. The
+[initial issue #148 observations](evidence-gate-2026-09-13.md) retain all four
+windows, including the final gate failure and concrete follow-up issues.
+
 For initialization, deadline and cleanup attribution, use the
 [short-budget investigation harness](budget-overhead/README.md). It compares
 controlled fresh processes with retained clients using an isolated benchmark
@@ -191,3 +196,43 @@ Current quality/latency runs default to passthrough query text. The runner retai
 Kestrel rejects that removed CLI option. The pinned 4.0.0 study explicitly requests
 its original portable semantics. Effective policies record this distinction; do
 not compare those configurations as identical.
+
+## Frozen metadata, live candidate-cap comparison (issue #75, version 2)
+
+`fixed_pool_study.py` separates discovery from the cap treatment. It makes exactly
+two identical, ten-second metadata discoveries for each of the 14 queries in
+`quality-queries-v1.json` (all engines, passthrough syntax, minimum/top-k 30,
+no fetch or rank). The stable first-occurrence canonical URL union is frozen once. Pools
+with fewer than 15 unique URLs remain in the report as insufficient; they are
+never padded, substituted, or included in cap summaries.
+
+```sh
+cargo build --release --locked --bin kestrel --example fetch_cap_replay
+python3 benchmarks/fixed_pool_study.py --binary target/release/kestrel \
+  --replay target/release/examples/fetch_cap_replay \
+  --output benchmarks/results/issue-75-fixed-pool-v2
+KESTREL_CAP_REPLAY_BINARY="$PWD/target/release/examples/fetch_cap_replay" \
+  python3 -m unittest discover -s benchmarks -p 'test_fixed_pool_study.py'
+python3 benchmarks/report_fixed_pool.py benchmarks/results/issue-75-fixed-pool-v2
+```
+
+For each eligible pool, three sequential rounds rotate caps 5/10/15 through all
+positions, with 0.25 seconds between processes. `fetch_cap_replay` uses the
+production library fetcher and hybrid ranker on the same prefixes: top-k five,
+pre-ranking and score gate off, no page cache, a five-second fetch budget,
+ten-second page timeout, fetch/parse concurrency ten, 2,000 retained characters,
+and a 1 MB decoded response cap. PDF URLs are skipped after prefix selection,
+as in the CLI. Full candidate bodies, fetch outcomes/cancellations, returned
+results, process and internal command/fetch/rank timings are retained locally.
+Discovery time is separate. Fresh processes do not control upstream caches.
+
+This benchmark example does not add a production CLI contract. Its command time
+includes pool loading/client initialization but excludes provider discovery;
+do not label it total search latency. The union of two discoveries is a
+conditional experimental input, not a guaranteed single-search result. Live
+bodies and remote server state may change between arms. Three within-query
+repeats cannot establish reliable population tails. Assess actual snippets and
+bodies for relevance/evidence; extraction success and pool size do not imply
+quality. Keep missing judgments unknown. Record all insufficient pools and
+errors, even if no query qualifies. Use a fresh output directory for each run;
+the runner refuses to overwrite an earlier experiment.

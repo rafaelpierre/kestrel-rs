@@ -10,40 +10,39 @@ const MAX_DEPTH: usize = 128;
 
 pub(super) struct Records {
     engine: Engine,
-    text: String,
-    json: Option<JsonRecords>,
-    html: Option<HtmlWorker>,
-    passes: usize,
+    worker: Option<RecordWorker>,
 }
 impl Records {
     pub fn new(engine: Engine) -> Self {
-        let json = matches!(
-            engine,
-            Engine::Dogpile | Engine::Yep | Engine::Qwant | Engine::Swisscows
-        )
-        .then(JsonRecords::default);
-        let html = json.is_none().then(|| HtmlWorker::new(engine));
         Self {
             engine,
-            text: String::new(),
-            json,
-            html,
-            passes: 0,
+            worker: None,
         }
     }
     pub async fn push(&mut self, text: &str) -> Result<Option<Vec<SearchResult>>, KestrelError> {
-        if let Some(html) = &self.html {
-            return html.push(text).await;
+        if self.worker.is_none() {
+            self.worker = Some(RecordWorker::new(self.engine).await?);
         }
+        match &self.worker {
+            Some(worker) => worker.push(text).await,
+            None => unreachable!("worker initialized above"),
+        }
+    }
+}
+
+struct JsonState {
+    engine: Engine,
+    text: String,
+    json: JsonRecords,
+    passes: usize,
+}
+impl JsonState {
+    fn push(&mut self, text: &str) -> Result<Option<Vec<SearchResult>>, KestrelError> {
         self.text.push_str(text);
         if self.passes >= MAX_PASSES {
             return Ok(None);
         }
-        let snapshot = self
-            .json
-            .as_mut()
-            .and_then(|json| json.push(&self.text, self.engine));
-        let Some(snapshot) = snapshot else {
+        let Some(snapshot) = self.json.push(&self.text, self.engine) else {
             return Ok(None);
         };
         self.passes += 1;
@@ -163,20 +162,41 @@ fn target_array(engine: Engine, prefix: &str, stack: &[(u8, bool)]) -> bool {
     }
 }
 
-struct HtmlWorker {
-    sender: tokio::sync::mpsc::Sender<HtmlJob>,
+struct RecordWorker {
+    sender: tokio::sync::mpsc::Sender<RecordJob>,
 }
-type HtmlJob = (
+type RecordJob = (
     String,
     tokio::sync::oneshot::Sender<Result<Option<Vec<SearchResult>>, KestrelError>>,
 );
 
-impl HtmlWorker {
-    fn new(engine: Engine) -> Self {
-        let (sender, mut receiver) = tokio::sync::mpsc::channel::<HtmlJob>(1);
-        let context = crate::telemetry::parent_context();
-        tokio::task::spawn_blocking(move || {
-            let _context = context.attach();
+impl RecordWorker {
+    async fn new(engine: Engine) -> Result<Self, KestrelError> {
+        let permit = parsing::current_pool().acquire().await?;
+        let (sender, mut receiver) = tokio::sync::mpsc::channel::<RecordJob>(1);
+        parsing::spawn(permit, move || {
+            if matches!(
+                engine,
+                Engine::Dogpile | Engine::Yep | Engine::Qwant | Engine::Swisscows
+            ) {
+                let mut state = JsonState {
+                    engine,
+                    text: String::new(),
+                    json: JsonRecords::default(),
+                    passes: 0,
+                };
+                while let Some((text, reply)) = receiver.blocking_recv() {
+                    if reply.is_closed() {
+                        break;
+                    }
+                    let outcome = state.push(&text);
+                    if reply.send(outcome).is_err() {
+                        break;
+                    }
+                }
+                drop(receiver);
+                return;
+            }
             // The tokenizer is thread-local; only owned strings and results cross the channel.
             let tokenizer = Tokenizer::new(
                 HtmlSink {
@@ -188,6 +208,9 @@ impl HtmlWorker {
             let input = BufferQueue::default();
             let mut results = Vec::new();
             while let Some((text, reply)) = receiver.blocking_recv() {
+                if reply.is_closed() {
+                    break;
+                }
                 input.push_back(text.into());
                 let _ = tokenizer.feed(&input);
                 let mut state = tokenizer.sink.state.borrow_mut();
@@ -215,19 +238,20 @@ impl HtmlWorker {
                     break;
                 }
             }
+            drop(receiver);
             // No EOF recovery: only complete cards are published. Dropping the sender stops the worker.
         });
-        Self { sender }
+        Ok(Self { sender })
     }
     async fn push(&self, text: &str) -> Result<Option<Vec<SearchResult>>, KestrelError> {
         let (sender, receiver) = tokio::sync::oneshot::channel();
         self.sender
             .send((text.to_owned(), sender))
             .await
-            .map_err(|_| KestrelError::Search("HTML stream parser stopped".into()))?;
+            .map_err(|_| KestrelError::Search("provider stream parser stopped".into()))?;
         receiver
             .await
-            .map_err(|_| KestrelError::Search("HTML stream parser stopped".into()))?
+            .map_err(|_| KestrelError::Search("provider stream parser stopped".into()))?
     }
 }
 
@@ -504,6 +528,75 @@ mod tests {
                 include_str!("../../../tests/fixtures/providers/qwant.json"),
             ),
         ]
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn html_and_json_workers_share_capacity_through_repeated_cancellation() {
+        let pool = parsing::ParserPool::with_capacity(1);
+        parsing::POOL
+            .scope(pool.clone(), async {
+                for _ in 0..5 {
+                    let mut html = Records::new(Engine::Bing);
+                    html.push("<html>").await.unwrap();
+                    let mut json = Records::new(Engine::Dogpile);
+                    assert!(
+                        tokio::time::timeout(
+                            Duration::from_millis(10),
+                            json.push("{\"results\":[]}")
+                        )
+                        .await
+                        .is_err()
+                    );
+                    // Dropping an async caller must not release the live HTML worker's slot.
+                    assert!(
+                        tokio::time::timeout(Duration::from_millis(10), pool.acquire())
+                            .await
+                            .is_err()
+                    );
+                    drop(html);
+                    tokio::time::timeout(Duration::from_secs(5), json.push("{\"results\":[]}"))
+                        .await
+                        .unwrap()
+                        .unwrap();
+                    assert!(
+                        tokio::time::timeout(Duration::from_millis(10), pool.acquire())
+                            .await
+                            .is_err()
+                    );
+                    drop(json);
+                    // EOF/batch work must make progress after stream worker teardown.
+                    tokio::time::timeout(Duration::from_secs(5), parsing::run(|| 42))
+                        .await
+                        .unwrap()
+                        .unwrap();
+                }
+            })
+            .await;
+    }
+
+    #[tokio::test(flavor = "current_thread")]
+    async fn large_incremental_json_keeps_runtime_heartbeat_alive() {
+        let text = serde_json::json!({"results":[{"clickUrl":"https://example.org", "title":"large", "description":"<b>padding</b>".repeat(10_000)}]}).to_string();
+        assert!(text.len() < MAX_PROVIDER_RESPONSE_BYTES);
+        let expected = parse_provider_response(Engine::Dogpile, &text).unwrap();
+        let mut parser = Records::new(Engine::Dogpile);
+        let future = parser.push(&text);
+        tokio::pin!(future);
+        let mut beats = 0;
+        let started = Instant::now();
+        let actual = loop {
+            tokio::select! {
+                biased;
+                result = &mut future => break result.unwrap().unwrap(),
+                _ = tokio::time::sleep(Duration::from_millis(1)) => beats += 1,
+            }
+        };
+        assert_eq!(actual, expected);
+        assert!(beats > 0);
+        eprintln!(
+            "incremental JSON worker+parse wall={:?}, heartbeat ticks={beats}; fixture allocation excluded, network=0; allocator bytes not measured",
+            started.elapsed()
+        );
     }
 
     #[tokio::test]

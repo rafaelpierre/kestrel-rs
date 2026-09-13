@@ -126,3 +126,25 @@ Sources for frontend wire-format inspection: live Swisscows JavaScript/responses
 Qwant initial props, and the independently maintained
 [SearXNG adapters](https://github.com/searxng/searxng/tree/master/searx/engines).
 Synthetic fixtures test contracts; they do not establish live success.
+
+## Completed-response parsing (#116)
+
+Completed DuckDuckGo, Bing and Yahoo validation/extraction now share one HTML
+DOM. Ecosia and Mojeek also reuse the document supplied by the completed-response
+dispatcher. Constant selectors are compiled once per parsing thread and reused.
+The four JSON adapters bypass HTML document construction; markup inside result
+fields is cleaned as result text, not interpreted as a page-level challenge.
+Qwant's top-level challenge URL is still rejected. HTML HTTP error bodies retain
+HTML challenge diagnostics even for providers normally returning JSON.
+
+Dogpile, Yep and Qwant each decode one JSON representation in their completed
+adapter. Swisscows decodes its outer JSON plus the encoded payload when present;
+these are distinct wire representations. HTML fragments in JSON titles/snippets
+still require text extraction. Streaming frame recognition, ranks, metadata and
+result-count stopping remain unchanged.
+
+Transport challenge diagnostics and incremental JSON probes/snapshots remain
+separate parsing work. This slice does not establish a global worker limit or
+claim that every transport response is parsed only once across diagnostics and
+extraction. Worker lifetime/cancellation work belongs to #117; #16 remains open
+until cross-slice validation is complete.
