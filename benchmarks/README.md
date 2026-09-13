@@ -1,5 +1,10 @@
 # CLI comparison benchmark
 
+For initialization, deadline and cleanup attribution, use the
+[short-budget investigation harness](budget-overhead/README.md). It compares
+controlled fresh processes with retained clients using an isolated benchmark
+build; it does not change the shipped CLI.
+
 `cli_compare.py` measures the Python and Rust CLIs without involving Codex. It
 launches each matched Python/Rust query pair concurrently as independent
 processes, records external wall time and Kestrel's search/fetch/rank artifact
