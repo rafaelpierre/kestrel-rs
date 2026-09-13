@@ -1,5 +1,11 @@
 use super::*;
 
+// Concurrent process-spawning tests can briefly inherit a locked descriptor
+// between fork and exec on Unix. Closing our handle alone need not release the
+// lock until that child execs. Successful acquisitions use the production budget;
+// reserve Duration::ZERO for assertions that contention must fail immediately.
+const TEST_LOCK_TIMEOUT: Duration = Duration::from_secs(10);
+
 #[test]
 fn records_deduplicates_and_removes() {
     let directory = tempfile::tempdir().unwrap();
@@ -190,7 +196,7 @@ fn failures_before_replacement_preserve_old_bytes_and_clean_staging() {
     fs::write(&store.path, original).unwrap();
     let replacement = "title = 'replacement'\n".parse().unwrap();
     for fail_persist in [false, true] {
-        let _lock = store.lock(Duration::ZERO).unwrap();
+        let _lock = store.lock(TEST_LOCK_TIMEOUT).unwrap();
         let error = store
             .save_before_replace(&replacement, |staged| {
                 assert_eq!(fs::read_to_string(&store.path)?, original);
@@ -225,7 +231,7 @@ fn invalid_toml_is_untouched_and_errors_release_lock() {
         Err(ConfigError::Toml(_))
     ));
     assert_eq!(fs::read_to_string(&store.path).unwrap(), original);
-    let _lock = store.lock(Duration::ZERO).unwrap();
+    let _lock = store.lock(TEST_LOCK_TIMEOUT).unwrap();
 }
 
 #[cfg(unix)]
@@ -240,7 +246,7 @@ fn preserves_permissions_and_symlink_destination() {
     symlink(&target, &link).unwrap();
     let store = ConfigStore::new(link.clone());
     let resolved = store.transaction_store().unwrap();
-    let lock = resolved.lock(Duration::ZERO).unwrap();
+    let lock = resolved.lock(TEST_LOCK_TIMEOUT).unwrap();
     assert!(
         matches!(ConfigStore::new(target.canonicalize().unwrap()).lock(Duration::ZERO), Err(ConfigError::Io(ref e)) if e.kind() == io::ErrorKind::TimedOut)
     );
@@ -272,4 +278,30 @@ fn dangling_symlink_is_not_replaced() {
     assert!(store.record_installation(Path::new("skill")).is_err());
     assert!(fs::symlink_metadata(link).unwrap().is_symlink());
     assert!(!target.exists());
+}
+
+#[test]
+fn waiting_writer_succeeds_after_other_process_releases_lock() {
+    let directory = tempfile::tempdir().unwrap();
+    let root = directory.path().canonicalize().unwrap();
+    let store = ConfigStore::new(root.join("config.toml"));
+    let worker = Worker::spawn(&root, "hold", 0);
+    wait_for(&root.join("held"));
+    assert!(
+        matches!(store.lock(Duration::ZERO), Err(ConfigError::Io(ref e)) if e.kind() == io::ErrorKind::TimedOut)
+    );
+    let release = root.join("release");
+    let releaser = std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(50));
+        fs::write(release, "go").unwrap();
+    });
+    store
+        .record_installation(&root.join("after-release"))
+        .unwrap();
+    releaser.join().unwrap();
+    worker.finish();
+    assert_eq!(
+        store.get_installations().unwrap(),
+        [root.join("after-release")]
+    );
 }
