@@ -78,7 +78,8 @@ bounded blocking executor remain unchanged. Empty or whitespace-only retained
 output has no extractable content. No new dependency, flag, public field, output
 schema or cache-key change is introduced. JSON consumers should expect escaped
 newlines/tabs in HTML `content` instead of flattened prose. Cached extractions
-keep their old text until expiry or a fresh fetch (omit cache flags for a fresh search-page extraction).
+are invalidated by the versioned page-cache key; omit cache flags for fresh
+search-page extraction (`--cache-ttl 0` is invalid).
 
 ### Ranking decision and validation
 
