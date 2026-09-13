@@ -114,13 +114,99 @@ with these instructions rather than guessing its contents.
   packaging, or release behavior. Check the declared minimum Rust version when
   using new language/library features or changing dependencies.
 - For documentation-only changes, check accuracy, links, and the diff; a full
-  Rust build is not required. Report any skipped or blocked checks and why.
+  Rust build is not normally required. This does not waive the mandatory
+  ten-question gate below or its executable-provenance requirements. Report any
+  skipped or blocked checks and why.
 - Use the methodology in `benchmarks/README.md` for performance claims. Record
   configuration, sample size, and limitations; distinguish live-network variance
   from reproducible improvements. Do not commit generated artifacts by default.
 - Update README examples and relevant `docs/` when behavior or usage changes.
   Preserve the release-plz/cargo-dist release workflow; do not manually bump
   versions or rewrite generated release files unless that is the task's scope.
+
+## Mandatory ten-question evidence-quality gate
+
+- **Every feature and every change must test all ten questions, q01–q10, in
+  [the canonical dataset](benchmarks/codex-search-2026-09-11/queries.json).
+  This includes fixes, refactors, dependencies, packaging, configuration, tests,
+  skills, documentation and repository instructions.** Run the gate before
+  marking a PR ready or merging; it supplements, never replaces, the Rust checks
+  and generated-skill compatibility checks above/below. It is a live acceptance
+  exercise, separate from the deterministic ordinary test suite.
+- **The minimum is 10/10 individual passes.** Each question needs at least one
+  directly relevant source and enough retrieved evidence to write an answer
+  meeting its row below. Inspect all returned titles, URLs and snippets; select
+  sources deliberately and fetch supporting passages when snippets cannot
+  establish the answer. A relevant-looking URL, exit zero, nonempty output,
+  successful extraction, keyword overlap or an aggregate average is not a pass.
+  Partial answers, wrong entities/versions, generic homepages, unsupported claims,
+  empty results, abstentions and missing/unrun/unknown judgments do not pass.
+
+| ID | Minimum acceptable evidence and answer |
+| --- | --- |
+| q01 | Explicitly identify **Canberra** as Australia's capital, supported by retrieved text; a city URL alone is insufficient. |
+| q02 | Explain blue sky through **Rayleigh scattering**, including preferential scattering of shorter visible wavelengths; dictionary definitions or generic atmospheric context fail. |
+| q03 | Use official Python documentation to explain **TaskGroup** failure propagation, sibling cancellation, grouped exceptions and `except*`, distinguishing ordinary failures from cancellation; preserve readable code when used. |
+| q04 | Retrieve **postgresql.org** documentation and explain what **EXPLAIN ANALYZE** executes/reports and what **BUFFERS** adds; a generic PostgreSQL page fails. |
+| q05 | Retrieve **grafana.com** documentation showing **TraceQL parent/child structural relationships**, with a supported operator or query example and correct direction; distinguish immediate children from descendants. |
+| q06 | Retrieve the requested official **learn.chatgpt.com** Codex configuration evidence for **otel / trace_exporter**, including supported configuration syntax; a CLI landing page fails. A documented official redirect is acceptable; an unannounced domain substitution is not. |
+| q07 | Use official Rust documentation to explain **E0382/use of moved value**, with at least one applicable repair and its ownership implications; game pages or a Rust homepage fail. |
+| q08 | Retrieve dated evidence addressing **JWST observations of TRAPPIST-1 b in the requested 2025 context**, accurately stating the atmospheric finding and its uncertainty; evidence about planet e or another year alone fails. |
+| q09 | Retrieve official **Grafana Tempo 3.0** release/migration documentation and identify its documented breaking changes with actionable migration implications; another release or the Grafana homepage fails. |
+| q10 | State the **London Science Museum's opening hours** from retrieved evidence, preferably its official visitor page, preserving stated date/season/holiday qualifications; London landmarks or another museum fail. |
+
+### Required execution and evidence
+
+- Start each question with its exact manifest query and retain its ID/intent.
+  Use Kestrel's tested executable and the current generated skill to discover,
+  inspect and selectively read. Do not fill gaps from model memory, another
+  search tool, remembered source URLs or a copied answer key. Fetch URLs selected
+  from this run; follow documented links/redirects only with provenance recorded.
+- Declare the workflow, flags, budgets, cache state, model/assessor and grading
+  criteria before running. Use a consistent bounded policy: at most two discovery
+  calls and three direct fetches per question, with explicit finite search and
+  fetch timeouts. Record any recovery query and why it is needed; preserve the
+  original intent, site restrictions, entity, version and date. Do not silently
+  switch syntax, loosen constraints or tune the policy after seeing failures.
+  A changed policy requires a separately identified complete ten-question run;
+  retain every earlier attempt rather than cherry-picking successful rows.
+- Exercise the PR's final executable inputs, recording the tested revision,
+  tracked diff/tree identity, binary path/version/SHA-256 and dataset hash. Build
+  in the feature worktree when needed to establish this provenance; an installed
+  version string alone is insufficient. Re-run after executable, dataset or
+  workflow/skill changes. For documentation-only edits after a recorded run,
+  reuse is allowed only with verified unchanged executable inputs, dataset and
+  evaluation policy; identify both revisions and the reason in the PR.
+- Save full argv, timestamps, exit codes, stdout/stderr, all returned candidates,
+  provider diagnostics, actual fetch attempts and complete retained page text.
+  For each question record the synthesized answer, selected URLs, supporting
+  passages, pass/fail judgment and rationale; a truncated page prefix is not an
+  answer. Record successful extraction separately from useful evidence and
+  distinguish skipped fetches from failures. Keep sensitive/raw generated data
+  local by default; publish a sanitized per-question evidence summary sufficient
+  for review and state where the full artifacts are retained.
+- Report discovery and fetch timings separately, plus total tool wall time per
+  question including recovery; distinguish these from agent end-to-end latency.
+  Use a declared percentile convention. Do not mix fetched and metadata-only
+  searches into an unlabeled latency comparison. A single live run is an
+  acceptance observation, not a statistically reliable performance claim.
+
+### Readiness and failure handling
+
+- Every PR description must link the dataset and a ten-row q01–q10 results table,
+  with evidence references, individual judgments, timing, tested revision/binary
+  identity, exact workflow and limitations. State **gate PASS (10/10)** only when
+  all ten rows meet their minima. Missing evidence means **gate NOT PASSED**.
+- Provider blocks, rate limits, deadlines, unavailable/moved documentation and
+  pre-existing baseline failures must be reported honestly and keep the gate
+  unsatisfied. A failing baseline is not a waiver, and improvements elsewhere
+  cannot compensate for a failed question. Preserve failed runs; link the
+  applicable investigation/fix issue rather than weakening the dataset or rubric.
+- If the gate cannot pass, push the signed work as a **draft PR**, list each
+  failing/blocked question and its reason, and continue independent validation.
+  Do not claim readiness or merge. Updating an obsolete query or changing this
+  acceptance policy requires an explicit, separately reviewed change documenting
+  the preserved intent; never silently replace a difficult question in a run.
 
 ## Required installed-skill compatibility
 
@@ -198,8 +284,9 @@ with these instructions rather than guessing its contents.
   appropriate; do not silently dismiss it or mark it fixed.
 - After pushing, check CI, signature verification, and any new review feedback.
   Report pending checks as pending rather than claiming the PR is ready.
-- Merge only when authorized, required checks and approvals pass, and unresolved
-  feedback has been addressed or explicitly accepted by a maintainer. Preserve
+- Merge only when authorized, the ten-question gate passes, required checks and
+  approvals pass, and unresolved feedback has been addressed or explicitly
+  accepted by a maintainer. Preserve
   verified signatures in the resulting history; never bypass branch protection.
 - Confirm the remote PR is merged before cleaning up the worktree and branch.
   Report the PR link, issue status, validation, and cleanup outcome.
