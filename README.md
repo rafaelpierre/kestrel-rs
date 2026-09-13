@@ -357,7 +357,11 @@ and capabilities that remain outside the CLI.
 
 Project installations use `.claude/skills`, `.codex/skills`, and
 `.github/skills`. Installation records are kept in
-`~/.kestrelsearch/config.toml`.
+`~/.kestrelsearch/config.toml`. Updates use a persistent `config.toml.lock`
+sidecar and atomic replacement to protect records from concurrent Kestrel commands
+and interrupted writes. Lock contention fails after ten seconds; retry once the
+other installation finishes. Do not delete the lock file. See
+[installation-state guarantees and limits](docs/installation-state.md).
 
 ## Performance evidence
 

@@ -177,6 +177,25 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     let target = project.path().join(".codex/skills/kestrelsearch/SKILL.md");
     assert!(target.exists());
     let skill = fs::read_to_string(&target).unwrap();
+    assert!(
+        user_home
+            .path()
+            .join(".kestrelsearch/config.toml.lock")
+            .exists()
+    );
+    for guidance in [
+        "Do not delete this lock file",
+        "lock contention fails after ten seconds",
+        "Config writes use atomic replacement",
+        "Invalid TOML returns an error without overwriting it",
+        "dangling symlinks are rejected",
+        "bookkeeping are separate operations",
+    ] {
+        assert!(
+            skill.contains(guidance),
+            "missing installed guidance: {guidance}"
+        );
+    }
     assert!(skill.contains("retained prefix"));
     assert!(skill.contains("round to at least one nanosecond"));
     assert!(skill.contains("Semaphore::MAX_PERMITS"));
