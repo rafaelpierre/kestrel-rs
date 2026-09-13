@@ -470,18 +470,24 @@ where
     .await
 }
 
+/// Trim query edges, drop empty queries and retain the first occurrence of each
+/// remaining query. Search uses these exact strings for provider provenance;
+/// callers composing search with metadata selection should use the same list.
+pub fn normalize_queries(queries: &[String]) -> Vec<String> {
+    let mut seen = HashSet::new();
+    queries
+        .iter()
+        .map(|query| query.trim())
+        .filter(|query| !query.is_empty() && seen.insert(*query))
+        .map(str::to_owned)
+        .collect()
+}
+
 fn validate_request(
     queries: &[String],
     options: &SearchOptions,
 ) -> Result<(Vec<String>, Vec<Engine>), KestrelError> {
-    let mut seen_queries = HashSet::new();
-    let clean_queries: Vec<String> = queries
-        .iter()
-        .map(|query| query.trim())
-        .filter(|query| !query.is_empty())
-        .filter(|query| seen_queries.insert((*query).to_owned()))
-        .map(str::to_owned)
-        .collect();
+    let clean_queries = normalize_queries(queries);
     let mut seen_engines = HashSet::new();
     let clean_engines: Vec<Engine> = options
         .engines

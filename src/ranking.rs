@@ -196,6 +196,121 @@ pub fn rank_results_by_query(results: Vec<SearchResult>, queries: &[String]) -> 
     interleave(buckets)
 }
 
+/// Counts from opt-in metadata relevance filtering, before the fetch cap.
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct FetchScoreReport {
+    /// Candidates removed from both fetching and final results.
+    pub rejected: usize,
+    /// Contributing queries without affirmative lexical terms; their candidates
+    /// bypass the threshold so site-only/exclusion-only searches remain usable.
+    pub bypassed_queries: usize,
+}
+
+/// Filter a deduplicated candidate pool by positive-IDF BM25 over doubled title
+/// plus snippet, using an inclusive, finite nonnegative minimum. Scores are
+/// corpus-dependent and remain internal; content and public BM25 are untouched.
+///
+/// Queries must use portable syntax. As in search, edges are trimmed, blank
+/// queries dropped and duplicates removed. Each query is scored against its complete
+/// contributing pool before filtering. A URL survives if any contributing query
+/// meets the minimum (or has no affirmative lexical terms). Candidates without
+/// provenance matching a supplied query are evaluated against all supplied queries.
+/// Order and provenance are preserved. Call before pre-ranking/truncation; this
+/// synchronous CPU work should run off an async executor thread.
+///
+/// Invalid thresholds/queries and an empty query list fail without mutating results.
+pub fn filter_fetch_candidates(
+    results: &mut Vec<SearchResult>,
+    queries: &[String],
+    minimum: f64,
+) -> Result<FetchScoreReport, crate::search::KestrelError> {
+    use crate::query::{QueryPlan, QuerySyntax};
+    use crate::search::KestrelError;
+
+    let query_order = crate::search::normalize_queries(queries);
+    if !minimum.is_finite() || minimum < 0.0 || query_order.is_empty() {
+        return Err(KestrelError::InvalidRequest(
+            "fetch score requires a finite nonnegative minimum and at least one portable query"
+                .into(),
+        ));
+    }
+    let terms: Vec<Vec<String>> = query_order
+        .iter()
+        .map(|query| {
+            let plan = QueryPlan::parse(query, QuerySyntax::Portable)?;
+            Ok(plan
+                .affirmative_text()
+                .into_iter()
+                .flat_map(evidence_tokens)
+                .collect())
+        })
+        .collect::<Result<_, KestrelError>>()?;
+    let memberships: Vec<Vec<usize>> = results
+        .iter()
+        .map(|result| {
+            let mut indexes: Vec<_> = query_order
+                .iter()
+                .enumerate()
+                .filter(|(_, query)| {
+                    result.query.as_deref() == Some(query.as_str())
+                        || result
+                            .sources
+                            .iter()
+                            .any(|source| source.query == query.as_str())
+                })
+                .map(|(index, _)| index)
+                .collect();
+            if indexes.is_empty() {
+                indexes.extend(0..query_order.len());
+            }
+            indexes
+        })
+        .collect();
+    let documents: Vec<_> = results
+        .iter()
+        .map(|result| {
+            evidence_tokens(&format!(
+                "{} {} {}",
+                result.title, result.title, result.snippet
+            ))
+        })
+        .collect();
+    let mut keep = vec![false; results.len()];
+    let mut report = FetchScoreReport::default();
+    for (query_index, terms) in terms.iter().enumerate() {
+        let indexes: Vec<_> = memberships
+            .iter()
+            .enumerate()
+            .filter(|(_, membership)| membership.contains(&query_index))
+            .map(|(index, _)| index)
+            .collect();
+        if indexes.is_empty() {
+            continue;
+        }
+        if terms.is_empty() {
+            report.bypassed_queries += 1;
+            for index in indexes {
+                keep[index] = true;
+            }
+            continue;
+        }
+        let corpus: Vec<_> = indexes
+            .iter()
+            .map(|index| documents[*index].clone())
+            .collect();
+        for (index, score) in indexes
+            .into_iter()
+            .zip(positive_bm25_scores(&corpus, terms))
+        {
+            keep[index] |= score >= minimum;
+        }
+    }
+    let mut decisions = keep.into_iter();
+    results.retain(|_| decisions.next().unwrap_or(false));
+    report.rejected = memberships.len() - results.len();
+    Ok(report)
+}
+
 /// Order search candidates by title/snippet relevance while interleaving source buckets.
 ///
 /// This does not set the public BM25 score, which remains reserved for final
@@ -393,6 +508,157 @@ mod tests {
         result.query = query.map(str::to_owned);
         result.content = content.map(str::to_owned);
         result
+    }
+
+    #[test]
+    fn fetch_score_small_corpora_boundaries_and_untouched_evidence() {
+        let mut hit = result(
+            "rust",
+            Some("rust"),
+            Some("body must not affect eligibility"),
+        );
+        hit.snippet = "rust".into();
+        hit.bm25_score = Some(-7.0);
+        let exact = positive_bm25_scores(&[evidence_tokens("rust rust rust")], &["rust".into()])[0];
+        assert!(exact > 0.0);
+        for size in [1, 2] {
+            let mut hits = vec![hit.clone(); size];
+            let report = filter_fetch_candidates(&mut hits, &["rust".into()], 0.1).unwrap();
+            assert_eq!(report.rejected, 0);
+            assert_eq!(hits, vec![hit.clone(); size]);
+        }
+        let mut hits = vec![hit.clone()];
+        filter_fetch_candidates(&mut hits, &["rust".into()], exact).unwrap();
+        assert_eq!(hits, vec![hit.clone()]);
+        filter_fetch_candidates(&mut hits, &["rust".into()], exact + 0.0001).unwrap();
+        assert!(hits.is_empty());
+        let mut hits = vec![
+            result("cooking", None, Some("rust")),
+            result("", None, None),
+        ];
+        let original = hits.clone();
+        filter_fetch_candidates(&mut hits, &["rust".into()], 0.0).unwrap();
+        assert_eq!(hits, original);
+        assert_eq!(
+            filter_fetch_candidates(&mut hits, &["rust".into()], 0.01)
+                .unwrap()
+                .rejected,
+            2
+        );
+        assert!(hits.is_empty());
+    }
+
+    #[test]
+    fn fetch_score_uses_complete_pool_and_preserves_ties() {
+        let input = vec![result("rust", None, None), result("cooking", None, None)];
+        let corpus: Vec<_> = input
+            .iter()
+            .map(|r| evidence_tokens(&format!("{} {} {}", r.title, r.title, r.snippet)))
+            .collect();
+        let exact = positive_bm25_scores(&corpus, &["rust".into()])[0];
+        let mut hits = input;
+        filter_fetch_candidates(&mut hits, &["rust".into()], exact).unwrap();
+        assert_eq!(hits.len(), 1);
+        let mut hits = vec![result("café 日本語", None, None); 2];
+        hits[0].url = "https://example.com/first".into();
+        hits[1].url = "https://example.com/second".into();
+        let original = hits.clone();
+        filter_fetch_candidates(&mut hits, &["café OR 日本語".into()], 0.01).unwrap();
+        assert_eq!(hits, original);
+    }
+
+    #[test]
+    fn fetch_score_uses_every_contributing_query_and_bypasses_nonlexical_queries() {
+        use crate::SourceOccurrence;
+        let mut shared = result("python", Some("rust"), None);
+        shared.sources = vec![
+            SourceOccurrence {
+                engine: Engine::Bing,
+                query: "rust".into(),
+                rank: 3,
+            },
+            SourceOccurrence {
+                engine: Engine::Yahoo,
+                query: "python".into(),
+                rank: 5,
+            },
+        ];
+        let mut hits = vec![shared.clone(), result("cooking", Some("rust"), None)];
+        filter_fetch_candidates(
+            &mut hits,
+            &["rust".into(), "python".into(), "python".into()],
+            0.1,
+        )
+        .unwrap();
+        assert_eq!(hits, vec![shared]);
+        // A foreign query must not rescue a result attributed only to rust.
+        let mut hits = vec![result("python", Some("rust"), None)];
+        filter_fetch_candidates(&mut hits, &["rust".into(), "python".into()], 0.1).unwrap();
+        assert!(hits.is_empty());
+        let query = "site:example.com NOT rust";
+        let mut hits = vec![
+            result("", Some(query), None),
+            result("python", Some("rust"), None),
+        ];
+        let report =
+            filter_fetch_candidates(&mut hits, &[query.into(), "rust".into()], f64::MAX).unwrap();
+        assert_eq!(report.bypassed_queries, 1);
+        assert_eq!(report.rejected, 1);
+        assert_eq!(hits.len(), 1);
+    }
+
+    #[test]
+    fn fetch_score_normalizes_queries_before_provenance_matching() {
+        let input = vec![
+            result("python", Some("rust"), None),
+            result("python", Some("python"), None),
+        ];
+        let mut expected = input.clone();
+        filter_fetch_candidates(&mut expected, &["rust".into(), "python".into()], 0.1).unwrap();
+        assert_eq!(expected.len(), 1);
+        assert_eq!(expected[0].query.as_deref(), Some("python"));
+        let mut actual = input.clone();
+        filter_fetch_candidates(
+            &mut actual,
+            &[
+                "  rust ".into(),
+                " ".into(),
+                "python".into(),
+                "rust".into(),
+                " python ".into(),
+            ],
+            0.1,
+        )
+        .unwrap();
+        assert_eq!(actual, expected);
+        let mut actual = input.clone();
+        assert!(filter_fetch_candidates(&mut actual, &[" ".into(), "\t".into()], 0.1).is_err());
+        assert_eq!(actual, input);
+    }
+
+    #[test]
+    fn fetch_score_ignores_exclusions_and_rejects_invalid_input_atomically() {
+        let query = "café NOT python site:example.com";
+        let mut hits = vec![
+            result("python AND example com", None, None),
+            result("café", None, None),
+        ];
+        filter_fetch_candidates(&mut hits, &[query.into()], 0.01).unwrap();
+        assert_eq!(hits.len(), 1);
+        assert_eq!(hits[0].title, "café");
+        let original = hits.clone();
+        for minimum in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, -1.0] {
+            assert!(filter_fetch_candidates(&mut hits, &[query.into()], minimum).is_err());
+            assert_eq!(hits, original);
+        }
+        for queries in [vec![], vec!["café".into(), "(".into()]] {
+            assert!(filter_fetch_candidates(&mut hits, &queries, 1.0).is_err());
+            assert_eq!(hits, original);
+        }
+        assert_eq!(
+            filter_fetch_candidates(&mut Vec::new(), &["rust".into()], 1.0).unwrap(),
+            FetchScoreReport::default()
+        );
     }
 
     #[test]

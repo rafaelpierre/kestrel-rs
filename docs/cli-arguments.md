@@ -13,6 +13,7 @@ search defaults to 2,000 extracted characters per page and fetch to 20,000.
 | `--mode fanout`, `--provider-quorum` | Fanout is the only mode; provider quorum is ignored by result-count stopping. |
 | `--min-results` | Provider stopping threshold per query (default five unique accepted candidates); independent of fetch and return limits, and not a guarantee. |
 | `--top-k`, `--fetch-candidates` | Returned result ceiling versus page candidate ceiling (default three times top-k). A smaller candidate ceiling can intentionally return fewer than top-k results. |
+| `--min-fetch-score` | Optional inclusive positive-IDF metadata threshold before candidate truncation; portable syntax and fetching required; independent of final ranking. |
 | `--pre-rank` | Orders titles/snippets before limiting fetch candidates, only when candidates exceed the limit. Independent of final ranking. |
 | `--fetch`, `--no-fetch` | Enable switch (already the default) versus disabling page retrieval and default body ranking. Mutually exclusive. |
 | `--rank`, `--no-rank`, `--ranking-policy` | Choose at most one explicit final-ranking control. Default is content BM25 with fetching. Provider policy preserves candidate order, like no-rank. |
@@ -39,7 +40,7 @@ prefix. Byte limits, timeouts, and partial-response diagnostics apply as usual.
 ## Invalid combinations and migration
 
 `--no-fetch` conflicts with explicit `--fetch`, `--rank`, `--fetch-candidates`,
-`--pre-rank`, `--content-limit`, `--max-response-bytes`, `--timeout`, `--fetch-budget`,
+`--pre-rank`, `--min-fetch-score`, `--content-limit`, `--max-response-bytes`, `--timeout`, `--fetch-budget`,
 `--cache-ttl`, `--cache-dir`, `--cache-max-entries`, `--concurrency`, and
 `--parse-concurrency`. Defaults do not cause conflicts; only explicitly supplied
 options are checked. Remove these settings from search-only commands, or remove
@@ -90,6 +91,60 @@ including empty input and cached fetch paths. Cached fetch validates before
 cache I/O. Transport and warm-up durations also validate deadline capacity.
 These representability checks are not practical memory or latency budgets;
 callers should still choose limits appropriate to their workload.
+
+## Optional fetch score threshold
+
+`--min-fetch-score SCORE` defaults to disabled. With the flag, positive-IDF BM25
+scores doubled title plus snippet over the complete deduplicated pool contributed
+by each query, before any gate rejection, pre-ranking or fetch-candidate truncation.
+It uses the evidence tokenizer shared with the experimental snippet policy.
+Scores remain internal and never populate or replace content-only `bm25_score`.
+Scores depend on corpus size/composition and query terms, not a universal relevance
+scale; choose a threshold only after evaluating useful-source retention.
+
+The comparison is inclusive (`score >= SCORE`). Finite nonnegative numbers are
+accepted, including zero (which keeps zero scores); negatives, NaN and infinities
+fail before requests with usage status 2. Native query syntax and `--no-fetch`
+conflict with this flag, also with status 2, stderr explanations and empty stdout.
+Standalone `fetch` has no query and does not accept the option.
+
+With the gate enabled, the CLI passes the same trimmed, deduplicated query list
+to search and later stages. Whitespace-only queries are discarded; at least one
+nonempty query is required. The library gate shares search's normalization, so
+padded queries cannot lose their provenance match or gain an unrelated query's
+score. No query or provenance field is rewritten by filtering.
+
+Only affirmative text leaves of the portable query expression contribute scoring
+terms. Phrases are tokenized rather than scored as exact phrases; existing query
+constraint matching remains intact. Operators, negated text and site constraints
+are excluded; nested negation restores positive polarity. Queries with no
+affirmative lexical terms bypass gating with a stderr diagnostic. Shared URLs
+qualify if any contributing query passes or bypasses, preserving their original
+query/engine fields, source occurrences and relative order. The reusable
+`ranking::filter_fetch_candidates` helper treats candidates without matching
+provenance as belonging to all supplied queries; library search/fetch APIs remain
+separate and unchanged. Its CPU work is synchronous; the CLI runs it on a blocking
+worker rather than the async executor.
+
+Filtering applies even below the fetch cap and without `--pre-rank`. The existing
+pre-rank policy runs afterwards only if survivors exceed the cap. Rejected URLs
+leave both the fetch pool and final output. `--no-rank` and all fetch-compatible
+ranking policies remain valid; final body ranking can still remove survivors.
+Provider stopping is unchanged, so raising only the fetch cap or threshold does
+not collect replacement candidates. There is no threshold relaxation or refill.
+All-rejected searches perform no page/cache work and return a successful empty
+result. Cache keys, PDF handling, final ranking and public JSON schemas are unchanged.
+
+Stderr reports rejected candidates and contributing queries that bypassed the gate.
+Existing benchmark fields remain; an enabled gate adds `fetch_score` timing and
+`after_fetch_score`, `fetch_score_rejected`, `fetch_score_bypassed_queries` counts.
+Scoring occurs between provider search and page fetching, outside their network
+budgets; these flags are not total process-latency limits. Regenerate the installed
+skill with the updated binary. Example (0.1 is illustrative, not calibrated):
+
+```sh
+kestrel search "rust async" --min-results 15 --fetch-candidates 8 --min-fetch-score 0.1 --no-rank
+```
 
 ## Advisory content quality
 
