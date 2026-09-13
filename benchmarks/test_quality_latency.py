@@ -110,6 +110,42 @@ class CaptureTests(unittest.TestCase):
 
 
 class BatchTests(unittest.TestCase):
+    def test_recover_runs_handles_missing_and_empty_files(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d)/'runs.jsonl'
+            self.assertEqual(ql.recover_runs(path), [])
+            self.assertFalse(path.exists())
+            path.touch()
+            self.assertEqual(ql.recover_runs(path), [])
+
+    def test_recover_runs_discards_only_unterminated_invalid_tail(self):
+        for tail in [b'{"run_id":', b'{"query":"caf\xc3']:
+            with self.subTest(tail=tail), tempfile.TemporaryDirectory() as d:
+                path = Path(d)/'runs.jsonl'
+                committed = b'{"run_id":"complete"}\n'
+                path.write_bytes(committed + tail)
+                with contextlib.redirect_stderr(io.StringIO()):
+                    self.assertEqual(ql.recover_runs(path), [dict(run_id='complete')])
+                self.assertEqual(path.read_bytes(), committed)
+
+    def test_recover_runs_preserves_complete_unterminated_record_before_append(self):
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d)/'runs.jsonl'
+            path.write_bytes(b'{"run_id":"complete"}')
+            self.assertEqual(ql.recover_runs(path), [dict(run_id='complete')])
+            with path.open('a') as stream:
+                stream.write('{"run_id":"next"}\n')
+            self.assertEqual(ql.recover_runs(path), [dict(run_id='complete'), dict(run_id='next')])
+
+    def test_recover_runs_rejects_committed_corruption_without_changing_file(self):
+        for data in [b'{bad}\n', b'{bad}\n{"run_id":"complete"}\n', b'\xff\n', b'\n']:
+            with self.subTest(data=data), tempfile.TemporaryDirectory() as d:
+                path = Path(d)/'runs.jsonl'
+                path.write_bytes(data)
+                with self.assertRaises((ValueError, UnicodeDecodeError)):
+                    ql.recover_runs(path)
+                self.assertEqual(path.read_bytes(), data)
+
     def test_resume_skips_complete_runs_and_preserves_orphan_attempt(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
@@ -137,11 +173,11 @@ class BatchTests(unittest.TestCase):
                         ql.main()
                     self.assertEqual(capture.call_count, 1)
                     self.assertEqual((output/'metadata.json').read_bytes(), metadata_before)
-                    # Simulate interruption after capture but before appending its record.
-                    (output/'runs.jsonl').write_text('')
+                    # Simulate interruption while appending the captured record.
+                    (output/'runs.jsonl').write_text('{"run_id":')
                     orphan = Path(saved['artifact_directory'])/'run-orphan.json'
                     orphan.write_text('{}')
-                    with patch.object(sys, 'argv', argv+['--resume']):
+                    with patch.object(sys, 'argv', argv+['--resume']), contextlib.redirect_stderr(io.StringIO()):
                         ql.main()
                     rerun = json.loads((output/'runs.jsonl').read_text())
                     self.assertIn('attempt-2', rerun['artifact_directory'])

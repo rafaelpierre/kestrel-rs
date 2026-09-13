@@ -94,6 +94,10 @@ effective policies and incompatible cache/fetch overrides are rejected. Old
 rewritten and old batches cannot resume under schema 2. `--resume` checks the
 binary, source/runner hashes, query selection, settings and captured environment.
 Interrupted attempts are retained in separate directories and never mixed.
+An invalid final record without a newline is treated as an interrupted append:
+resume truncates only that incomplete tail and retries the run in a new attempt
+directory. Complete records are retained, including a final JSON record missing
+only its newline. Malformed newline-terminated records remain errors.
 
 Calls are sequential (one CLI process), with a minimum idle interval of 0.25
 seconds, including between warmup and measurement. Conditions rotate positions

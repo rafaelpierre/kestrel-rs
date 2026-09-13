@@ -499,7 +499,7 @@ async fn portable_constraints_filter_streamed_records_before_counting() {
 
 #[tokio::test]
 async fn benchmark_minimum_arms_and_fixed_pool_exercise_larger_fetch_caps() {
-    use crate::{FetchOptions, fetch_all};
+    use crate::{FetchOptions, fetcher::fetch_all_reusing_client};
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
     tokio::time::timeout(Duration::from_secs(10), async {
@@ -543,7 +543,7 @@ async fn benchmark_minimum_arms_and_fixed_pool_exercise_larger_fetch_caps() {
                 }).collect();
                 for cap in [5, 10, 15] {
                     let before = pages.received_requests().await.unwrap().len();
-                    let content = fetch_all(&urls[..cap], &FetchOptions::default()).await.unwrap();
+                    let content = fetch_all_reusing_client(&urls[..cap], &FetchOptions::default(), &client).await.unwrap();
                     assert_eq!(pages.received_requests().await.unwrap().len() - before, cap);
                     assert_eq!(content.iter().filter(|c| c.as_deref().is_some_and(|s| s.contains("Complete fixture evidence"))).count(), cap);
                 }

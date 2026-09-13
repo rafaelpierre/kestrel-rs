@@ -107,6 +107,34 @@ def environment():
                 warm_state='page cache only; warmup success does not guarantee the next live search chooses the same URLs')
 
 
+def recover_runs(path):
+    """Read saved runs, repairing only an interrupted, unterminated final line."""
+    if not path.exists():
+        return []
+    runs = []
+    # Read bytes so a kill halfway through a UTF-8 character is recoverable too.
+    with path.open('r+b') as stream:
+        while True:
+            offset = stream.tell()
+            line = stream.readline()
+            if not line:
+                break
+            try:
+                run = json.loads(line)
+            except (ValueError, UnicodeDecodeError):
+                if line.endswith(b'\n'):
+                    raise
+                stream.truncate(offset)
+                print(f'Removed incomplete trailing record from {path} at byte {offset}', file=sys.stderr)
+                break
+            runs.append(run)
+            if not line.endswith(b'\n'):
+                # A complete JSON object may have reached disk before its delimiter.
+                stream.write(b'\n')
+                break
+    return runs
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--binary', required=True, type=Path)
@@ -199,7 +227,7 @@ def main():
     if sha(frozen) != metadata['binary_sha256']:
         parser.error('frozen binary differs; use a new batch')
     output = args.output / 'runs.jsonl'
-    old = list(map(json.loads, output.read_text().splitlines())) if output.exists() else []
+    old = recover_runs(output)
     completed = {r['run_id'] for r in old}
     if len(completed) != len(old):
         parser.error('duplicate run IDs in saved batch')
