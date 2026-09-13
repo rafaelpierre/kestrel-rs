@@ -108,6 +108,7 @@ page text is unavailable, including searches with `--no-fetch`.
 - Portable mode and --query-syntax have been removed. Remove that flag from saved commands; there is no replacement local Boolean/phrase filter. Do not infer full-page relevance from a snippet.
 - All nine supported engines are selected by default. Explicit `--engine` selections replace this list; use `-e duckduckgo -e bing -e yahoo` to retain the previous provider set.
 - Provider failures, bot challenges, and unsupported region/recency filters retain results from successful providers; including an engine does not guarantee results.
+- Completed HTML validation and extraction share one document. JSON result descriptions are data: embedded CAPTCHA markup does not by itself indicate a page challenge; Qwant's top-level challenge URL remains an error. HTML error responses still receive HTML challenge diagnostics.
 - Fanout defaults to a five-second search budget, including queueing and retries. Use --search-budget to change it or --no-search-budget to disable the total deadline.
 - Search, page fetching, and parsing concurrency each default to 10.
 - Search/fetch clients select random browser headers and reuse HTTP/2 or HTTP/1.1 connections within the process.

@@ -59,6 +59,21 @@ fn classify_challenge(engine: Engine, text: &str) -> Challenge {
     if text.trim().is_empty() {
         return Challenge::Unknown;
     }
+    if matches!(
+        engine,
+        Engine::Dogpile | Engine::Yep | Engine::Swisscows | Engine::Qwant
+    ) && matches!(text.trim_start().as_bytes().first(), Some(b'{' | b'['))
+    {
+        return if engine == Engine::Qwant
+            && serde_json::from_str::<serde_json::Value>(text)
+                .ok()
+                .is_some_and(|v| v.get("url").and_then(|v| v.as_str()).is_some())
+        {
+            Challenge::Detected
+        } else {
+            Challenge::NotDetected
+        };
+    }
     let document = Html::parse_document(text);
     if document.select(&selector("#b_captcha, #captcha, form[action*='captcha'], .g-recaptcha, #challenge-form, #cf-challenge-running, form[action*='anomaly.js'], .anomaly-modal")).next().is_some() {
         return Challenge::Detected;
@@ -70,13 +85,6 @@ fn classify_challenge(engine: Engine, text: &str) -> Challenge {
         && document
             .select(&selector("title"))
             .any(|e| e.text().collect::<String>().contains("Firewall"))
-    {
-        return Challenge::Detected;
-    }
-    if engine == Engine::Qwant
-        && serde_json::from_str::<serde_json::Value>(text)
-            .ok()
-            .is_some_and(|v| v.get("url").and_then(|v| v.as_str()).is_some())
     {
         return Challenge::Detected;
     }
@@ -1507,6 +1515,12 @@ fn result_allowed(query: &str, value: &str) -> bool {
 }
 
 fn parse_provider_response(engine: Engine, html: &str) -> Result<Vec<SearchResult>, KestrelError> {
+    if matches!(
+        engine,
+        Engine::Dogpile | Engine::Yep | Engine::Swisscows | Engine::Qwant
+    ) {
+        return crate::providers::parse(engine, html);
+    }
     let document = Html::parse_document(html);
     if document
         .select(&selector(
@@ -1520,10 +1534,10 @@ fn parse_provider_response(engine: Engine, html: &str) -> Result<Vec<SearchResul
         )));
     }
     let results = match engine {
-        Engine::Bing => parse_bing_results(html),
-        Engine::Yahoo => parse_yahoo_results(html),
-        Engine::Duckduckgo => return parse_duckduckgo_response(html),
-        _ => return crate::providers::parse(engine, html),
+        Engine::Bing => parse_bing_document(&document),
+        Engine::Yahoo => parse_yahoo_document(&document),
+        Engine::Duckduckgo => return parse_duckduckgo_document(&document),
+        _ => return crate::providers::parse_html(engine, &document),
     };
     let empty_marker = match engine {
         Engine::Bing => "li.b_no, .b_no",
@@ -1539,7 +1553,10 @@ fn parse_provider_response(engine: Engine, html: &str) -> Result<Vec<SearchResul
 }
 
 fn parse_duckduckgo_response(html: &str) -> Result<Vec<SearchResult>, KestrelError> {
-    let document = Html::parse_document(html);
+    parse_duckduckgo_document(&Html::parse_document(html))
+}
+
+fn parse_duckduckgo_document(document: &Html) -> Result<Vec<SearchResult>, KestrelError> {
     if document
         .select(&selector(
             "form#challenge-form, form[action*='anomaly.js'], .anomaly-modal",
@@ -1551,7 +1568,7 @@ fn parse_duckduckgo_response(html: &str) -> Result<Vec<SearchResult>, KestrelErr
             "DuckDuckGo returned a bot challenge; try --engine bing or --engine yahoo".into(),
         ));
     }
-    let results = parse_duckduckgo_results(html);
+    let results = parse_duckduckgo_document_results(document);
     if results.is_empty() && document.select(&selector(".no-results")).next().is_none() {
         return Err(KestrelError::Search(
             "DuckDuckGo returned an unrecognized search page; try --engine bing or --engine yahoo"
@@ -1561,8 +1578,12 @@ fn parse_duckduckgo_response(html: &str) -> Result<Vec<SearchResult>, KestrelErr
     Ok(results)
 }
 
+#[cfg(test)]
 fn parse_duckduckgo_results(html: &str) -> Vec<SearchResult> {
-    let document = Html::parse_document(html);
+    parse_duckduckgo_document_results(&Html::parse_document(html))
+}
+
+fn parse_duckduckgo_document_results(document: &Html) -> Vec<SearchResult> {
     let item = selector("div.result.results_links.results_links_deep.web-result");
     let title = selector("h2.result__title a.result__a");
     let display = selector("a.result__url");
@@ -1587,8 +1608,12 @@ fn parse_duckduckgo_results(html: &str) -> Vec<SearchResult> {
         .collect()
 }
 
+#[cfg(test)]
 fn parse_bing_results(html: &str) -> Vec<SearchResult> {
-    let document = Html::parse_document(html);
+    parse_bing_document(&Html::parse_document(html))
+}
+
+fn parse_bing_document(document: &Html) -> Vec<SearchResult> {
     let item = selector("li.b_algo");
     let title = selector("h2 a");
     let snippet = selector(".b_caption p");
@@ -1613,6 +1638,9 @@ fn parse_bing_results(html: &str) -> Vec<SearchResult> {
         .collect()
 }
 
+#[cfg(test)]
+mod parse_once_tests;
+
 fn decode_bing_url(value: &str) -> String {
     if !value.contains("/ck/a") && !value.contains("/cr?") {
         return value.to_owned();
@@ -1636,8 +1664,12 @@ fn decode_bing_url(value: &str) -> String {
         .unwrap_or_else(|| value.to_owned())
 }
 
+#[cfg(test)]
 fn parse_yahoo_results(html: &str) -> Vec<SearchResult> {
-    let document = Html::parse_document(html);
+    parse_yahoo_document(&Html::parse_document(html))
+}
+
+fn parse_yahoo_document(document: &Html) -> Vec<SearchResult> {
     let primary = selector("div.dd.algo");
     let fallback = selector("div.compTitle");
     let entries: Vec<_> = document.select(&primary).collect();
@@ -1728,8 +1760,20 @@ fn percent_decode(value: &str) -> String {
         .unwrap_or_else(|| value.to_owned())
 }
 
-fn selector(value: &str) -> Selector {
-    Selector::parse(value).expect("static selector is valid")
+pub(crate) fn selector(value: &'static str) -> Selector {
+    // Only internal constant selectors enter this cache. Each parsing thread reuses
+    // compiled selectors without contending with other provider workers.
+    thread_local! {
+        static SELECTORS: std::cell::RefCell<HashMap<&'static str, Selector>> =
+            std::cell::RefCell::new(HashMap::new());
+    }
+    SELECTORS.with(|selectors| {
+        selectors
+            .borrow_mut()
+            .entry(value)
+            .or_insert_with(|| Selector::parse(value).expect("static selector is valid"))
+            .clone()
+    })
 }
 
 fn element_text(element: ElementRef<'_>, separator: &str) -> String {
