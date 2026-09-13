@@ -1,0 +1,5617 @@
+{
+  "candidates": {
+    "music-bss": {
+      "candidates-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.440883082977962,
+          "p95": 7.648923416971229,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.426154792,
+          "p95": 7.260615875,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 15,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 27,
+            "after_candidate_selection": 15,
+            "with_content": 6,
+            "returned": 15
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 3,
+            "result_count": 27
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 3,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 15,
+            "response_bytes": 6124018,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.2,
+        "evidence_slot_coverage": 0.4
+      },
+      "candidates-10": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.289982250018511,
+          "p95": 6.485748708015308,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.274747166,
+          "p95": 6.470283417,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 15,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 37,
+            "after_candidate_selection": 28,
+            "with_content": 11,
+            "returned": 15
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 46,
+            "filtered_count": 9,
+            "result_count": 37
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 3,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 28,
+            "response_bytes": 10480961,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.13333333333333333,
+        "evidence_slot_coverage": 0.13333333333333333
+      },
+      "candidates-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.5354379999917,
+          "p95": 6.70416700001806,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.517862708,
+          "p95": 6.684705625,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 15,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 27,
+            "after_candidate_selection": 27,
+            "with_content": 6,
+            "returned": 15
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 3,
+            "result_count": 27
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 3,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 27,
+            "response_bytes": 10644501,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.2,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "music-duet": {
+      "candidates-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.354888917005155,
+          "p95": 6.804514167015441,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.333284083,
+          "p95": 6.784343833,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 15,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 30,
+            "after_candidate_selection": 15,
+            "with_content": 6,
+            "returned": 15
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 0,
+            "result_count": 30
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 3,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 15,
+            "response_bytes": 7749635,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.8,
+        "evidence_slot_coverage": 0.2
+      },
+      "candidates-10": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.524076875008177,
+          "p95": 6.5706745000206865,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.504720666,
+          "p95": 6.5521899999999995,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 15,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 30,
+            "after_candidate_selection": 30,
+            "with_content": 18,
+            "returned": 15
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 0,
+            "result_count": 30
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 3,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 30,
+            "response_bytes": 10376719,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.6,
+        "evidence_slot_coverage": 0.0
+      },
+      "candidates-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.195748542028014,
+          "p95": 6.370571749983355,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.17864275,
+          "p95": 6.351996334,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 15,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 30,
+            "after_candidate_selection": 30,
+            "with_content": 18,
+            "returned": 15
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 0,
+            "result_count": 30
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 3,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 30,
+            "response_bytes": 10376720,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.6,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "music-metric": {
+      "candidates-10": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.175696999998763,
+          "p95": 5.336743874999229,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.149791083,
+          "p95": 5.325356541,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.6666666666666666,
+        "valid_empty_rate": 0.6666666666666666,
+        "returned_slots": 2,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 2,
+            "after_candidate_selection": 2,
+            "with_content": 2,
+            "returned": 2
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 48,
+            "result_count": 2
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 1,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 2,
+            "response_bytes": 1107036,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.06666666666666667,
+        "evidence_slot_coverage": 0.06666666666666667
+      },
+      "candidates-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.155601708043832,
+          "p95": 10.16490699996939,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.130914875,
+          "p95": 10.144879041,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.6666666666666666,
+        "valid_empty_rate": 0.6666666666666666,
+        "returned_slots": 5,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 8,
+            "after_candidate_selection": 8,
+            "with_content": 4,
+            "returned": 5
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 42,
+            "result_count": 8
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 1,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 8,
+            "response_bytes": 884216,
+            "cancelled": 2
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.3333333333333333,
+        "evidence_slot_coverage": 0.0
+      },
+      "candidates-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.152411040966399,
+          "p95": 6.573446832946502,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.133870583,
+          "p95": 6.5567283750000005,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.6666666666666666,
+        "valid_empty_rate": 0.6666666666666666,
+        "returned_slots": 2,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 2,
+            "after_candidate_selection": 2,
+            "with_content": 2,
+            "returned": 2
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 48,
+            "result_count": 2
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 1,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 2,
+            "response_bytes": 1107036,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.06666666666666667,
+        "evidence_slot_coverage": 0.06666666666666667
+      }
+    },
+    "music-sonic": {
+      "candidates-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.4964432080159895,
+          "p95": 5.552393833990209,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.474139583,
+          "p95": 5.543772375,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.3333333333333333,
+        "valid_empty_rate": 0.3333333333333333,
+        "returned_slots": 10,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 16,
+            "after_candidate_selection": 16,
+            "with_content": 6,
+            "returned": 10
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 14,
+            "result_count": 16
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 2,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 16,
+            "response_bytes": 4413979,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.4,
+        "evidence_slot_coverage": 0.0
+      },
+      "candidates-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.557531583006494,
+          "p95": 5.755622874945402,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.54026125,
+          "p95": 5.741001709,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 15,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 25,
+            "after_candidate_selection": 15,
+            "with_content": 10,
+            "returned": 15
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 23,
+            "result_count": 27
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 3,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 15,
+            "response_bytes": 7006850,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.4,
+        "evidence_slot_coverage": 0.0
+      },
+      "candidates-10": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.5196912080282345,
+          "p95": 6.1849583750008605,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.501703833,
+          "p95": 6.167985667,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 15,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 24,
+            "after_candidate_selection": 24,
+            "with_content": 9,
+            "returned": 15
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 6,
+            "result_count": 24
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 3,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 24,
+            "response_bytes": 6621346,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.6,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "q01": {
+      "candidates-10": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.143300833005924,
+          "p95": 7.458289499976672,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.124284625,
+          "p95": 7.437459541,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 10,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 13,
+            "after_candidate_selection": 13,
+            "with_content": 13,
+            "returned": 10
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 70,
+            "filtered_count": 57,
+            "result_count": 13
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 3,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 13,
+            "response_bytes": 1859343,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.6666666666666666,
+        "evidence_slot_coverage": 0.6666666666666666
+      },
+      "candidates-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.177522959013004,
+          "p95": 8.190141208004206,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.162483583,
+          "p95": 8.169500042,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 9,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 10,
+            "after_candidate_selection": 10,
+            "with_content": 10,
+            "returned": 9
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 40,
+            "filtered_count": 28,
+            "result_count": 12
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 3,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 10,
+            "response_bytes": 1943812,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.6,
+        "evidence_slot_coverage": 0.6
+      },
+      "candidates-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.23842508305097,
+          "p95": 6.926715667010285,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 6.225447333,
+          "p95": 6.907091208,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 9,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 12,
+            "after_candidate_selection": 9,
+            "with_content": 9,
+            "returned": 9
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 38,
+            "result_count": 12
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 3,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 9,
+            "response_bytes": 1320934,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.5333333333333333,
+        "evidence_slot_coverage": 0.6
+      }
+    },
+    "q03": {
+      "candidates-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.151215334015433,
+          "p95": 5.154327249969356,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.132738709,
+          "p95": 5.135491959,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 30,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "candidates-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.152305457973853,
+          "p95": 5.156661042012274,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.134873375,
+          "p95": 5.136442667,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 30,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "candidates-10": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.392195541993715,
+          "p95": 6.198098915978335,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.369272667,
+          "p95": 6.182652083,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.3333333333333333,
+        "valid_empty_rate": 0.3333333333333333,
+        "returned_slots": 2,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 2,
+            "after_candidate_selection": 2,
+            "with_content": 2,
+            "returned": 2
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 70,
+            "filtered_count": 68,
+            "result_count": 2
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 2,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 2,
+            "response_bytes": 234940,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.13333333333333333,
+        "evidence_slot_coverage": 0.13333333333333333
+      }
+    },
+    "q08": {
+      "candidates-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.158385500020813,
+          "p95": 5.162680791981984,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.140924709,
+          "p95": 5.144492625,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 30,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "candidates-10": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.1488934170338325,
+          "p95": 5.156202999991365,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.131569583,
+          "p95": 5.140638792,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 30,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "candidates-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.1443422920419835,
+          "p95": 5.149970417027362,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.132032791,
+          "p95": 5.135586625,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 30,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      }
+    }
+  },
+  "fetching": {
+    "music-bss": {
+      "metadata-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.37691870846902,
+          "p95": 5.5942456249613315,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.1381260415,
+          "p95": 5.140336042,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 10,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 18,
+            "after_candidate_selection": 18,
+            "with_content": 0,
+            "returned": 10
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 20,
+            "filtered_count": 2,
+            "result_count": 18
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.2,
+        "evidence_slot_coverage": 0.0
+      },
+      "fetched-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 6.3752442085242365,
+          "p95": 6.506433167029172,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 6.359775791500001,
+          "p95": 6.491466625,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 10,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 18,
+            "after_candidate_selection": 18,
+            "with_content": 4,
+            "returned": 10
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 20,
+            "filtered_count": 2,
+            "result_count": 18
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 2,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 18,
+            "response_bytes": 7096313,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.2,
+        "evidence_slot_coverage": 0.2
+      }
+    },
+    "music-duet": {
+      "fetched-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 6.4460019999824,
+          "p95": 6.513831624994054,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 6.4263569794999995,
+          "p95": 6.493767209,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 10,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 20,
+            "after_candidate_selection": 20,
+            "with_content": 12,
+            "returned": 10
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 20,
+            "filtered_count": 0,
+            "result_count": 20
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 2,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 20,
+            "response_bytes": 6917809,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.4,
+        "evidence_slot_coverage": 0.0
+      },
+      "metadata-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.152752354508266,
+          "p95": 5.155976417008787,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.1347248955,
+          "p95": 5.13792525,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 10,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 20,
+            "after_candidate_selection": 20,
+            "with_content": 0,
+            "returned": 10
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 20,
+            "filtered_count": 0,
+            "result_count": 20
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.4,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "music-metric": {
+      "fetched-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.151059896015795,
+          "p95": 5.153817499987781,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.129005188,
+          "p95": 5.129509042,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 20,
+            "filtered_count": 20,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "metadata-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.159888041525846,
+          "p95": 5.160672250029165,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.137502104499999,
+          "p95": 5.13802575,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 20,
+            "filtered_count": 20,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "music-sonic": {
+      "metadata-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.161178854003083,
+          "p95": 5.1626422079862095,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.140718853999999,
+          "p95": 5.143668708,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 10,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 16,
+            "after_candidate_selection": 16,
+            "with_content": 0,
+            "returned": 10
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 20,
+            "filtered_count": 4,
+            "result_count": 16
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.6,
+        "evidence_slot_coverage": 0.0
+      },
+      "fetched-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.738684999960242,
+          "p95": 5.891715957957786,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.7200858125,
+          "p95": 5.8721865,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 10,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 17,
+            "after_candidate_selection": 17,
+            "with_content": 7,
+            "returned": 10
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 40,
+            "filtered_count": 21,
+            "result_count": 19
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 2,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 17,
+            "response_bytes": 5414106,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.6,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "q01": {
+      "metadata-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.156981957989046,
+          "p95": 5.1592238749726675,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.1391090625,
+          "p95": 5.1400145,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 4,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 4,
+            "after_candidate_selection": 4,
+            "with_content": 0,
+            "returned": 4
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 20,
+            "filtered_count": 16,
+            "result_count": 4
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.4,
+        "evidence_slot_coverage": 0.0
+      },
+      "fetched-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 6.900816125504207,
+          "p95": 7.604192416998558,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 6.8830929995000005,
+          "p95": 7.590057458,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 7,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 11,
+            "after_candidate_selection": 11,
+            "with_content": 11,
+            "returned": 7
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 40,
+            "filtered_count": 29,
+            "result_count": 11
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 2,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 11,
+            "response_bytes": 1602494,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.5,
+        "evidence_slot_coverage": 0.5
+      }
+    },
+    "q03": {
+      "fetched-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.140091333043529,
+          "p95": 5.1421522500459105,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.1284177295,
+          "p95": 5.130669459,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 20,
+            "filtered_count": 20,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "metadata-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.163709104002919,
+          "p95": 5.165425540995784,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.1374406875,
+          "p95": 5.139267958,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 20,
+            "filtered_count": 20,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "q08": {
+      "metadata-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.159724458004348,
+          "p95": 5.159997374983504,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.1363601249999995,
+          "p95": 5.13733275,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 20,
+            "filtered_count": 20,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "fetched-snippet": {
+        "runs": 2,
+        "queries": 1,
+        "process_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.160791145986877,
+          "p95": 5.160983707988635,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 2,
+          "missing": 0,
+          "p50": 5.138586604,
+          "p95": 5.140007625,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 10,
+        "candidate_counts": {
+          "observations": 2,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 18,
+          "sums": {
+            "raw_result_count": 20,
+            "filtered_count": 20,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 2,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      }
+    }
+  },
+  "retrieval": {
+    "music-bss": {
+      "minimum-1": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.248680999968201,
+          "p95": 7.704676708031911,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.183105375,
+          "p95": 5.2279645,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 30,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.130883542005904,
+          "p95": 5.138869707996491,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.120792708,
+          "p95": 5.1286395,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.6666666666666666,
+        "valid_empty_rate": 0.6666666666666666,
+        "returned_slots": 5,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 5,
+            "after_candidate_selection": 5,
+            "with_content": 0,
+            "returned": 5
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 37,
+            "filtered_count": 32,
+            "result_count": 5
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.2,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.133446000050753,
+          "p95": 5.151137125038076,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.125416042,
+          "p95": 5.131570875,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.3333333333333333,
+        "valid_empty_rate": 0.3333333333333333,
+        "returned_slots": 10,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 21,
+            "after_candidate_selection": 21,
+            "with_content": 0,
+            "returned": 10
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 70,
+            "filtered_count": 49,
+            "result_count": 21
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.4,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "music-duet": {
+      "minimum-1": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 1.2145250830217265,
+          "p95": 5.152380249986891,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 1.188815625,
+          "p95": 5.137060417,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.3333333333333333,
+        "valid_empty_rate": 0.3333333333333333,
+        "returned_slots": 10,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 13,
+            "after_candidate_selection": 13,
+            "with_content": 0,
+            "returned": 10
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 37,
+            "result_count": 13
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.5333333333333333,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 1.4591425410471857,
+          "p95": 1.4825499590369873,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 1.450505917,
+          "p95": 1.46200225,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 15,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 21,
+            "after_candidate_selection": 21,
+            "with_content": 0,
+            "returned": 15
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 59,
+            "filtered_count": 38,
+            "result_count": 21
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.7333333333333333,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 1.3245296250097454,
+          "p95": 5.165511040948331,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 1.31108175,
+          "p95": 5.141143208,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 15,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 45,
+            "after_candidate_selection": 45,
+            "with_content": 0,
+            "returned": 15
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 98,
+            "filtered_count": 51,
+            "result_count": 47
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 1,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.6666666666666666,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "music-metric": {
+      "minimum-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.152745000028517,
+          "p95": 5.17054708302021,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.137737459,
+          "p95": 5.145544542,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.3333333333333333,
+        "valid_empty_rate": 0.3333333333333333,
+        "returned_slots": 4,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 4,
+            "after_candidate_selection": 4,
+            "with_content": 0,
+            "returned": 4
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 70,
+            "filtered_count": 66,
+            "result_count": 4
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.13333333333333333,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.134970500017516,
+          "p95": 5.140893499949016,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.125606917,
+          "p95": 5.126301292,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.3333333333333333,
+        "valid_empty_rate": 0.3333333333333333,
+        "returned_slots": 7,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 10,
+            "after_candidate_selection": 10,
+            "with_content": 0,
+            "returned": 7
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 70,
+            "filtered_count": 60,
+            "result_count": 10
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.4,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-1": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 1.0950805420288816,
+          "p95": 1.2756662499741651,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 1.075817625,
+          "p95": 1.260826083,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 7,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 9,
+            "after_candidate_selection": 9,
+            "with_content": 0,
+            "returned": 7
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 59,
+            "filtered_count": 50,
+            "result_count": 9
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.26666666666666666,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "music-sonic": {
+      "minimum-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.154978332982864,
+          "p95": 5.271245416952297,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.139955833,
+          "p95": 5.256292916,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.3333333333333333,
+        "valid_empty_rate": 0.3333333333333333,
+        "returned_slots": 5,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 5,
+            "after_candidate_selection": 5,
+            "with_content": 0,
+            "returned": 5
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 70,
+            "filtered_count": 65,
+            "result_count": 5
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.2,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-1": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.129225832992233,
+          "p95": 5.1693101249984466,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.121654,
+          "p95": 5.149500833,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.6666666666666666,
+        "valid_empty_rate": 0.6666666666666666,
+        "returned_slots": 1,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 1,
+            "after_candidate_selection": 1,
+            "with_content": 0,
+            "returned": 1
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 40,
+            "filtered_count": 39,
+            "result_count": 1
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.06666666666666667,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.1469719579909,
+          "p95": 5.268696624960285,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.132243666,
+          "p95": 5.252899375,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 8,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 8,
+            "after_candidate_selection": 8,
+            "with_content": 0,
+            "returned": 8
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 90,
+            "filtered_count": 82,
+            "result_count": 8
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.3333333333333333,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "q01": {
+      "minimum-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 1.081700542010367,
+          "p95": 5.1500073749921285,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 1.059312666,
+          "p95": 5.134735167,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 13,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 19,
+            "after_candidate_selection": 19,
+            "with_content": 0,
+            "returned": 13
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 82,
+            "filtered_count": 63,
+            "result_count": 19
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.7333333333333333,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.154205625003669,
+          "p95": 5.163332582975272,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.141059459,
+          "p95": 5.143297792,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 12,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 18,
+            "after_candidate_selection": 18,
+            "with_content": 0,
+            "returned": 12
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 70,
+            "filtered_count": 52,
+            "result_count": 18
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.6666666666666666,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-1": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 0.7204347079969011,
+          "p95": 0.7572073750197887,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 0.4043675,
+          "p95": 0.749312917,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 3,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 3,
+            "after_candidate_selection": 3,
+            "with_content": 0,
+            "returned": 3
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 13,
+            "filtered_count": 10,
+            "result_count": 3
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.2,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "q03": {
+      "minimum-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.153419291949831,
+          "p95": 5.154405499983113,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.140429833,
+          "p95": 5.142474833,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.6666666666666666,
+        "valid_empty_rate": 0.6666666666666666,
+        "returned_slots": 1,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 1,
+            "after_candidate_selection": 1,
+            "with_content": 0,
+            "returned": 1
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 70,
+            "filtered_count": 69,
+            "result_count": 1
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.06666666666666667,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-1": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.151710083999205,
+          "p95": 5.163368208042812,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.139117167,
+          "p95": 5.142137042,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.6666666666666666,
+        "valid_empty_rate": 0.6666666666666666,
+        "returned_slots": 1,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 1,
+            "after_candidate_selection": 1,
+            "with_content": 0,
+            "returned": 1
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 56,
+            "filtered_count": 55,
+            "result_count": 1
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.06666666666666667,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.154220916039776,
+          "p95": 5.155875791970175,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.138125792,
+          "p95": 5.142422292,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.3333333333333333,
+        "valid_empty_rate": 0.3333333333333333,
+        "returned_slots": 2,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 2,
+            "after_candidate_selection": 2,
+            "with_content": 0,
+            "returned": 2
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 70,
+            "filtered_count": 68,
+            "result_count": 2
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.13333333333333333,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "q08": {
+      "minimum-1": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.156885083008092,
+          "p95": 5.166306249971967,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.141871583,
+          "p95": 5.142805209,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 50,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-5": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.164007790968753,
+          "p95": 5.169247540994547,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.146756125,
+          "p95": 5.147419167,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 30,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "minimum-15": {
+        "runs": 3,
+        "queries": 1,
+        "process_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.151095457957126,
+          "p95": 5.156988083035685,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 3,
+          "missing": 0,
+          "p50": 5.138187458,
+          "p95": 5.14040325,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 15,
+        "candidate_counts": {
+          "observations": 3,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 27,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 30,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 3,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      }
+    }
+  },
+  "search-budget": {
+    "music-bss": {
+      "search-1s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.152173959009815,
+          "p95": 1.5766768750036135,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.13674075,
+          "p95": 1.140576666,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.8,
+        "valid_empty_rate": 0.8,
+        "returned_slots": 5,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 5,
+            "after_candidate_selection": 5,
+            "with_content": 0,
+            "returned": 5
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 45,
+            "filtered_count": 40,
+            "result_count": 5
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.04,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-2s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 2.143140083004255,
+          "p95": 2.169097750040237,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 2.131568542,
+          "p95": 2.141843083,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.8,
+        "valid_empty_rate": 0.8,
+        "returned_slots": 5,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 6,
+            "after_candidate_selection": 6,
+            "with_content": 0,
+            "returned": 5
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 46,
+            "filtered_count": 40,
+            "result_count": 6
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.04,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-3s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.4444651669473387,
+          "p95": 2.5672417919849977,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.43036225,
+          "p95": 2.559738875,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 25,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 25,
+            "after_candidate_selection": 25,
+            "with_content": 0,
+            "returned": 25
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 73,
+            "filtered_count": 48,
+            "result_count": 25
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.52,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-default-5s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.4912604160490446,
+          "p95": 5.132780833984725,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.474542625,
+          "p95": 5.125252583,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.2,
+        "valid_empty_rate": 0.2,
+        "returned_slots": 20,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 23,
+            "after_candidate_selection": 23,
+            "with_content": 0,
+            "returned": 20
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 75,
+            "filtered_count": 52,
+            "result_count": 23
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.4,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-no-total-deadline": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 31.18714741698932,
+          "p95": 31.558219041966368,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 31.159217167,
+          "p95": 31.537521916,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 50,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "music-duet": {
+      "search-default-5s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 0.5044220419949852,
+          "p95": 5.5282564999652095,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 0.48565125,
+          "p95": 5.207013875,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.2,
+        "valid_empty_rate": 0.2,
+        "returned_slots": 20,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 20,
+            "after_candidate_selection": 20,
+            "with_content": 0,
+            "returned": 20
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 10,
+            "result_count": 20
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.64,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-no-total-deadline": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 0.5021656249882653,
+          "p95": 31.605578000016976,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 0.48414475,
+          "p95": 31.5975775,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.2,
+        "valid_empty_rate": 0.2,
+        "returned_slots": 20,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 22,
+            "after_candidate_selection": 22,
+            "with_content": 0,
+            "returned": 20
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 32,
+            "filtered_count": 10,
+            "result_count": 22
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.64,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-1s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 0.4524974999949336,
+          "p95": 1.1635484169819392,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 0.438339041,
+          "p95": 1.142656542,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.2,
+        "valid_empty_rate": 0.2,
+        "returned_slots": 20,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 26,
+            "after_candidate_selection": 26,
+            "with_content": 0,
+            "returned": 20
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 36,
+            "filtered_count": 10,
+            "result_count": 26
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.64,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-2s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 0.464234207989648,
+          "p95": 0.8658933750120923,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 0.445517875,
+          "p95": 0.851779583,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 25,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 29,
+            "after_candidate_selection": 29,
+            "with_content": 0,
+            "returned": 25
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 30,
+            "filtered_count": 1,
+            "result_count": 29
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.8,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-3s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 0.43719741702079773,
+          "p95": 0.4916117920074612,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 0.423080667,
+          "p95": 0.4720255,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 25,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 26,
+            "after_candidate_selection": 26,
+            "with_content": 0,
+            "returned": 25
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 26,
+            "filtered_count": 0,
+            "result_count": 26
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.8,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "music-metric": {
+      "search-2s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 2.1509344580117613,
+          "p95": 2.156671791046392,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 2.134337708,
+          "p95": 2.142141167,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.4,
+        "valid_empty_rate": 0.4,
+        "returned_slots": 9,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 11,
+            "after_candidate_selection": 11,
+            "with_content": 0,
+            "returned": 9
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 108,
+            "filtered_count": 97,
+            "result_count": 11
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.28,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-3s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 3.1516852080239914,
+          "p95": 3.168927583959885,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 3.136234875,
+          "p95": 3.154682959,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.4,
+        "valid_empty_rate": 0.4,
+        "returned_slots": 6,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 6,
+            "after_candidate_selection": 6,
+            "with_content": 0,
+            "returned": 6
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 110,
+            "filtered_count": 104,
+            "result_count": 6
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.12,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-default-5s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 5.156675334030297,
+          "p95": 5.162425582995638,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 5.137275125,
+          "p95": 5.142985125,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.6,
+        "valid_empty_rate": 0.6,
+        "returned_slots": 4,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 4,
+            "after_candidate_selection": 4,
+            "with_content": 0,
+            "returned": 4
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 90,
+            "filtered_count": 86,
+            "result_count": 4
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.08,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-no-total-deadline": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 31.17264670797158,
+          "p95": 31.41185937501723,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 31.159531875,
+          "p95": 31.399869333,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.8,
+        "valid_empty_rate": 0.8,
+        "returned_slots": 2,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 2,
+            "after_candidate_selection": 2,
+            "with_content": 0,
+            "returned": 2
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 70,
+            "filtered_count": 68,
+            "result_count": 2
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.04,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-1s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.159540291002486,
+          "p95": 1.1622636659885757,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.138472959,
+          "p95": 1.147637,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 50,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "music-sonic": {
+      "search-3s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 3.1264496670337394,
+          "p95": 3.1563425000058487,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 3.119130959,
+          "p95": 3.142236125,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.2,
+        "valid_empty_rate": 0.2,
+        "returned_slots": 16,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 16,
+            "after_candidate_selection": 16,
+            "with_content": 0,
+            "returned": 16
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 82,
+            "filtered_count": 66,
+            "result_count": 16
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.32,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-default-5s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 0.9008618750376627,
+          "p95": 5.156487250002101,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 0.886970042,
+          "p95": 5.139939375,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.2,
+        "valid_empty_rate": 0.2,
+        "returned_slots": 18,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 19,
+            "after_candidate_selection": 19,
+            "with_content": 0,
+            "returned": 18
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 59,
+            "filtered_count": 40,
+            "result_count": 19
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.32,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-no-total-deadline": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 31.084587624995038,
+          "p95": 31.46418991696555,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 31.06631075,
+          "p95": 31.456919291,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.2,
+        "valid_empty_rate": 0.2,
+        "returned_slots": 16,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 16,
+            "after_candidate_selection": 16,
+            "with_content": 0,
+            "returned": 16
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 82,
+            "filtered_count": 66,
+            "result_count": 16
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.32,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-1s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.1231759999645874,
+          "p95": 1.1585327089997008,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.115934209,
+          "p95": 1.142675167,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.4,
+        "valid_empty_rate": 0.4,
+        "returned_slots": 13,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 13,
+            "after_candidate_selection": 13,
+            "with_content": 0,
+            "returned": 13
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 62,
+            "filtered_count": 49,
+            "result_count": 13
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.24,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-2s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 2.123457250010688,
+          "p95": 2.1642847499460913,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 2.115923917,
+          "p95": 2.141017708,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.4,
+        "valid_empty_rate": 0.4,
+        "returned_slots": 12,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 13,
+            "after_candidate_selection": 13,
+            "with_content": 0,
+            "returned": 12
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 63,
+            "filtered_count": 50,
+            "result_count": 13
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.2,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "q01": {
+      "search-no-total-deadline": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 31.14192299998831,
+          "p95": 31.487117374956142,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 31.123656833,
+          "p95": 31.473397833,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 14,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 17,
+            "after_candidate_selection": 17,
+            "with_content": 0,
+            "returned": 14
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 82,
+            "filtered_count": 65,
+            "result_count": 17
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.52,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-1s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.154681415995583,
+          "p95": 1.1663491670042276,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.141096291,
+          "p95": 1.14360175,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 10,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 10,
+            "after_candidate_selection": 10,
+            "with_content": 0,
+            "returned": 10
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 40,
+            "result_count": 10
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.4,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-2s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 2.1482695839949884,
+          "p95": 2.1543547499459237,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 2.135346708,
+          "p95": 2.137441625,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 14,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 17,
+            "after_candidate_selection": 17,
+            "with_content": 0,
+            "returned": 14
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 86,
+            "filtered_count": 69,
+            "result_count": 17
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.52,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-3s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 3.153872583003249,
+          "p95": 3.1610299170133658,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 3.1376135,
+          "p95": 3.1410625420000002,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 15,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 18,
+            "after_candidate_selection": 18,
+            "with_content": 0,
+            "returned": 15
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 106,
+            "filtered_count": 88,
+            "result_count": 18
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.56,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-default-5s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 5.155600666010287,
+          "p95": 5.1621998329646885,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 5.1408,
+          "p95": 5.14140125,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.0,
+        "valid_empty_rate": 0.0,
+        "returned_slots": 17,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 23,
+            "after_candidate_selection": 23,
+            "with_content": 0,
+            "returned": 17
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 102,
+            "filtered_count": 79,
+            "result_count": 23
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.6,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "q03": {
+      "search-1s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.1592176660196856,
+          "p95": 1.1698333749664016,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.138117708,
+          "p95": 1.151501292,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 50,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-2s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 2.146212999999989,
+          "p95": 2.1653684589546174,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 2.13398425,
+          "p95": 2.14525,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 0.8,
+        "valid_empty_rate": 0.8,
+        "returned_slots": 1,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 1,
+            "after_candidate_selection": 1,
+            "with_content": 0,
+            "returned": 1
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 70,
+            "filtered_count": 69,
+            "result_count": 1
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.04,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-3s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 3.1516070410143584,
+          "p95": 3.160470250004437,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 3.13600575,
+          "p95": 3.138598917,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 50,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-default-5s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 5.156228040985297,
+          "p95": 5.161530708021019,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 5.138191959,
+          "p95": 5.142922542,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 70,
+            "filtered_count": 70,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-no-total-deadline": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 31.265235333994497,
+          "p95": 31.605421374959406,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 31.248085959,
+          "p95": 31.591831708,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 50,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      }
+    },
+    "q08": {
+      "search-2s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 2.163944249972701,
+          "p95": 2.1826944579952396,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 2.141219917,
+          "p95": 2.1743618749999998,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 50,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-3s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 3.1591473749722354,
+          "p95": 3.160742084030062,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 3.13898875,
+          "p95": 3.143664333,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 50,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-default-5s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 5.157250458956696,
+          "p95": 5.17532337497687,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 5.133223708,
+          "p95": 5.140941542,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 50,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-no-total-deadline": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 31.180048540991265,
+          "p95": 31.296065583999734,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 31.166587708,
+          "p95": 31.280323166,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 50,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      },
+      "search-1s": {
+        "runs": 5,
+        "queries": 1,
+        "process_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.1627864580368623,
+          "p95": 1.177349416015204,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "command_seconds": {
+          "n": 5,
+          "missing": 0,
+          "p50": 1.141593791,
+          "p95": 1.167257917,
+          "p50_query_bootstrap_95_interval": null,
+          "p95_query_bootstrap_95_interval": null,
+          "tail_note": "Observed nearest-rank p95; exploratory, especially with fewer than 100 runs or few independent queries. Repeats share network/provider state."
+        },
+        "timeouts": 0,
+        "errors": 0,
+        "empty_rate": 1.0,
+        "valid_empty_rate": 1.0,
+        "returned_slots": 0,
+        "expected_slots": 25,
+        "candidate_counts": {
+          "observations": 5,
+          "sums": {
+            "after_search": 0,
+            "after_candidate_selection": 0,
+            "with_content": 0,
+            "returned": 0
+          }
+        },
+        "provider_counts": {
+          "observations": 45,
+          "sums": {
+            "raw_result_count": 50,
+            "filtered_count": 50,
+            "result_count": 0
+          },
+          "note": "Provider accepted counts can overlap across providers; after_search is deduplicated. Missing artifacts are unknown."
+        },
+        "fetch_counts": {
+          "observations": 0,
+          "sums": {
+            "cache_hits": 0,
+            "cache_misses": 0,
+            "response_bytes": 0,
+            "cancelled": 0
+          }
+        },
+        "insufficient_pools": 5,
+        "unknown_pools": 0,
+        "unjudged_relevance": 0,
+        "unjudged_evidence": 0,
+        "precision_at_k": 0.0,
+        "evidence_slot_coverage": 0.0
+      }
+    }
+  }
+}

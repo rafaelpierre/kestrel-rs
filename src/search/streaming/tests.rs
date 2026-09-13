@@ -49,7 +49,13 @@ async fn server(h2: bool, compressed: bool) -> Server {
                         } else {
                             Engine::Bing
                         };
-                        let text = if slow { cards(engine, 3) } else { "ok".into() };
+                        let text = if request.uri().path() == "/pool" {
+                            cards(engine, 15)
+                        } else if slow {
+                            cards(engine, 3)
+                        } else {
+                            "ok".into()
+                        };
                         let mut payload = text.into_bytes();
                         if compressed && slow {
                             use std::io::Write;
@@ -489,4 +495,60 @@ async fn portable_constraints_filter_streamed_records_before_counting() {
             assert!(receiver.try_recv().is_err());
         })
         .await;
+}
+
+#[tokio::test]
+async fn benchmark_minimum_arms_and_fixed_pool_exercise_larger_fetch_caps() {
+    use crate::{FetchOptions, fetcher::fetch_all_reusing_client};
+    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+
+    tokio::time::timeout(Duration::from_secs(10), async {
+        let provider = server(false, false).await;
+        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let mut sizes = Vec::new();
+        for minimum in [1, 5, 15] {
+            let (sender, receiver) = mpsc::channel(1);
+            let publisher = Publisher {
+                sender,
+                index: 0,
+                engine: Engine::Bing,
+                query: "Café".into(),
+                query_syntax: QuerySyntax::Portable,
+            };
+            let endpoint = format!("{}/pool", provider.url);
+            let pending = FuturesUnordered::<Job<'_>>::new();
+            let job = async {
+                let (body, _) = request_standard_with_retries(
+                    &client, Engine::Bing, "Café", || client.get(&endpoint),
+                ).await?;
+                parse_provider_response(Engine::Bing, &body)
+            };
+            pending.push(Box::pin(async move { (0, PUBLISHER.scope(publisher, job).await) }));
+            let (outcomes, cancelled) = collect(pending, None, Some(minimum), None, Some(receiver)).await;
+            let pool = merge_outcomes(outcomes).unwrap();
+            assert_eq!(cancelled, 1); // The response deliberately never reaches EOF.
+            assert!(pool.len() >= minimum);
+            sizes.push(pool.len());
+            if minimum == 15 {
+                assert_eq!(pool.len(), 15);
+                let pages = MockServer::start().await;
+                Mock::given(method("GET"))
+                    .respond_with(ResponseTemplate::new(200)
+                        .insert_header("content-type", "text/html")
+                        .set_body_string("<main><h1>Café</h1><p>Complete fixture evidence for the fixed candidate pool and benchmark fetch cap validation.</p></main>"))
+                    .mount(&pages).await;
+                // Reuse the same collected order and local page content in all cap arms.
+                let urls: Vec<_> = pool.iter().map(|r| {
+                    format!("{}{}", pages.uri(), url::Url::parse(&r.url).unwrap().path())
+                }).collect();
+                for cap in [5, 10, 15] {
+                    let before = pages.received_requests().await.unwrap().len();
+                    let content = fetch_all_reusing_client(&urls[..cap], &FetchOptions::default(), &client).await.unwrap();
+                    assert_eq!(pages.received_requests().await.unwrap().len() - before, cap);
+                    assert_eq!(content.iter().filter(|c| c.as_deref().is_some_and(|s| s.contains("Complete fixture evidence"))).count(), cap);
+                }
+            }
+        }
+        assert!(sizes[0] < sizes[1] && sizes[1] < sizes[2], "{sizes:?}");
+    }).await.expect("local benchmark fixtures must finish promptly");
 }

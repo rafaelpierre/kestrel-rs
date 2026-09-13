@@ -1,0 +1,215 @@
+{
+  "method": "1000 paired query-cluster bootstrap resamples, seed 75, percentile 95% intervals. Seven clusters and shared network state limit inference; no independent-trial or reliable-tail claim.",
+  "intervals": {
+    "candidates": {
+      "candidates-10": {
+        "empty_rate": [
+          0.047619047619047616,
+          0.5714285714285714
+        ],
+        "precision_at_k": [
+          0.09523809523809523,
+          0.5142857142857142
+        ],
+        "page_evidence_slot_coverage": [
+          0.02857142857142857,
+          0.3238095238095238
+        ]
+      },
+      "candidates-15": {
+        "empty_rate": [
+          0.14285714285714285,
+          0.7619047619047619
+        ],
+        "precision_at_k": [
+          0.12380952380952381,
+          0.4666666666666667
+        ],
+        "page_evidence_slot_coverage": [
+          0.0,
+          0.2571428571428571
+        ]
+      },
+      "candidates-5": {
+        "empty_rate": [
+          0.09523809523809523,
+          0.7619047619047619
+        ],
+        "precision_at_k": [
+          0.08571428571428572,
+          0.5047619047619047
+        ],
+        "page_evidence_slot_coverage": [
+          0.02857142857142857,
+          0.37142857142857144
+        ]
+      }
+    },
+    "fetching": {
+      "fetched-snippet": {
+        "empty_rate": [
+          0.14285714285714285,
+          0.8571428571428571
+        ],
+        "precision_at_k": [
+          0.05714285714285714,
+          0.4142857142857143
+        ],
+        "page_evidence_slot_coverage": [
+          0.0,
+          0.24285714285714285
+        ]
+      },
+      "metadata-snippet": {
+        "empty_rate": [
+          0.14285714285714285,
+          0.8571428571428571
+        ],
+        "precision_at_k": [
+          0.05714285714285714,
+          0.4
+        ],
+        "page_evidence_slot_coverage": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "retrieval": {
+      "minimum-1": {
+        "empty_rate": [
+          0.23809523809523808,
+          0.8095238095238095
+        ],
+        "precision_at_k": [
+          0.047619047619047616,
+          0.3047619047619048
+        ],
+        "page_evidence_slot_coverage": [
+          0.0,
+          0.0
+        ]
+      },
+      "minimum-15": {
+        "empty_rate": [
+          0.14285714285714285,
+          0.6190476190476191
+        ],
+        "precision_at_k": [
+          0.1523809523809524,
+          0.5142857142857142
+        ],
+        "page_evidence_slot_coverage": [
+          0.0,
+          0.0
+        ]
+      },
+      "minimum-5": {
+        "empty_rate": [
+          0.09523809523809523,
+          0.6190476190476191
+        ],
+        "precision_at_k": [
+          0.12380952380952381,
+          0.5333333333333333
+        ],
+        "page_evidence_slot_coverage": [
+          0.0,
+          0.0
+        ]
+      }
+    },
+    "search-budget": {
+      "search-1s": {
+        "empty_rate": [
+          0.34285714285714286,
+          0.9142857142857143
+        ],
+        "precision_at_k": [
+          0.017142857142857144,
+          0.37142857142857144
+        ],
+        "page_evidence_slot_coverage": [
+          0.0,
+          0.0
+        ],
+        "precision_difference_from_default_5s": [
+          -0.20571428571428574,
+          -0.022857142857142854
+        ]
+      },
+      "search-2s": {
+        "empty_rate": [
+          0.22857142857142856,
+          0.7714285714285715
+        ],
+        "precision_at_k": [
+          0.08,
+          0.4857142857142857
+        ],
+        "page_evidence_slot_coverage": [
+          0.0,
+          0.0
+        ],
+        "precision_difference_from_default_5s": [
+          -0.17142857142857143,
+          0.09714285714285714
+        ]
+      },
+      "search-3s": {
+        "empty_rate": [
+          0.08571428571428572,
+          0.7142857142857143
+        ],
+        "precision_at_k": [
+          0.11428571428571428,
+          0.5428571428571428
+        ],
+        "page_evidence_slot_coverage": [
+          0.0,
+          0.0
+        ],
+        "precision_difference_from_default_5s": [
+          -0.0057142857142856995,
+          0.09142857142857147
+        ]
+      },
+      "search-default-5s": {
+        "empty_rate": [
+          0.2,
+          0.7714285714285715
+        ],
+        "precision_at_k": [
+          0.10285714285714286,
+          0.4685714285714286
+        ],
+        "page_evidence_slot_coverage": [
+          0.0,
+          0.0
+        ],
+        "precision_difference_from_default_5s": [
+          0.0,
+          0.0
+        ]
+      },
+      "search-no-total-deadline": {
+        "empty_rate": [
+          0.2857142857142857,
+          0.9142857142857143
+        ],
+        "precision_at_k": [
+          0.017142857142857144,
+          0.4114285714285714
+        ],
+        "page_evidence_slot_coverage": [
+          0.0,
+          0.0
+        ],
+        "precision_difference_from_default_5s": [
+          -0.18857142857142856,
+          -0.0057142857142856995
+        ]
+      }
+    }
+  }
+}

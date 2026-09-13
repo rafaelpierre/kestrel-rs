@@ -1,0 +1,1079 @@
+{
+  "candidates": {
+    "note": "Live matching is a diagnostic, not randomization or a guarantee of fixed inputs. Candidate sweeps compare prefixes of the largest selected pool. Ranking isolation requires frozen replay including identical content.",
+    "pairs": [
+      {
+        "query_id": "music-bss",
+        "round": 1,
+        "conditions": [
+          "candidates-5",
+          "candidates-10",
+          "candidates-15"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-metric",
+        "round": 1,
+        "conditions": [
+          "candidates-10",
+          "candidates-15",
+          "candidates-5"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-sonic",
+        "round": 1,
+        "conditions": [
+          "candidates-15",
+          "candidates-5",
+          "candidates-10"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-duet",
+        "round": 1,
+        "conditions": [
+          "candidates-5",
+          "candidates-10",
+          "candidates-15"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q01",
+        "round": 1,
+        "conditions": [
+          "candidates-10",
+          "candidates-15",
+          "candidates-5"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q03",
+        "round": 1,
+        "conditions": [
+          "candidates-15",
+          "candidates-5",
+          "candidates-10"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q08",
+        "round": 1,
+        "conditions": [
+          "candidates-5",
+          "candidates-10",
+          "candidates-15"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-bss",
+        "round": 2,
+        "conditions": [
+          "candidates-10",
+          "candidates-15",
+          "candidates-5"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-metric",
+        "round": 2,
+        "conditions": [
+          "candidates-15",
+          "candidates-5",
+          "candidates-10"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-sonic",
+        "round": 2,
+        "conditions": [
+          "candidates-5",
+          "candidates-10",
+          "candidates-15"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-duet",
+        "round": 2,
+        "conditions": [
+          "candidates-10",
+          "candidates-15",
+          "candidates-5"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q01",
+        "round": 2,
+        "conditions": [
+          "candidates-15",
+          "candidates-5",
+          "candidates-10"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q03",
+        "round": 2,
+        "conditions": [
+          "candidates-5",
+          "candidates-10",
+          "candidates-15"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q08",
+        "round": 2,
+        "conditions": [
+          "candidates-10",
+          "candidates-15",
+          "candidates-5"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-bss",
+        "round": 3,
+        "conditions": [
+          "candidates-15",
+          "candidates-5",
+          "candidates-10"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-metric",
+        "round": 3,
+        "conditions": [
+          "candidates-5",
+          "candidates-10",
+          "candidates-15"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-sonic",
+        "round": 3,
+        "conditions": [
+          "candidates-10",
+          "candidates-15",
+          "candidates-5"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-duet",
+        "round": 3,
+        "conditions": [
+          "candidates-15",
+          "candidates-5",
+          "candidates-10"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q01",
+        "round": 3,
+        "conditions": [
+          "candidates-5",
+          "candidates-10",
+          "candidates-15"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q03",
+        "round": 3,
+        "conditions": [
+          "candidates-10",
+          "candidates-15",
+          "candidates-5"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q08",
+        "round": 3,
+        "conditions": [
+          "candidates-15",
+          "candidates-5",
+          "candidates-10"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      }
+    ]
+  },
+  "fetching": {
+    "note": "Live matching is a diagnostic, not randomization or a guarantee of fixed inputs. Candidate sweeps compare prefixes of the largest selected pool. Ranking isolation requires frozen replay including identical content.",
+    "pairs": [
+      {
+        "query_id": "music-bss",
+        "round": 1,
+        "conditions": [
+          "metadata-snippet",
+          "fetched-snippet"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-metric",
+        "round": 1,
+        "conditions": [
+          "fetched-snippet",
+          "metadata-snippet"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-sonic",
+        "round": 1,
+        "conditions": [
+          "metadata-snippet",
+          "fetched-snippet"
+        ],
+        "selected_metadata_inputs_match": true,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-duet",
+        "round": 1,
+        "conditions": [
+          "fetched-snippet",
+          "metadata-snippet"
+        ],
+        "selected_metadata_inputs_match": true,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q01",
+        "round": 1,
+        "conditions": [
+          "metadata-snippet",
+          "fetched-snippet"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q03",
+        "round": 1,
+        "conditions": [
+          "fetched-snippet",
+          "metadata-snippet"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q08",
+        "round": 1,
+        "conditions": [
+          "metadata-snippet",
+          "fetched-snippet"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-bss",
+        "round": 2,
+        "conditions": [
+          "fetched-snippet",
+          "metadata-snippet"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-metric",
+        "round": 2,
+        "conditions": [
+          "metadata-snippet",
+          "fetched-snippet"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-sonic",
+        "round": 2,
+        "conditions": [
+          "fetched-snippet",
+          "metadata-snippet"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-duet",
+        "round": 2,
+        "conditions": [
+          "metadata-snippet",
+          "fetched-snippet"
+        ],
+        "selected_metadata_inputs_match": true,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q01",
+        "round": 2,
+        "conditions": [
+          "fetched-snippet",
+          "metadata-snippet"
+        ],
+        "selected_metadata_inputs_match": true,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q03",
+        "round": 2,
+        "conditions": [
+          "metadata-snippet",
+          "fetched-snippet"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q08",
+        "round": 2,
+        "conditions": [
+          "fetched-snippet",
+          "metadata-snippet"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      }
+    ]
+  },
+  "retrieval": {
+    "note": "Live matching is a diagnostic, not randomization or a guarantee of fixed inputs. Candidate sweeps compare prefixes of the largest selected pool. Ranking isolation requires frozen replay including identical content.",
+    "pairs": [
+      {
+        "query_id": "music-bss",
+        "round": 1,
+        "conditions": [
+          "minimum-1",
+          "minimum-5",
+          "minimum-15"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-metric",
+        "round": 1,
+        "conditions": [
+          "minimum-5",
+          "minimum-15",
+          "minimum-1"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-sonic",
+        "round": 1,
+        "conditions": [
+          "minimum-15",
+          "minimum-1",
+          "minimum-5"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-duet",
+        "round": 1,
+        "conditions": [
+          "minimum-1",
+          "minimum-5",
+          "minimum-15"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q01",
+        "round": 1,
+        "conditions": [
+          "minimum-5",
+          "minimum-15",
+          "minimum-1"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q03",
+        "round": 1,
+        "conditions": [
+          "minimum-15",
+          "minimum-1",
+          "minimum-5"
+        ],
+        "selected_metadata_inputs_match": true,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q08",
+        "round": 1,
+        "conditions": [
+          "minimum-1",
+          "minimum-5",
+          "minimum-15"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-bss",
+        "round": 2,
+        "conditions": [
+          "minimum-5",
+          "minimum-15",
+          "minimum-1"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-metric",
+        "round": 2,
+        "conditions": [
+          "minimum-15",
+          "minimum-1",
+          "minimum-5"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-sonic",
+        "round": 2,
+        "conditions": [
+          "minimum-1",
+          "minimum-5",
+          "minimum-15"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-duet",
+        "round": 2,
+        "conditions": [
+          "minimum-5",
+          "minimum-15",
+          "minimum-1"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q01",
+        "round": 2,
+        "conditions": [
+          "minimum-15",
+          "minimum-1",
+          "minimum-5"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q03",
+        "round": 2,
+        "conditions": [
+          "minimum-1",
+          "minimum-5",
+          "minimum-15"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q08",
+        "round": 2,
+        "conditions": [
+          "minimum-5",
+          "minimum-15",
+          "minimum-1"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-bss",
+        "round": 3,
+        "conditions": [
+          "minimum-15",
+          "minimum-1",
+          "minimum-5"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-metric",
+        "round": 3,
+        "conditions": [
+          "minimum-1",
+          "minimum-5",
+          "minimum-15"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-sonic",
+        "round": 3,
+        "conditions": [
+          "minimum-5",
+          "minimum-15",
+          "minimum-1"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-duet",
+        "round": 3,
+        "conditions": [
+          "minimum-15",
+          "minimum-1",
+          "minimum-5"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q01",
+        "round": 3,
+        "conditions": [
+          "minimum-1",
+          "minimum-5",
+          "minimum-15"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q03",
+        "round": 3,
+        "conditions": [
+          "minimum-5",
+          "minimum-15",
+          "minimum-1"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q08",
+        "round": 3,
+        "conditions": [
+          "minimum-15",
+          "minimum-1",
+          "minimum-5"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      }
+    ]
+  },
+  "search-budget": {
+    "note": "Live matching is a diagnostic, not randomization or a guarantee of fixed inputs. Candidate sweeps compare prefixes of the largest selected pool. Ranking isolation requires frozen replay including identical content.",
+    "pairs": [
+      {
+        "query_id": "music-bss",
+        "round": 1,
+        "conditions": [
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-metric",
+        "round": 1,
+        "conditions": [
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-sonic",
+        "round": 1,
+        "conditions": [
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-duet",
+        "round": 1,
+        "conditions": [
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q01",
+        "round": 1,
+        "conditions": [
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q03",
+        "round": 1,
+        "conditions": [
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q08",
+        "round": 1,
+        "conditions": [
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-bss",
+        "round": 2,
+        "conditions": [
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-metric",
+        "round": 2,
+        "conditions": [
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-sonic",
+        "round": 2,
+        "conditions": [
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-duet",
+        "round": 2,
+        "conditions": [
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q01",
+        "round": 2,
+        "conditions": [
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q03",
+        "round": 2,
+        "conditions": [
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q08",
+        "round": 2,
+        "conditions": [
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-bss",
+        "round": 3,
+        "conditions": [
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-metric",
+        "round": 3,
+        "conditions": [
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-sonic",
+        "round": 3,
+        "conditions": [
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-duet",
+        "round": 3,
+        "conditions": [
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q01",
+        "round": 3,
+        "conditions": [
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q03",
+        "round": 3,
+        "conditions": [
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q08",
+        "round": 3,
+        "conditions": [
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-bss",
+        "round": 4,
+        "conditions": [
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-metric",
+        "round": 4,
+        "conditions": [
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-sonic",
+        "round": 4,
+        "conditions": [
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-duet",
+        "round": 4,
+        "conditions": [
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q01",
+        "round": 4,
+        "conditions": [
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q03",
+        "round": 4,
+        "conditions": [
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q08",
+        "round": 4,
+        "conditions": [
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-bss",
+        "round": 5,
+        "conditions": [
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-metric",
+        "round": 5,
+        "conditions": [
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-sonic",
+        "round": 5,
+        "conditions": [
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "music-duet",
+        "round": 5,
+        "conditions": [
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q01",
+        "round": 5,
+        "conditions": [
+          "search-default-5s",
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s"
+        ],
+        "selected_metadata_inputs_match": false,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q03",
+        "round": 5,
+        "conditions": [
+          "search-no-total-deadline",
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      },
+      {
+        "query_id": "q08",
+        "round": 5,
+        "conditions": [
+          "search-1s",
+          "search-2s",
+          "search-3s",
+          "search-default-5s",
+          "search-no-total-deadline"
+        ],
+        "selected_metadata_inputs_match": null,
+        "sufficient_pools": false
+      }
+    ]
+  }
+}

@@ -5,6 +5,8 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import tempfile
+import time
 
 
 def main():
@@ -15,13 +17,27 @@ def main():
     args = p.parse_args()
     with args.output.open('x') as stream:
         for run in map(json.loads,(args.batch/'runs.jsonl').read_text().splitlines()):
-            candidates = list((args.batch/'artifacts'/run['run_id']).glob('run-*.json'))
-            if len(candidates) != 1:
-                raise ValueError(f'{run["run_id"]}: expected exactly one candidate artifact')
-            output = subprocess.check_output([str(args.binary.resolve()),str(candidates[0])],text=True)
+            artifacts = run.get('artifacts')
+            if artifacts is None:
+                directory = Path(run.get('artifact_directory', args.batch/'artifacts'/run['run_id']))
+                artifacts = [json.loads(p.read_text()) for p in directory.glob('run-*.json')]
+            if len(artifacts) != 1:
+                stream.write(json.dumps(dict(source_run_id=run['run_id'], query_id=run['query_id'],
+                    round=run['round'], replay_status='missing_or_ambiguous_artifact'))+'\n')
+                continue
+            data = json.dumps(artifacts[0], sort_keys=True).encode()
+            with tempfile.TemporaryDirectory() as directory:
+                frozen = Path(directory)/'input.json'
+                frozen.write_bytes(data)
+                command = [str(args.binary.resolve()), str(frozen)]
+                started = time.perf_counter()
+                output = subprocess.check_output(command, text=True)
+                elapsed = time.perf_counter() - started
             for ranked in map(json.loads,output.splitlines()):
                 ranked.update(condition=ranked.pop('policy').lower(), query_id=run['query_id'], round=run['round'],
-                              input_sha256=hashlib.sha256(candidates[0].read_bytes()).hexdigest())
+                              input_sha256=hashlib.sha256(data).hexdigest(),
+                              source_run_id=run['run_id'], replay_binary_sha256=hashlib.sha256(args.binary.read_bytes()).hexdigest(),
+                              all_policies_process_seconds=elapsed, command=command)
                 stream.write(json.dumps(ranked)+'\n')
 
 
