@@ -84,6 +84,8 @@ where
             }
             None => quorum.is_some_and(|n| buckets.iter().filter(|r| !r.is_empty()).count() >= n),
         };
+        #[cfg(test)]
+        let reached = probe::validation::observe_collector(&buckets, reached);
         if reached {
             cancelled = pending.len();
             if let Some(signal) = &signal {
