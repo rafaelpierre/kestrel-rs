@@ -518,6 +518,83 @@ async fn opt_out_creates_no_raw_capture_and_redirect_counts_are_explicit() {
     assert_eq!(server.received_requests().await.unwrap().len(), 4);
 }
 
+// Synthetic Yahoo-shaped redirect: the path is not evidence of a challenge.
+#[tokio::test]
+async fn yahoo_empty_500_redirects_preserve_recovery_and_unknown_challenge() {
+    let _telemetry = crate::telemetry::test_export_guard();
+    for recover_on in [2, 3, 4] {
+        let server = MockServer::start().await;
+        Mock::given(wiremock::matchers::path("/search"))
+            .respond_with(
+                ResponseTemplate::new(302)
+                    .insert_header("location", format!("{}/_bv/v.gif", server.uri())),
+            )
+            .mount(&server)
+            .await;
+        let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let seen = Arc::clone(&calls);
+        Mock::given(wiremock::matchers::path("/_bv/v.gif"))
+            .respond_with(move |_: &wiremock::Request| {
+                if seen.fetch_add(1, Ordering::Relaxed) + 1 >= recover_on {
+                    ResponseTemplate::new(200)
+                        .set_body_string("<div class='msgNoResults'>No results</div>")
+                } else {
+                    ResponseTemplate::new(500).insert_header("retry-after", "120")
+                }
+            })
+            .mount(&server)
+            .await;
+        let directory = tempfile::tempdir().unwrap();
+        let (result, snapshot) = TEST_TRACE_DIRECTORY
+            .scope(
+                Some(directory.path().to_owned()),
+                recorded(true, &format!("{}/search", server.uri())),
+            )
+            .await;
+        let attempts = recover_on.min(3);
+        assert_eq!(snapshot.send_attempts, attempts);
+        assert_eq!(
+            server.received_requests().await.unwrap().len(),
+            attempts * 2
+        );
+        assert!(!snapshot.redirect_hops_observed);
+        for attempt in snapshot.attempts.iter().take(recover_on - 1) {
+            assert_eq!(attempt.http_status, Some(500));
+            assert_eq!(attempt.challenge, Challenge::Unknown);
+            assert_eq!(attempt.retry_after.as_deref(), Some("120"));
+            assert_eq!(attempt.outcome, Some("response"));
+            assert_eq!(attempt.transport_error, None);
+        }
+        if recover_on <= 3 {
+            let (body, retries) = result.unwrap();
+            assert_eq!(retries, recover_on - 1);
+            assert!(
+                parse_provider_response(Engine::Yahoo, &body)
+                    .unwrap()
+                    .is_empty()
+            );
+        } else {
+            assert!(result.unwrap_err().to_string().contains("HTTP 500"));
+        }
+        let captures = json_files(directory.path());
+        assert_eq!(captures.len(), attempts);
+        let failures: Vec<_> = captures
+            .iter()
+            .filter(|c| c["http_status"] == 500)
+            .collect();
+        assert_eq!(failures.len(), (recover_on - 1).min(3));
+        for capture in failures {
+            let body = std::fs::read(
+                directory
+                    .path()
+                    .join(capture["html_file"].as_str().unwrap()),
+            )
+            .unwrap();
+            assert!(body.is_empty());
+        }
+    }
+}
+
 #[tokio::test]
 async fn quorum_during_real_retry_backoff_does_not_cancel_completed_response() {
     let _telemetry = crate::telemetry::test_export_guard();
