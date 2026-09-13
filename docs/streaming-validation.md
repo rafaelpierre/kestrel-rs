@@ -217,3 +217,46 @@ Review-fix validation: formatting, Clippy, 179 Rust tests (five ignored), and
 four Python report tests passed. Added coverage preserves raw diff whitespace
 and non-UTF-8 bytes, and runs the report using the JSON envelope extracted from
 its own help text. The live pilot was not rerun for these provenance/help fixes.
+
+## Independent provider probes
+
+`live_streaming_provider_probes` runs all eight corpus queries against each of
+nine providers separately (72 sequential calls), rotating provider order by
+query. Each call uses a fresh client with the same fixed browser profile as the
+four-policy experiment. The test-only full policy disables target stopping;
+only provider completion/failure or the common deadline ends the call. This
+removes competing-provider cancellation, while deadline and retry censoring
+remain. It preserves diagnostics on total failure and checkpoints each result.
+
+```sh
+KESTREL_VALIDATION_OUTPUT=benchmarks/results/streaming-independent-window-1 \
+KESTREL_VALIDATION_CONTEXT='describe region and network type' \
+KESTREL_VALIDATION_BUDGET=3 \
+cargo test --release --lib live_streaming_provider_probes -- --ignored --nocapture
+```
+
+Choose a new directory; existing directories are rejected. The probe writes
+`metadata.json`, `runs.jsonl` and `COMPLETE`; its separate experiment schema is
+not input to the four-policy summarizer. Retain all 72 records, including empty
+results, HTTP failures and deadlines. Content type is now captured by the shared
+test probe alongside protocol/status. Missing content type means unobserved;
+returned content type describes the server's declaration, not a verified layout.
+The transport exposes decoded bodies, so absent Content-Encoding cannot establish
+uncompressed wire delivery. First chunk/record/EOF spacing does not distinguish
+server buffering from intermediary buffering. These require per-attempt wire
+instrumentation coordinated with #29. No production behavior or installed-skill
+contract changes.
+
+For a position-balanced four-policy run, set `KESTREL_VALIDATION_TRIALS=4`:
+each policy occupies every position once per query/client condition, for 256
+searches. Fresh clients still precede reused clients; this is a limitation of the
+existing design, not a randomized estimate of pooling benefit. Separate complete
+time windows must remain distinct, and same-host repetitions do not establish
+geographic or independent-network representativeness.
+
+## Repeated current-contract measurements
+
+See [the 512-call comparison and 72 independent probes](streaming-evidence-2026-09-13.md)
+for measured quality, resource and provider limitations, the recommendation, and
+the canonical gate (NOT PASSED, 5/10). This supersedes the historical pilot as
+current observations, while retaining its artifacts. Issue #46 remains open.

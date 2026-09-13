@@ -1331,6 +1331,10 @@ async fn read_standard_body(
         body.engine,
         format!("{:?}", response.version()),
         body.status,
+        response
+            .headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok()),
     );
     let mut incremental = streaming::Incremental::for_body(&body);
     while let Some(chunk) = response.chunk().await? {
@@ -1363,6 +1367,10 @@ async fn read_yahoo_body(mut response: primp::Response) -> Result<String, Kestre
         body.engine,
         format!("{:?}", response.version()),
         body.status,
+        response
+            .headers()
+            .get("content-type")
+            .and_then(|v| v.to_str().ok()),
     );
     let mut incremental = streaming::Incremental::for_body(&body);
     while let Some(chunk) = response.chunk().await? {

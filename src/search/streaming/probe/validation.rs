@@ -148,6 +148,24 @@ async fn measured_search(
     (merge_outcomes(outcomes), diagnostics, cancelled)
 }
 
+fn validation_clients() -> SearchClients {
+    let profile = crate::http_client::BrowserProfile::bing_experiment();
+    let transport = crate::TransportOptions::default();
+    let standard = crate::http_client::standard_builder(profile, &transport)
+        .timeout(SEARCH_TIMEOUT)
+        .build()
+        .unwrap();
+    let mut yahoo = crate::http_client::impersonated_builder(profile, &transport)
+        .timeout(SEARCH_TIMEOUT)
+        .build()
+        .unwrap();
+    *yahoo.headers_mut() = profile.headers();
+    SearchClients {
+        standard,
+        yahoo: Some(yahoo),
+    }
+}
+
 #[tokio::test]
 #[ignore = "live providers: current-contract four-policy benchmark; explicit output directory required"]
 async fn live_streaming_validation() {
@@ -288,6 +306,90 @@ async fn live_streaming_validation() {
         }
     }
     std::fs::write(directory.join("COMPLETE"), "all scheduled runs recorded\n").unwrap();
+}
+
+/// Independently exhaust each provider under the common deadline. No competing
+/// provider or result minimum can censor its response; deadline censoring remains.
+#[tokio::test]
+#[ignore = "live providers: independent full-body probes; explicit new output required"]
+async fn live_streaming_provider_probes() {
+    use sha2::{Digest, Sha256};
+    let directory = std::path::PathBuf::from(
+        std::env::var("KESTREL_VALIDATION_OUTPUT").expect("set a new output directory"),
+    );
+    let context = std::env::var("KESTREL_VALIDATION_CONTEXT").expect("set network context");
+    assert!(!context.trim().is_empty());
+    let budget = positive_env("KESTREL_VALIDATION_BUDGET", 3);
+    let corpus: Corpus = serde_json::from_str(include_str!(
+        "../../../../benchmarks/streaming-queries-v1.json"
+    ))
+    .unwrap();
+    std::fs::create_dir(&directory).expect("output directory must be new");
+    let mut output = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(directory.join("runs.jsonl"))
+        .unwrap();
+    let engines = SearchOptions::default().engines;
+    let executable = std::env::current_exe().unwrap();
+    std::fs::write(directory.join("metadata.json"), serde_json::to_vec_pretty(&serde_json::json!({
+        "schema_version": 1, "experiment": "independent-provider-full",
+        "started_utc": chrono::Utc::now().to_rfc3339(),
+        "revision": command("git", &["rev-parse", "HEAD"]),
+        "tracked_diff_sha256": format!("{:x}", Sha256::digest(command_bytes("git", &["diff", "HEAD"]))),
+        "test_binary_sha256": format!("{:x}", Sha256::digest(std::fs::read(executable).unwrap())),
+        "rustc": command("rustc", &["--version"]), "context": context,
+        "corpus": corpus, "providers": engines, "deadline_seconds": budget,
+        "profile": format!("{:?}", crate::http_client::BrowserProfile::bing_experiment()),
+        "policy": "full; one provider per call; fresh client; no target cancellation",
+        "pacing_ms": 250, "query_syntax": "passthrough",
+        "limitations": "logical-search timing aggregates retries; compression and server buffering not observable; parser worker elapsed is not CPU; absent timings are unknown"
+    })).unwrap()).unwrap();
+    for (query_index, query) in corpus.queries.iter().enumerate() {
+        for step in 0..engines.len() {
+            let engine = engines[(step + query_index) % engines.len()];
+            let mut options = validation_options(Duration::from_secs(budget as u64));
+            options.engines = vec![engine];
+            let clients = validation_clients();
+            let probe = Arc::new(Mutex::new(Probe {
+                started: Instant::now(),
+                providers: BTreeMap::new(),
+            }));
+            let (result, diagnostics, cancelled) = PROBE
+                .scope(
+                    probe.clone(),
+                    POLICY.scope(
+                        Policy::Full,
+                        measured_search(&query.query, &options, &clients),
+                    ),
+                )
+                .await;
+            let elapsed = elapsed_millis(probe.lock().unwrap().started);
+            let (results, error) = match result {
+                Ok(results) => (results, None),
+                Err(error) => (vec![], Some(error.to_string())),
+            };
+            serde_json::to_writer(
+                &mut output,
+                &serde_json::json!({
+                    "query_id": query.id, "query": query.query, "engine": engine,
+                    "elapsed_ms": elapsed, "providers": probe.lock().unwrap().providers,
+                    "diagnostics": diagnostics, "cancelled": cancelled,
+                    "results": results, "error": error,
+                }),
+            )
+            .unwrap();
+            writeln!(output).unwrap();
+            output.flush().unwrap();
+            eprintln!("independent probe: {}, {engine}: {elapsed} ms", query.id);
+            tokio::time::sleep(Duration::from_millis(250)).await;
+        }
+    }
+    std::fs::write(
+        directory.join("COMPLETE"),
+        "all 72 independent probes recorded\n",
+    )
+    .unwrap();
 }
 
 #[cfg(test)]
@@ -440,6 +542,17 @@ mod tests {
                 assert_eq!(count, 6);
             }
         }
+    }
+
+    #[tokio::test]
+    async fn independent_full_probe_reads_past_five_until_provider_finishes() {
+        let pending = FuturesUnordered::<Job>::new();
+        pending.push(Box::pin(async { (0, Ok(records(0, 9))) }));
+        let (outcomes, cancelled) = POLICY
+            .scope(Policy::Full, collect(pending, None, Some(5), None, None))
+            .await;
+        assert_eq!(cancelled, 0);
+        assert_eq!(merge_outcomes(outcomes).unwrap().len(), 9);
     }
 
     #[tokio::test]
