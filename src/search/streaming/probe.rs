@@ -8,6 +8,7 @@ pub(super) mod validation;
 #[derive(Default, Serialize)]
 struct Observation {
     http_version: String,
+    content_type: Option<String>,
     http_status: u16,
     headers_ms: u64,
     first_chunk_ms: Option<u64>,
@@ -37,9 +38,10 @@ fn update(engine: Engine, action: impl FnOnce(&mut Observation, u64)) {
         );
     });
 }
-pub(crate) fn headers(engine: Engine, version: String, status: u16) {
+pub(crate) fn headers(engine: Engine, version: String, status: u16, content_type: Option<&str>) {
     update(engine, |r, elapsed| {
         r.http_version = version;
+        r.content_type = content_type.map(str::to_owned);
         r.http_status = status;
         r.headers_ms = elapsed;
     });
