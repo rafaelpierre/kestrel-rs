@@ -5,6 +5,11 @@ translate conversational requests before searching. Its [dataset revision notes]
 record the corrected inputs and unchanged answer requirements. Historical query
 sets and measurements remain historical; compare scores only with matched inputs.
 
+Use the [repeatable evidence-gate runner](evidence-gate.md) to freeze inputs,
+retain bounded search/fetch attempts and record manual answer judgments. The
+[initial issue #148 observations](evidence-gate-2026-09-13.md) retain all four
+windows, including the final gate failure and concrete follow-up issues.
+
 For initialization, deadline and cleanup attribution, use the
 [short-budget investigation harness](budget-overhead/README.md). It compares
 controlled fresh processes with retained clients using an isolated benchmark
