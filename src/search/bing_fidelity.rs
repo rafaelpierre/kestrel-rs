@@ -208,6 +208,7 @@ async fn capture_live_matrix() {
             .unwrap();
     *impersonated.headers_mut() = profile.headers();
     let clients = SearchClients {
+        parsers: parsing::ParserPool::default(),
         standard: standard.clone(),
         yahoo: Some(impersonated.clone()),
     };

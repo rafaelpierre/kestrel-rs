@@ -21,6 +21,7 @@ use crate::model::{
 
 use crate::provider_diagnostics::{Challenge, Phase, Recorder, TransportKind};
 
+mod parsing;
 mod streaming;
 
 // Per-query cancellation reason, shared with provider lifecycle guards.
@@ -178,6 +179,7 @@ pub enum KestrelError {
 pub(crate) struct SearchClients {
     pub(crate) standard: reqwest::Client,
     pub(crate) yahoo: Option<primp::Client>,
+    pub(crate) parsers: parsing::ParserPool,
 }
 
 impl SearchClients {
@@ -205,6 +207,7 @@ impl SearchClients {
         Ok(Self {
             standard,
             yahoo: yahoo.transpose()?,
+            parsers: parsing::ParserPool::default(),
         })
     }
 }
@@ -766,6 +769,21 @@ async fn run_provider(
     time_filter: TimeFilter,
     clients: &SearchClients,
 ) -> Result<ProviderResponse, KestrelError> {
+    parsing::POOL
+        .scope(
+            clients.parsers.clone(),
+            run_provider_inner(query, engine, region, time_filter, clients),
+        )
+        .await
+}
+
+async fn run_provider_inner(
+    query: &str,
+    engine: Engine,
+    region: &str,
+    time_filter: TimeFilter,
+    clients: &SearchClients,
+) -> Result<ProviderResponse, KestrelError> {
     let mut result = match engine {
         Engine::Duckduckgo => {
             search_duckduckgo(query, region, time_filter, &clients.standard).await
@@ -842,7 +860,7 @@ async fn search_additional(
     })
     .await?;
     Ok(ProviderResponse {
-        results: crate::providers::parse(engine, &text)?,
+        results: parsing::run(move || crate::providers::parse(engine, &text)).await??,
         retries,
         raw_result_count: 0,
     })
@@ -875,7 +893,7 @@ async fn search_duckduckgo(
     })
     .await?;
     Ok(ProviderResponse {
-        results: parse_duckduckgo_response(&text)?,
+        results: parsing::run(move || parse_duckduckgo_response(&text)).await??,
         retries,
         raw_result_count: 0,
     })
@@ -913,7 +931,7 @@ async fn search_bing(
     })
     .await?;
     Ok(ProviderResponse {
-        results: parse_provider_response(Engine::Bing, &text)?,
+        results: parsing::run(move || parse_provider_response(Engine::Bing, &text)).await??,
         retries,
         raw_result_count: 0,
     })
@@ -948,7 +966,7 @@ async fn search_yahoo(
         request_yahoo_with_retries(query, || yahoo_request(client, query, region, time_filter))
             .await?;
     Ok(ProviderResponse {
-        results: parse_provider_response(Engine::Yahoo, &html)?,
+        results: parsing::run(move || parse_provider_response(Engine::Yahoo, &html)).await??,
         retries,
         raw_result_count: 0,
     })
@@ -994,7 +1012,11 @@ where
                 match body {
                     Ok(html) => {
                         record_phase(Phase::Parse);
-                        let challenge = classify_challenge(engine, &html);
+                        let (html, challenge) = parsing::run(move || {
+                            let challenge = classify_challenge(engine, &html);
+                            (html, challenge)
+                        })
+                        .await?;
                         observe(|r| r.response(challenge));
                         record_phase(Phase::Processing);
                         crate::benchmarking::capture_provider(
@@ -1083,7 +1105,11 @@ where
                 match body {
                     Ok(html) => {
                         record_phase(Phase::Parse);
-                        let challenge = classify_challenge(engine, &html);
+                        let (html, challenge) = parsing::run(move || {
+                            let challenge = classify_challenge(engine, &html);
+                            (html, challenge)
+                        })
+                        .await?;
                         observe(|r| r.response(challenge));
                         record_phase(Phase::Processing);
                         crate::benchmarking::capture_provider(
@@ -1183,7 +1209,9 @@ async fn read_standard_body(
     }
     #[cfg(test)]
     streaming::probe::eof(body.engine);
-    Ok(body.text())
+    // Release the persistent stream worker before waiting for completed-body capacity.
+    drop(incremental);
+    parsing::run(move || body.text()).await
 }
 
 async fn read_yahoo_body(mut response: primp::Response) -> Result<String, KestrelError> {
@@ -1213,7 +1241,9 @@ async fn read_yahoo_body(mut response: primp::Response) -> Result<String, Kestre
     }
     #[cfg(test)]
     streaming::probe::eof(body.engine);
-    Ok(body.text())
+    // Release the persistent stream worker before waiting for completed-body capacity.
+    drop(incremental);
+    parsing::run(move || body.text()).await
 }
 
 struct ProviderBody {

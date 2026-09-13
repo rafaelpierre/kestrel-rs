@@ -120,6 +120,7 @@ async fn both_clients_stream_normalized_results_and_cancel_unfinished_bodies() {
                     yahoo = yahoo.http2_prior_knowledge();
                 }
                 let clients = SearchClients {
+                    parsers: parsing::ParserPool::default(),
                     standard: standard.build().unwrap(),
                     yahoo: Some(yahoo.build().unwrap()),
                 };

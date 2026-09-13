@@ -1850,6 +1850,14 @@ mod tests {
     }
 
     #[test]
+    fn generated_skill_documents_provider_worker_ownership() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("ten queued/running blocking workers per retained client"));
+        assert!(skill.contains("Cancellation retains capacity until the worker exits"));
+        assert!(skill.contains("Parser queueing is included in the search budget"));
+    }
+
+    #[test]
     fn generated_skill_examples_parse_with_current_cli() {
         let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let skill = generate_skill_md(&mut Cli::command());

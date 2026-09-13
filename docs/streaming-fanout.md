@@ -51,13 +51,39 @@ A provider falling back to EOF still feeds the same collector and is cancelled
 when other providers satisfy the target. Transport chunks need not align with
 UTF-8 characters, tags, strings or JSON records. Both clients decompress before
 incremental character decoding. HTML uses a persistent tokenizer on a blocking
-worker, parsing each completed card once. A bounded worker channel ends when its
-provider is dropped. JSON recognizes the exact result-array location, including
-nested envelopes, and never treats a completed nested field as a completed result.
+worker, parsing each completed card once. JSON prefix scanning, probes and
+snapshot parsing also run on a persistent blocking worker. A bounded worker
+channel ends when its provider is dropped. JSON recognizes the exact result-array
+location, including nested envelopes, and never treats a completed nested field as a completed result.
 
 The existing 4 MiB decompressed-body limit applies. HTML/JSON nesting is bounded
 at 128 levels. JSON prefix decoding has a 256-pass/probe limit and falls back to
 EOF after that limit. No extra response suffix validation delays early stopping.
+
+## Provider worker ownership
+
+Each retained `KestrelClient` shares a fixed capacity of ten queued/running
+provider parsing workers across calls and clones. Persistent HTML and JSON
+workers, completed-body charset decoding, challenge classification and completed
+HTML/JSON/envelope extraction all use this capacity. Admission happens before
+`spawn_blocking`; capacity remains with the worker until its buffers and parser
+state are dropped, including after caller cancellation. Streaming workers release
+capacity after their input channel closes; EOF drops that channel before admitting
+completed-body work so a saturated pool cannot deadlock on its own stream workers.
+
+The per-call `SearchOptions::max_concurrency` / `--search-concurrency` still bounds
+provider requests. It does not resize this aggregate pool. `--parse-concurrency`
+controls fetched-page extraction, a separate resource. Separate clients and free
+search function invocations have independent pools; this is not a process-wide
+memory cap. Reuse a client and its clones to retain the aggregate bound.
+
+Waiting for provider parser capacity consumes the existing search budget. A
+cancelled/deadline-expired call returns without waiting for a started parser;
+the parser may finish later, and runtime shutdown may wait for it. With many
+concurrent calls, queueing can reduce candidates received before a deadline.
+No provider ordering, result threshold, retry policy or response-size limit changes.
+Completed-response representation sharing remains separate work in
+[issue #116](https://github.com/rafaelpierre/kestrel-rs/issues/116); this change moves existing parsing off async polls without changing its classifications.
 
 ## Verification
 
