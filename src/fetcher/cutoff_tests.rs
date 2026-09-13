@@ -49,6 +49,7 @@ impl Drop for TestBody {
 
 #[tokio::test]
 async fn h2_cap_cancels_stream_without_aborting_another_request_or_pool() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
     let connections = Arc::new(AtomicUsize::new(0));
@@ -141,6 +142,7 @@ async fn h2_cap_cancels_stream_without_aborting_another_request_or_pool() {
 
 #[tokio::test]
 async fn h1_cap_disconnects_without_waiting_for_eof_or_next_chunk() {
+    let _telemetry = crate::telemetry::test_export_guard();
     // Known length, unknown length, and a single chunk crossing the boundary.
     for (declared, suffix) in [(true, ""), (false, ""), (false, " unread suffix")] {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -208,6 +210,7 @@ async fn h1_cap_disconnects_without_waiting_for_eof_or_next_chunk() {
 
 #[tokio::test]
 async fn failure_before_cap_does_not_return_partial_success() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for stall in [false, true] {
         let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap();

@@ -10,6 +10,7 @@ const PAGE: &str = "<main><h1>Kestrel heading</h1><p>This is meaningful page con
 
 #[tokio::test]
 async fn fetches_parses_and_preserves_url_order() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/one"))
@@ -44,6 +45,7 @@ async fn fetches_parses_and_preserves_url_order() {
 
 #[tokio::test]
 async fn detailed_fetch_reports_transfer_and_phase_metadata() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/observed"))
@@ -70,6 +72,7 @@ async fn detailed_fetch_reports_transfer_and_phase_metadata() {
 
 #[tokio::test]
 async fn rejects_unsupported_but_extracts_declared_oversized_responses() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/binary"))
@@ -113,6 +116,7 @@ async fn rejects_unsupported_but_extracts_declared_oversized_responses() {
 
 #[tokio::test]
 async fn reusable_client_fetches_across_multiple_calls() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/reused"))
@@ -137,6 +141,7 @@ async fn reusable_client_fetches_across_multiple_calls() {
 
 #[tokio::test]
 async fn fetch_budget_retains_results_completed_before_deadline() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/fast"))
@@ -180,6 +185,7 @@ async fn fetch_budget_retains_results_completed_before_deadline() {
 
 #[tokio::test]
 async fn page_cache_avoids_a_second_network_fetch() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/cached"))
@@ -211,6 +217,7 @@ async fn page_cache_avoids_a_second_network_fetch() {
 
 #[tokio::test]
 async fn capped_pages_are_not_cached_by_either_api() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .respond_with(
@@ -261,6 +268,7 @@ async fn capped_pages_are_not_cached_by_either_api() {
 
 #[tokio::test]
 async fn decoded_prefix_handles_compression_boundaries_and_empty_content() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     use std::io::Write;
     let server = MockServer::start().await;
     let prefix = "<main><p>This is readable text preceding a split character: ";
@@ -326,6 +334,7 @@ async fn decoded_prefix_handles_compression_boundaries_and_empty_content() {
 
 #[tokio::test]
 async fn plain_text_preserves_charset_whitespace_and_literal_markup() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let server = MockServer::start().await;
     let utf8 = "  Source: literal metadata\r\nfn main() {\n\tif x < 2 && y > 0 {\n        println!(\"<p>&amp; café 日本 🦀</p>\");\n    }\n}\nrepeat\nrepeat\n\n";
     let cases = [
@@ -364,6 +373,7 @@ async fn plain_text_preserves_charset_whitespace_and_literal_markup() {
 
 #[tokio::test]
 async fn plain_text_limits_characters_and_decodes_capped_bytes() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let server = MockServer::start().await;
     let body = "é日🦀 &amp; trailing text";
     Mock::given(path("/plain"))
@@ -400,6 +410,7 @@ async fn plain_text_limits_characters_and_decodes_capped_bytes() {
 
 #[tokio::test]
 async fn plain_text_empty_or_whitespace_only_prefix_has_no_content() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let server = MockServer::start().await;
     for (index, body) in ["", " \r\n\t", "    useful text"].into_iter().enumerate() {
         let route = format!("/empty-{index}");
@@ -428,6 +439,7 @@ async fn plain_text_empty_or_whitespace_only_prefix_has_no_content() {
 
 #[tokio::test]
 async fn quality_is_advisory_and_recomputed_for_cached_and_failed_bodies() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     use kestrelsearch::ContentQualityState;
     let server = MockServer::start().await;
     let shell = "Your browser is not supported.";

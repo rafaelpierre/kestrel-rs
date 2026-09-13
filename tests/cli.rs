@@ -21,6 +21,7 @@ fn completion_seconds(stderr: &[u8], command: &str) -> f64 {
 
 #[test]
 fn help_lists_search_and_skill_commands() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     Command::cargo_bin("kestrel")
         .unwrap()
         .arg("--help")
@@ -33,6 +34,7 @@ fn help_lists_search_and_skill_commands() {
 
 #[test]
 fn fetch_rejects_invalid_urls_and_limits() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     for url in [
         "test",
         "site:https://example.com/page",
@@ -57,6 +59,7 @@ fn fetch_rejects_invalid_urls_and_limits() {
 
 #[tokio::test]
 async fn fetch_extracts_a_known_url_as_text_or_json() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     use wiremock::{
         Mock, MockServer, ResponseTemplate,
         matchers::{method, path},
@@ -109,6 +112,7 @@ async fn fetch_extracts_a_known_url_as_text_or_json() {
 
 #[tokio::test]
 async fn fetch_reports_http_and_unsupported_content_failures() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
     let server = MockServer::start().await;
     Mock::given(path("/missing"))
@@ -142,6 +146,7 @@ async fn fetch_reports_http_and_unsupported_content_failures() {
 
 #[test]
 fn version_matches_package_version() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     Command::cargo_bin("kestrel")
         .unwrap()
         .arg("--version")
@@ -155,6 +160,7 @@ fn version_matches_package_version() {
 
 #[test]
 fn invalid_positive_limits_are_rejected() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     Command::cargo_bin("kestrel")
         .unwrap()
         .args(["search", "query", "--top-k", "0"])
@@ -165,6 +171,7 @@ fn invalid_positive_limits_are_rejected() {
 
 #[test]
 fn skill_install_and_uninstall_use_compatible_paths() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let project = tempfile::tempdir().unwrap();
     let user_home = tempfile::tempdir().unwrap();
     Command::cargo_bin("kestrel")
@@ -322,6 +329,7 @@ fn skill_install_and_uninstall_use_compatible_paths() {
 
 #[test]
 fn removed_query_syntax_option_fails_before_requests() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     for syntax in ["portable", "native"] {
         Command::cargo_bin("kestrel")
             .unwrap()
@@ -337,6 +345,7 @@ fn removed_query_syntax_option_fails_before_requests() {
 
 #[test]
 fn passthrough_accepts_provider_syntax_without_local_parser_errors() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     for query in ["filetype:pdf", "learning AND", "\"machine", "a|b"] {
         Command::cargo_bin("kestrel")
             .unwrap()
@@ -357,6 +366,7 @@ fn passthrough_accepts_provider_syntax_without_local_parser_errors() {
 
 #[test]
 fn contradictory_search_options_fail_before_requests_in_either_order() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let mut pairs = vec![
         (vec!["--fetch"], vec!["--no-fetch"]),
         (vec!["--rank"], vec!["--no-rank"]),
@@ -401,6 +411,7 @@ fn contradictory_search_options_fail_before_requests_in_either_order() {
 
 #[test]
 fn search_min_results_is_documented_and_validated() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     Command::cargo_bin("kestrel")
         .unwrap()
         .args(["search", "--help"])
@@ -422,6 +433,7 @@ fn search_min_results_is_documented_and_validated() {
 
 #[test]
 fn failed_search_has_no_success_completion_line() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     // A one-nanosecond deadline expires before provider jobs start, avoiding live requests.
     for output in ["text", "json"] {
         Command::cargo_bin("kestrel")
@@ -445,6 +457,7 @@ fn failed_search_has_no_success_completion_line() {
 
 #[tokio::test]
 async fn capped_fetch_returns_successful_text_and_json_with_stderr_notice() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
     let server = MockServer::start().await;
     Mock::given(method("GET"))
@@ -498,6 +511,7 @@ async fn capped_fetch_returns_successful_text_and_json_with_stderr_notice() {
 
 #[tokio::test]
 async fn default_byte_cap_stops_at_one_mb_and_can_be_overridden() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
     let server = MockServer::start().await;
     let body = "<main><p>This readable prefix is before the default cutoff.</p><!--".to_owned()
@@ -537,6 +551,7 @@ async fn default_byte_cap_stops_at_one_mb_and_can_be_overridden() {
 
 #[test]
 fn overflowing_numeric_arguments_are_usage_errors() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     for flag in [
         "--timeout",
         "--search-budget",
@@ -594,6 +609,7 @@ fn overflowing_numeric_arguments_are_usage_errors() {
 
 #[tokio::test]
 async fn installed_skill_reading_recipe_handles_evidence_and_capture() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
 
     let server = MockServer::start().await;
@@ -692,6 +708,7 @@ async fn installed_skill_reading_recipe_handles_evidence_and_capture() {
 
 #[tokio::test]
 async fn fetch_plain_text_preserves_body_in_text_and_json() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
     let server = MockServer::start().await;
     let body = "  fn main() {\n\tprintln!(\"<p>&amp; 日本 🦀</p>\");\n}\n";
@@ -734,6 +751,7 @@ async fn fetch_plain_text_preserves_body_in_text_and_json() {
 
 #[test]
 fn fetch_score_invalid_options_fail_before_requests() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     for flags in [
         vec!["--min-fetch-score=-1"],
         vec!["--min-fetch-score=NaN"],
@@ -763,6 +781,7 @@ fn fetch_score_invalid_options_fail_before_requests() {
 
 #[tokio::test]
 async fn quality_keeps_shell_fetch_successful_and_recovers_explicit_article() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
     let server = MockServer::start().await;
     for (route, html) in [
@@ -817,8 +836,36 @@ async fn quality_keeps_shell_fetch_successful_and_recovers_explicit_article() {
     .unwrap();
 }
 
+#[test]
+fn installed_skill_documents_telemetry_configuration_and_capture_limits() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
+    let project = tempfile::tempdir().unwrap();
+    let home = tempfile::tempdir().unwrap();
+    Command::cargo_bin("kestrel")
+        .unwrap()
+        .current_dir(project.path())
+        .env("HOME", home.path())
+        .args(["skill", "install", "--agent", "codex", "--scope", "project"])
+        .assert()
+        .success();
+    let skill =
+        std::fs::read_to_string(project.path().join(".codex/skills/kestrelsearch/SKILL.md"))
+            .unwrap();
+    for text in [
+        "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+        "KESTRELSEARCH_OTEL_CONTENT",
+        "8192",
+        "sanitized",
+        "http/protobuf",
+        "test_traces.py",
+    ] {
+        assert!(skill.contains(text), "missing {text}");
+    }
+}
+
 #[tokio::test]
 async fn ordered_html_fetch_matches_golden_in_text_and_json() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
     let server = MockServer::start().await;
     let cases: Vec<serde_json::Value> =

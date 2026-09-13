@@ -12,6 +12,7 @@ fn invalid<T>(result: Result<T, KestrelError>) {
 
 #[tokio::test]
 async fn numeric_fetch_validation_precedes_requests_and_cached_results() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let server = MockServer::start().await;
     let urls = vec![server.uri()];
     let client = KestrelClient::new().unwrap();
@@ -106,6 +107,7 @@ async fn numeric_fetch_validation_precedes_requests_and_cached_results() {
 
 #[tokio::test]
 async fn numeric_search_validation_rejects_before_provider_execution() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let client = KestrelClient::new().unwrap();
     let queries = vec!["test".into()];
     let mut cases = Vec::new();
@@ -131,6 +133,7 @@ async fn numeric_search_validation_rejects_before_provider_execution() {
 
 #[test]
 fn numeric_transport_durations_are_checked() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     for options in [
         TransportOptions {
             pool_idle_timeout: Duration::MAX,

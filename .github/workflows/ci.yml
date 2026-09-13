@@ -21,3 +21,17 @@ jobs:
       - run: cargo test --all-features
       - name: Validate benchmark contracts against the built CLI
         run: KESTREL_BENCH_TEST_BINARY="$PWD/target/debug/kestrel" python3 -m unittest discover -s benchmarks -p 'test_*.py'
+      - name: Run tests with Honeycomb traces when credentials are available
+        env:
+          OTEL_EXPORTER_OTLP_ENDPOINT: ${{ vars.HONEYCOMB_OTLP_ENDPOINT }}
+          HONEYCOMB_API_KEY: ${{ secrets.HONEYCOMB_API_KEY }}
+          OTEL_SERVICE_NAME: kestrel-tests
+          OTEL_RESOURCE_ATTRIBUTES: service.version=${{ github.sha }},deployment.environment.name=ci,ci.run.id=${{ github.run_id }},ci.run.attempt=${{ github.run_attempt }}
+          KESTREL_BENCH_TEST_BINARY: ${{ github.workspace }}/target/debug/kestrel
+        run: |
+          if [ -z "$HONEYCOMB_API_KEY" ] || [ -z "$OTEL_EXPORTER_OTLP_ENDPOINT" ]; then
+            echo "Honeycomb export unavailable: configure HONEYCOMB_API_KEY and HONEYCOMB_OTLP_ENDPOINT; fork PRs have no secrets."
+            exit 0
+          fi
+          export OTEL_EXPORTER_OTLP_HEADERS="x-honeycomb-team=$HONEYCOMB_API_KEY"
+          python3 scripts/test_traces.py

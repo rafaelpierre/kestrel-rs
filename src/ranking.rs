@@ -45,63 +45,66 @@ pub fn rank_with_policy(
     queries: &[String],
     policy: RankingPolicy,
 ) -> Vec<SearchResult> {
-    if matches!(policy, RankingPolicy::Provider) {
-        return results;
-    }
-    if matches!(policy, RankingPolicy::Body) {
-        return rank_results_by_query(results, queries);
-    }
-    let mut groups: Vec<Vec<SearchResult>> = vec![Vec::new(); queries.len() + 1];
-    for result in results {
-        let index = queries
-            .iter()
-            .position(|q| Some(q.as_str()) == result.query.as_deref())
-            .unwrap_or(queries.len());
-        groups[index].push(result);
-    }
-    for (index, group) in groups.iter_mut().enumerate() {
-        let query = queries
-            .get(index)
-            .cloned()
-            .unwrap_or_else(|| queries.join(" "));
-        let terms = evidence_tokens(
-            &query
-                .split_whitespace()
-                .filter(|term| !term.contains(':'))
-                .collect::<Vec<_>>()
-                .join(" "),
-        );
-        let documents: Vec<_> = group
-            .iter()
-            .map(|r| {
-                let body = if matches!(policy, RankingPolicy::Hybrid) {
-                    let body = r.content.as_deref().unwrap_or_default();
-                    body.strip_prefix("Source: ")
-                        .and_then(|_| body.split_once("\n\n").map(|(_, text)| text))
-                        .unwrap_or(body)
-                } else {
-                    ""
-                };
-                evidence_tokens(&format!("{} {} {} {}", r.title, r.title, r.snippet, body))
-            })
-            .collect();
-        let scores = positive_bm25_scores(&documents, &terms);
-        let mut scored: Vec<_> = group.drain(..).zip(scores).collect();
-        if matches!(policy, RankingPolicy::Rrf) {
-            for (result, score) in &mut scored {
-                let mut seen = HashSet::new();
-                *score = result
-                    .sources
-                    .iter()
-                    .filter(|source| source.query == query && seen.insert(source.engine))
-                    .map(|source| 1.0 / (60.0 + source.rank as f64))
-                    .sum();
-            }
+    crate::telemetry::scope_results("kestrel.rank_with_policy", || {
+        crate::telemetry::results("ranking.input", &results);
+        if matches!(policy, RankingPolicy::Provider) {
+            return results;
         }
-        scored.sort_by(|a, b| b.1.total_cmp(&a.1));
-        *group = scored.into_iter().map(|(result, _)| result).collect();
-    }
-    interleave(groups)
+        if matches!(policy, RankingPolicy::Body) {
+            return rank_results_by_query(results, queries);
+        }
+        let mut groups: Vec<Vec<SearchResult>> = vec![Vec::new(); queries.len() + 1];
+        for result in results {
+            let index = queries
+                .iter()
+                .position(|q| Some(q.as_str()) == result.query.as_deref())
+                .unwrap_or(queries.len());
+            groups[index].push(result);
+        }
+        for (index, group) in groups.iter_mut().enumerate() {
+            let query = queries
+                .get(index)
+                .cloned()
+                .unwrap_or_else(|| queries.join(" "));
+            let terms = evidence_tokens(
+                &query
+                    .split_whitespace()
+                    .filter(|term| !term.contains(':'))
+                    .collect::<Vec<_>>()
+                    .join(" "),
+            );
+            let documents: Vec<_> = group
+                .iter()
+                .map(|r| {
+                    let body = if matches!(policy, RankingPolicy::Hybrid) {
+                        let body = r.content.as_deref().unwrap_or_default();
+                        body.strip_prefix("Source: ")
+                            .and_then(|_| body.split_once("\n\n").map(|(_, text)| text))
+                            .unwrap_or(body)
+                    } else {
+                        ""
+                    };
+                    evidence_tokens(&format!("{} {} {} {}", r.title, r.title, r.snippet, body))
+                })
+                .collect();
+            let scores = positive_bm25_scores(&documents, &terms);
+            let mut scored: Vec<_> = group.drain(..).zip(scores).collect();
+            if matches!(policy, RankingPolicy::Rrf) {
+                for (result, score) in &mut scored {
+                    let mut seen = HashSet::new();
+                    *score = result
+                        .sources
+                        .iter()
+                        .filter(|source| source.query == query && seen.insert(source.engine))
+                        .map(|source| 1.0 / (60.0 + source.rank as f64))
+                        .sum();
+                }
+            }
+            scored.sort_by(|a, b| b.1.total_cmp(&a.1));
+            *group = scored.into_iter().map(|(result, _)| result).collect();
+        }
+        interleave(groups)
+    })
 }
 
 fn positive_bm25_scores(corpus: &[Vec<String>], query: &[String]) -> Vec<f64> {
@@ -128,11 +131,14 @@ fn positive_bm25_scores(corpus: &[Vec<String>], query: &[String]) -> Vec<f64> {
 
 /// Rank fetched results with rank_bm25's BM25Okapi defaults.
 pub fn rank_results(mut results: Vec<SearchResult>, query: &str) -> Vec<SearchResult> {
-    if results.is_empty() {
-        return results;
-    }
-    score_results(&mut results, query);
-    retain_ranked(results)
+    crate::telemetry::scope_results("kestrel.rank_results", || {
+        crate::telemetry::results("ranking.input", &results);
+        if results.is_empty() {
+            return results;
+        }
+        score_results(&mut results, query);
+        retain_ranked(results)
+    })
 }
 
 fn score_results(results: &mut [SearchResult], query: &str) {
@@ -159,41 +165,44 @@ fn retain_ranked(mut results: Vec<SearchResult>) -> Vec<SearchResult> {
 
 /// Rank each originating-query group and interleave the groups fairly.
 pub fn rank_results_by_query(results: Vec<SearchResult>, queries: &[String]) -> Vec<SearchResult> {
-    let mut seen = HashSet::new();
-    let query_order: Vec<&str> = queries
-        .iter()
-        .map(String::as_str)
-        .filter(|query| seen.insert(*query))
-        .collect();
-    let mut groups: Vec<Vec<SearchResult>> = vec![Vec::new(); query_order.len()];
-    let indexes: HashMap<&str, usize> = query_order
-        .iter()
-        .enumerate()
-        .map(|(index, query)| (*query, index))
-        .collect();
-    let mut unassigned = Vec::new();
-    for result in results {
-        if let Some(index) = result
-            .query
-            .as_deref()
-            .and_then(|query| indexes.get(query).copied())
-        {
-            groups[index].push(result);
-        } else {
-            unassigned.push(result);
+    crate::telemetry::scope_results("kestrel.rank_results_by_query", || {
+        crate::telemetry::results("ranking.input", &results);
+        let mut seen = HashSet::new();
+        let query_order: Vec<&str> = queries
+            .iter()
+            .map(String::as_str)
+            .filter(|query| seen.insert(*query))
+            .collect();
+        let mut groups: Vec<Vec<SearchResult>> = vec![Vec::new(); query_order.len()];
+        let indexes: HashMap<&str, usize> = query_order
+            .iter()
+            .enumerate()
+            .map(|(index, query)| (*query, index))
+            .collect();
+        let mut unassigned = Vec::new();
+        for result in results {
+            if let Some(index) = result
+                .query
+                .as_deref()
+                .and_then(|query| indexes.get(query).copied())
+            {
+                groups[index].push(result);
+            } else {
+                unassigned.push(result);
+            }
         }
-    }
 
-    let mut buckets = Vec::new();
-    for (query, group) in query_order.iter().zip(groups) {
-        if !group.is_empty() {
-            buckets.push(rank_or_retain(group, query));
+        let mut buckets = Vec::new();
+        for (query, group) in query_order.iter().zip(groups) {
+            if !group.is_empty() {
+                buckets.push(rank_or_retain(group, query));
+            }
         }
-    }
-    if !unassigned.is_empty() {
-        buckets.push(rank_or_retain(unassigned, &query_order.join(" ")));
-    }
-    interleave(buckets)
+        if !unassigned.is_empty() {
+            buckets.push(rank_or_retain(unassigned, &query_order.join(" ")));
+        }
+        interleave(buckets)
+    })
 }
 
 /// Counts from opt-in metadata relevance filtering, before the fetch cap.
@@ -223,82 +232,84 @@ pub fn filter_fetch_candidates(
     queries: &[String],
     minimum: f64,
 ) -> Result<FetchScoreReport, crate::search::KestrelError> {
-    use crate::search::KestrelError;
+    crate::telemetry::scope_sync("kestrel.filter_fetch_candidates", || {
+        use crate::search::KestrelError;
 
-    let query_order = crate::search::normalize_queries(queries);
-    if !minimum.is_finite() || minimum < 0.0 || query_order.is_empty() {
-        return Err(KestrelError::InvalidRequest(
-            "fetch score requires a finite nonnegative minimum and at least one query".into(),
-        ));
-    }
-    let terms: Vec<Vec<String>> = query_order
-        .iter()
-        .map(|query| evidence_tokens(query))
-        .collect();
-    let memberships: Vec<Vec<usize>> = results
-        .iter()
-        .map(|result| {
-            let mut indexes: Vec<_> = query_order
+        let query_order = crate::search::normalize_queries(queries);
+        if !minimum.is_finite() || minimum < 0.0 || query_order.is_empty() {
+            return Err(KestrelError::InvalidRequest(
+                "fetch score requires a finite nonnegative minimum and at least one query".into(),
+            ));
+        }
+        let terms: Vec<Vec<String>> = query_order
+            .iter()
+            .map(|query| evidence_tokens(query))
+            .collect();
+        let memberships: Vec<Vec<usize>> = results
+            .iter()
+            .map(|result| {
+                let mut indexes: Vec<_> = query_order
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, query)| {
+                        result.query.as_deref() == Some(query.as_str())
+                            || result
+                                .sources
+                                .iter()
+                                .any(|source| source.query == query.as_str())
+                    })
+                    .map(|(index, _)| index)
+                    .collect();
+                if indexes.is_empty() {
+                    indexes.extend(0..query_order.len());
+                }
+                indexes
+            })
+            .collect();
+        let documents: Vec<_> = results
+            .iter()
+            .map(|result| {
+                evidence_tokens(&format!(
+                    "{} {} {}",
+                    result.title, result.title, result.snippet
+                ))
+            })
+            .collect();
+        let mut keep = vec![false; results.len()];
+        let mut report = FetchScoreReport::default();
+        for (query_index, terms) in terms.iter().enumerate() {
+            let indexes: Vec<_> = memberships
                 .iter()
                 .enumerate()
-                .filter(|(_, query)| {
-                    result.query.as_deref() == Some(query.as_str())
-                        || result
-                            .sources
-                            .iter()
-                            .any(|source| source.query == query.as_str())
-                })
+                .filter(|(_, membership)| membership.contains(&query_index))
                 .map(|(index, _)| index)
                 .collect();
             if indexes.is_empty() {
-                indexes.extend(0..query_order.len());
+                continue;
             }
-            indexes
-        })
-        .collect();
-    let documents: Vec<_> = results
-        .iter()
-        .map(|result| {
-            evidence_tokens(&format!(
-                "{} {} {}",
-                result.title, result.title, result.snippet
-            ))
-        })
-        .collect();
-    let mut keep = vec![false; results.len()];
-    let mut report = FetchScoreReport::default();
-    for (query_index, terms) in terms.iter().enumerate() {
-        let indexes: Vec<_> = memberships
-            .iter()
-            .enumerate()
-            .filter(|(_, membership)| membership.contains(&query_index))
-            .map(|(index, _)| index)
-            .collect();
-        if indexes.is_empty() {
-            continue;
-        }
-        if terms.is_empty() {
-            report.bypassed_queries += 1;
-            for index in indexes {
-                keep[index] = true;
+            if terms.is_empty() {
+                report.bypassed_queries += 1;
+                for index in indexes {
+                    keep[index] = true;
+                }
+                continue;
             }
-            continue;
+            let corpus: Vec<_> = indexes
+                .iter()
+                .map(|index| documents[*index].clone())
+                .collect();
+            for (index, score) in indexes
+                .into_iter()
+                .zip(positive_bm25_scores(&corpus, terms))
+            {
+                keep[index] |= score >= minimum;
+            }
         }
-        let corpus: Vec<_> = indexes
-            .iter()
-            .map(|index| documents[*index].clone())
-            .collect();
-        for (index, score) in indexes
-            .into_iter()
-            .zip(positive_bm25_scores(&corpus, terms))
-        {
-            keep[index] |= score >= minimum;
-        }
-    }
-    let mut decisions = keep.into_iter();
-    results.retain(|_| decisions.next().unwrap_or(false));
-    report.rejected = memberships.len() - results.len();
-    Ok(report)
+        let mut decisions = keep.into_iter();
+        results.retain(|_| decisions.next().unwrap_or(false));
+        report.rejected = memberships.len() - results.len();
+        Ok(report)
+    })
 }
 
 /// Order search candidates by title/snippet relevance while interleaving source buckets.
@@ -306,54 +317,57 @@ pub fn filter_fetch_candidates(
 /// This does not set the public BM25 score, which remains reserved for final
 /// extracted-content ranking.
 pub fn pre_rank_candidates(results: Vec<SearchResult>, queries: &[String]) -> Vec<SearchResult> {
-    if results.len() < 2 {
-        return results;
-    }
-    let mut query_order: Vec<&str> = Vec::new();
-    let mut seen_queries = HashSet::new();
-    for query in queries {
-        if seen_queries.insert(query.as_str()) {
-            query_order.push(query);
+    crate::telemetry::scope_results("kestrel.pre_rank_candidates", || {
+        crate::telemetry::results("ranking.input", &results);
+        if results.len() < 2 {
+            return results;
         }
-    }
-    let fallback_query = query_order.join(" ");
-    let mut scores = vec![0.0; results.len()];
-    for query in &query_order {
-        score_snippet_group(&results, &mut scores, query, |result| {
-            result.query.as_deref() == Some(*query)
+        let mut query_order: Vec<&str> = Vec::new();
+        let mut seen_queries = HashSet::new();
+        for query in queries {
+            if seen_queries.insert(query.as_str()) {
+                query_order.push(query);
+            }
+        }
+        let fallback_query = query_order.join(" ");
+        let mut scores = vec![0.0; results.len()];
+        for query in &query_order {
+            score_snippet_group(&results, &mut scores, query, |result| {
+                result.query.as_deref() == Some(*query)
+            });
+        }
+        score_snippet_group(&results, &mut scores, &fallback_query, |result| {
+            result
+                .query
+                .as_deref()
+                .is_none_or(|query| !seen_queries.contains(query))
         });
-    }
-    score_snippet_group(&results, &mut scores, &fallback_query, |result| {
-        result
-            .query
-            .as_deref()
-            .is_none_or(|query| !seen_queries.contains(query))
-    });
 
-    let mut bucket_indexes: HashMap<(String, Option<Engine>), usize> = HashMap::new();
-    let mut buckets: Vec<Vec<(usize, f64, SearchResult)>> = Vec::new();
-    for (index, (result, score)) in results.into_iter().zip(scores).enumerate() {
-        let key = (result.query.clone().unwrap_or_default(), result.engine);
-        let next_index = bucket_indexes.len();
-        let bucket = *bucket_indexes.entry(key).or_insert_with(|| {
-            buckets.push(Vec::new());
-            next_index
-        });
-        buckets[bucket].push((index, score, result));
-    }
-    for bucket in &mut buckets {
-        bucket.sort_by(|left, right| {
-            right
-                .1
-                .total_cmp(&left.1)
-                .then_with(|| left.0.cmp(&right.0))
-        });
-    }
-    let ranked_buckets = buckets
-        .into_iter()
-        .map(|bucket| bucket.into_iter().map(|(_, _, result)| result).collect())
-        .collect();
-    interleave(ranked_buckets)
+        let mut bucket_indexes: HashMap<(String, Option<Engine>), usize> = HashMap::new();
+        let mut buckets: Vec<Vec<(usize, f64, SearchResult)>> = Vec::new();
+        for (index, (result, score)) in results.into_iter().zip(scores).enumerate() {
+            let key = (result.query.clone().unwrap_or_default(), result.engine);
+            let next_index = bucket_indexes.len();
+            let bucket = *bucket_indexes.entry(key).or_insert_with(|| {
+                buckets.push(Vec::new());
+                next_index
+            });
+            buckets[bucket].push((index, score, result));
+        }
+        for bucket in &mut buckets {
+            bucket.sort_by(|left, right| {
+                right
+                    .1
+                    .total_cmp(&left.1)
+                    .then_with(|| left.0.cmp(&right.0))
+            });
+        }
+        let ranked_buckets = buckets
+            .into_iter()
+            .map(|bucket| bucket.into_iter().map(|(_, _, result)| result).collect())
+            .collect();
+        interleave(ranked_buckets)
+    })
 }
 
 fn score_snippet_group(
@@ -502,6 +516,7 @@ mod tests {
 
     #[test]
     fn fetch_score_small_corpora_boundaries_and_untouched_evidence() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let mut hit = result(
             "rust",
             Some("rust"),
@@ -540,6 +555,7 @@ mod tests {
 
     #[test]
     fn fetch_score_uses_complete_pool_and_preserves_ties() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let input = vec![result("rust", None, None), result("cooking", None, None)];
         let corpus: Vec<_> = input
             .iter()
@@ -559,6 +575,7 @@ mod tests {
 
     #[test]
     fn fetch_score_uses_every_contributing_query_and_bypasses_nonlexical_queries() {
+        let _telemetry = crate::telemetry::test_export_guard();
         use crate::SourceOccurrence;
         let mut shared = result("python", Some("rust"), None);
         shared.sources = vec![
@@ -599,6 +616,7 @@ mod tests {
 
     #[test]
     fn fetch_score_normalizes_queries_before_provenance_matching() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let input = vec![
             result("python", Some("rust"), None),
             result("python", Some("python"), None),
@@ -628,6 +646,7 @@ mod tests {
 
     #[test]
     fn fetch_score_tokenizes_query_text_and_rejects_invalid_input_atomically() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let query = "café NOT python site:example.com";
         let mut hits = vec![
             result("python AND example com", None, None),
@@ -652,6 +671,7 @@ mod tests {
 
     #[test]
     fn extraction_restores_tokens_without_implicit_heading_weights() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let html = [
             "<main><h1>Rust</h1><p>The <b>Rust</b> language.</p></main>",
             "<main><p>Rust</p><p>The Rust language.</p></main>",
@@ -699,11 +719,13 @@ mod tests {
 
     #[test]
     fn tokenizer_normalizes_words() {
+        let _telemetry = crate::telemetry::test_export_guard();
         assert_eq!(tokenize("Hello, WORLD! 123"), ["hello", "world", "123"]);
     }
 
     #[test]
     fn relevant_result_wins_and_zero_scores_are_removed() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let ranked = rank_results(
             vec![
                 result("Low", None, Some("python")),
@@ -724,6 +746,7 @@ mod tests {
 
     #[test]
     fn query_groups_are_interleaved() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let ranked = rank_results_by_query(
             vec![
                 result("Alpha best", Some("alpha"), Some("alpha alpha exact")),
@@ -740,6 +763,7 @@ mod tests {
 
     #[test]
     fn all_zero_fallback_retains_assigned_scores() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let ranked = rank_results_by_query(
             vec![result("Only", Some("rust"), Some("rust language"))],
             &["rust".into()],
@@ -750,6 +774,7 @@ mod tests {
 
     #[test]
     fn snippet_pre_rank_reorders_within_sources_and_keeps_source_interleaving() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let mut alpha_low = result("Alpha low", Some("rust async"), None);
         alpha_low.engine = Some(Engine::Bing);
         alpha_low.snippet = "programming language".into();
@@ -768,6 +793,7 @@ mod tests {
     }
     #[test]
     fn hybrid_retains_failed_fetches_and_ignores_source_prefix() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let mut relevant = result("Rust E0382 moved value", Some("E0382"), None);
         relevant.snippet = "How to fix ownership errors".into();
         let irrelevant = result(
@@ -787,6 +813,7 @@ mod tests {
 
     #[test]
     fn hybrid_single_document_and_ties_are_retained() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let input = vec![
             result("one", Some("absent"), None),
             result("two", Some("absent"), None),
@@ -808,6 +835,7 @@ mod tests {
     }
     #[test]
     fn experimental_tokens_preserve_versions_and_identifiers() {
+        let _telemetry = crate::telemetry::test_export_guard();
         assert_eq!(
             evidence_tokens("Tempo 3.0 TRAPPIST-1 E0382 foo_bar"),
             ["tempo", "3.0", "trappist-1", "e0382", "foo_bar"]

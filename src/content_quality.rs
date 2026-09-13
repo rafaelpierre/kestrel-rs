@@ -198,6 +198,7 @@ mod tests {
 
     #[test]
     fn assessment_bounds_and_absence_are_explicit() {
+        let _telemetry = crate::telemetry::test_export_guard();
         for text in [None, Some(""), Some(" \n\t")] {
             assert_eq!(
                 assess_content_quality(text).reasons,
@@ -217,6 +218,7 @@ mod tests {
 
     #[test]
     fn near_matches_and_mixed_text_are_not_shell_only() {
+        let _telemetry = crate::telemetry::test_export_guard();
         for text in [
             "Your browser is not supported. Evidence follows.",
             "Evidence precedes. Your browser is not supported.",
@@ -236,6 +238,7 @@ mod tests {
 
     #[test]
     fn reports_use_content_input_order_and_results_strip_only_their_own_wrapper() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let report = crate::FetchReport {
             contents: vec![Some("Your browser is not supported.".into()), None],
             pages: vec![],

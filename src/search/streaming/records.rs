@@ -174,7 +174,9 @@ type HtmlJob = (
 impl HtmlWorker {
     fn new(engine: Engine) -> Self {
         let (sender, mut receiver) = tokio::sync::mpsc::channel::<HtmlJob>(1);
+        let context = crate::telemetry::parent_context();
         tokio::task::spawn_blocking(move || {
+            let _context = context.attach();
             // The tokenizer is thread-local; only owned strings and results cross the channel.
             let tokenizer = Tokenizer::new(
                 HtmlSink {
@@ -506,6 +508,7 @@ mod tests {
 
     #[tokio::test]
     async fn all_providers_emit_the_same_results_as_their_full_parser() {
+        let _telemetry = crate::telemetry::test_export_guard();
         for (engine, text) in fixtures() {
             for split in [1, 7, text.len()] {
                 let mut parser = Records::new(engine);
@@ -532,6 +535,7 @@ mod tests {
 
     #[tokio::test]
     async fn unfinished_cards_and_script_comment_lookalikes_are_not_records() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let fake = r#"<li class="b_algo"><h2><a href="https://example.org/">fake</a></h2></li>"#;
         for text in [
             format!("<!-- {fake} -->"),
@@ -559,6 +563,7 @@ mod tests {
 
     #[tokio::test]
     async fn nested_json_fields_do_not_complete_the_enclosing_result() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let mut parser = Records::new(Engine::Dogpile);
         let prefix = r#"{"results":[{"title":"quoted \\\" title","clickUrl":"https://example.org/","nested":[{"title":"x"}]"#;
         assert!(parser.push(prefix).await.unwrap().is_none());
@@ -572,6 +577,7 @@ mod tests {
 
     #[tokio::test]
     async fn known_challenges_are_rejected_before_publication() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let (engine, card) = fixtures().remove(0);
         assert!(
             Records::new(engine)

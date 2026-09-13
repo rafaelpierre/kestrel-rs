@@ -1,5 +1,6 @@
 //! Multi-provider search, retry, normalization, and fair merging.
 
+use opentelemetry::trace::FutureExt;
 use std::collections::{HashMap, HashSet};
 use std::future::Future;
 use std::sync::atomic::{AtomicU8, Ordering};
@@ -236,21 +237,24 @@ pub(crate) async fn search_with_clients(
     time_filter: TimeFilter,
     clients: &SearchClients,
 ) -> Result<Vec<SearchResult>, KestrelError> {
-    validate_query(query)?;
-    DIAGNOSTIC_RUN_ID
-        .scope(uuid::Uuid::new_v4().to_string(), async {
-            run_one_job(
-                query,
-                engine,
-                Arc::new(Semaphore::new(1)),
-                Arc::new(Mutex::new(Vec::new())),
-                None,
-                None,
-                run_provider(query, engine, region, time_filter, clients),
-            )
+    crate::telemetry::scope_result("kestrel.search", async {
+        validate_query(query)?;
+        DIAGNOSTIC_RUN_ID
+            .scope(uuid::Uuid::new_v4().to_string(), async {
+                run_one_job(
+                    query,
+                    engine,
+                    Arc::new(Semaphore::new(1)),
+                    Arc::new(Mutex::new(Vec::new())),
+                    None,
+                    None,
+                    run_provider(query, engine, region, time_filter, clients),
+                )
+                .await
+            })
             .await
-        })
-        .await
+    })
+    .await
 }
 
 struct ProviderResponse {
@@ -289,9 +293,12 @@ pub async fn search_many_detailed(
     queries: &[String],
     options: &SearchOptions,
 ) -> Result<SearchReport, KestrelError> {
-    let (queries, engines) = validate_request(queries, options)?;
-    let clients = SearchClients::new(&engines)?;
-    search_many_with_clients_detailed(queries, engines, options, &clients).await
+    crate::telemetry::scope_result("kestrel.search", async {
+        let (queries, engines) = validate_request(queries, options)?;
+        let clients = SearchClients::new(&engines)?;
+        search_many_with_clients_detailed(queries, engines, options, &clients).await
+    })
+    .await
 }
 
 pub(crate) async fn search_many_reusing_clients(
@@ -311,8 +318,11 @@ pub(crate) async fn search_many_reusing_clients_detailed(
     options: &SearchOptions,
     clients: &SearchClients,
 ) -> Result<SearchReport, KestrelError> {
-    let (queries, engines) = validate_request(queries, options)?;
-    search_many_with_clients_detailed(queries, engines, options, clients).await
+    crate::telemetry::scope_result("kestrel.search", async {
+        let (queries, engines) = validate_request(queries, options)?;
+        search_many_with_clients_detailed(queries, engines, options, clients).await
+    })
+    .await
 }
 
 async fn search_many_with_clients_detailed(
@@ -335,6 +345,18 @@ async fn search_many_with_clients_in_run(
     options: &SearchOptions,
     clients: &SearchClients,
 ) -> Result<SearchReport, KestrelError> {
+    crate::telemetry::payload("search.input", &queries);
+    crate::telemetry::attribute("kestrel.query_syntax", "passthrough");
+    crate::telemetry::attribute("kestrel.time_filter", format!("{:?}", options.time_filter));
+    crate::telemetry::payload("search.region", &options.region);
+    if let Some(budget) = options.search_budget {
+        crate::telemetry::attribute("kestrel.search_budget_seconds", budget.as_secs_f64());
+    }
+    crate::telemetry::attribute("kestrel.search_concurrency", options.max_concurrency as i64);
+    crate::telemetry::attribute(
+        "kestrel.min_results",
+        options.min_results.unwrap_or(5) as i64,
+    );
     let semaphore = Arc::new(Semaphore::new(options.max_concurrency));
     let diagnostics = Arc::new(Mutex::new(Vec::new()));
     let deadline = options
@@ -362,7 +384,8 @@ async fn search_many_with_clients_in_run(
         .into_iter()
         .flat_map(|(outcomes, _)| outcomes)
         .collect();
-    let results = merge_outcomes(outcomes)?;
+    let results = crate::telemetry::scope_sync("kestrel.merge", || merge_outcomes(outcomes))?;
+    crate::telemetry::results("search.output", &results);
     let providers = Arc::try_unwrap(diagnostics)
         .expect("all search diagnostic references dropped")
         .into_inner()
@@ -387,6 +410,10 @@ fn run_fanout_query<'a>(
     min_results: Option<usize>,
     deadline: Option<tokio::time::Instant>,
 ) -> impl Future<Output = (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)> + 'a {
+    let mut query_span = crate::telemetry::Span::new("kestrel.query");
+    let query_context = query_span.context();
+    let _query_context = query_context.clone().attach();
+    crate::telemetry::payload("query.input", &query);
     let pending = FuturesUnordered::new();
     let (sender, receiver) = tokio::sync::mpsc::channel(1);
     let fanout_cancelled = Arc::new(AtomicU8::new(FANOUT_RUNNING));
@@ -421,7 +448,7 @@ fn run_fanout_query<'a>(
     }
     drop(sender);
     async move {
-        streaming::collect(
+        let output = streaming::collect(
             pending,
             provider_quorum,
             min_results,
@@ -432,8 +459,11 @@ fn run_fanout_query<'a>(
                 None
             },
         )
-        .await
+        .await;
+        query_span.finish();
+        output
     }
+    .with_context(query_context)
 }
 
 #[cfg(test)]
@@ -572,7 +602,14 @@ fn run_one_job<'a>(
     let run_id = DIAGNOSTIC_RUN_ID
         .try_with(Clone::clone)
         .unwrap_or_else(|_| uuid::Uuid::new_v4().to_string());
-    let recorder = Arc::new(Mutex::new(Recorder::with_run(run_id)));
+    let telemetry = crate::telemetry::Span::new("kestrel.provider");
+    telemetry.attribute("kestrel.provider", engine.to_string());
+    let context = telemetry.context();
+    let recorder = {
+        let _context = context.clone().attach();
+        crate::telemetry::payload("input", &query);
+        Arc::new(Mutex::new(Recorder::with_run(run_id)))
+    };
     let timer = DiagnosticTimer {
         diagnostics: Arc::clone(&diagnostics),
         index,
@@ -581,6 +618,7 @@ fn run_one_job<'a>(
         completed: false,
         deadline: false,
         fanout_cancelled,
+        telemetry,
     };
     async move {
         let mut timer = timer;
@@ -644,8 +682,12 @@ fn run_one_job<'a>(
                 }
             }
         }
+        if let Ok(response) = &outcome {
+            crate::telemetry::results("provider.results", &response.results);
+        }
         outcome.map(|response| response.results)
     }
+    .with_context(context)
 }
 
 fn provider_error_outcome(message: &str) -> &'static str {
@@ -668,6 +710,7 @@ struct DiagnosticTimer {
     completed: bool,
     deadline: bool,
     fanout_cancelled: Option<Arc<AtomicU8>>,
+    telemetry: crate::telemetry::Span,
 }
 impl Drop for DiagnosticTimer {
     fn drop(&mut self) {
@@ -693,6 +736,14 @@ impl Drop for DiagnosticTimer {
             entry.clone()
         });
         if let Some(diagnostic) = diagnostic {
+            let _context = self.telemetry.context().attach();
+            self.telemetry
+                .attribute("kestrel.outcome", diagnostic.outcome.clone());
+            self.telemetry.attribute("kestrel.cancelled", cancelled);
+            if !diagnostic.success && !cancelled {
+                crate::telemetry::error("provider_failed");
+            }
+            self.telemetry.finish();
             let lifecycle = self
                 .recorder
                 .lock()
@@ -755,6 +806,7 @@ async fn run_provider(
 }
 
 fn filter_response(query: &str, response: &mut ProviderResponse) {
+    crate::telemetry::results("provider.raw_results", &response.results);
     response.raw_result_count = response.results.len();
     normalize_provider_results(&mut response.results, query);
 }
@@ -763,7 +815,16 @@ fn normalize_provider_results(results: &mut Vec<SearchResult>, query: &str) {
     for (index, result) in results.iter_mut().enumerate() {
         result.engine_rank = Some(index + 1);
     }
-    results.retain(|result| result_allowed(query, &result.url));
+    results.retain(|result| {
+        let accepted = result_allowed(query, &result.url);
+        if !accepted {
+            crate::telemetry::results(
+                "provider.rejected_invalid_url_or_query",
+                std::slice::from_ref(result),
+            );
+        }
+        accepted
+    });
 }
 
 async fn search_additional(
@@ -1705,6 +1766,7 @@ mod tests {
 
     #[test]
     fn numeric_search_concurrency_accepts_semaphore_boundary() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let options = SearchOptions {
             max_concurrency: Semaphore::MAX_PERMITS,
             search_budget: Some(Duration::from_nanos(1)),
@@ -1715,6 +1777,7 @@ mod tests {
 
     #[test]
     fn provider_buffer_checks_capacity_before_appending() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let mut body = ProviderBody::new(Engine::Bing, 200, None, None).unwrap();
         // Uneven chunks exercise growth near the limit rather than powers of two.
         let chunk = vec![b'x'; 100_003];
@@ -1783,6 +1846,7 @@ mod tests {
 
     #[tokio::test]
     async fn provider_transports_bound_declared_chunked_and_compressed_bodies() {
+        let _telemetry = crate::telemetry::test_export_guard();
         use std::io::Write;
         let oversized = vec![b'x'; MAX_PROVIDER_RESPONSE_BYTES + 1];
         let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::default());
@@ -1837,6 +1901,7 @@ mod tests {
 
     #[tokio::test]
     async fn provider_transports_accept_boundary_and_preserve_text_decoding() {
+        let _telemetry = crate::telemetry::test_export_guard();
         use std::io::Write;
         for yahoo in [false, true] {
             for bytes in [
@@ -1868,6 +1933,7 @@ mod tests {
 
     #[tokio::test]
     async fn provider_http_errors_keep_retry_policy_under_limit() {
+        let _telemetry = crate::telemetry::test_export_guard();
         use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
         for yahoo in [false, true] {
             for status in [403, 503] {
@@ -1910,6 +1976,7 @@ mod tests {
 
     #[tokio::test]
     async fn provider_body_failures_preserve_status_retries() {
+        let _telemetry = crate::telemetry::test_export_guard();
         use tokio::io::{AsyncReadExt, AsyncWriteExt};
         for yahoo in [false, true] {
             for status in [200, 403, 408, 429, 503] {
@@ -1999,6 +2066,7 @@ mod tests {
 
     #[test]
     fn oversized_provider_preserves_partial_success() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let oversized = || KestrelError::ProviderResponseTooLarge {
             engine: Engine::Bing,
             limit_bytes: MAX_PROVIDER_RESPONSE_BYTES,
@@ -2015,6 +2083,7 @@ mod tests {
 
     #[test]
     fn parses_duckduckgo() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let results = parse_duckduckgo_response(DDG).unwrap();
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].title, "Example");
@@ -2023,6 +2092,7 @@ mod tests {
 
     #[test]
     fn duckduckgo_distinguishes_empty_results_from_unrecognized_pages() {
+        let _telemetry = crate::telemetry::test_export_guard();
         assert!(
             parse_duckduckgo_response(r#"<div class="no-results">No results found.</div>"#)
                 .unwrap()
@@ -2038,6 +2108,7 @@ mod tests {
 
     #[tokio::test]
     async fn duckduckgo_challenge_is_an_error_even_with_success_http_status() {
+        let _telemetry = crate::telemetry::test_export_guard();
         use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
         for status in [200, 202] {
@@ -2065,6 +2136,7 @@ mod tests {
 
     #[tokio::test]
     async fn mojeek_http_success_challenge_and_forbidden_remain_distinct() {
+        let _telemetry = crate::telemetry::test_export_guard();
         use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
         let challenge = include_str!("../tests/fixtures/providers/mojeek-challenge.html");
@@ -2107,6 +2179,7 @@ mod tests {
 
     #[tokio::test]
     async fn single_provider_apis_reject_blank_queries() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let client = crate::KestrelClient::new().unwrap();
         for query in ["", " ", "\t\n", "\u{2003}"] {
             assert!(matches!(
@@ -2124,6 +2197,7 @@ mod tests {
 
     #[test]
     fn blocking_search_rejects_blank_queries() {
+        let _telemetry = crate::telemetry::test_export_guard();
         for query in ["", " ", "\t\n", "\u{2003}"] {
             assert!(matches!(
                 search_blocking(query, Engine::Bing, "", TimeFilter::Any),
@@ -2134,6 +2208,7 @@ mod tests {
 
     #[test]
     fn provider_requests_preserve_query_text() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let standard = reqwest::Client::new();
         let yahoo = primp::Client::builder().build().unwrap();
         for query in [
@@ -2166,6 +2241,7 @@ mod tests {
 
     #[test]
     fn default_query_mode_retains_incomplete_metadata_for_all_providers() {
+        let _telemetry = crate::telemetry::test_export_guard();
         for query in [
             "machine learning",
             "\"machine learning\"",
@@ -2201,6 +2277,7 @@ mod tests {
 
     #[test]
     fn bing_request_preserves_complete_query_and_region() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let client = reqwest::Client::new();
         for query in [
             "\"machine learning\"",
@@ -2232,6 +2309,7 @@ mod tests {
 
     #[test]
     fn bing_query_echo_does_not_replace_response_entries() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let results = parse_provider_response(Engine::Bing, BING_UNRELATED).unwrap();
         assert_eq!(results.len(), 2);
         assert_eq!(results[0].title, "Why — dictionary definition");
@@ -2245,6 +2323,7 @@ mod tests {
     // Native passthrough still accepts provider results without lexical checks.
     #[tokio::test]
     async fn native_bing_unrelated_results_satisfy_quorum() {
+        let _telemetry = crate::telemetry::test_export_guard();
         type Outcome = (usize, Result<Vec<SearchResult>, KestrelError>);
         let pending: FuturesUnordered<futures_util::future::BoxFuture<'static, Outcome>> =
             FuturesUnordered::new();
@@ -2267,6 +2346,7 @@ mod tests {
 
     #[test]
     fn parses_redirects_and_canonicalizes() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let encoded =
             base64::engine::general_purpose::URL_SAFE_NO_PAD.encode("https://example.com/bing");
         let html = format!(
@@ -2281,6 +2361,7 @@ mod tests {
 
     #[test]
     fn parses_yahoo_redirect() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let html = r#"<div class="dd algo"><h3><a href="https://r.search.yahoo.com/RU=https%3A%2F%2Fexample.com%2Fyahoo/RK=2/RS=x">Yahoo result</a></h3><div class="compText"><p>Yahoo snippet</p></div></div>"#;
         let result = &parse_yahoo_results(html)[0];
         assert_eq!(result.url, "https://example.com/yahoo");
@@ -2289,6 +2370,7 @@ mod tests {
 
     #[test]
     fn parses_yahoo_mobile_result_without_attribution_in_title() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let html = r#"<div class="compTitle p-r"><h3 class="title"><a aria-label="Rust Programming Language" href="https://r.search.yahoo.com/RU=https%3A%2F%2Frust-lang.org%2F/RK=2"><span>Rust Programming Language</span>https://rust-lang.org Rust Programming Language</a></h3></div><div class="compText"><p>Useful Rust result snippet.</p></div>"#;
         let result = &parse_yahoo_results(html)[0];
         assert_eq!(result.title, "Rust Programming Language");
@@ -2298,6 +2380,7 @@ mod tests {
 
     #[test]
     fn merges_provider_buckets_round_robin() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let bucket = |engine, label: &str| {
             with_provenance(
                 (1..=2)
@@ -2330,6 +2413,7 @@ mod tests {
 
     #[test]
     fn merging_duplicate_urls_preserves_sources() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let first = with_provenance(parse_duckduckgo_results(DDG), Engine::Duckduckgo, "one");
         let second = with_provenance(parse_duckduckgo_results(DDG), Engine::Bing, "two");
         let merged = merge_round_robin(vec![first, second]);
@@ -2339,6 +2423,7 @@ mod tests {
 
     #[test]
     fn validates_and_deduplicates_dimensions() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let options = SearchOptions {
             engines: vec![Engine::Bing, Engine::Bing, Engine::Yahoo],
             ..SearchOptions::default()
@@ -2359,6 +2444,7 @@ mod tests {
 
     #[test]
     fn provider_quorum_is_ignored_by_result_count_fanout() {
+        let _telemetry = crate::telemetry::test_export_guard();
         for quorum in [0, 3] {
             let options = SearchOptions {
                 provider_quorum: Some(quorum),
@@ -2370,6 +2456,7 @@ mod tests {
 
     #[tokio::test]
     async fn fanout_quorum_keeps_engine_order_and_cancels_straggler() {
+        let _telemetry = crate::telemetry::test_export_guard();
         use std::pin::Pin;
 
         type Job =
@@ -2398,6 +2485,7 @@ mod tests {
 
     #[test]
     fn outcome_merging_keeps_partial_success_and_rejects_total_failure() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let success = with_provenance(parse_duckduckgo_results(DDG), Engine::Duckduckgo, "one");
         let merged = merge_outcomes(vec![
             Ok(success),
@@ -2414,6 +2502,7 @@ mod tests {
     }
     #[test]
     fn site_restrictions_respect_host_boundaries_and_query_syntax() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let query = "site:Postgresql.org \"EXPLAIN ANALYZE\" BUFFERS";
         assert!(result_allowed(
             query,
@@ -2444,6 +2533,7 @@ mod tests {
 
     #[tokio::test]
     async fn fanout_quorum_ignores_empty_and_failed_providers() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let pending = FuturesUnordered::new();
         for (index, outcome) in [
             Ok(Vec::new()),
@@ -2463,6 +2553,7 @@ mod tests {
 
     #[tokio::test]
     async fn fanout_polls_all_providers_and_supports_single_provider() {
+        let _telemetry = crate::telemetry::test_export_guard();
         for count in [1, 3] {
             let barrier = Arc::new(tokio::sync::Barrier::new(count));
             let pending = FuturesUnordered::new();
@@ -2496,6 +2587,7 @@ mod tests {
 
     #[tokio::test]
     async fn dropped_provider_preserves_retries_and_censored_backoff() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let diagnostics = Arc::new(Mutex::new(vec![ProviderSearchDiagnostic {
             engine: Engine::Bing,
             query: "test".into(),
@@ -2513,6 +2605,7 @@ mod tests {
         let task_diagnostics = Arc::clone(&diagnostics);
         let mut job = Box::pin(async move {
             let _timer = DiagnosticTimer {
+                telemetry: crate::telemetry::Span::new("kestrel.provider"),
                 diagnostics: task_diagnostics,
                 index: 0,
                 started: Instant::now(),
@@ -2543,6 +2636,7 @@ mod tests {
 
     #[tokio::test]
     async fn deadline_includes_provider_queue_and_records_reason() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let clients = SearchClients::new(&[Engine::Bing]).unwrap();
         let diagnostics = Arc::new(Mutex::new(Vec::new()));
         let result = run_one(
@@ -2565,6 +2659,7 @@ mod tests {
 
     #[tokio::test]
     async fn fanout_deadline_retains_success_and_reports_total_failure() {
+        let _telemetry = crate::telemetry::test_export_guard();
         use std::pin::Pin;
 
         type Job<'a> =
@@ -2634,6 +2729,7 @@ mod tests {
 
     #[test]
     fn additional_html_parsers_reject_shells_and_accept_explicit_empty() {
+        let _telemetry = crate::telemetry::test_export_guard();
         for engine in [Engine::Bing, Engine::Yahoo] {
             assert!(parse_provider_response(engine, "<html><nav>Home</nav></html>").is_err());
             assert!(parse_provider_response(engine, "<form id='captcha'></form>").is_err());
@@ -2651,6 +2747,7 @@ mod tests {
     }
     #[test]
     fn filtering_preserves_original_provider_rank() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let mut retained = SearchResult::parsed(
             "Docs".into(),
             "https://postgresql.org/docs/".into(),

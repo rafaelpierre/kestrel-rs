@@ -249,6 +249,7 @@ mod tests {
 
     #[test]
     fn writes_compact_result_metadata() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let directory = tempfile::tempdir().unwrap();
         let mut result = SearchResult::parsed(
             "Example".into(),

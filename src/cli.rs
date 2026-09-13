@@ -298,7 +298,15 @@ enum InstallScope {
 }
 
 pub async fn run() -> ExitCode {
-    match Cli::parse().command {
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(error) => {
+            let code = error.exit_code();
+            let _ = error.print();
+            return ExitCode::from(code as u8);
+        }
+    };
+    match cli.command {
         Commands::Install(arguments) => match crate::install::run(arguments) {
             Ok(()) => ExitCode::SUCCESS,
             Err(error) => {
@@ -319,6 +327,7 @@ pub async fn run() -> ExitCode {
 }
 
 async fn run_fetch(arguments: FetchArgs) -> ExitCode {
+    kestrelsearch::telemetry::scope_exit("kestrel.cli.fetch", async {
     let command_started = Instant::now();
     let options = FetchOptions {
         timeout: Duration::from_secs_f64(arguments.timeout),
@@ -360,6 +369,7 @@ async fn run_fetch(arguments: FetchArgs) -> ExitCode {
         );
     }
     let content = format!("Source: {}\n\n{content}", arguments.url);
+    kestrelsearch::telemetry::payload("output.content", &content);
     match arguments.output {
         Output::Text => println!("{content}"),
         Output::Json => println!(
@@ -374,9 +384,11 @@ async fn run_fetch(arguments: FetchArgs) -> ExitCode {
     }
     print_completion("Fetch", command_started);
     ExitCode::SUCCESS
+    }).await
 }
 
 async fn run_search(arguments: SearchArgs) -> ExitCode {
+    kestrelsearch::telemetry::scope_exit("kestrel.cli.search", async {
     let command_started = Instant::now();
     if arguments.no_fetch
         && matches!(
@@ -391,18 +403,22 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             .find_subcommand("search")
             .cloned()
             .unwrap_or(command);
-        command.error(
+        let _ = command.error(
                 clap::error::ErrorKind::ArgumentConflict,
                 "--ranking-policy body cannot be used with --no-fetch; remove --no-fetch or choose provider, snippet, hybrid, or rrf",
             )
-            .exit();
+            .print();
+        return ExitCode::from(2);
     }
-    arguments.candidate_limit().unwrap_or_else(|message| {
-        Cli::command()
-            .error(clap::error::ErrorKind::ValueValidation, message)
-            .exit()
-    });
+    if let Err(message) = arguments.candidate_limit() {
+        let _ = Cli::command().error(clap::error::ErrorKind::ValueValidation, message).print();
+        return ExitCode::from(2);
+    }
     let queries = arguments.queries();
+    kestrelsearch::telemetry::payload("input.queries", &queries);
+    kestrelsearch::telemetry::attribute("kestrel.top_k", arguments.top_k as i64);
+    kestrelsearch::telemetry::attribute("kestrel.fetch_enabled", !arguments.no_fetch);
+    kestrelsearch::telemetry::attribute("kestrel.rank_enabled", !arguments.no_rank && (!arguments.no_fetch || arguments.ranking_policy.is_some()));
     let query_label = queries.join(" | ");
     let options = arguments.search_options();
     eprintln!(
@@ -454,6 +470,7 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
     }
 
     if results.is_empty() {
+        kestrelsearch::telemetry::results("output", &results);
         write_benchmark_artifact(
             &query_label,
             &results,
@@ -545,6 +562,7 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             candidate_counts: Some(&candidate_counts),
         },
     );
+    kestrelsearch::telemetry::results("output", &results);
     eprintln!("[kestrel] Returning top {} results.", results.len());
     match arguments.output {
         Output::Json => match search_json(&results, command_started) {
@@ -558,6 +576,7 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
     }
     print_completion("Search", command_started);
     ExitCode::SUCCESS
+    }).await
 }
 
 // Borrow results so adding command metadata does not clone page content.
@@ -592,12 +611,16 @@ async fn select_fetch_candidates(
     queries: &[String],
     diagnostics: &mut impl Write,
 ) -> Result<CandidateSelection, kestrelsearch::KestrelError> {
+    kestrelsearch::telemetry::scope_result("kestrel.select_candidates", async {
+    kestrelsearch::telemetry::results("selection.input", &results);
     let mut timings = BTreeMap::new();
     let mut counts = BTreeMap::new();
     if let Some(minimum) = arguments.min_fetch_score {
         let started = Instant::now();
         let queries = queries.to_vec();
+        let context = kestrelsearch::telemetry::parent_context();
         let (filtered, report) = tokio::task::spawn_blocking(move || {
+            let _context = context.attach();
             kestrelsearch::ranking::filter_fetch_candidates(&mut results, &queries, minimum)
                 .map(|report| (results, report))
         })
@@ -646,11 +669,13 @@ async fn select_fetch_candidates(
         );
         results.truncate(limit);
     }
+    kestrelsearch::telemetry::results("selection.output", &results);
     Ok(CandidateSelection {
         results,
         timings,
         counts,
     })
+    }).await
 }
 
 async fn attach_page_content(
@@ -659,6 +684,7 @@ async fn attach_page_content(
     arguments: &SearchArgs,
     diagnostics: &mut impl Write,
 ) -> Result<FetchReport, kestrelsearch::search::KestrelError> {
+    kestrelsearch::telemetry::scope_result("kestrel.attach_content", async {
     // An all-rejected pool must not initialize or touch a page cache.
     if results.is_empty() {
         return Ok(FetchReport {
@@ -733,6 +759,7 @@ async fn attach_page_content(
         urls.len()
     );
     Ok(report)
+    }).await
 }
 
 fn render_text_results(results: &[SearchResult], query: &str) {
@@ -1034,6 +1061,7 @@ mod tests {
 
     #[test]
     fn numeric_boundaries_and_candidate_defaults() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         for value in [
             "0",
             "NaN",
@@ -1073,6 +1101,7 @@ mod tests {
 
     #[test]
     fn compatible_stage_options_remain_accepted() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         Cli::command().debug_assert();
         for flags in [
             vec![],
@@ -1129,6 +1158,7 @@ mod tests {
 
     #[test]
     fn shell_quoting_only_groups_the_query_argument() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         for (command, expected) in [
             (r#"kestrel search "machine learning""#, "machine learning"),
             (
@@ -1150,6 +1180,7 @@ mod tests {
 
     #[test]
     fn search_budget_defaults_and_overrides() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         for (extra, expected) in [
             (vec![], Some(5.0)),
             (vec!["--mode", "fanout"], Some(5.0)),
@@ -1199,6 +1230,7 @@ mod tests {
 
     #[test]
     fn search_defaults_match_library_and_explicit_engines_replace_defaults() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         for extra in [vec![], vec!["--mode", "fanout"]] {
             let cli = Cli::try_parse_from(["kestrel", "search", "test"].into_iter().chain(extra))
                 .unwrap();
@@ -1230,6 +1262,7 @@ mod tests {
 
     #[test]
     fn budgeted_search_defaults_and_explicit_overrides() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         for (flags, mode, quorum) in [
             (vec![], SearchMode::Fanout, None),
             (vec!["--search-budget", "3"], SearchMode::Fanout, Some(1)),
@@ -1285,6 +1318,7 @@ mod tests {
 
     #[test]
     fn fallback_mode_is_rejected() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let error =
             Cli::try_parse_from(["kestrel", "search", "test", "--mode", "fallback"]).unwrap_err();
         assert_eq!(error.kind(), clap::error::ErrorKind::InvalidValue);
@@ -1294,6 +1328,7 @@ mod tests {
 
     #[test]
     fn target_groups_match_agent_layout() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let targets = skill_targets(AgentChoice::All, InstallScope::Project).unwrap();
         assert_eq!(
             targets,
@@ -1307,12 +1342,14 @@ mod tests {
 
     #[test]
     fn selections_reject_invalid_entries() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let paths = vec![PathBuf::from("one"), PathBuf::from("two")];
         assert_eq!(select_installations("2,2,nope,3", &paths), [&paths[1]]);
     }
 
     #[tokio::test]
     async fn gated_search_normalizes_queries_for_search_and_selection() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let Commands::Search(mut args) = Cli::try_parse_from([
             "kestrel",
             "search",
@@ -1347,6 +1384,7 @@ mod tests {
 
     #[tokio::test]
     async fn fetch_threshold_filters_before_cap_and_cache_without_refilling_failures() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
         let server = MockServer::start().await;
         for endpoint in ["/irrelevant", "/beyond-cap"] {
@@ -1436,6 +1474,7 @@ mod tests {
 
     #[tokio::test]
     async fn fetch_threshold_small_pool_empty_selection_and_absent_flag() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
         let server = MockServer::start().await;
         Mock::given(path("/good"))
@@ -1514,6 +1553,7 @@ mod tests {
 
     #[tokio::test]
     async fn fetch_threshold_skill_recipe_and_pre_rank_preserve_selection_contract() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let Commands::Search(mut args) = Cli::try_parse_from([
             "kestrel",
             "search",
@@ -1581,6 +1621,7 @@ mod tests {
 
     #[tokio::test]
     async fn search_fetch_warns_for_successful_capped_pages_including_cache_misses() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
         let server = MockServer::start().await;
         let short = "<p>This short response has readable content.</p>";
@@ -1675,6 +1716,7 @@ mod tests {
 
     #[tokio::test]
     async fn quality_does_not_reject_search_bodies_or_change_ranking() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         use kestrelsearch::{
             ContentQualityState,
             ranking::{RankingPolicy, rank_with_policy},
@@ -1722,6 +1764,7 @@ mod tests {
 
     #[test]
     fn page_fetch_defaults_match_library_and_preserve_character_limits() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let library = FetchOptions::default();
         assert_eq!(library.max_response_bytes, 1_000_000);
         assert_eq!(library.content_limit, 2_000);
@@ -1746,6 +1789,7 @@ mod tests {
 
     #[test]
     fn generated_skill_documents_result_minimum_precedence() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let skill = generate_skill_md(&mut Cli::command());
         assert!(skill.contains("--min-results"));
         assert!(skill.contains("Provider quorum is ignored"));
@@ -1756,6 +1800,7 @@ mod tests {
 
     #[test]
     fn generated_skill_examples_parse_with_current_cli() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let skill = generate_skill_md(&mut Cli::command());
         let mut count = 0;
         for block in skill.split("```bash\n").skip(1) {
@@ -1787,6 +1832,7 @@ mod tests {
 
     #[test]
     fn generated_skill_documents_parser_conflicts_and_cache_requirements() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let skill = generate_skill_md(&mut Cli::command());
         for (left, right) in [
             (vec!["--fetch"], vec!["--no-fetch"]),
@@ -1835,6 +1881,7 @@ mod tests {
 
     #[test]
     fn generated_skill_schema_matches_serialized_results() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let skill = generate_skill_md(&mut Cli::command());
         let mut result = SearchResult {
             title: "Example".into(),
@@ -1905,6 +1952,7 @@ mod tests {
 
     #[test]
     fn generated_skill_reflects_cli() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let skill = generate_skill_md(&mut Cli::command());
         assert!(skill.contains("name: kestrelsearch"));
         assert!(skill.contains("--time-filter"));

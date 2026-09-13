@@ -15,6 +15,7 @@ struct Case {
 
 #[test]
 fn frozen_quality_corpus_preserves_evidence_and_reports_errors() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for (name, data) in [
         (
             "development",
@@ -60,6 +61,7 @@ fn frozen_quality_corpus_preserves_evidence_and_reports_errors() {
 
 #[test]
 fn root_recovery_is_limited_to_a_known_shell_and_first_article() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let cases: Vec<Case> = serde_json::from_str(include_str!(
         "../../tests/fixtures/content-quality/development.json"
     ))
@@ -94,6 +96,7 @@ fn root_recovery_is_limited_to_a_known_shell_and_first_article() {
 
 #[test]
 fn quality_recovery_respects_assessment_bytes_and_extraction_characters() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let shell = "Your browser is not supported";
     let html = format!(
         "<main><h1>{shell}</h1></main><article><p>{}</p></article>",

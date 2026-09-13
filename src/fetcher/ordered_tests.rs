@@ -10,6 +10,7 @@ struct Case {
 
 #[test]
 fn ordered_html_golden_fixtures_and_every_character_boundary() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let cases: Vec<Case> =
         serde_json::from_str(include_str!("../../tests/fixtures/extraction/ordered.json")).unwrap();
     for case in cases {
@@ -37,6 +38,7 @@ fn ordered_html_golden_fixtures_and_every_character_boundary() {
 
 #[test]
 fn deeply_nested_wrappers_do_not_duplicate_text_or_recurse() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let html = format!(
         "<main>{}<p>Retained</p>{}</main>",
         "<div>".repeat(4000),

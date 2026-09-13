@@ -159,6 +159,7 @@ mod tests {
 
     #[test]
     fn deduplicates_origins_and_rejects_non_http_targets() {
+        let _telemetry = crate::telemetry::test_export_guard();
         assert_eq!(
             origins(&[
                 "https://user:pass@example.com:443/a?q=secret".into(),
@@ -174,6 +175,7 @@ mod tests {
 
     #[test]
     fn additional_provider_warmup_matches_actual_request_origin() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let client = reqwest::Client::new();
         for engine in [
             Engine::Dogpile,
@@ -197,6 +199,7 @@ mod tests {
 
     #[tokio::test]
     async fn warmup_records_http1_head_rejections_and_timeouts() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let server = MockServer::start().await;
         Mock::given(method("HEAD"))
             .and(path("/"))
@@ -228,6 +231,7 @@ mod tests {
 
     #[tokio::test]
     async fn invalid_warmup_never_sends_partial_requests() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let server = MockServer::start().await;
         let client = KestrelClient::new().unwrap();
         assert!(

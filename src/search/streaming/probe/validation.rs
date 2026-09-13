@@ -150,6 +150,7 @@ async fn measured_search(
 #[tokio::test]
 #[ignore = "live providers: current-contract four-policy benchmark; explicit output directory required"]
 async fn live_streaming_validation() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let directory = std::path::PathBuf::from(
         std::env::var("KESTREL_VALIDATION_OUTPUT")
             .expect("set KESTREL_VALIDATION_OUTPUT to a new directory"),
@@ -306,6 +307,7 @@ mod tests {
     }
     #[test]
     fn validation_preserves_query_text_without_metadata_constraints() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let options = validation_options(Duration::from_secs(3));
         let query = "machine learning";
         let mut response = ProviderResponse {
@@ -322,6 +324,7 @@ mod tests {
 
     #[test]
     fn diff_capture_preserves_trailing_whitespace_and_non_utf8_bytes() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let directory = tempfile::tempdir().unwrap();
         let path = directory.path().to_str().unwrap();
         command("git", &["-C", path, "init", "--quiet"]);
@@ -352,6 +355,7 @@ mod tests {
 
     #[tokio::test]
     async fn policies_distinguish_five_results_from_two_contributing_providers() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let first = records(0, 5);
         let duplicate = records(0, 1);
         let empty = vec![];
@@ -393,6 +397,7 @@ mod tests {
     }
     #[tokio::test]
     async fn streamed_snapshot_cancels_only_the_immediate_policy() {
+        let _telemetry = crate::telemetry::test_export_guard();
         for policy in [Policy::Stream, Policy::Diversity, Policy::Full] {
             let (sender, receiver) = mpsc::channel(1);
             let ready = Arc::new(tokio::sync::Notify::new());
@@ -437,6 +442,7 @@ mod tests {
 
     #[tokio::test]
     async fn full_and_diversity_wait_for_exhaustion_when_target_is_unavailable() {
+        let _telemetry = crate::telemetry::test_export_guard();
         for policy in [Policy::Full, Policy::Diversity] {
             let pending = FuturesUnordered::<Job>::new();
             pending.push(Box::pin(async { (0, Ok(records(0, 7))) }));
@@ -453,6 +459,7 @@ mod tests {
     }
     #[tokio::test]
     async fn collector_clock_counts_canonical_unique_candidates() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let probe = Arc::new(Mutex::new(Probe {
             started: Instant::now(),
             providers: BTreeMap::new(),
