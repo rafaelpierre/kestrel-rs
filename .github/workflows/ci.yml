@@ -19,3 +19,5 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --all-targets --all-features -- -D warnings
       - run: cargo test --all-features
+      - name: Validate benchmark contracts against the built CLI
+        run: KESTREL_BENCH_TEST_BINARY="$PWD/target/debug/kestrel" python3 -m unittest discover -s benchmarks -p 'test_*.py'

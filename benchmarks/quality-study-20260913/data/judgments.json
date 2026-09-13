@@ -1,0 +1,773 @@
+{
+  "assessor": "Codex; one unblinded assessor reviewing captured metadata for relevance and returned page text for evidence",
+  "judgments": [
+    {
+      "query_id": "music-bss",
+      "url": "https://brokensocialscene.lnk.to/anthemsyfiip",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://brokensocialscene.bandcamp.com/album/anthems-a-celebration-of-broken-social-scenes-you-forgot-it-in-people",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://en.wikipedia.org/wiki/Anthems:_A_Celebration_of_Broken_Social_Scene%27s_You_Forgot_It_in_People",
+      "content_sha256": "4a6c239e2b375afedf522131b7350f0be70b4337235111a7ace9b488daa8d090",
+      "relevance": 1,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. Returned prose connects the named song’s cover to Broken Social Scene’s original album."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.youtube.com/watch?v=wLaDksDOcE4",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the original Anthems song and Broken Social Scene. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.roughtrade.com/product/various/anthems-a-celebration-of-broken-social-scenes-you-forgot-it-in-people",
+      "content_sha256": "1d30f677fbfc651b53698344bc47880f7cf21b1efde38bb5ea9537de3e1e4028",
+      "relevance": 1,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. The retained prose explains a front-to-back tribute to the band’s original album and lists the named song among its covers."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.youtube.com/watch?v=Ty_LAi0dleU",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the original Anthems song and Broken Social Scene. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.albumoftheyear.org/album/1296707-various-artists-anthems-a-celebration-of-broken-social-scenes-you-forgot-it-in-people.php",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://open.spotify.com/album/4HdLA0xaCNM7H5FmwVo2FT",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://tabs.ultimate-guitar.com/tab/sonic-youth/guitar-tunings-chords-84337",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing concrete Sonic Youth guitar tuning information. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://www.guitarworld.com/artists/guitarists/how-and-why-thurston-moore-started-using-alternative-tunings",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing concrete Sonic Youth guitar tuning information. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://www.reddit.com/r/sonicyouth/comments/t888p4/what_are_the_most_accesible_sonic_youth_tunings/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing concrete Sonic Youth guitar tuning information. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://stringjoy.com/sonic-youth-alternate-tunings/",
+      "content_sha256": "d2a787748aa95c33c25dca942ef7c7f02fc91e581adecd25228e690d89a103c0",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing concrete Sonic Youth guitar tuning information. This is a relevance judgment, not proof of page evidence. The retained 2,000-character introduction promises tuning examples but contains no concrete tuning values."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://smart.dhgate.com/mastering-sonic-youth-guitar-tunings-a-step-by-step-guide-to-custom-adjustments-and-sound-optimization/",
+      "content_sha256": "94f8354d1becaf317f80a52f7b7cfcf833277195fb5ad229ea41078f7ee81799",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing concrete Sonic Youth guitar tuning information. Returned generic tuning advice contains no concrete Sonic Youth tuning values in the retained prefix."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://en.wikipedia.org/wiki/Sonic_Youth",
+      "content_sha256": "ff0bd9bd8a481fcc79b554f3a430b6f75d226d6d9cb7b34e2ade5de5da3a2962",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing concrete Sonic Youth guitar tuning information. Returned band biography mentions unconventional tunings without concrete tuning values."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://courtneybarnettandkurtvile.com/",
+      "content_sha256": "9f0ba557f2b9d90dd42fb3d5530a3a46d5ed00c8e41e596d6f5a5393281764ef",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the collaborative album. Only format-shopping text was extracted; the album name is absent."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.youtube.com/@CourtneyBarnettandKurtVile",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.youtube.com/watch?v=3KNsBCf34fQ",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://courtneybarnettandkurtvile.bandcamp.com/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://en.wikipedia.org/wiki/Lotta_Sea_Lice",
+      "content_sha256": "801259eec4fb1f505d81ed59345a66e82049ae3b22863e61cde905a1a0ac9f03",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. Returned text explicitly identifies Lotta Sea Lice as the collaborative studio album by both artists."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.officialcharts.com/artist/kurt-vile-courtney-barnett/",
+      "content_sha256": "7dfb4c8bd7a4fecf1f3455779f10cf632d93864c9979b8e2460f8fa9b93145e4",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the collaborative album. Returned chart text names a song, not the collaborative album."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.jagranjosh.com/general-knowledge/capital-of-australia-1820003355-1",
+      "content_sha256": "e6ab35f5afce8c1cda2d59366ac60d6005707b6cb8ebd58bc8a53681bd9e6aed",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. Returned text explicitly identifies Canberra as Australia’s capital; other page claims were not audited."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-australia.html",
+      "content_sha256": "6c190a720351dc9f8b164a4e1e2a0ac68edcd1c82f85aea6573f22fe5bf968b1",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. Returned text explicitly identifies Canberra as Australia’s capital; unrelated geographical claims were not validated."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://ovolohotels.com/ovolo/blog/sydney-isnt-the-capital-of-australia/",
+      "content_sha256": "8d71be07a4a96e091a9dfcd74ab264692e7e550c2e8c60ca1b8df9071b35e445",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. Returned text directly answers Canberra; unrelated claims were not audited."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.mapsofworld.com/answers/world/what-is-the-capital-of-australia/",
+      "content_sha256": "f835fce8fc841b9cd804fee131a75f20b3d965c923cc9df25e5298edc056b8e6",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. Returned text explicitly identifies Canberra as Australia’s capital; unrelated claims on the page were not validated."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.countryaah.com/australia-faqs/",
+      "content_sha256": "676928326cfd2f9b7643c87f1db64436d70ad1fb24407c9d66b6d061ba51ff29",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. The retained body explicitly identifies Canberra as Australia’s capital; other claims were not audited."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.mappr.co/capital-cities/australia/",
+      "content_sha256": "c7d7f8105e4f6d83db131331ecdcbfc8c2acd6853226396ec5ed2efde8d06e02",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. Returned text directly identifies Canberra as the national capital; unrelated claims were not audited."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.insideaustraliatravel.com/faqs/australia-capital-city",
+      "content_sha256": "f485ba30f53d87cebee857b4ca498c046a9d3f8e26239113d13c6fe23a26eb95",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. Returned answer explicitly identifies Canberra and distinguishes it from Sydney and Melbourne."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.muziker.bg/broken-social-scene-anthems-a-celebration-of-broken-social-scenes-you-forgot-it-in-people-limited-edition-lp",
+      "content_sha256": "54ca97350020b96f59995c33fcb618ee05fe8709929ab98c81e994bd3523889f",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. Product and accessory text identifies the tribute album but does not identify the original song."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://consequence.net/2025/04/broken-social-scene-you-forgot-it-in-people-maggie-rogers-tribute-album/",
+      "content_sha256": "c3266c18583cec1117338669a6e92f380c8f78f87d8a6232171761dd53de4906",
+      "relevance": 1,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. Returned prose explicitly connects a cover of the named song to the band’s original album; release-year claims were not audited."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://www.songsterr.com/a/wsa/metric-black-sheep-scott-pilgrim-vs-the-world-tab-s3563044",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://m.song.guru/text/metric-ost-scott-pilgrim-vs-the-world-black-sheep",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://www.songsterr.com/a/wsa/metric-black-sheep-scott-pilgrim-vs-the-world-bass-tab-s3563044",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://m.song.guru/text/metric-black-sheep-ost-scott-pilgrim-vs-the-world",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://soundcloud.com/adrienne-t-munive/black-sheep-by-metric-feat",
+      "content_sha256": "193f6decc29cebe1e4dacf9b88efecf827f588db55ea20959806e173fe4fd654",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. Extracted browser-compatibility and connection-error text supplies no musical evidence."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://ca.billboard.com/culture/tv-film/metric-cover-a-classic-canadian-song-in-new-netflix-series-scott-pilgrim-takes-off",
+      "content_sha256": "7eeb1b9a637447227a4377fb695e2aac6f53e3c1fe1e61777b70d0ea9d40496d",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. Returned prose identifies Metric’s cover contribution to the animated series; incidental film-history claims were not audited."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://pitchfork.com/reviews/albums/14577-scott-pilgrim-vs-the-world-ost/",
+      "content_sha256": "06e983122d2035c0c6e089d5cfdcbc4ef51b48e77e87b3fe279dc190f223390d",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing Metric’s musical contribution to Scott Pilgrim. The retained soundtrack-review prefix discusses other contributors without identifying Metric’s contribution."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.britannica.com/place/Australia",
+      "content_sha256": "7ee7a3fa979be404b87c36b2423e22085d46f09169b0723ba4159caad0b62e57",
+      "relevance": 1,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing the Australian capital question. Returned reference text explicitly identifies Canberra as Australia’s capital; unrelated article claims were not audited."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.stanza.dev/courses/python-concurrency/structured-concurrency/python-concurrency-task-groups",
+      "content_sha256": "83e696a7740efaa7d560f6a81f306efb401ca1e1b1ec0e93be5444f6e8abffa8",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing TaskGroup exception propagation and ExceptionGroup handling. This is a relevance judgment, not proof of page evidence. Returned tutorial explains sibling cancellation, collected exceptions, and ExceptionGroup handling; this is not a complete code/version audit."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://reverb.com/news/potent-pairings-how-to-sound-like-sonic-youth",
+      "content_sha256": "8b81972bc1a512eaa4b89fb1aff52285adb7c4e34aadbeb7ba934bd843c00866",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing concrete Sonic Youth guitar tuning information. This is a relevance judgment, not proof of page evidence. Returned article text refers to tuning details in a video but does not contain the concrete tuning values."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://en.wikipedia.org/wiki/Anthems:_A_Celebration_of_Broken_Social_Scene%27s_You_Forgot_It_in_People",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://stringjoy.com/sonic-youth-alternate-tunings/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing concrete Sonic Youth guitar tuning information. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://en.wikipedia.org/wiki/Sonic_Youth",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing concrete Sonic Youth guitar tuning information. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://courtneybarnettandkurtvile.com/about/",
+      "content_sha256": "8abbe8315dcaa93974ec6577a82cc9fb67fd86d7eaeae85259f8882c1c80b26a",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the collaborative album. Returned collaboration history names songs but does not identify the album within the retained prefix."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://courtneybarnettandkurtvile.com/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the collaborative album. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://courtneybarnettandkurtvile.com/about/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the collaborative album. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.officialcharts.com/artist/kurt-vile-courtney-barnett/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the collaborative album. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.jagranjosh.com/general-knowledge/capital-of-australia-1820003355-1",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.countryaah.com/australia-faqs/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-western-australia.html",
+      "content_sha256": "fabf9205c263722ede54af34d115a9e935a3ad92a7a8a91d11f581a0f9de6dc7",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "The page concerns a state capital rather than the national capital. The body identifies Perth as a state capital rather than Australia’s national capital."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-south-australia.html",
+      "content_sha256": "d5845dced0542b34b544fcdc52100a7f98a4f3b50af4c50ed5daf12e382a79e8",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "The page concerns a state capital rather than the national capital. The body identifies Adelaide as a state capital rather than Australia’s national capital."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.muziker.bg/broken-social-scene-anthems-a-celebration-of-broken-social-scenes-you-forgot-it-in-people-limited-edition-lp",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://genius.com/Broken-social-scene-anthems-for-a-seventeen-year-old-girl-lyrics",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the original Anthems song and Broken Social Scene. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://consequence.net/2025/04/broken-social-scene-you-forgot-it-in-people-maggie-rogers-tribute-album/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://songsfor3am.substack.com/p/anthems-for-a-seventeen-year-old",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the original Anthems song and Broken Social Scene. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.cancioneros.com/letras/cancion/1825802/anthems-for-a-seventeen-year-old-girl-broken-social-scene",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the original Anthems song and Broken Social Scene. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://pitchfork.com/news/meryl-streep-and-tracey-ullman-join-broken-social-scene-at-new-york-show-watch/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the original Anthems song and Broken Social Scene. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.billboard.com/music/rock/broken-social-scene-anthems-for-a-seventeen-year-old-girl-oral-history-1235302363/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the original Anthems song and Broken Social Scene. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://pitchfork.com/news/broken-social-scene-announce-you-forgot-it-in-people-covers-album-featuring-toro-y-moi-maggie-rogers-and-more/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://stereogum.com/1833510/the-10-best-broken-social-scene-songs/lists",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://scottpilgrim.fandom.com/wiki/Black_Sheep",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://soundcloud.com/adrienne-t-munive/black-sheep-by-metric-feat",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://www.cbc.ca/music/metric-transforms-sarah-mclachlan-song-into-total-cartoon-banger-new-scott-pilgrim-series-1.7035286",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://scottpilgrim.fandom.com/wiki/Metric",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing Metric’s musical contribution to Scott Pilgrim. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://www.youtube.com/watch?v=1xcSDYy3Dl4",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://www.youtube.com/watch?v=-jMruFHTwrY",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://genius.com/Metric-black-sheep-brie-larson-vocal-version-lyrics",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://music.youtube.com/watch?v=Gc-ZIb4bnR0&list=PL9vOrmKtGA7iqjLnlYKi-jKkvq3ICTs7V",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://reverb.com/news/potent-pairings-how-to-sound-like-sonic-youth",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing concrete Sonic Youth guitar tuning information. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://en.wikipedia.org/wiki/Lotta_Sea_Lice",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://en.wikipedia.org/wiki/File:Courtney_Barnett_and_Kurt_Vile_-_Lotta_Sea_Lice.jpg",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.rollingstone.com/music/music-features/kurt-vile-and-courtney-barnett-inside-indie-rock-superduos-new-album-124704/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.billboard.com/business/touring/bumbershoot-2024-lineup-pavement-james-blake-kurt-vile-1235688428/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "The festival-lineup co-mention does not address the intended collaborative album. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.pastemagazine.com/music/courtney-barnett-kurt-vile/catching-up-with-kurt-vile-and-courtney-barnett",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the collaborative album. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://pitchfork.com/reviews/albums/courtney-barnett-kurt-vile-lotta-sea-lice/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://pitchfork.com/news/kurt-vile-and-courtney-barnett-hang-with-family-in-new-video-watch/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://pitchfork.com/reviews/tracks/courtney-barnett-kurt-vile-continental-breakfast/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://pitchfork.com/reviews/tracks/courtney-barnett-kurt-vile-over-everything/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.britannica.com/question/What-is-the-capital-of-Australia",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.worldatlas.com/articles/what-is-the-capital-of-australia.html",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.britannica.com/place/Australia",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing the Australian capital question. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://ovolohotels.com/ovolo/blog/sydney-isnt-the-capital-of-australia/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.stanza.dev/courses/python-concurrency/structured-concurrency/python-concurrency-task-groups",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing TaskGroup exception propagation and ExceptionGroup handling. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://pitchfork.com/reviews/albums/14577-scott-pilgrim-vs-the-world-ost/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing Metric’s musical contribution to Scott Pilgrim. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://ca.billboard.com/culture/tv-film/metric-cover-a-classic-canadian-song-in-new-netflix-series-scott-pilgrim-takes-off",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing Metric’s musical contribution to Scott Pilgrim. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://guitar.com/features/interviews/the-guitar-interview-thurston-moore-on-jazzmasters-sonic-youth-and-his-new-solo-lp/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing concrete Sonic Youth guitar tuning information. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.psychedelicbabymag.com/2017/10/courtney-barnett-kurt-vile-lotta-sea.html",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.youtube.com/watch?v=JQs5XagfheI",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the collaborative album. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://kexp.org/read/2017/11/6/live-review-courtney-barnett-kurt-vile-at-the-moore-theatre-1021/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the collaborative album. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://matadorrecords.com/pages/artists/courtney-barnett-kurt-vile",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.mappr.co/capital-cities/australia/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://www.mapsofworld.com/answers/world/what-is-the-capital-of-australia/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://smart.dhgate.com/mastering-sonic-youth-guitar-tunings-a-step-by-step-guide-to-custom-adjustments-and-sound-optimization/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing concrete Sonic Youth guitar tuning information. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.roughtrade.com/product/various/anthems-a-celebration-of-broken-social-scenes-you-forgot-it-in-people",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the original Anthems song and Broken Social Scene. No captured page text: page-evidence score is zero."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.marathonartists.com/courtney-barnett-kurt-vile/",
+      "content_sha256": "0e3bc493290851fdce5695dcc92b03c8d30aed71e3cb58cdf1d57e4b5408a206",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Assessor reviewed the captured metadata as related background, without directly addressing identification of the collaborative album. Returned collaboration history does not name the collaborative album in the retained text."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://en.wikipedia.org/wiki/Kurt_Vile",
+      "content_sha256": "1e039347683724547f308c4e75705965c5a8d7502178b38a6a030d4d855bfd12",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing identification of the collaborative album. This is a relevance judgment, not proof of page evidence. Returned biography explicitly names Lotta Sea Lice as the collaboration with Courtney Barnett."
+    },
+    {
+      "query_id": "q01",
+      "url": "https://youtooproject.com/en/blog/australia-en/capital-of-australia-canberra/",
+      "content_sha256": "1db7e1848f12969583393f92d94a17641eb718c8bb7f6fedb2d554c708263529",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Assessor reviewed the captured metadata as directly addressing the Australian capital question. This is a relevance judgment, not proof of page evidence. Returned prose explicitly answers Canberra; incidental historical claims were not audited."
+    }
+  ]
+}
