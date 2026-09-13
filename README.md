@@ -342,6 +342,12 @@ kestrel skill install --agent all --scope global
 kestrel skill uninstall
 ```
 
+The generated skill begins with a bounded discovery, source inspection, selective
+reading and stopping workflow. It distinguishes fast metadata lookup from page
+evidence needed for details or quotations, and documents installation and optional
+diagnostics. See the [skill capability audit](docs/skill-capabilities.md) for coverage
+and capabilities that remain outside the CLI.
+
 Project installations use `.claude/skills`, `.codex/skills`, and
 `.github/skills`. Installation records are kept in
 `~/.kestrelsearch/config.toml`.

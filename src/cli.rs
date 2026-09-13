@@ -1273,11 +1273,12 @@ mod tests {
         let mut count = 0;
         for block in skill.split("```bash\n").skip(1) {
             for line in block.split("```").next().unwrap().lines() {
-                if !line.starts_with("kestrel ") {
+                let words = shlex::split(line).expect("valid shell quoting in skill example");
+                let Some(start) = words.iter().position(|word| word == "kestrel") else {
                     continue;
-                }
-                let args = shlex::split(line).expect("valid shell quoting in skill example");
-                let cli = Cli::try_parse_from(args)
+                };
+                assert!(words[..start].iter().all(|word| word.contains('=')));
+                let cli = Cli::try_parse_from(&words[start..])
                     .unwrap_or_else(|error| panic!("Invalid example: {line}\n{error}"));
                 if let Commands::Search(args) = cli.command {
                     assert!(

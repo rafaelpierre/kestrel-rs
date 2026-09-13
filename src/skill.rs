@@ -90,6 +90,65 @@ pub fn generate_skill_md(root: &mut Command) -> String {
 - Use `kestrel fetch "https://example.com/path/to/page"` when you already have a page URL and need its contents. Fetch requests that URL directly, without a search provider or BM25 filtering.
 - Do not use `search "site:<full-url-to-page>"` as a substitute for fetching a known page. Use `site:example.com keywords` only to discover pages within a site.
 
+## Task workflow: discover, inspect, read, stop
+
+1. **Known URL:** fetch it directly. For a quotation or verification, inspect the
+   actual extracted passage and its context before citing it.
+2. **Unknown sources:** discover a small metadata candidate set, then inspect
+   titles, URLs and snippets for relevance, primary-source authority and freshness.
+   Keep alternatives when pages may fail; one returned candidate leaves no backup.
+3. **Read selectively:** fetch the most promising URL(s). Snippet matches are
+   discovery evidence, not full-page support. Details, verification and quotations
+   need page evidence when snippets are insufficient. A successful extraction can
+   still be boilerplate, a browser-error page or unrelated text; null content and
+   truncated text may also leave the question unsupported.
+4. **Recover within a bound:** for an ordinary lookup, start with a ceiling of
+   two discovery calls and three direct fetches total, adjusting to the user's
+   task/budget. If discovery is empty or weak, use the remaining call to clarify
+   terms or increase the collection minimum/search budget. Preserve requested
+   phrases and Boolean constraints; explain any proposed relaxation instead of
+   silently switching to native syntax. Metadata constraints can reject a useful
+   page when its snippet omits required evidence. Empty results do not prove that
+   no sources exist; ordinary JSON does not identify every completion reason.
+   If a page fails or is unusable, try an alternative. If evidence was truncated,
+   one bounded refetch with larger character/byte limits counts toward the ceiling.
+   There is no find-within-page or ranked-passage command today.
+5. **Stop:** once the requested claims have adequate source support, stop retrieving.
+   If the ceiling is reached first, state what remains uncertain or unsupported;
+   do not turn missing text into a negative factual conclusion. Broader research
+   can justify a larger explicit budget, not an unbounded retry loop.
+
+### Low-latency discovery
+
+```bash
+kestrel search "rust ownership" --no-fetch -k 3 --min-results 3 --search-budget 2 --output json
+```
+
+Inspect `.results[]` in the JSON object, choose a source, then fetch its URL.
+A one-result/one-second search is an aggressive coverage tradeoff, not a universal
+optimum. `--top-k` caps output; `--min-results` controls accepted collection per
+query. Neither promises enough useful evidence. The search budget excludes client
+initialization, fetching, ranking and output; it is not end-to-end wall time.
+
+### Evidence-seeking discovery and reading
+
+```bash
+kestrel search "rust ownership" --no-fetch -k 5 --min-results 10 --search-budget 5 --output json
+kestrel fetch "https://doc.rust-lang.org/book/ch04-01-what-is-ownership.html" --content-limit 40000 --max-response-bytes 2000000 --timeout 15 --output json
+```
+
+The URL illustrates a selected primary source; choose from the actual results.
+Inspect fetch `.content` and supporting context, not only exit status. More
+alternatives and larger page limits cost work and still do not guarantee support.
+For a known-URL task, skip the discovery command entirely.
+
+Connection pools are reused within one process/retained library client. Separate
+CLI calls can each incur initialization and cannot reuse the previous process's
+pool. Search's opt-in extracted-page cache reuses unexpired completed extractions,
+keyed by canonical URL and content limit; provider discovery still runs. Standalone
+fetch does not use that cache, and byte-capped extractions are excluded. It is not
+cross-process search-progress recovery (tracked in #70).
+
 "#);
     for name in ["search", "fetch"] {
         // Clap selects long help only when that subcommand has long-help content.
@@ -269,7 +328,7 @@ of semantic quality.
 
 These describe work and coverage tradeoffs, not measured speedups or a quality
 ranking. Provider latency, available candidates, cache state and page structure
-can change the outcome. All examples return up to five results.
+can change the outcome. The recipes in this section return up to five results.
 
 ### Least page work: metadata only
 
@@ -361,7 +420,82 @@ article. Search and direct-fetch content limits are per page, not total output.
     rendered.push_str(SCHEMA_AND_NOTES);
     rendered.push_str(
         r#"
+## Binary installation and removal of skills
+
+`kestrel install` copies the running executable on macOS/Linux; it does not
+fetch a release or update the binary. Defaults to `~/.local/bin/kestrel`.
+Use `--system` for `/usr/local/bin/kestrel` (usually requires elevated privileges),
+or `--dir DIRECTORY` for a custom destination; these flags are mutually exclusive.
+
+```bash
+kestrel install --dir ./bin
+kestrel skill uninstall
+```
+
+Self-install creates the directory and prints PATH guidance without editing shell
+configuration. Ensure the destination is on PATH and check for an earlier binary.
+Copying the installed file onto itself is a no-op. Other existing files/symlinks
+prompt `Replace it? [y/N]`; only y/yes replaces them, leaving a symlink's target
+untouched. Use the package manager to update a package-managed installation.
+Prebuilt releases currently support Apple Silicon macOS; Cargo can build on Linux.
+
+`skill uninstall` interactively selects recorded installations from
+`~/.kestrelsearch/config.toml`, removes selected skill files and cleans stale
+records. Its selection prompt defaults to all: choose numbered paths to remove
+only intended copies. It does not discover unrecorded copies or remove the binary,
+and has no agent/scope/force switches. Restart the agent after removal.
+
+## Advanced diagnostics (optional)
+
+Use these environment interfaces to investigate a specific failure, not for every
+lookup. In a shell, create private temporary directories and enable capture for
+one command:
+
+```bash
+trace_dir=$(mktemp -d)
+artifact_dir=$(mktemp -d)
+KESTRELSEARCH_PROVIDER_TRACE_DIR="$trace_dir" KESTRELSEARCH_BENCHMARK_ARTIFACT_DIR="$artifact_dir" KESTRELSEARCH_BENCHMARK_RUN_ID=lookup kestrel search "rust ownership" --no-fetch --output json
+```
+
+- `KESTRELSEARCH_PROVIDER_TRACE_DIR` writes generated-header files, provider
+  `outcome-*.json` lifecycle records and available raw response `.html`/metadata
+  captures. Interrupted or oversized bodies may have no raw capture. Correlate
+  run/search/attempt IDs; raw files and outcomes are views of the same attempts.
+  Cancelled work may already have supplied retained candidates. A censored phase
+  is time observed before cancellation, not a completed latency measurement.
+- Search artifact writing requires **both** `KESTRELSEARCH_BENCHMARK_ARTIFACT_DIR`
+  and `KESTRELSEARCH_BENCHMARK_RUN_ID`. Use a simple filename label such as `lookup`.
+  Successful search handling writes `<run-id>-<uuid>.json` in the chosen directory,
+  with candidate snapshots, phase timings and provider/fetch reports. This is a
+  separate diagnostic schema, not the ordinary stdout JSON envelope. Standalone
+  fetch does not write these search artifacts. Failed searches can still produce
+  provider lifecycle traces without a search artifact.
+- Traces/artifacts may contain queries, URLs and raw responses or extracted content;
+  they are not anonymized. Inspect and redact sensitive data before sharing. Trace
+  metadata omits response cookies/authorization headers, but bodies may be sensitive.
+  Capture adds I/O overhead; do not treat instrumented timings as free of that cost.
+- Independently, best-effort local event logging writes selected search/fetch
+  events to `~/.kestrel/logs/YYYY-MM-DD/events.jsonl` (UTC date). This is an existing
+  side effect, not opt-in provider tracing, a complete report or a reliable resume
+  journal. There are no CLI disable/location controls. Logs can include query/URL
+  information; missing events do not prove that work did not happen.
+
+Normal JSON does not expose hybrid score components or useful-evidence counts.
+Structured completion reporting is tracked in #81; do not invent those fields.
+
 ## Refreshing an installed skill
+
+Locate the intended Rust executable with `command -v kestrel` (and `type -a kestrel`
+where supported), then check that exact path with `--version`, `search --help` and
+`fetch --help`. The Cargo package is `kestrel-rs`; the binary is `kestrel`, distinct
+from the Python `kestrelsearch` executable. When PATH is ambiguous, invoke the
+verified absolute binary path for installation and refresh.
+
+Inspect the intended project/global skill paths before refreshing stale copies.
+Project paths are `.claude/skills`, `.codex/skills`, and `.github/skills`; global
+paths are `~/.claude/skills`, `~/.codex/skills`, and `~/.copilot/skills`, each with
+`kestrelsearch/SKILL.md`. Refresh only the agent/scope you intend, not unrelated
+installations or every copy merely because one is stale.
 
 After updating the executable, regenerate the skill with that executable. For
 example, overwrite the current user's Codex installation with:
