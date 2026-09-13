@@ -203,6 +203,19 @@ fn skill_install_and_uninstall_use_compatible_paths() {
             "missing installed guidance: {guidance}"
         );
     }
+    for guidance in [
+        "## Formulate keyword FTS queries",
+        "NEVER submit conversational questions",
+        "Apply this rule to every `--query` and every recovery search",
+        "| `why is the sky blue Rayleigh scattering` | `Rayleigh scattering blue sky` |",
+        "| `What is the capital of Australia?` | `Australia capital` |",
+        "| `Rust E0382 use of moved value how to fix` | `Rust E0382 moved value fix` |",
+        "shortening a query must not relax its requirements",
+        "Kestrel passes query text to",
+        "providers unchanged",
+    ] {
+        assert!(skill.contains(guidance), "missing FTS guidance: {guidance}");
+    }
     assert!(skill.contains("retained prefix"));
     assert!(skill.contains("round to at least one nanosecond"));
     assert!(skill.contains("Semaphore::MAX_PERMITS"));

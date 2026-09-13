@@ -312,7 +312,7 @@ Two measured optimizations remain explicit opt-ins:
 - `--min-results N` controls the unique-result target for fanout.
   `--provider-quorum` is accepted for compatibility but ignored.
 
-`kestrel search "what is ML" --mode fanout` now stops each query after **five
+`kestrel search "machine learning" --mode fanout` now stops each query after **five
 valid, unique search candidates**. Change the target with `--min-results N`.
 Challenges, failed requests, empty responses, invalid URLs, and filtered-out
 records contribute zero. Duplicate URLs count once. There is no separate
@@ -479,6 +479,13 @@ benchmark are described in [HTTP/2 transport tuning](docs/http2.md).
 ### Experimental providers and latency controls
 
 Default adapters include Dogpile, Ecosia, Swisscows, Yep, Qwant and Mojeek.
+Form queries as concise keyword-based full-text search (FTS) terms. Agents must
+NEVER submit conversational questions or semantic prompts: translate
+`why is the sky blue Rayleigh scattering` to `Rayleigh scattering blue sky`.
+Preserve the user's intent, entities, technical identifiers, phrases, negation,
+domains, versions and dates when translating. The generated skill teaches this
+rule for initial and recovery queries; the CLI does not rewrite or reject prose.
+
 Search defaults to provider-native query passthrough. Shell quotes in
 `kestrel search "machine learning"` group one argument; they do not add local
 AND or phrase constraints. Literal quotes in `kestrel search '"machine learning"'`

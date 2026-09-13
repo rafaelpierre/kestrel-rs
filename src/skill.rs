@@ -19,6 +19,29 @@ argument-hint: "search <query> | fetch <url>"
 
 Kestrel Search — web search, page extraction, and relevance ranking for AI agents.
 
+## Formulate keyword FTS queries
+
+Always translate the user's request into a concise keyword-based full-text search
+(FTS) query before calling `search`. NEVER submit conversational questions or
+semantic prompts as search queries. Use the terms likely to appear in the source:
+subject names, technical identifiers and the needed property or relationship.
+Remove question scaffolding such as "why is", "what is" and "how do I"; preserve
+meaning-bearing terms, requested phrases, negation, site restrictions, versions
+and dates. Apply this rule to every `--query` and every recovery search.
+
+| User request or unsuitable query | Keyword FTS query to send |
+| --- | --- |
+| `why is the sky blue Rayleigh scattering` | `Rayleigh scattering blue sky` |
+| `What is the capital of Australia?` | `Australia capital` |
+| `Rust E0382 use of moved value how to fix` | `Rust E0382 moved value fix` |
+| Find official PostgreSQL EXPLAIN ANALYZE buffer documentation | `site:postgresql.org EXPLAIN ANALYZE BUFFERS` |
+
+FTS here describes how the agent writes the query. Kestrel passes query text to
+providers unchanged; it does not rewrite questions, perform semantic expansion,
+or enforce a local Boolean/phrase language. Provider operator support varies.
+Keep the user's full question as the answer goal and judge retrieved evidence
+against that goal; shortening a query must not relax its requirements.
+
 "#;
 
 const SCHEMA_AND_NOTES: &str = r#"
