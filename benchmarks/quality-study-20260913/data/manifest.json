@@ -1,0 +1,8 @@
+{
+  "input-comparisons.json": "919191b7d3bec46eb161564034f9c25e9d62417399f4b9b31c7aebff9f327c43",
+  "judgments.json": "1d0ccbd003330ff3971e337e44cb9bd94b228a08fdabefb2569d5662c507a98c",
+  "measurements.jsonl": "2b10ab99b28b1f65af3c17b5134a90966d07d448ea581eb2a7570e83c0da639c",
+  "metadata.json": "888222646cb84d7ffd96ae2b0f896bafde13c343e0170cbdd801ffd9de7b8f23",
+  "per-query.json": "579c793cee48d7faf5d1dc846093eb0943ea19586467bea70d8051730cbd5560",
+  "summary.json": "bd441ccd10ab1cc1e64d1042eee2a9a1b2ed11170b00627ef51f0a48c2872c5e"
+}
