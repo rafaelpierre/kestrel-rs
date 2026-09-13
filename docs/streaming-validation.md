@@ -2,7 +2,7 @@
 
 PR #68 shipped unique-result stopping and incremental parsing. This investigation
 validates that policy; it does not introduce another public stopping control.
-The historical pilots are not evidence for the current portable-query contract.
+The historical portable pilots are not comparable to the current passthrough experiment.
 
 ## Experiment
 
@@ -19,9 +19,10 @@ round-robin merger. Only the stopping decision is overridden in test builds:
 
 A provider may corroborate an existing URL to count toward diversity. Diversity
 is measured across retained candidates, not guaranteed in the final five. Every
-arm retains chunk/batch overshoot and explicitly selects portable filtering, independently
-of the production query default. The artifact syntax is derived from those actual
-options. All arms use the same retry
+arm retains chunk/batch overshoot and uses provider passthrough, with URL/site checks.
+Metadata schema version 2 labels `query_syntax` as `passthrough`; portable mode
+and its parser have been removed. Earlier schema-1 portable artifacts remain
+historical and must not be pooled with this experiment. All arms use the same retry
 behavior, deadline, nine providers and concurrency nine. Full fanout is bounded
 by that deadline; it cannot establish exhaustive provider coverage. It continues
 to emit snapshots so time-to-five remains observable. First time-to-five can

@@ -205,12 +205,12 @@ and BM25 can filter candidates. Kestrel does not refill failed fetch slots.
 Use optional `--min-fetch-score SCORE` to reject weak title/snippet candidates
 before the fetch cap. This positive-IDF BM25 gate runs even for small pools and
 without `--pre-rank`; it removes rejected candidates from final output as well
-as fetching. It is disabled by default and requires explicit `--query-syntax portable` and fetching.
+as fetching. It is disabled by default and requires fetching.
 Scores are finite nonnegative numbers with an inclusive cutoff (zero keeps zero
 scores), and depend on the candidate pool; no universal nonzero cutoff is
 recommended. For example, `kestrel search "rust async" --min-results 15
---fetch-candidates 8 --query-syntax portable --min-fetch-score 0.1 --no-rank` illustrates syntax, not a
-calibrated threshold. Queries without affirmative lexical terms bypass the gate;
+--fetch-candidates 8 --min-fetch-score 0.1 --no-rank` illustrates syntax, not a
+calibrated threshold. Queries without lexical terms bypass the gate;
 all-rejected searches return empty without page/cache work or automatic refill.
 See [argument responsibilities](docs/cli-arguments.md#optional-fetch-score-threshold)
 for multi-query handling, diagnostics and interactions. Regenerate installed
@@ -460,13 +460,13 @@ are sent to providers unchanged, with provider-dependent phrase semantics.
 Results are not rejected merely because title/snippet metadata omits query terms.
 Existing native hostname restrictions and HTTP(S) URL validation remain.
 
-Use `--query-syntax portable` to explicitly opt into local title/snippet
-constraints (implicit AND, phrases, Boolean operators and hostname expressions).
-These checks run before result-count stopping, independently of fetching/ranking,
-and can exclude relevant pages whose metadata lacks terms. Callers relying on
-the v3/v4 portable default must now select it explicitly, including users of
-`--min-fetch-score`. This restores passthrough as the CLI and library default;
-it does not fix provider retrieval or guarantee latency.
+Portable mode and `--query-syntax` have been removed from the CLI; the Rust
+`QuerySyntax` enum and `SearchOptions.query_syntax` field are also removed.
+Remove these options from existing commands and callers. No local Boolean/phrase
+filter replaces them. The optional `--min-fetch-score` gate now scores tokenized
+query text without Boolean parsing, like lexical ranking; site/exclusion-only
+queries no longer automatically bypass that gate. Provider retrieval quality and
+latency are not guaranteed by this change.
 
 See [provider contracts, query syntax, randomized headers and pooled HTTP/2 transport](docs/search-providers.md)
 and the [quality/latency benchmark workflow](benchmarks/README.md).

@@ -175,7 +175,6 @@ async fn both_clients_stream_normalized_results_and_cancel_unfinished_bodies() {
                         index,
                         engine,
                         query: "site:example.org test".into(),
-                        query_syntax: QuerySyntax::Native,
                     };
                     let clients = &clients;
                     let job = run_one_job(
@@ -310,7 +309,6 @@ async fn deadline_keeps_closed_records_and_releases_provider_permits() {
         index: 0,
         engine: Engine::Bing,
         query: "test".into(),
-        query_syntax: QuerySyntax::Native,
     };
     let job = run_one_job(
         "test",
@@ -350,7 +348,6 @@ async fn simultaneous_queries_have_independent_thresholds_and_provenance() {
             index: 0,
             engine: Engine::Bing,
             query: query.into(),
-            query_syntax: QuerySyntax::Native,
         };
         pending.push(Box::pin(async move {
             let future = async {
@@ -390,7 +387,6 @@ async fn failures_empty_responses_and_filtered_records_never_reach_the_minimum()
         index: 2,
         engine: Engine::Bing,
         query: "site:allowed.example".into(),
-        query_syntax: QuerySyntax::Native,
     };
     pending.push(Box::pin(async move {
         let future = async {
@@ -417,7 +413,6 @@ async fn failures_empty_responses_and_filtered_records_never_reach_the_minimum()
             index: 0,
             engine: Engine::Bing,
             query: "test".into(),
-            query_syntax: QuerySyntax::Native,
         };
         PUBLISHER
             .scope(publisher, async {
@@ -437,7 +432,6 @@ async fn default_query_mode_counts_metadata_without_query_terms_and_cancels_stra
         index: 0,
         engine: Engine::Bing,
         query: "machine learning".into(),
-        query_syntax: SearchOptions::default().query_syntax,
     };
     pending.push(Box::pin(async move {
         let future = async {
@@ -474,14 +468,13 @@ async fn default_query_mode_counts_metadata_without_query_terms_and_cancels_stra
 }
 
 #[tokio::test]
-async fn portable_constraints_filter_streamed_records_before_counting() {
+async fn site_constraints_filter_streamed_records_before_counting() {
     let (sender, mut receiver) = mpsc::channel(1);
     let publisher = Publisher {
         sender,
         index: 0,
         engine: Engine::Bing,
-        query: "requiredword".into(),
-        query_syntax: QuerySyntax::Portable,
+        query: "site:other.example.com".into(),
     };
     PUBLISHER
         .scope(publisher, async {
@@ -513,7 +506,6 @@ async fn benchmark_minimum_arms_and_fixed_pool_exercise_larger_fetch_caps() {
                 index: 0,
                 engine: Engine::Bing,
                 query: "Café".into(),
-                query_syntax: QuerySyntax::Portable,
             };
             let endpoint = format!("{}/pool", provider.url);
             let pending = FuturesUnordered::<Job<'_>>::new();

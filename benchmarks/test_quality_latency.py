@@ -70,13 +70,13 @@ class ConditionsTests(unittest.TestCase):
 
     @unittest.skipUnless(os.environ.get('KESTREL_BENCH_TEST_BINARY'), 'set KESTREL_BENCH_TEST_BINARY for real CLI parsing')
     def test_every_generated_condition_parses_in_current_cli_without_network(self):
-        # An unterminated portable phrase fails query validation before provider requests.
+        # An empty query fails validation before provider requests.
         for stage in qc.STAGES:
             for c in qc.conditions(stage):
-                p = subprocess.run([os.environ['KESTREL_BENCH_TEST_BINARY'], 'search', '"', *c['flags'], '--output', 'json'],
+                p = subprocess.run([os.environ['KESTREL_BENCH_TEST_BINARY'], 'search', '', *c['flags'], '--output', 'json'],
                                    capture_output=True, text=True, timeout=10)
                 self.assertEqual(p.returncode, 1, (stage, c['name'], p.stderr))
-                self.assertIn('unclosed quoted phrase', p.stderr.lower())
+                self.assertIn('at least one non-empty query', p.stderr.lower())
 
 
 class CaptureTests(unittest.TestCase):

@@ -24,23 +24,20 @@ without a cookie jar. The profile is fixed for reproducibility; production CLI
 profiles can vary. It alternates variant order across queries:
 
 - `bing-standard`: one complete raw Bing response, before query filtering.
-- `fanout-native-min5`: all nine providers, native query syntax, five-result minimum.
-- `fanout-portable-min5`: all nine providers, portable syntax, five-result minimum.
-- `fanout-portable-min20`: the same portable search with a twenty-result minimum.
+- `fanout-passthrough-min5`: all nine providers, five-result minimum.
+- `fanout-passthrough-min20`: all nine providers, twenty-result minimum.
 
 These are streaming result minima, not output caps or guarantees of provider
 diversity. A minimum of twenty is still bounded early stopping, not full fanout.
 All fanout arms use concurrency ten, production retries and the same five-second
 budget. Page fetching/ranking is excluded. Provider quorum is unset.
 
-Each successful isolated response also stores native and portable views computed
-from the exact same original entries using production normalization, before URL
-sanitization. The scorer expands these into `*-native-replay` and
-`*-portable-replay` groups. Failed captures contribute empty/error observations
-to both groups too. These paired views make no extra requests and have no
-independent latency; replay p50/p95 and attempt estimates are deliberately null
-(or zero for additional isolated attempts). Compare the raw entries to these
-views to inspect filter losses independently of upstream time variation.
+Experiment revision 3 stores one `passthrough` view of each isolated response,
+using production URL/site normalization. The scorer expands it into a
+`*-passthrough-replay` group, including failed captures. Replays make no extra
+requests and have no independent latency; replay p50/p95 are null. Revision 2
+artifacts retain their historical native/portable paired views and remain
+readable. Do not pool these revisions as equivalent experiments.
 
 Use `--transports` for a separate four-variant matrix: standard Bing, browser
 impersonation, explicit `gb-en` region, and the previously observed browser

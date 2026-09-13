@@ -7,13 +7,13 @@ search defaults to 2,000 extracted characters per page and fetch to 20,000.
 
 | Controls | Responsibility and interaction |
 | --- | --- |
-| Query, `--query`, `--query-syntax`, `--engine`, `--region`, `--time-filter` | Provider queries and filters; unaffected by fetching or ranking switches. |
+| Query, `--query`, `--engine`, `--region`, `--time-filter` | Provider queries and filters; unaffected by fetching or ranking switches. |
 | `--search-concurrency` | Concurrent provider requests. |
 | `--search-budget`, `--no-search-budget` | Mutually exclusive total provider deadline controls; excludes page fetching. |
 | `--mode fanout`, `--provider-quorum` | Fanout is the only mode; provider quorum is ignored by result-count stopping. |
 | `--min-results` | Provider stopping threshold per query (default five unique accepted candidates); independent of fetch and return limits, and not a guarantee. |
 | `--top-k`, `--fetch-candidates` | Returned result ceiling versus page candidate ceiling (default three times top-k). A smaller candidate ceiling can intentionally return fewer than top-k results. |
-| `--min-fetch-score` | Optional inclusive positive-IDF metadata threshold before candidate truncation; portable syntax and fetching required; independent of final ranking. |
+| `--min-fetch-score` | Optional inclusive positive-IDF metadata threshold before candidate truncation; fetching required; independent of final ranking. |
 | `--pre-rank` | Orders titles/snippets before limiting fetch candidates, only when candidates exceed the limit. Independent of final ranking. |
 | `--fetch`, `--no-fetch` | Enable switch (already the default) versus disabling page retrieval and default body ranking. Mutually exclusive. |
 | `--rank`, `--no-rank`, `--ranking-policy` | Choose at most one explicit final-ranking control. Default is content BM25 with fetching. Provider policy preserves candidate order, like no-rank. |
@@ -94,8 +94,7 @@ callers should still choose limits appropriate to their workload.
 
 ## Optional fetch score threshold
 
-`--min-fetch-score SCORE` defaults to disabled and requires explicit
-`--query-syntax portable`, because the query default is now native. With the flag, positive-IDF BM25
+`--min-fetch-score SCORE` defaults to disabled and requires fetching. With the flag, positive-IDF BM25
 scores doubled title plus snippet over the complete deduplicated pool contributed
 by each query, before any gate rejection, pre-ranking or fetch-candidate truncation.
 It uses the evidence tokenizer shared with the experimental snippet policy.
@@ -105,8 +104,8 @@ scale; choose a threshold only after evaluating useful-source retention.
 
 The comparison is inclusive (`score >= SCORE`). Finite nonnegative numbers are
 accepted, including zero (which keeps zero scores); negatives, NaN and infinities
-fail before requests with usage status 2. Native query syntax and `--no-fetch`
-conflict with this flag, also with status 2, stderr explanations and empty stdout.
+fail before requests with usage status 2. `--no-fetch`
+conflicts with this flag, also with status 2, stderr explanations and empty stdout.
 Standalone `fetch` has no query and does not accept the option.
 
 With the gate enabled, the CLI passes the same trimmed, deduplicated query list
@@ -115,11 +114,11 @@ nonempty query is required. The library gate shares search's normalization, so
 padded queries cannot lose their provenance match or gain an unrelated query's
 score. No query or provenance field is rewritten by filtering.
 
-Only affirmative text leaves of the portable query expression contribute scoring
-terms. Phrases are tokenized rather than scored as exact phrases; existing query
-constraint matching remains intact. Operators, negated text and site constraints
-are excluded; nested negation restores positive polarity. Queries with no
-affirmative lexical terms bypass gating with a stderr diagnostic. Shared URLs
+Scoring uses tokenized original query text, without a Boolean query parser.
+Operators, negated terms and site-expression words can contribute scores. This
+intentionally replaces the old affirmative-only scoring; site/exclusion-only
+queries no longer automatically bypass the gate. Queries with no lexical tokens
+bypass it with a stderr diagnostic. Shared URLs
 qualify if any contributing query passes or bypasses, preserving their original
 query/engine fields, source occurrences and relative order. The reusable
 `ranking::filter_fetch_candidates` helper treats candidates without matching
@@ -144,7 +143,7 @@ budgets; these flags are not total process-latency limits. Regenerate the instal
 skill with the updated binary. Example (0.1 is illustrative, not calibrated):
 
 ```sh
-kestrel search "rust async" --min-results 15 --fetch-candidates 8 --query-syntax portable --min-fetch-score 0.1 --no-rank
+kestrel search "rust async" --min-results 15 --fetch-candidates 8 --min-fetch-score 0.1 --no-rank
 ```
 
 ## Advisory content quality

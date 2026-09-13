@@ -7,7 +7,7 @@ STAGES = ['retrieval', 'providers', 'ranking', 'candidates', 'pre-rank', 'fetchi
 
 
 def conditions(stage, engine=None, *, top_k=5, minimum=15, pool=15,
-               search_budget=None, fetch_budget=None, syntax='portable', cache='off'):
+               search_budget=None, fetch_budget=None, syntax='passthrough', cache='off'):
     if stage not in STAGES:
         raise ValueError(f'unknown stage: {stage}')
     if min(top_k, minimum, pool) < 1:
@@ -78,9 +78,11 @@ def check_duplicates(items):
 
 
 def flags_for(p):
-    flags = ['--mode', 'fanout', '--query-syntax', p['query_syntax'], '--min-results', str(p['minimum']),
+    flags = ['--mode', 'fanout', '--min-results', str(p['minimum']),
              '--top-k', str(p['top_k']), '--search-concurrency', str(p['search_concurrency']),
              '--region', p['region'], '--time-filter', p['time_filter']]
+    if p['query_syntax'] != 'passthrough':
+        flags += ['--query-syntax', p['query_syntax']]  # Historical executable replay only.
     for engine in p['engines']:
         flags += ['--engine', engine]
     if p['search_budget_mode'] == 'unlimited':

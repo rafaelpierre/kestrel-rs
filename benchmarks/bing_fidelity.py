@@ -52,6 +52,9 @@ def load_runs(paths):
             if (artifact.get('experiment_revision') == 2 and row['variant'].startswith('bing-')
                     and set(row.get('paired_views', {})) != {'native', 'portable'}):
                 raise ValueError(f'{path}: missing paired views, including failed captures')
+            if (artifact.get('experiment_revision') == 3 and row['variant'].startswith('bing-')
+                    and set(row.get('paired_views', {})) != {'passthrough'}):
+                raise ValueError(f'{path}: missing passthrough view, including failed captures')
             runs.append(dict(row, source=str(path)))
             for name, view in row.get('paired_views', {}).items():
                 runs.append(dict(row, **view, source=str(path),

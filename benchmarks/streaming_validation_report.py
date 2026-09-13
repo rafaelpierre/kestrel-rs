@@ -22,6 +22,8 @@ def key(run):
 
 
 def summarize(metadata, runs, judgments=None):
+    if metadata.get("schema_version") == 2 and metadata.get("query_syntax") != "passthrough":
+        raise ValueError("schema-2 experiments must declare passthrough query syntax")
     judgments = judgments or {}
     indexed = {key(run): run for run in runs}
     if len(indexed) != len(runs):
@@ -92,7 +94,8 @@ def summarize(metadata, runs, judgments=None):
             "incremental_parser_worker_microseconds": distribution(p["parse_microseconds"] for p in observed if p["parse_microseconds"]),
             "caveat": "logical-search aggregation; not per-attempt; cancellation and blocks censor feasibility",
         })
-    return {"schema_version": 1, "observed_runs": len(runs), "expected_runs": len(expected),
+    return {"schema_version": 1, "input_schema_version": metadata.get("schema_version"),
+            "query_syntax": metadata.get("query_syntax", "unknown"), "observed_runs": len(runs), "expected_runs": len(expected),
             "complete": indexed.keys() == expected, "groups": groups, "provider_matrix": matrix,
             "limitations": ["Small-sample p95 is descriptive, not a stable tail estimate.",
                 "Full fanout is deadline-bounded, not exhaustive web coverage.",

@@ -201,8 +201,7 @@ pub fn rank_results_by_query(results: Vec<SearchResult>, queries: &[String]) -> 
 pub struct FetchScoreReport {
     /// Candidates removed from both fetching and final results.
     pub rejected: usize,
-    /// Contributing queries without affirmative lexical terms; their candidates
-    /// bypass the threshold so site-only/exclusion-only searches remain usable.
+    /// Contributing queries without lexical tokens; their candidates bypass the threshold.
     pub bypassed_queries: usize,
 }
 
@@ -210,41 +209,32 @@ pub struct FetchScoreReport {
 /// plus snippet, using an inclusive, finite nonnegative minimum. Scores are
 /// corpus-dependent and remain internal; content and public BM25 are untouched.
 ///
-/// Queries must use portable syntax. As in search, edges are trimmed, blank
+/// Query text is tokenized without Boolean/operator parsing. As in search, edges are trimmed, blank
 /// queries dropped and duplicates removed. Each query is scored against its complete
 /// contributing pool before filtering. A URL survives if any contributing query
-/// meets the minimum (or has no affirmative lexical terms). Candidates without
+/// meets the minimum (or has no lexical tokens). Candidates without
 /// provenance matching a supplied query are evaluated against all supplied queries.
 /// Order and provenance are preserved. Call before pre-ranking/truncation; this
 /// synchronous CPU work should run off an async executor thread.
 ///
-/// Invalid thresholds/queries and an empty query list fail without mutating results.
+/// Invalid thresholds and an empty query list fail without mutating results.
 pub fn filter_fetch_candidates(
     results: &mut Vec<SearchResult>,
     queries: &[String],
     minimum: f64,
 ) -> Result<FetchScoreReport, crate::search::KestrelError> {
-    use crate::query::{QueryPlan, QuerySyntax};
     use crate::search::KestrelError;
 
     let query_order = crate::search::normalize_queries(queries);
     if !minimum.is_finite() || minimum < 0.0 || query_order.is_empty() {
         return Err(KestrelError::InvalidRequest(
-            "fetch score requires a finite nonnegative minimum and at least one portable query"
-                .into(),
+            "fetch score requires a finite nonnegative minimum and at least one query".into(),
         ));
     }
     let terms: Vec<Vec<String>> = query_order
         .iter()
-        .map(|query| {
-            let plan = QueryPlan::parse(query, QuerySyntax::Portable)?;
-            Ok(plan
-                .affirmative_text()
-                .into_iter()
-                .flat_map(evidence_tokens)
-                .collect())
-        })
-        .collect::<Result<_, KestrelError>>()?;
+        .map(|query| evidence_tokens(query))
+        .collect();
     let memberships: Vec<Vec<usize>> = results
         .iter()
         .map(|result| {
@@ -595,7 +585,7 @@ mod tests {
         let mut hits = vec![result("python", Some("rust"), None)];
         filter_fetch_candidates(&mut hits, &["rust".into(), "python".into()], 0.1).unwrap();
         assert!(hits.is_empty());
-        let query = "site:example.com NOT rust";
+        let query = "!!!";
         let mut hits = vec![
             result("", Some(query), None),
             result("python", Some("rust"), None),
@@ -637,21 +627,20 @@ mod tests {
     }
 
     #[test]
-    fn fetch_score_ignores_exclusions_and_rejects_invalid_input_atomically() {
+    fn fetch_score_tokenizes_query_text_and_rejects_invalid_input_atomically() {
         let query = "café NOT python site:example.com";
         let mut hits = vec![
             result("python AND example com", None, None),
             result("café", None, None),
         ];
         filter_fetch_candidates(&mut hits, &[query.into()], 0.01).unwrap();
-        assert_eq!(hits.len(), 1);
-        assert_eq!(hits[0].title, "café");
+        assert_eq!(hits.len(), 2);
         let original = hits.clone();
         for minimum in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY, -1.0] {
             assert!(filter_fetch_candidates(&mut hits, &[query.into()], minimum).is_err());
             assert_eq!(hits, original);
         }
-        for queries in [vec![], vec!["café".into(), "(".into()]] {
+        for queries in [vec![], vec!["  ".into()]] {
             assert!(filter_fetch_candidates(&mut hits, &queries, 1.0).is_err());
             assert_eq!(hits, original);
         }

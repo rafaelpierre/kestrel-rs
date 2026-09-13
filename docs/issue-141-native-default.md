@@ -1,3 +1,6 @@
+> Historical report: this describes the intermediate native-default implementation.
+> Portable mode has since been removed; see the current README for the supported contract.
+
 # Native query default regression validation (#141)
 
 The CLI, `SearchOptions::default()` and single-provider APIs now pass query text

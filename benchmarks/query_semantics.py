@@ -29,7 +29,6 @@ def main():
     parser.add_argument("--engines", nargs="+", choices=ENGINES, default=ENGINES)
     parser.add_argument("--stages", nargs="+", choices=STAGES, default=list(STAGES))
     parser.add_argument("--query", action="append")
-    parser.add_argument("--syntax", choices=["portable", "native"], default="portable")
     args = parser.parse_args()
     binary = args.binary.resolve(strict=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -37,16 +36,18 @@ def main():
     with args.output.open("x") as output:
         evidence = {"started_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
                     "binary_sha256": hashlib.sha256(binary.read_bytes()).hexdigest(),
-                    "syntax": args.syntax, "complete": False, "runs": []}
+                    "syntax": "passthrough", "complete": False, "runs": []}
         json.dump(evidence, output, indent=2)
     queries = args.query or ['"machine learning"', 'machine AND learning', '("machine learning" OR "deep learning") -jobs']
     cases = [(engine, stage, query) for engine in args.engines for stage in args.stages for query in queries]
 
     def run(case):
         engine, stage, query = case
-        command = [str(binary), "search", query, "--engine", engine, "--query-syntax", args.syntax,
-                   "--search-budget", "5", "--fetch-budget", "2", "--timeout", "3", "--top-k", "3",
+        command = [str(binary), "search", query, "--engine", engine,
+                   "--search-budget", "5", "--top-k", "3",
                    "--output", "json", *STAGES[stage]]
+        if stage != "no-fetch":
+            command.extend(["--fetch-budget", "2", "--timeout", "3"])
         start = time.monotonic()
         try:
             result = subprocess.run(command, capture_output=True, text=True, timeout=25)

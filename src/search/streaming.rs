@@ -15,7 +15,6 @@ pub(super) struct Publisher {
     pub index: usize,
     pub engine: Engine,
     pub query: String,
-    pub query_syntax: QuerySyntax,
 }
 
 /// A cumulative snapshot of complete, normalized records from one provider.
@@ -115,7 +114,6 @@ pub(super) struct Incremental {
     decoder: encoding_rs::Decoder,
     records: records::Records,
     previous: Vec<SearchResult>,
-    plan: QueryPlan,
 }
 
 impl Incremental {
@@ -131,13 +129,11 @@ impl Incremental {
             return None;
         }
         let publisher = PUBLISHER.try_with(Clone::clone).ok()?;
-        let plan = QueryPlan::parse(&publisher.query, publisher.query_syntax).ok()?;
         Some(Self {
             records: records::Records::new(body.engine),
             publisher,
             decoder: body.encoding.new_decoder(),
             previous: Vec::new(),
-            plan,
         })
     }
 
@@ -159,7 +155,7 @@ impl Incremental {
         record_phase(Phase::Body);
         if let Some(mut results) = snapshot? {
             let raw_count = results.len();
-            normalize_provider_results(&mut results, &self.publisher.query, &self.plan);
+            normalize_provider_results(&mut results, &self.publisher.query);
             let _ = PROVIDER_DIAGNOSTIC.try_with(|(diagnostics, index)| {
                 if let Ok(mut entries) = diagnostics.lock() {
                     let entry = &mut entries[*index];

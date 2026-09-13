@@ -65,6 +65,22 @@ class ScoringTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'missing paired views'):
                 load_runs([path])
 
+    def test_revision_three_passthrough_replay_and_missing_views(self):
+        row = dict(self.row([], error='deadline'), id='failed', variant='bing-standard',
+                   paired_views={'passthrough': {'results': []}})
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / 'runs.json'
+            payload = dict(schema=1, experiment_revision=3, completed=True,
+                           expected_rows=1, runs=[row])
+            path.write_text(json.dumps(payload))
+            loaded = load_runs([path])
+            self.assertEqual(len(loaded), 2)
+            self.assertIn('bing-standard-passthrough-replay', score(loaded, {}))
+            row['paired_views'] = {'native': {'results': []}, 'portable': {'results': []}}
+            path.write_text(json.dumps(payload))
+            with self.assertRaises(ValueError):
+                load_runs([path])
+
     def test_completed_window_cannot_hide_incomplete_schedule(self):
         with TemporaryDirectory() as directory:
             root = Path(directory)
