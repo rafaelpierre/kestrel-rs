@@ -1153,10 +1153,24 @@ mod tests {
             ("/empty", format!("<script>{}</script>", "x".repeat(500))),
         ] {
             Mock::given(path(path_name))
-                .respond_with(ResponseTemplate::new(200).set_body_string(body))
+                .respond_with(
+                    ResponseTemplate::new(200)
+                        .insert_header("content-type", "text/html")
+                        .set_body_bytes(body),
+                )
                 .mount(&server)
                 .await;
         }
+        let plain = "  Source: literal\n<p>&amp;</p>\n";
+        Mock::given(path("/plain"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_bytes(plain)
+                    .insert_header("content-type", "text/plain"),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
         let client = KestrelClient::new().unwrap();
         let Commands::Search(mut args) = Cli::try_parse_from([
             "kestrel",
@@ -1186,7 +1200,7 @@ mod tests {
             sources: Vec::new(),
         };
         for expected_hits in [0, 1] {
-            let mut results: Vec<_> = ["/short", "/capped", "/empty"]
+            let mut results: Vec<_> = ["/short", "/capped", "/empty", "/plain"]
                 .into_iter()
                 .map(candidate)
                 .collect();
@@ -1198,10 +1212,14 @@ mod tests {
             assert!(diagnostics.contains("1 fetched page(s) reached --max-response-bytes"));
             assert!(diagnostics.contains("search results may contain incomplete page content"));
             assert!(!diagnostics.contains("2 fetched page(s)"));
-            assert_eq!(report.cache_hits, expected_hits);
+            assert_eq!(report.cache_hits, expected_hits * 2);
             assert!(results[0].content.is_some());
             assert!(results[1].content.is_some());
             assert!(results[2].content.is_none());
+            assert_eq!(
+                results[3].content.as_deref(),
+                Some(format!("Source: {}/plain\n\n{plain}", server.uri()).as_str())
+            );
         }
         let mut results = [candidate("/short")];
         let mut diagnostics = Vec::new();

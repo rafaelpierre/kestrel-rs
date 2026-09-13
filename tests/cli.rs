@@ -67,7 +67,7 @@ async fn fetch_extracts_a_known_url_as_text_or_json() {
         .respond_with(ResponseTemplate::new(200)
             .insert_header("content-type", "text/html")
             .set_delay(Duration::from_millis(100))
-            .set_body_string("<nav>Unwanted navigation</nav><main><div class=\"download\"><h1>Article heading</h1><p>This is meaningful article content fetched directly from a known page URL.</p></div></main>"))
+            .set_body_bytes("<nav>Unwanted navigation</nav><main><div class=\"download\"><h1>Article heading</h1><p>This is meaningful article content fetched directly from a known page URL.</p></div></main>"))
         .expect(2)
         .mount(&server).await;
     let url = format!("{}/article", server.uri());
@@ -119,7 +119,7 @@ async fn fetch_reports_http_and_unsupported_content_failures() {
         .respond_with(
             ResponseTemplate::new(200)
                 .insert_header("content-type", "application/pdf")
-                .set_body_string("PDF"),
+                .set_body_bytes("PDF"),
         )
         .mount(&server)
         .await;
@@ -179,6 +179,10 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     let skill = fs::read_to_string(&target).unwrap();
     assert!(skill.contains("retained prefix"));
     assert!(skill.contains("whole class tokens"));
+    assert!(skill.contains("support `text/plain`"));
+    assert!(skill.contains("literal markup/entities"));
+    assert!(skill.contains("whitespace-only retained plain text"));
+    assert!(skill.contains("decode with replacement characters"));
     assert!(skill.contains("download`, `reader`, `shadow`, and `thread"));
     assert!(skill.contains("not cached"));
     assert!(skill.contains("--max-response-bytes 65536"));
@@ -361,10 +365,14 @@ async fn capped_fetch_returns_successful_text_and_json_with_stderr_notice() {
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
     let server = MockServer::start().await;
     Mock::given(method("GET"))
-        .respond_with(ResponseTemplate::new(200).set_body_string(
-            "<main><p>This readable content survives the byte cutoff.</p><p>".to_owned()
-                + &"later text ".repeat(100),
-        ))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .insert_header("content-type", "text/html")
+                .set_body_bytes(
+                    "<main><p>This readable content survives the byte cutoff.</p><p>".to_owned()
+                        + &"later text ".repeat(100),
+                ),
+        )
         .expect(2)
         .mount(&server)
         .await;
@@ -413,7 +421,11 @@ async fn default_byte_cap_stops_at_one_mb_and_can_be_overridden() {
         + &"x".repeat(1_000_000)
         + "--><p>This readable tail is after the default cutoff.</p></main>";
     Mock::given(method("GET"))
-        .respond_with(ResponseTemplate::new(200).set_body_string(body))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .insert_header("content-type", "text/html")
+                .set_body_bytes(body),
+        )
         .expect(2)
         .mount(&server)
         .await;
@@ -435,6 +447,48 @@ async fn default_byte_cap_stops_at_one_mb_and_can_be_overridden() {
             .stdout(predicate::str::contains("This readable prefix"))
             .stdout(predicate::str::contains("This readable tail"))
             .stderr(predicate::str::contains("page may be incomplete").not());
+    })
+    .await
+    .unwrap();
+}
+
+#[tokio::test]
+async fn fetch_plain_text_preserves_body_in_text_and_json() {
+    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
+    let server = MockServer::start().await;
+    let body = "  fn main() {\n\tprintln!(\"<p>&amp; 日本 🦀</p>\");\n}\n";
+    Mock::given(path("/source.txt"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_bytes(body)
+                .insert_header("content-type", "text/plain; charset=utf-8"),
+        )
+        .expect(2)
+        .mount(&server)
+        .await;
+    let url = format!("{}/source.txt", server.uri());
+    tokio::task::spawn_blocking(move || {
+        for format in ["text", "json"] {
+            let output = Command::cargo_bin("kestrel")
+                .unwrap()
+                .args(["fetch", &url, "--output", format])
+                .assert()
+                .success()
+                .get_output()
+                .clone();
+            let expected = format!("Source: {url}\n\n{body}");
+            if format == "json" {
+                let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+                assert_eq!(value["content"], expected);
+                assert_eq!(value["url"], url);
+            } else {
+                assert_eq!(
+                    String::from_utf8(output.stdout).unwrap(),
+                    format!("{expected}\n")
+                );
+            }
+            completion_seconds(&output.stderr, "Fetch");
+        }
     })
     .await
     .unwrap();

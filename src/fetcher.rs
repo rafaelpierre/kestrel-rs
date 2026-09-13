@@ -1,4 +1,4 @@
-//! Bounded asynchronous page retrieval and off-runtime HTML extraction.
+//! Bounded asynchronous page retrieval and off-runtime HTML/plain-text extraction.
 
 use std::sync::Arc;
 
@@ -229,6 +229,11 @@ fn validate_options(options: &FetchOptions) -> Result<(), KestrelError> {
     Ok(())
 }
 
+enum ContentKind {
+    Html,
+    PlainText,
+}
+
 struct FetchItem {
     content: Option<String>,
     diagnostic: PageFetchDiagnostic,
@@ -296,7 +301,7 @@ async fn fetch_one_inner(
     // Keep the download slot until a parser takes ownership of this body.
     // This bounds downloading/waiting bodies to max_concurrency per batch.
     let network_permit = network.acquire().await.expect("semaphore remains open");
-    let (body, encoding, queue_ms, request_ms, download_ms, response_bytes) = {
+    let (body, encoding, content_kind, queue_ms, request_ms, download_ms, response_bytes) = {
         let queue_ms = elapsed_millis(queue_started);
         let request_started = Instant::now();
         let response = client.get(url).timeout(options.timeout).send().await?;
@@ -346,7 +351,16 @@ async fn fetch_one_inner(
                     .map_err(|error| KestrelError::Search(error.to_string()))
             })
             .transpose()?;
-        let encoding = response_encoding(&content_type);
+        let parsed_type = content_type.parse::<mime::Mime>().ok();
+        let encoding = response_encoding(parsed_type.as_ref());
+        let content_kind = if parsed_type
+            .as_ref()
+            .is_some_and(|value| value.essence_str() == "text/plain")
+        {
+            ContentKind::PlainText
+        } else {
+            ContentKind::Html
+        };
         let download_started = Instant::now();
         let mut stream = response.bytes_stream();
         let mut body = Vec::with_capacity(
@@ -374,6 +388,7 @@ async fn fetch_one_inner(
         (
             body,
             encoding,
+            content_kind,
             queue_ms,
             request_ms,
             download_ms,
@@ -395,8 +410,16 @@ async fn fetch_one_inner(
         // slot until the body and DOM are released, including while queued.
         let _permit = parse_permit;
         let body = body;
-        let (html, _, _) = encoding.decode(&body);
-        parse_content(&html, limit)
+        let (text, _, _) = encoding.decode(&body);
+        match content_kind {
+            ContentKind::Html => parse_content(&text, limit),
+            ContentKind::PlainText => {
+                // Preserve literal markup, whitespace, and repeated lines. Test
+                // the retained prefix so a whitespace-only cutoff is NoContent.
+                let retained: String = text.chars().take(limit).collect();
+                (!retained.trim().is_empty()).then_some(retained)
+            }
+        }
     })
     .await
     .map_err(|error| KestrelError::Search(format!("HTML parser task failed: {error}")))?;
@@ -452,10 +475,8 @@ fn elapsed_millis(started: Instant) -> u64 {
     started.elapsed().as_millis().try_into().unwrap_or(u64::MAX)
 }
 
-fn response_encoding(content_type: &str) -> &'static Encoding {
+fn response_encoding(content_type: Option<&mime::Mime>) -> &'static Encoding {
     content_type
-        .parse::<mime::Mime>()
-        .ok()
         .and_then(|value| {
             value
                 .get_param(mime::CHARSET)
@@ -618,7 +639,7 @@ mod tests {
                 .respond_with(
                     ResponseTemplate::new(200)
                         .insert_header("content-type", "text/html")
-                        .set_body_string(page.clone()),
+                        .set_body_bytes(page.clone()),
                 )
                 .mount(&server)
                 .await;
