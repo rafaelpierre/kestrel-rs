@@ -84,7 +84,7 @@ async fn fetch_extracts_a_known_url_as_text_or_json() {
             .clone();
         assert!(completion_seconds(&output.stderr, "Fetch") >= 0.1);
         let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-        assert_eq!(value.as_object().unwrap().len(), 3);
+        assert_eq!(value.as_object().unwrap().len(), 4);
         let seconds = value["elapsed_seconds"].as_f64().unwrap();
         assert!(seconds.is_finite() && seconds >= 0.1);
         // Stderr rounds its later sample to milliseconds.
@@ -225,7 +225,7 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(skill.contains("32,768 UTF-8 bytes"));
     assert!(skill.contains("comments-only `main`"));
     assert!(skill.contains("diagnostics.candidate_content_quality"));
-    assert!(skill.contains("No quality flag, rejection, ranking penalty, or normal JSON field"));
+    assert!(skill.contains("No quality rejection or ranking penalty"));
     assert!(skill.contains("support `text/plain`"));
     assert!(skill.contains("literal markup/entities"));
     assert!(skill.contains("whitespace-only retained plain text"));
@@ -493,7 +493,7 @@ async fn capped_fetch_returns_successful_text_and_json_with_stderr_notice() {
                 .clone();
             let text = if format == "json" {
                 let value: serde_json::Value = serde_json::from_slice(&output).unwrap();
-                assert_eq!(value.as_object().unwrap().len(), 3);
+                assert_eq!(value.as_object().unwrap().len(), 4);
                 let seconds = value["elapsed_seconds"].as_f64().unwrap();
                 assert!(seconds.is_finite() && seconds >= 0.0);
                 assert_eq!(value["url"], url);
@@ -836,6 +836,78 @@ async fn quality_keeps_shell_fetch_successful_and_recovers_explicit_article() {
     .unwrap();
 }
 
+#[tokio::test]
+async fn structured_diagnostics_default_opt_out_and_skill_installation() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
+    use wiremock::{Mock, MockServer, ResponseTemplate};
+    let server = MockServer::start().await;
+    Mock::given(wiremock::matchers::method("GET"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_raw("Your browser is not supported.", "text/plain"),
+        )
+        .expect(2)
+        .mount(&server)
+        .await;
+    let url = server.uri();
+    tokio::task::spawn_blocking(move || {
+        let project = tempfile::tempdir().unwrap();
+        let user_home = tempfile::tempdir().unwrap();
+        for opt_out in [false, true] {
+            let mut command = Command::cargo_bin("kestrel").unwrap();
+            command
+                .current_dir(project.path())
+                .env("HOME", user_home.path())
+                .env_remove("KESTRELSEARCH_PROVIDER_TRACE_DIR")
+                .env_remove("KESTRELSEARCH_BENCHMARK_ARTIFACT_DIR")
+                .args(["fetch", &url, "--output", "json"]);
+            if opt_out {
+                command.arg("--no-diagnostics");
+            }
+            let output = command.assert().success().get_output().clone();
+            let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+            if opt_out {
+                assert_eq!(value.as_object().unwrap().len(), 3);
+                assert!(value.get("diagnostics").is_none());
+            } else {
+                assert_eq!(value["diagnostics"]["schema_version"], 1);
+                assert_eq!(value["diagnostics"]["state"], "extracted");
+                assert_eq!(value["diagnostics"]["quality"]["state"], "boilerplate_only");
+                assert!(value["diagnostics"]["usable"].is_null());
+                assert!(!value["diagnostics"].to_string().contains(&url));
+            }
+        }
+        Command::cargo_bin("kestrel")
+            .unwrap()
+            .current_dir(project.path())
+            .env("HOME", user_home.path())
+            .args(["skill", "install", "--agent", "codex", "--scope", "project"])
+            .assert()
+            .success();
+        let skill = fs::read_to_string(project.path().join(".codex/skills/kestrelsearch/SKILL.md"))
+            .unwrap();
+        for command in ["search", "fetch"] {
+            Command::cargo_bin("kestrel")
+                .unwrap()
+                .args([command, "--help"])
+                .assert()
+                .success()
+                .stdout(predicate::str::contains("--no-diagnostics"));
+        }
+        for contract in [
+            "--no-diagnostics",
+            "schema_version: 1",
+            "returned_index",
+            "timing_censored",
+            "all_failed",
+            "queries_omitted",
+        ] {
+            assert!(skill.contains(contract), "{contract}");
+        }
+    })
+    .await
+    .unwrap();
+}
+
 #[test]
 fn installed_skill_documents_telemetry_configuration_and_capture_limits() {
     let _telemetry = kestrelsearch::telemetry::test_export_guard();
@@ -898,7 +970,8 @@ async fn ordered_html_fetch_matches_golden_in_text_and_json() {
                 if format == "json" {
                     let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
                     assert_eq!(value["content"], expected);
-                    assert_eq!(value.as_object().unwrap().len(), 3);
+                    assert_eq!(value.as_object().unwrap().len(), 4);
+                    assert_eq!(value["diagnostics"]["schema_version"], 1);
                 } else {
                     assert_eq!(
                         String::from_utf8(output.stdout).unwrap(),

@@ -1,7 +1,9 @@
 # Provider diagnostic records
 
 Set `KESTRELSEARCH_PROVIDER_TRACE_DIR` to opt into diagnostic files. Normal CLI
-result JSON and public `SearchReport` fields retain their existing shapes.
+result fields and public `SearchReport` fields retain their existing shapes.
+The CLI adds a default bounded diagnostics envelope; `--no-diagnostics` restores
+the previous JSON envelope. See [caller diagnostics](structured-diagnostics.md).
 Every scheduled provider/query operation produces one `outcome-*.json`, including
 all-failed searches, deadline expiry, caller cancellation and quorum cancellation.
 Fallback providers that are never selected are not scheduled operations.

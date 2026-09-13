@@ -17,6 +17,8 @@ use kestrelsearch::{
     SearchResult, TimeFilter, pre_rank_candidates, rank_results_by_query,
 };
 
+mod diagnostics;
+
 const SKILL_NAME: &str = "kestrelsearch";
 
 #[derive(Debug, Parser)]
@@ -172,9 +174,13 @@ struct SearchArgs {
     #[arg(long, default_value_t = 10, value_parser = concurrency_usize, value_name = "N")]
     parse_concurrency: usize,
 
-    /// Output format. JSON returns an object with results and elapsed_seconds.
+    /// Output format. JSON returns results, elapsed_seconds and default structured diagnostics.
     #[arg(long, default_value = "text")]
     output: Output,
+
+    /// Omit default structured diagnostics from JSON; restores the previous envelope. No effect on text.
+    #[arg(long)]
+    no_diagnostics: bool,
 }
 
 impl SearchArgs {
@@ -242,9 +248,13 @@ struct FetchArgs {
     #[arg(long, default_value_t = 10.0, value_parser = positive_f64, value_name = "SECS")]
     timeout: f64,
 
-    /// Output format. JSON returns an object with url, content and elapsed_seconds.
+    /// Output format. JSON returns url, content, elapsed_seconds and default structured diagnostics.
     #[arg(long, default_value = "text")]
     output: Output,
+
+    /// Omit default structured diagnostics from JSON; restores the previous envelope. No effect on text.
+    #[arg(long)]
+    no_diagnostics: bool,
 }
 
 fn page_url(value: &str) -> Result<String, String> {
@@ -346,7 +356,7 @@ async fn run_fetch(arguments: FetchArgs) -> ExitCode {
                 return ExitCode::FAILURE;
             }
         };
-    let Some(content) = report.contents.into_iter().next().flatten() else {
+    let Some(content) = report.contents.first().and_then(Option::as_deref) else {
         use kestrelsearch::FetchOutcome;
         let reason = match report.pages.first().map(|page| page.outcome) {
             Some(FetchOutcome::UnsupportedContentType) => {
@@ -372,15 +382,22 @@ async fn run_fetch(arguments: FetchArgs) -> ExitCode {
     kestrelsearch::telemetry::payload("output.content", &content);
     match arguments.output {
         Output::Text => println!("{content}"),
-        Output::Json => println!(
-            "{}",
-            serde_json::to_string_pretty(&serde_json::json!({
+        Output::Json => {
+            let mut output = serde_json::json!({
                 "url": arguments.url,
                 "content": content,
                 "elapsed_seconds": command_started.elapsed().as_secs_f64(),
-            }))
-            .expect("strings and finite elapsed seconds serialize to JSON")
-        ),
+            });
+            if !arguments.no_diagnostics {
+                output["diagnostics"] =
+                    diagnostics::direct_fetch(&report, arguments.max_response_bytes);
+            }
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&output)
+                    .expect("strings and finite elapsed seconds serialize to JSON")
+            );
+        }
     }
     print_completion("Fetch", command_started);
     ExitCode::SUCCESS
@@ -451,6 +468,13 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
+    let structured = (!arguments.no_diagnostics && arguments.output == Output::Json).then(|| {
+        diagnostics::SearchDiagnostics::new(
+            &search_report,
+            &queries,
+            options.min_results.unwrap_or(5),
+        )
+    });
     let provider_diagnostics = search_report.providers;
     let filtered: usize = provider_diagnostics
         .iter()
@@ -486,8 +510,18 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             },
         );
         eprintln!("[kestrel] No results found.");
+        let diagnostic = structured.map(|d| {
+            d.finish(
+                &results,
+                &results,
+                None,
+                arguments.no_fetch,
+                &candidate_counts,
+                arguments.max_response_bytes,
+            )
+        });
         match arguments.output {
-            Output::Json => match search_json(&results, command_started) {
+            Output::Json => match search_json(&results, command_started, diagnostic.as_ref()) {
                 Ok(json) => println!("{json}"),
                 Err(error) => {
                     eprintln!("[kestrel] JSON output failed: {error}");
@@ -564,8 +598,18 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
     );
     kestrelsearch::telemetry::results("output", &results);
     eprintln!("[kestrel] Returning top {} results.", results.len());
+    let diagnostic = structured.map(|d| {
+        d.finish(
+            &candidates,
+            &results,
+            fetch_diagnostics.as_ref(),
+            arguments.no_fetch,
+            &candidate_counts,
+            arguments.max_response_bytes,
+        )
+    });
     match arguments.output {
-        Output::Json => match search_json(&results, command_started) {
+        Output::Json => match search_json(&results, command_started, diagnostic.as_ref()) {
             Ok(json) => println!("{json}"),
             Err(error) => {
                 eprintln!("[kestrel] JSON output failed: {error}");
@@ -580,15 +624,22 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
 }
 
 // Borrow results so adding command metadata does not clone page content.
-fn search_json(results: &[SearchResult], started: Instant) -> Result<String, serde_json::Error> {
+fn search_json(
+    results: &[SearchResult],
+    started: Instant,
+    diagnostics: Option<&serde_json::Value>,
+) -> Result<String, serde_json::Error> {
     #[derive(serde::Serialize)]
     struct SearchOutput<'a> {
         results: &'a [SearchResult],
         elapsed_seconds: f64,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        diagnostics: Option<&'a serde_json::Value>,
     }
     serde_json::to_string_pretty(&SearchOutput {
         results,
         elapsed_seconds: started.elapsed().as_secs_f64(),
+        diagnostics,
     })
 }
 
@@ -1909,7 +1960,7 @@ mod tests {
         let started = Instant::now() - Duration::from_millis(1250);
         for results in [std::slice::from_ref(&result), &[]] {
             let json: serde_json::Value =
-                serde_json::from_str(&search_json(results, started).unwrap()).unwrap();
+                serde_json::from_str(&search_json(results, started, None).unwrap()).unwrap();
             assert_eq!(json.as_object().unwrap().len(), 2);
             assert_eq!(json["results"], serde_json::to_value(results).unwrap());
             let seconds = json["elapsed_seconds"].as_f64().unwrap();
@@ -1948,6 +1999,52 @@ mod tests {
             })
         );
         assert!(skill.contains(&format!("cargo install {}", env!("CARGO_PKG_NAME"))));
+    }
+
+    #[test]
+    fn structured_search_json_default_and_opt_out_preserve_results() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
+        for opt_out in [false, true] {
+            let mut args = vec!["kestrel", "search", "q", "--no-fetch", "--output", "json"];
+            if opt_out {
+                args.push("--no-diagnostics");
+            }
+            let Cli {
+                command: Commands::Search(args),
+            } = Cli::try_parse_from(args).unwrap()
+            else {
+                panic!("search");
+            };
+            assert_eq!(args.no_diagnostics, opt_out);
+            let report = kestrelsearch::SearchReport {
+                results: vec![],
+                providers: vec![],
+                cancelled: 0,
+            };
+            let diagnostic = (!args.no_diagnostics).then(|| {
+                diagnostics::SearchDiagnostics::new(&report, &["q".into()], 5).finish(
+                    &[],
+                    &[],
+                    None,
+                    true,
+                    &BTreeMap::new(),
+                    100,
+                )
+            });
+            let value: serde_json::Value = serde_json::from_str(
+                &search_json(&[], Instant::now(), diagnostic.as_ref()).unwrap(),
+            )
+            .unwrap();
+            assert_eq!(
+                value.as_object().unwrap().len(),
+                if opt_out { 2 } else { 3 }
+            );
+            assert_eq!(value["results"], serde_json::json!([]));
+            assert!(value["elapsed_seconds"].is_number());
+            if !opt_out {
+                assert_eq!(value["diagnostics"]["schema_version"], 1);
+            }
+        }
     }
 
     #[test]
