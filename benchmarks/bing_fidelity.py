@@ -7,6 +7,7 @@ import hashlib
 import json
 import math
 import os
+import platform
 from pathlib import Path
 import subprocess
 import shutil
@@ -18,13 +19,29 @@ ROOT = Path(__file__).resolve().parents[1]
 def load_runs(paths):
     runs = []
     for path in paths:
+        schedule_path = Path(path).parent.parent / 'schedule.json'
+        if schedule_path.exists():
+            schedule = json.loads(schedule_path.read_text())
+            executions = schedule.get('executions', [])
+            if (schedule.get('completed') is False or
+                    len(executions) != schedule.get('windows') or
+                    any(e.get('exit_code') != 0 for e in executions)):
+                raise ValueError(f'{schedule_path}: incomplete schedule')
         artifact = json.loads(Path(path).read_text())
         if artifact.get('schema') != 1:
             raise ValueError(f'{path}: unsupported schema')
         if not artifact.get('completed') or len(artifact['runs']) != artifact.get('expected_rows'):
             raise ValueError(f'{path}: incomplete schedule; do not silently exclude missing searches')
         for row in artifact['runs']:
+            if (artifact.get('experiment_revision') == 2 and row['variant'].startswith('bing-')
+                    and set(row.get('paired_views', {})) != {'native', 'portable'}):
+                raise ValueError(f'{path}: missing paired views, including failed captures')
             runs.append(dict(row, source=str(path)))
+            for name, view in row.get('paired_views', {}).items():
+                runs.append(dict(row, **view, source=str(path),
+                                 variant=f"{row['variant']}-{name}-replay",
+                                 observation_kind='same-response-replay',
+                                 paired_with=row['id'], attempts=0))
     return runs
 
 
@@ -78,21 +95,25 @@ def score(runs, judgments):
             relevant += sum(v is True for v in labels)
             missing += sum(v is None for v in labels)
         count = len(rows)
+        replay = all(r.get('observation_kind') == 'same-response-replay' for r in rows)
         summaries[variant] = {
+            'observation_kind': 'same-response-replay' if replay else 'network',
             'scheduled': count, 'nonempty': nonempty,
             'empty_or_error': count - nonempty,
             'errors': sum(bool(r.get('error')) for r in rows),
-            'over_budget': sum(r['elapsed_ms'] > r['budget_ms'] for r in rows),
+            'over_budget': None if replay else sum(r['elapsed_ms'] > r['budget_ms'] for r in rows),
             'unjudged_results': missing,
             'conditional_precision_at_5': relevant / (5 * nonempty) if nonempty and not missing else None,
             'usable_coverage': useful / count if not unknown_runs else None,
             'usable_coverage_bounds': [known_useful / count, (known_useful + unknown_runs) / count],
-            'p50_ms': percentile([r['elapsed_ms'] for r in rows], .5),
-            'p95_ms': percentile([r['elapsed_ms'] for r in rows], .95),
+            'p50_ms': None if replay else percentile([r['elapsed_ms'] for r in rows], .5),
+            'p95_ms': None if replay else percentile([r['elapsed_ms'] for r in rows], .95),
             'provider_cancellations': sum(r.get('cancelled', 0) for r in rows),
             'runs_missing_provider_diagnostics': sum(
                 not r['variant'].startswith('bing-') and 'providers' not in r for r in rows),
-            'observed_completed_provider_attempts': sum(sum(1 + p.get('retries', 0) for p in r.get('providers', [])
+            # Public diagnostics cannot establish sends for cancelled/queued jobs.
+            # Retain historical scoring, but do not infer attempts for new runs.
+            'observed_completed_provider_attempts': None if any('observation_kind' in r for r in rows) else sum(sum(1 + p.get('retries', 0) for p in r.get('providers', [])
                                                   if p.get('outcome') != 'cancelled_quorum') for r in rows),
             'isolated_attempts': sum(r.get('attempts', 0) for r in rows),
         }
@@ -106,7 +127,18 @@ def run(args):
     start = time.monotonic()
     schedule = {'created_at': datetime.now(timezone.utc).isoformat(),
                 'windows': args.windows, 'interval_seconds': args.interval,
-                'query_manifest': 'benchmarks/bing-fidelity/queries.json', 'executions': []}
+                'query_manifest': 'benchmarks/bing-fidelity/queries.json', 'executions': [],
+                'completed': False, 'environment_label': args.environment,
+                'platform': dict(system=platform.system(), release=platform.release(),
+                                 machine=platform.machine()),
+                'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
+                'tracked_diff_sha256': hashlib.sha256(subprocess.check_output(['git', 'diff', 'HEAD'], cwd=ROOT)).hexdigest(),
+                'proxy_environment_present': {key: key in os.environ for key in
+                    ['HTTP_PROXY', 'HTTPS_PROXY', 'ALL_PROXY', 'NO_PROXY',
+                     'http_proxy', 'https_proxy', 'all_proxy', 'no_proxy']},
+                'network_equivalence': 'not verified; labels and proxy presence do not identify egress'}
+    schedule_path = args.output / 'schedule.json'
+    schedule_path.write_text(json.dumps(schedule, indent=2))
     build = subprocess.run(['cargo', 'test', '--lib', '--no-run', '--message-format=json'],
                            cwd=ROOT, check=True, capture_output=True, text=True)
     artifacts = [json.loads(line) for line in build.stdout.splitlines() if line.startswith('{')]
@@ -120,12 +152,15 @@ def run(args):
     schedule['query_manifest_sha256'] = hashlib.sha256(
         (ROOT / schedule['query_manifest']).read_bytes()).hexdigest()
     schedule['encoding_only'] = args.encodings
+    schedule['transport_only'] = args.transports
+    schedule_path.write_text(json.dumps(schedule, indent=2))
     start = time.monotonic()
     for window in range(args.windows):
         target = start + window * args.interval
         time.sleep(max(0, target - time.monotonic()))
         output = (args.output / f'window-{window + 1}').resolve()
-        env = dict(os.environ, KESTREL_BING_EXPERIMENT_DIR=str(output))
+        env = dict(os.environ, KESTREL_BING_EXPERIMENT_DIR=str(output),
+                   KESTREL_BING_ENVIRONMENT=args.environment)
         if args.raw:
             env['KESTREL_BING_RAW_DIR'] = str(output / 'raw')
         else:
@@ -134,6 +169,10 @@ def run(args):
             env['KESTREL_BING_ENCODING_ONLY'] = '1'
         else:
             env.pop('KESTREL_BING_ENCODING_ONLY', None)
+        if args.transports:
+            env['KESTREL_BING_TRANSPORT_ONLY'] = '1'
+        else:
+            env.pop('KESTREL_BING_TRANSPORT_ONLY', None)
         # Do not accidentally activate unrelated raw tracing from a parent shell.
         env.pop('KESTRELSEARCH_PROVIDER_TRACE_DIR', None)
         invocation = {'window': window + 1, 'started_at': datetime.now(timezone.utc).isoformat()}
@@ -141,9 +180,11 @@ def run(args):
                                '--ignored', '--exact', '--nocapture'], cwd=ROOT, env=env)
         invocation['exit_code'] = proc.returncode
         schedule['executions'].append(invocation)
-        (args.output / 'schedule.json').write_text(json.dumps(schedule, indent=2))
+        schedule_path.write_text(json.dumps(schedule, indent=2))
         if proc.returncode:
             raise RuntimeError('experiment failed; partial evidence retained, do not score as a complete schedule')
+    schedule['completed'] = True
+    schedule_path.write_text(json.dumps(schedule, indent=2))
 
 
 def main():
@@ -153,7 +194,11 @@ def main():
     live.add_argument('--output', required=True, type=Path)
     live.add_argument('--windows', type=int, default=1)
     live.add_argument('--interval', type=float, default=300)
-    live.add_argument('--encodings', action='store_true', help='compare + and %%20 spaces only')
+    matrix = live.add_mutually_exclusive_group()
+    matrix.add_argument('--encodings', action='store_true', help='compare + and %%20 spaces only')
+    matrix.add_argument('--transports', action='store_true', help='compare standard, impersonated, region and form variants')
+    live.add_argument('--environment', default='local-unverified',
+                      help='non-sensitive environment label; does not establish network independence')
     live.add_argument('--raw', action='store_true', help='also retain unredacted local HTML; do not commit it')
     for name in ['template', 'score']:
         p = sub.add_parser(name)

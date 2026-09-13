@@ -1,5 +1,8 @@
 import unittest
-from bing_fidelity import judgment_key, judgment_template, score
+import json
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from bing_fidelity import judgment_key, judgment_template, score, load_runs
 
 class ScoringTests(unittest.TestCase):
     def row(self, results, **kw):
@@ -33,6 +36,46 @@ class ScoringTests(unittest.TestCase):
         for label in [dict(relevant=1,reason='bad type'),dict(relevant=True,reason='')]:
             with self.assertRaises(ValueError):
                 score([self.row([r])],{judgment_key('intent',r):label})
+
+    def test_replays_include_failed_captures_without_double_counting_network(self):
+        result = dict(url='https://example.org', title='answer', snippet='evidence')
+        rows = [dict(self.row([result]), id='ok', variant='bing-standard', attempts=1,
+                     paired_views={'native': {'results': [result]}, 'portable': {'results': []}}),
+                dict(self.row([], error='deadline'), id='failed', variant='bing-standard', attempts=1,
+                     paired_views={'native': {'results': []}, 'portable': {'results': []}})]
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / 'runs.json'
+            path.write_text(json.dumps(dict(schema=1, experiment_revision=2,
+                                            completed=True, expected_rows=2, runs=rows)))
+            loaded = load_runs([path])
+            self.assertEqual(len(loaded), 6)
+            labels = {judgment_key('intent', result): dict(relevant=True, reason='addresses intent')}
+            summaries = score(loaded, labels)
+            native = summaries['bing-standard-native-replay']
+            self.assertEqual(native['scheduled'], 2)
+            self.assertEqual(native['usable_coverage'], .5)
+            self.assertEqual(native['errors'], 1)
+            self.assertEqual(native['isolated_attempts'], 0)
+            self.assertIsNone(native['p50_ms'])
+            self.assertIsNone(native['p95_ms'])
+            self.assertEqual(summaries['bing-standard']['isolated_attempts'], 2)
+            del rows[1]['paired_views']
+            path.write_text(json.dumps(dict(schema=1, experiment_revision=2,
+                                            completed=True, expected_rows=2, runs=rows)))
+            with self.assertRaisesRegex(ValueError, 'missing paired views'):
+                load_runs([path])
+
+    def test_completed_window_cannot_hide_incomplete_schedule(self):
+        with TemporaryDirectory() as directory:
+            root = Path(directory)
+            window = root / 'window-1'
+            window.mkdir()
+            path = window / 'runs.json'
+            path.write_text(json.dumps(dict(schema=1, completed=True, expected_rows=0, runs=[])))
+            (root / 'schedule.json').write_text(json.dumps(dict(
+                completed=False, windows=2, executions=[dict(exit_code=0)])))
+            with self.assertRaisesRegex(ValueError, 'incomplete schedule'):
+                load_runs([path])
 
 
 class SanitizerTests(unittest.TestCase):
