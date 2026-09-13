@@ -122,7 +122,7 @@ impl PageCache {
 
     // Admission happens before spawning, and the worker owns the permit. Dropping
     // an async caller cannot admit unlimited replacement work behind a blocked disk.
-    async fn run_io<T: Send + 'static>(
+    pub(crate) async fn run_io<T: Send + 'static>(
         &self,
         action: impl FnOnce() -> Result<T, std::io::Error> + Send + 'static,
     ) -> Result<T, KestrelError> {
@@ -162,22 +162,13 @@ impl PageCache {
             page.content_sha256 = format!("{:x}", Sha256::digest(page.content.as_bytes()));
             std::fs::create_dir_all(&cache.directory)?;
             let _lock = cache.lock()?;
-            let mut temporary = tempfile::NamedTempFile::new_in(&cache.directory)?;
-            {
-                let mut writer = std::io::BufWriter::new(temporary.as_file_mut());
-                serde_json::to_writer(&mut writer, &page).map_err(std::io::Error::other)?;
-                writer.flush()?;
-            }
-            temporary.as_file().sync_all()?;
-            temporary.persist(&target).map_err(|error| error.error)?;
-            #[cfg(unix)]
-            std::fs::File::open(&cache.directory)?.sync_all()?;
+            atomic_json(&cache.directory, &target, &page)?;
             Ok(())
         })
         .await
     }
 
-    fn lock(&self) -> Result<std::fs::File, std::io::Error> {
+    pub(crate) fn lock(&self) -> Result<std::fs::File, std::io::Error> {
         let lock = std::fs::File::options()
             .read(true)
             .write(true)
@@ -399,6 +390,24 @@ pub(crate) fn page_writer(
         exhausted
     };
     (queue, writer)
+}
+
+pub(crate) fn atomic_json(
+    directory: &Path,
+    target: &Path,
+    value: &impl Serialize,
+) -> std::io::Result<()> {
+    let mut temporary = tempfile::NamedTempFile::new_in(directory)?;
+    {
+        let mut writer = std::io::BufWriter::new(temporary.as_file_mut());
+        serde_json::to_writer(&mut writer, value).map_err(std::io::Error::other)?;
+        writer.flush()?;
+    }
+    temporary.as_file().sync_all()?;
+    temporary.persist(target).map_err(|error| error.error)?;
+    #[cfg(unix)]
+    std::fs::File::open(directory)?.sync_all()?;
+    Ok(())
 }
 
 #[cfg(test)]

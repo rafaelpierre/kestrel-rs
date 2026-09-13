@@ -25,16 +25,36 @@ pub(super) struct Batch {
     resume: oneshot::Sender<()>,
 }
 
+#[cfg(test)]
 pub(super) async fn collect<F>(
+    pending: FuturesUnordered<F>,
+    quorum: Option<usize>,
+    minimum: Option<usize>,
+    signal: Option<Arc<AtomicU8>>,
+    receiver: Option<mpsc::Receiver<Batch>>,
+) -> (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)
+where
+    F: Future<Output = (usize, Result<Vec<SearchResult>, KestrelError>)>,
+{
+    collect_recording(pending, quorum, minimum, signal, receiver, None, None).await
+}
+
+pub(super) async fn collect_recording<F>(
     mut pending: FuturesUnordered<F>,
     quorum: Option<usize>,
     minimum: Option<usize>,
     signal: Option<Arc<AtomicU8>>,
     mut receiver: Option<mpsc::Receiver<Batch>>,
+    progress: Option<(
+        crate::recovery::ProgressQueue,
+        Vec<crate::recovery::UnitKey>,
+    )>,
+    deadline: Option<tokio::time::Instant>,
 ) -> (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)
 where
     F: Future<Output = (usize, Result<Vec<SearchResult>, KestrelError>)>,
 {
+    let mut sequence = 0u64;
     let mut completed = BTreeMap::new();
     let mut partial = BTreeMap::new();
     let mut cancelled = 0;
@@ -44,6 +64,14 @@ where
                 let Some((index, outcome)) = outcome else { break };
                 // EOF replaces the snapshot. Deadlines retain complete records;
                 // malformed/error responses retract them before the threshold.
+                if let Some((queue, keys)) = &progress {
+                    sequence = sequence.saturating_add(1);
+                    match &outcome {
+                        Ok(records) => queue.enqueue(keys[index].clone(), sequence, crate::recovery::State::Complete, records, deadline).await,
+                        Err(KestrelError::SearchDeadline) => (),
+                        Err(_) => queue.enqueue(keys[index].clone(), sequence, crate::recovery::State::Invalid, &[], deadline).await,
+                    }
+                }
                 let snapshot = partial.remove(&index);
                 let outcome = if matches!(outcome, Err(KestrelError::SearchDeadline)) {
                     snapshot.filter(|r: &Vec<SearchResult>| !r.is_empty()).map(Ok).unwrap_or(outcome)
@@ -59,6 +87,10 @@ where
             } => {
                 match event {
                     Some(batch) => {
+                        if let Some((queue, keys)) = &progress {
+                            sequence = sequence.saturating_add(1);
+                            queue.enqueue(keys[batch.index].clone(), sequence, crate::recovery::State::Incomplete, &batch.results, deadline).await;
+                        }
                         partial.insert(batch.index, batch.results);
                         Some(batch.resume)
                     }

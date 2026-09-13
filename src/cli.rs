@@ -160,6 +160,18 @@ struct SearchArgs {
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     cache_ttl: Option<f64>,
 
+    /// Record provider progress for this many seconds; replay is not yet enabled.
+    #[arg(long, value_parser = positive_f64, value_name = "SECS")]
+    recovery_ttl: Option<f64>,
+
+    /// Independent provider-progress directory; also works with --no-fetch.
+    #[arg(long, requires = "recovery_ttl", value_name = "PATH")]
+    recovery_dir: Option<PathBuf>,
+
+    /// Best-effort retained provider units (default 1000).
+    #[arg(long, requires = "recovery_ttl", value_parser = positive_usize, value_name = "N")]
+    recovery_max_entries: Option<usize>,
+
     /// Directory for incrementally committed extracted-page cache entries.
     #[arg(long, value_name = "PATH", requires = "cache_ttl")]
     cache_dir: Option<PathBuf>,
@@ -461,6 +473,14 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
+    let client = if let Some(ttl) = arguments.recovery_ttl {
+        let store = arguments.recovery_dir.clone().map_or_else(kestrelsearch::SearchRecovery::default_directory, Ok)
+            .and_then(|path| kestrelsearch::SearchRecovery::new(path, Duration::from_secs_f64(ttl)))
+            .and_then(|store| store.with_max_entries(arguments.recovery_max_entries.unwrap_or(1000)));
+        match store { Ok(store) => client.with_recovery(store), Err(error) => {
+            eprintln!("[kestrel] Invalid recovery configuration: {error}"); return ExitCode::FAILURE;
+        } }
+    } else { client };
     timings.insert("initialize".into(), elapsed_millis(initialize_started));
     let started = Instant::now();
     let search_report = match client.search_many_detailed(&queries, &options).await {
@@ -2105,5 +2125,44 @@ fn skill_documents_incremental_page_recovery() {
         "page-only",
     ] {
         assert!(skill.contains(phrase), "missing {phrase}");
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn recovery_flags_and_generated_skill_match_recording_contract() {
+    for args in [
+        vec!["--no-fetch", "--recovery-ttl", "60"],
+        vec![
+            "--recovery-ttl",
+            "60",
+            "--recovery-dir",
+            "progress",
+            "--recovery-max-entries",
+            "10",
+        ],
+    ] {
+        assert!(Cli::try_parse_from([vec!["kestrel", "search", "fixture"], args].concat()).is_ok());
+    }
+    for args in [
+        vec!["--recovery-dir", "progress"],
+        vec!["--recovery-max-entries", "10"],
+        vec!["--recovery-ttl", "0"],
+        vec!["--recovery-ttl", "NaN"],
+    ] {
+        assert!(
+            Cli::try_parse_from([vec!["kestrel", "search", "fixture"], args].concat()).is_err()
+        );
+    }
+    let skill = generate_skill_md(&mut Cli::command());
+    for text in [
+        "--recovery-ttl",
+        "--recovery-dir",
+        "--recovery-max-entries",
+        "records but does not replay",
+        "64 MiB",
+        "invalid tombstone",
+    ] {
+        assert!(skill.contains(text), "missing {text}");
     }
 }

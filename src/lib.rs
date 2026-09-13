@@ -13,6 +13,8 @@ mod numeric;
 mod provider_diagnostics;
 pub mod providers;
 pub mod ranking;
+pub mod recovery;
+pub use recovery::SearchRecovery;
 pub mod search;
 pub mod skill;
 pub mod telemetry;

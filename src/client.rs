@@ -21,6 +21,7 @@ use crate::search::{
 pub struct KestrelClient {
     pub(crate) search: SearchClients,
     pub(crate) fetch: reqwest::Client,
+    recovery: Option<crate::SearchRecovery>,
 }
 
 impl KestrelClient {
@@ -39,8 +40,15 @@ impl KestrelClient {
                     &transport,
                 )?,
                 fetch: build_client_with_transport(&transport)?,
+                recovery: None,
             })
         })
+    }
+
+    /// Enable provider progress recording for multi-query searches. Page caching is independent.
+    pub fn with_recovery(mut self, recovery: crate::SearchRecovery) -> Self {
+        self.recovery = Some(recovery);
+        self
     }
 
     /// Search one provider while retaining its connection pool for later calls.
@@ -60,7 +68,7 @@ impl KestrelClient {
         queries: &[String],
         options: &SearchOptions,
     ) -> Result<Vec<SearchResult>, KestrelError> {
-        search_many_reusing_clients(queries, options, &self.search).await
+        search_many_reusing_clients(queries, options, &self.search, self.recovery.as_ref()).await
     }
 
     /// Search one or more query/provider combinations with provider diagnostics.
@@ -69,7 +77,8 @@ impl KestrelClient {
         queries: &[String],
         options: &SearchOptions,
     ) -> Result<crate::model::SearchReport, KestrelError> {
-        search_many_reusing_clients_detailed(queries, options, &self.search).await
+        search_many_reusing_clients_detailed(queries, options, &self.search, self.recovery.as_ref())
+            .await
     }
 
     /// Fetch and extract pages while retaining connections for later calls.

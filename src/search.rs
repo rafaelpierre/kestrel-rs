@@ -296,7 +296,7 @@ pub async fn search_many_detailed(
     crate::telemetry::scope_result("kestrel.search", async {
         let (queries, engines) = validate_request(queries, options)?;
         let clients = SearchClients::new(&engines)?;
-        search_many_with_clients_detailed(queries, engines, options, &clients).await
+        search_many_with_clients_detailed(queries, engines, options, &clients, None).await
     })
     .await
 }
@@ -305,9 +305,10 @@ pub(crate) async fn search_many_reusing_clients(
     queries: &[String],
     options: &SearchOptions,
     clients: &SearchClients,
+    recovery: Option<&crate::SearchRecovery>,
 ) -> Result<Vec<SearchResult>, KestrelError> {
     Ok(
-        search_many_reusing_clients_detailed(queries, options, clients)
+        search_many_reusing_clients_detailed(queries, options, clients, recovery)
             .await?
             .results,
     )
@@ -317,10 +318,11 @@ pub(crate) async fn search_many_reusing_clients_detailed(
     queries: &[String],
     options: &SearchOptions,
     clients: &SearchClients,
+    recovery: Option<&crate::SearchRecovery>,
 ) -> Result<SearchReport, KestrelError> {
     crate::telemetry::scope_result("kestrel.search", async {
         let (queries, engines) = validate_request(queries, options)?;
-        search_many_with_clients_detailed(queries, engines, options, clients).await
+        search_many_with_clients_detailed(queries, engines, options, clients, recovery).await
     })
     .await
 }
@@ -330,11 +332,12 @@ async fn search_many_with_clients_detailed(
     engines: Vec<Engine>,
     options: &SearchOptions,
     clients: &SearchClients,
+    recovery: Option<&crate::SearchRecovery>,
 ) -> Result<SearchReport, KestrelError> {
     DIAGNOSTIC_RUN_ID
         .scope(
             uuid::Uuid::new_v4().to_string(),
-            search_many_with_clients_in_run(queries, engines, options, clients),
+            search_many_with_clients_in_run(queries, engines, options, clients, recovery),
         )
         .await
 }
@@ -344,6 +347,7 @@ async fn search_many_with_clients_in_run(
     engines: Vec<Engine>,
     options: &SearchOptions,
     clients: &SearchClients,
+    recovery: Option<&crate::SearchRecovery>,
 ) -> Result<SearchReport, KestrelError> {
     crate::telemetry::payload("search.input", &queries);
     crate::telemetry::attribute("kestrel.query_syntax", "passthrough");
@@ -364,21 +368,31 @@ async fn search_many_with_clients_in_run(
         .map(|budget| crate::numeric::deadline("search budget", budget))
         .transpose()?;
 
-    let jobs = queries.iter().map(|query| {
-        run_fanout_query(
-            query,
-            &engines,
-            clients,
-            Arc::clone(&semaphore),
-            Arc::clone(&diagnostics),
-            &options.region,
-            options.time_filter,
-            options.provider_quorum,
-            Some(options.min_results.unwrap_or(5)),
-            deadline,
-        )
-    });
-    let query_outcomes = join_all(jobs).await;
+    let (progress, writer) = crate::recovery::writer(recovery, deadline);
+    let jobs = queries
+        .iter()
+        .map(|query| {
+            run_fanout_query(
+                query,
+                &engines,
+                clients,
+                Arc::clone(&semaphore),
+                Arc::clone(&diagnostics),
+                &options.region,
+                options.time_filter,
+                options.provider_quorum,
+                Some(options.min_results.unwrap_or(5)),
+                deadline,
+                progress.clone(),
+            )
+        })
+        .collect::<Vec<_>>();
+    let collect = async {
+        let outcomes = join_all(jobs).await;
+        drop(progress);
+        outcomes
+    };
+    let (query_outcomes, ()) = tokio::join!(collect, writer);
     let cancelled = query_outcomes.iter().map(|(_, count)| count).sum();
     let outcomes = query_outcomes
         .into_iter()
@@ -409,6 +423,7 @@ fn run_fanout_query<'a>(
     provider_quorum: Option<usize>,
     min_results: Option<usize>,
     deadline: Option<tokio::time::Instant>,
+    progress: Option<crate::recovery::ProgressQueue>,
 ) -> impl Future<Output = (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)> + 'a {
     let mut query_span = crate::telemetry::Span::new("kestrel.query");
     let query_context = query_span.context();
@@ -447,8 +462,17 @@ fn run_fanout_query<'a>(
         });
     }
     drop(sender);
+    let progress = progress.map(|queue| {
+        (
+            queue,
+            engines
+                .iter()
+                .map(|engine| crate::recovery::UnitKey::new(query, *engine, region, time_filter))
+                .collect(),
+        )
+    });
     async move {
-        let output = streaming::collect(
+        let output = streaming::collect_recording(
             pending,
             provider_quorum,
             min_results,
@@ -458,6 +482,8 @@ fn run_fanout_query<'a>(
             } else {
                 None
             },
+            progress,
+            deadline,
         )
         .await;
         query_span.finish();

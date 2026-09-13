@@ -514,3 +514,8 @@ latency are not guaranteed by this change.
 
 See [provider contracts, query syntax, randomized headers and pooled HTTP/2 transport](docs/search-providers.md)
 and the [quality/latency benchmark workflow](benchmarks/README.md).
+
+Provider snapshots can be recorded independently with `--recovery-ttl 300`,
+`--recovery-dir ./progress` and optional `--recovery-max-entries 1000`, including
+metadata-only searches. This slice records but does not replay provider work.
+See [provider progress storage](docs/provider-progress.md) for commit boundaries.
