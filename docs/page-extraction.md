@@ -100,3 +100,38 @@ specified readable corpus, including equal heading/paragraph scores and newly
 recoverable code evidence. Local CLI mocks verify exact text/JSON output from the
 same golden pages. Temporary skill installation checks the new guidance alongside
 current CLI help. No live-web quality or performance improvement is claimed.
+
+## Parser capacity
+
+`KestrelClient` owns an immutable aggregate capacity (default 10), shared across
+its clones and all fetch methods, including cache misses. Use
+`with_parser_capacity(n)` or `with_transport_and_parser_capacity(transport, n)`
+to choose a capacity in `1..=tokio::sync::Semaphore::MAX_PERMITS`; invalid values
+return `InvalidRequest` before building HTTP clients. Each call additionally
+obeys its own `FetchOptions::parse_concurrency`. Calls with differing limits
+cannot resize or replenish the shared pool. The CLI configures its client cap
+from `--parse-concurrency`, preserving the flag's existing single-call behavior.
+
+A page first obtains its per-call parser slot, then a shared slot, keeping its
+download slot while waiting for both. Queued and running blocking jobs own both
+parser slots until body, decoded text and DOM resources have been released.
+Cancellation/budget expiry drops waiting bodies and returns without waiting for
+already submitted jobs; it does not stop running parsers. Tokio runtime shutdown
+may wait for those jobs independently of API return timing. No lock is held
+across parsing, and admission always uses the same acquisition order.
+
+Per call, at most `max_concurrency` bodies download or wait for admission.
+Across a client's calls, at most its configured capacity of additional bodies
+belong to queued/running parsers. Download limits remain per call: applications
+must also bound the number of concurrent calls to bound total download memory.
+Decoded text/DOM expansion, transport buffers and retained results are additional
+memory. Provider parsing is outside this pool (#16). Separate clients and free
+fetch functions have independent pools; reuse one client family when requiring
+an aggregate parser bound. Cached hits consume no parser capacity.
+
+Deterministic regressions gate an entered parser, assert per-call limits and
+shared capacity under overlapping clones, expiry, abort and repeated cached/
+uncached calls, then release it and verify progress. A single-blocking-worker
+regression covers queued jobs across clones; the existing large-batch regression
+continues to check per-call body backpressure. These are resource/lifecycle tests,
+not live latency or memory benchmark claims.

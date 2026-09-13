@@ -170,7 +170,7 @@ struct SearchArgs {
     #[arg(long, default_value_t = 10, value_parser = concurrency_usize, value_name = "N")]
     concurrency: usize,
 
-    /// Maximum concurrent HTML parsing jobs (1 through Tokio MAX_PERMITS).
+    /// Maximum queued/running page extraction jobs (1 through Tokio MAX_PERMITS).
     #[arg(long, default_value_t = 10, value_parser = concurrency_usize, value_name = "N")]
     parse_concurrency: usize,
 
@@ -452,7 +452,7 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
 
     let mut timings = BTreeMap::new();
     let initialize_started = Instant::now();
-    let client = match KestrelClient::new() {
+    let client = match KestrelClient::with_parser_capacity(arguments.parse_concurrency) {
         Ok(client) => client,
         Err(error) => {
             eprintln!("[kestrel] Failed to initialize HTTP clients: {error}");

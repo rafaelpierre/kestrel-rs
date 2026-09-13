@@ -159,3 +159,14 @@ fn numeric_transport_durations_are_checked() {
         invalid(KestrelClient::with_transport(options));
     }
 }
+
+#[test]
+fn client_parser_capacity_checks_numeric_boundaries() {
+    for capacity in [0, usize::MAX] {
+        assert!(matches!(
+            KestrelClient::with_parser_capacity(capacity),
+            Err(KestrelError::InvalidRequest(_))
+        ));
+    }
+    assert!(KestrelClient::with_parser_capacity(tokio::sync::Semaphore::MAX_PERMITS).is_ok());
+}

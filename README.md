@@ -345,7 +345,7 @@ cancelled. The cache is disabled unless `--cache-ttl` is supplied.
 ## Use the library
 
 Reuse a `KestrelClient` across calls to retain its search and fetch connection
-pools:
+pools and aggregate page parser capacity:
 
 ```rust,no_run
 use kestrelsearch::{KestrelClient, SearchOptions};
@@ -361,6 +361,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+Clients default to 10 queued/running page parsers across all calls and clones.
+Use `KestrelClient::with_parser_capacity(n)` (or
+`with_transport_and_parser_capacity(transport, n)`) to configure this shared cap.
+Each batch also obeys `FetchOptions::parse_concurrency`; larger per-call values
+do not raise the client cap. For library callers previously using values above
+10, explicitly configure a larger client capacity to retain that concurrency.
+Cancellation and fetch-budget expiry return without waiting for blocking parsers,
+but their slots remain occupied until the body/DOM is released. Runtime shutdown
+can still wait for those jobs. Free fetch functions and independently constructed
+clients own separate capacity. See [ownership boundaries](docs/page-extraction.md#parser-capacity).
 
 The crate exports typed engine, mode, filter, search, and fetch options;
 `search`, `search_many`, and `search_blocking`; bounded `fetch_all`; optional
