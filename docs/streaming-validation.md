@@ -19,7 +19,9 @@ round-robin merger. Only the stopping decision is overridden in test builds:
 
 A provider may corroborate an existing URL to count toward diversity. Diversity
 is measured across retained candidates, not guaranteed in the final five. Every
-arm retains chunk/batch overshoot and uses the same portable filtering, retry
+arm retains chunk/batch overshoot and explicitly selects portable filtering, independently
+of the production query default. The artifact syntax is derived from those actual
+options. All arms use the same retry
 behavior, deadline, nine providers and concurrency nine. Full fanout is bounded
 by that deadline; it cannot establish exhaustive provider coverage. It continues
 to emit snapshots so time-to-five remains observable. First time-to-five can

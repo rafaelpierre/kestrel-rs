@@ -98,6 +98,19 @@ fn positive_env(name: &str, default: usize) -> usize {
     value
 }
 
+// Pin the published experiment contract independently of production defaults.
+fn validation_options(budget: Duration) -> SearchOptions {
+    SearchOptions {
+        mode: SearchMode::Fanout,
+        query_syntax: QuerySyntax::Portable,
+        min_results: Some(5),
+        provider_quorum: None,
+        search_budget: Some(budget),
+        max_concurrency: 9,
+        ..SearchOptions::default()
+    }
+}
+
 // Keep diagnostics even when merging all failed providers returns an error.
 // Uses the same validation, provider jobs, collector and merger as the public API.
 async fn measured_search(
@@ -161,7 +174,8 @@ async fn live_streaming_validation() {
         .create_new(true)
         .open(directory.join("runs.jsonl"))
         .unwrap();
-    let engines = SearchOptions::default().engines;
+    let options = validation_options(Duration::from_secs(budget_seconds as u64));
+    let engines = &options.engines;
     let profile = crate::http_client::BrowserProfile::bing_experiment();
     let build = || {
         let transport = crate::TransportOptions::default();
@@ -193,7 +207,8 @@ async fn live_streaming_validation() {
         "corpus": corpus, "query_limit": query_limit, "trials": trials,
         "policies": POLICIES, "enabled_providers": engines, "profile": format!("{profile:?}"),
         "minimum": 5, "diversity_minimum": 2, "deadline_seconds": budget_seconds,
-        "concurrency": 9, "pacing_ms": 250, "query_syntax": "portable",
+        "concurrency": 9, "pacing_ms": 250,
+        "query_syntax": clap::ValueEnum::to_possible_value(&options.query_syntax).unwrap().get_name(),
         "ranking": "production round-robin fusion; first five; no page fetch or body ranking",
         "reused_clients": "separate pool per policy; first use is cold; no excluded warmup",
         "timing": "monotonic search-only; excludes client construction; deadline-bounded full fanout",
@@ -217,15 +232,6 @@ async fn live_streaming_validation() {
                         &owned
                     } else {
                         &pools[index]
-                    };
-                    let options = SearchOptions {
-                        engines: engines.clone(),
-                        mode: SearchMode::Fanout,
-                        min_results: Some(5),
-                        provider_quorum: None,
-                        search_budget: Some(Duration::from_secs(budget_seconds as u64)),
-                        max_concurrency: 9,
-                        ..SearchOptions::default()
                     };
                     let probe = Arc::new(Mutex::new(Probe {
                         started: Instant::now(),
@@ -300,6 +306,28 @@ mod tests {
             })
             .collect()
     }
+    #[test]
+    fn validation_pins_portable_filtering_despite_native_production_default() {
+        assert_eq!(SearchOptions::default().query_syntax, QuerySyntax::Native);
+        let options = validation_options(Duration::from_secs(3));
+        assert_eq!(options.query_syntax, QuerySyntax::Portable);
+        let query = "machine learning";
+        let mut response = ProviderResponse {
+            results: records(0, 1),
+            retries: 0,
+            raw_result_count: 0,
+        };
+        response.results[0].title = "machine".into();
+        filter_response(
+            query,
+            &QueryPlan::parse(query, options.query_syntax).unwrap(),
+            &mut response,
+        );
+        assert!(response.results.is_empty());
+        assert_eq!(response.raw_result_count, 1);
+        assert!(validate_request(&["filetype:pdf".into()], &options).is_err());
+    }
+
     #[test]
     fn diff_capture_preserves_trailing_whitespace_and_non_utf8_bytes() {
         let directory = tempfile::tempdir().unwrap();
