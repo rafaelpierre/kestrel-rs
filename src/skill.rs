@@ -77,9 +77,9 @@ page text is unavailable, including searches with `--no-fetch`.
 - By default, at most three times `--top-k` candidates are fetched before BM25 ranking.
 - BM25 filtering removes zero-relevance results unless an entire query group scores zero.
 - Use `--no-fetch` for a fast, low-cost keyword search.
-- Portable query syntax is the default for every provider: quoted phrases require adjacency in one title/snippet; unquoted terms use AND. Uppercase AND/OR/NOT, exclusions, parentheses and site:hostname are supported.
-- Query constraints filter title/snippet evidence before counting toward the result minimum, independently of fetching/ranking. Missing positive evidence excludes a result; NOT checks metadata absence, not the full page.
-- Use --query-syntax native for provider-specific syntax such as filetype:pdf and the previous passthrough behavior. Do not claim complete-page relevance from metadata matches.
+- Portable query syntax requires explicit --query-syntax portable: quoted phrases require adjacency in one title/snippet; unquoted terms use AND. Uppercase AND/OR/NOT, exclusions, parentheses and site:hostname are supported.
+- In portable mode, query constraints filter title/snippet evidence before counting toward the result minimum, independently of fetching/ranking. Missing positive evidence excludes a result; NOT checks metadata absence, not the full page.
+- Provider-native passthrough is the default: shell quotes group one argument without adding local AND or phrase checks. Literal quotes are sent unchanged; provider operator support varies. Missing title/snippet terms do not reject results. Existing native hostname restrictions and HTTP(S) URL validation remain. To retain the v3/v4 portable default, explicitly use --query-syntax portable. Do not claim complete-page relevance from metadata matches.
 - All nine supported engines are selected by default. Explicit `--engine` selections replace this list; use `-e duckduckgo -e bing -e yahoo` to retain the previous provider set.
 - Provider failures, bot challenges, and unsupported region/recency filters retain results from successful providers; including an engine does not guarantee results.
 - Fanout defaults to a five-second search budget, including queueing and retries. Use --search-budget to change it or --no-search-budget to disable the total deadline.
@@ -118,7 +118,8 @@ pub fn generate_skill_md(root: &mut Command) -> String {
    task/budget. If discovery is empty or weak, use the remaining call to clarify
    terms or increase the collection minimum/search budget. Preserve requested
    phrases and Boolean constraints; explain any proposed relaxation instead of
-   silently switching to native syntax. Metadata constraints can reject a useful
+   silently dropping an explicitly requested portable mode. In portable mode,
+   metadata constraints can reject a useful
    page when its snippet omits required evidence. Empty results do not prove that
    no sources exist; ordinary JSON does not identify every completion reason.
    If a page fails or is unusable, try an alternative. If evidence was truncated,
@@ -240,7 +241,7 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
 - `--pre-rank` scores titles/snippets before selecting fetch candidates, and only
   takes effect when fetching and the candidate count exceeds the fetch limit.
 - `--min-fetch-score SCORE` is an opt-in metadata gate, disabled by default.
-  It requires portable query syntax and page fetching; native syntax and
+  It requires explicit `--query-syntax portable` and page fetching; native syntax and
   `--no-fetch` conflict with it (usage status 2 before requests, empty stdout).
   SCORE must be finite and nonnegative; negative values, NaN and infinities are
   invalid. The comparison is inclusive (`score >= SCORE`), so zero keeps zero
@@ -366,7 +367,7 @@ of semantic quality.
 ## Optional fetch relevance gate
 
 ```bash
-kestrel search "rust async" --min-results 15 --fetch-candidates 8 --min-fetch-score 0.1 --no-rank
+kestrel search "rust async" --min-results 15 --fetch-candidates 8 --query-syntax portable --min-fetch-score 0.1 --no-rank
 ```
 
 The `0.1` above illustrates syntax, not a calibrated recommendation. Validate

@@ -94,7 +94,8 @@ callers should still choose limits appropriate to their workload.
 
 ## Optional fetch score threshold
 
-`--min-fetch-score SCORE` defaults to disabled. With the flag, positive-IDF BM25
+`--min-fetch-score SCORE` defaults to disabled and requires explicit
+`--query-syntax portable`, because the query default is now native. With the flag, positive-IDF BM25
 scores doubled title plus snippet over the complete deduplicated pool contributed
 by each query, before any gate rejection, pre-ranking or fetch-candidate truncation.
 It uses the evidence tokenizer shared with the experimental snippet policy.
@@ -143,7 +144,7 @@ budgets; these flags are not total process-latency limits. Regenerate the instal
 skill with the updated binary. Example (0.1 is illustrative, not calibrated):
 
 ```sh
-kestrel search "rust async" --min-results 15 --fetch-candidates 8 --min-fetch-score 0.1 --no-rank
+kestrel search "rust async" --min-results 15 --fetch-candidates 8 --query-syntax portable --min-fetch-score 0.1 --no-rank
 ```
 
 ## Advisory content quality

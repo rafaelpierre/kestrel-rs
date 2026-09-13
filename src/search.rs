@@ -217,7 +217,7 @@ pub async fn search(
     region: &str,
     time_filter: TimeFilter,
 ) -> Result<Vec<SearchResult>, KestrelError> {
-    QueryPlan::parse(query, QuerySyntax::Portable)?;
+    QueryPlan::parse(query, QuerySyntax::default())?;
     let clients = SearchClients::new(&[engine])?;
     search_with_clients(query, engine, region, time_filter, &clients).await
 }
@@ -244,7 +244,7 @@ pub(crate) async fn search_with_clients(
                     region,
                     time_filter,
                     clients,
-                    QuerySyntax::Portable,
+                    QuerySyntax::default(),
                 ),
             )
             .await
@@ -2149,6 +2149,46 @@ mod tests {
             assert_eq!(pairs["p"], query);
             assert_eq!(pairs["vl"], "uk-en");
             assert_eq!(pairs["btf"], "w");
+        }
+    }
+
+    #[test]
+    fn default_query_mode_retains_incomplete_metadata_for_all_providers() {
+        assert_eq!(SearchOptions::default().query_syntax, QuerySyntax::Native);
+        for query in [
+            "machine learning",
+            "\"machine learning\"",
+            "filetype:pdf a OR b",
+            "learning AND",
+        ] {
+            for engine in [
+                Engine::Duckduckgo,
+                Engine::Bing,
+                Engine::Yahoo,
+                Engine::Dogpile,
+                Engine::Ecosia,
+                Engine::Swisscows,
+                Engine::Yep,
+                Engine::Qwant,
+                Engine::Mojeek,
+            ] {
+                let mut response = ProviderResponse {
+                    results: vec![SearchResult::parsed(
+                        "An introduction".into(),
+                        "https://example.com/article".into(),
+                        String::new(),
+                        String::new(),
+                    )],
+                    retries: 0,
+                    raw_result_count: 0,
+                };
+                filter_response(
+                    query,
+                    &QueryPlan::parse(query, QuerySyntax::default()).unwrap(),
+                    &mut response,
+                );
+                assert_eq!(response.results.len(), 1, "{engine}: {query}");
+            }
         }
     }
 

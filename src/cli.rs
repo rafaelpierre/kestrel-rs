@@ -52,7 +52,7 @@ struct SearchArgs {
     query: String,
 
     /// Query syntax: portable checks titles/snippets; native passes provider syntax through.
-    #[arg(long, value_enum, default_value = "portable")]
+    #[arg(long, value_enum, default_value = "native")]
     query_syntax: kestrelsearch::QuerySyntax,
 
     /// Additional query to run. Repeat for multiple queries.
@@ -1143,10 +1143,10 @@ mod tests {
     #[test]
     fn query_syntax_preserves_shell_argument_and_additional_queries() {
         for (flags, syntax) in [
-            (vec![], kestrelsearch::QuerySyntax::Portable),
+            (vec![], kestrelsearch::QuerySyntax::Native),
             (
-                vec!["--query-syntax", "native"],
-                kestrelsearch::QuerySyntax::Native,
+                vec!["--query-syntax", "portable"],
+                kestrelsearch::QuerySyntax::Portable,
             ),
         ] {
             let cli = Cli::try_parse_from(
@@ -1167,6 +1167,31 @@ mod tests {
             assert_eq!(args.query, r#""machine learning""#);
             assert_eq!(args.additional_queries, ["C++ AND Rust"]);
             assert_eq!(args.search_options().query_syntax, syntax);
+        }
+    }
+
+    #[test]
+    fn shell_quoting_only_groups_the_query_argument() {
+        for (command, expected) in [
+            (r#"kestrel search "machine learning""#, "machine learning"),
+            (
+                r#"kestrel search '"machine learning"'"#,
+                r#""machine learning""#,
+            ),
+            (
+                r#"kestrel search "filetype:pdf a OR b""#,
+                "filetype:pdf a OR b",
+            ),
+        ] {
+            let argv = shlex::split(command).unwrap();
+            let Commands::Search(args) = Cli::try_parse_from(argv).unwrap().command else {
+                panic!("expected search");
+            };
+            assert_eq!(args.queries(), [expected]);
+            assert_eq!(
+                args.search_options().query_syntax,
+                kestrelsearch::QuerySyntax::Native
+            );
         }
     }
 

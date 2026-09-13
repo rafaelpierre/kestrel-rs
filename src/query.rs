@@ -7,9 +7,9 @@ use url::Url;
 #[derive(Clone, Copy, Debug, Default, clap::ValueEnum, PartialEq, Eq)]
 pub enum QuerySyntax {
     /// Check portable constraints against titles/snippets before accepting results.
-    #[default]
     Portable,
     /// Pass provider-specific syntax through without portable metadata checks.
+    #[default]
     Native,
 }
 

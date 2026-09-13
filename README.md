@@ -205,11 +205,11 @@ and BM25 can filter candidates. Kestrel does not refill failed fetch slots.
 Use optional `--min-fetch-score SCORE` to reject weak title/snippet candidates
 before the fetch cap. This positive-IDF BM25 gate runs even for small pools and
 without `--pre-rank`; it removes rejected candidates from final output as well
-as fetching. It is disabled by default and requires portable syntax and fetching.
+as fetching. It is disabled by default and requires explicit `--query-syntax portable` and fetching.
 Scores are finite nonnegative numbers with an inclusive cutoff (zero keeps zero
 scores), and depend on the candidate pool; no universal nonzero cutoff is
 recommended. For example, `kestrel search "rust async" --min-results 15
---fetch-candidates 8 --min-fetch-score 0.1 --no-rank` illustrates syntax, not a
+--fetch-candidates 8 --query-syntax portable --min-fetch-score 0.1 --no-rank` illustrates syntax, not a
 calibrated threshold. Queries without affirmative lexical terms bypass the gate;
 all-rejected searches return empty without page/cache work or automatic refill.
 See [argument responsibilities](docs/cli-arguments.md#optional-fetch-score-threshold)
@@ -453,14 +453,20 @@ benchmark are described in [HTTP/2 transport tuning](docs/http2.md).
 ### Experimental providers and latency controls
 
 Default adapters include Dogpile, Ecosia, Swisscows, Yep, Qwant and Mojeek.
-Search defaults to portable query constraints across all nine providers:
-`kestrel search '"machine learning"'` requires the phrase in a title or snippet;
-`machine AND learning` requires both terms. Plain space-separated terms also use
-AND. `OR`, `NOT`, exclusions, parentheses and `site:hostname` are supported.
-Checks happen before result-count stopping and work with `--no-fetch` and `--no-rank`.
-These checks use search-result metadata, not full-page evidence; they can exclude
-pages whose snippets omit the requested terms. Use `--query-syntax native` for
-provider-specific syntax and the previous passthrough behavior.
+Search defaults to provider-native query passthrough. Shell quotes in
+`kestrel search "machine learning"` group one argument; they do not add local
+AND or phrase constraints. Literal quotes in `kestrel search '"machine learning"'`
+are sent to providers unchanged, with provider-dependent phrase semantics.
+Results are not rejected merely because title/snippet metadata omits query terms.
+Existing native hostname restrictions and HTTP(S) URL validation remain.
+
+Use `--query-syntax portable` to explicitly opt into local title/snippet
+constraints (implicit AND, phrases, Boolean operators and hostname expressions).
+These checks run before result-count stopping, independently of fetching/ranking,
+and can exclude relevant pages whose metadata lacks terms. Callers relying on
+the v3/v4 portable default must now select it explicitly, including users of
+`--min-fetch-score`. This restores passthrough as the CLI and library default;
+it does not fix provider retrieval or guarantee latency.
 
 See [provider contracts, query syntax, randomized headers and pooled HTTP/2 transport](docs/search-providers.md)
 and the [quality/latency benchmark workflow](benchmarks/README.md).

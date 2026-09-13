@@ -248,7 +248,10 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(skill.contains("--min-results 15 --fetch-candidates 15"));
     assert!(skill.contains("usage status 2 before requests"));
     assert!(skill.contains("Choose either `--rank` or `--ranking-policy`, never both"));
-    assert!(skill.contains("Portable query syntax is the default for every provider"));
+    assert!(skill.contains("Provider-native passthrough is the default"));
+    assert!(skill.contains("Portable query syntax requires explicit --query-syntax portable"));
+    assert!(skill.contains("[default: native]"));
+    assert!(!skill.contains("[default: portable]"));
     assert!(skill.contains("Query constraints apply before counting"));
     assert!(skill.contains("--min-results"));
     assert!(skill.contains("Provider quorum is ignored"));
@@ -305,7 +308,7 @@ fn skill_install_and_uninstall_use_compatible_paths() {
 }
 
 #[test]
-fn malformed_primary_and_additional_queries_fail_before_search() {
+fn explicit_portable_malformed_queries_fail_before_search() {
     for args in [
         vec!["search", "\"machine"],
         vec!["search", "machine", "--query", "learning AND"],
@@ -314,6 +317,7 @@ fn malformed_primary_and_additional_queries_fail_before_search() {
         Command::cargo_bin("kestrel")
             .unwrap()
             .args(args)
+            .args(["--query-syntax", "portable"])
             .assert()
             .failure()
             .stderr(predicate::str::contains("Invalid portable query"))
@@ -709,6 +713,7 @@ fn fetch_score_invalid_options_fail_before_requests() {
         vec!["--min-fetch-score=abc"],
         vec!["--min-fetch-score=1", "--no-fetch"],
         vec!["--min-fetch-score=1", "--query-syntax=native"],
+        vec!["--min-fetch-score=1"],
     ] {
         Command::cargo_bin("kestrel")
             .unwrap()

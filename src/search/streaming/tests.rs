@@ -423,15 +423,15 @@ async fn failures_empty_responses_and_filtered_records_never_reach_the_minimum()
 }
 
 #[tokio::test]
-async fn minimum_cancels_without_waiting_for_requested_second_provider() {
+async fn default_query_mode_counts_metadata_without_query_terms_and_cancels_stragglers() {
     let (sender, receiver) = mpsc::channel(1);
     let pending = FuturesUnordered::<Job<'_>>::new();
     let publisher = Publisher {
         sender,
         index: 0,
         engine: Engine::Bing,
-        query: "test".into(),
-        query_syntax: QuerySyntax::Native,
+        query: "machine learning".into(),
+        query_syntax: SearchOptions::default().query_syntax,
     };
     pending.push(Box::pin(async move {
         let future = async {

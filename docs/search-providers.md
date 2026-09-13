@@ -9,8 +9,8 @@ it does not establish a quality, latency or availability improvement. Failed or
 unsupported-filter providers retain results from successful providers.
 
 ```sh
-kestrel search 'site:postgresql.org EXPLAIN ANALYZE BUFFERS' --engine swisscows --no-fetch --no-rank --search-budget 3 --output json
-kestrel search 'Rust E0382 use of moved value' --engine swisscows --engine bing --mode fanout --search-budget 3 --ranking-policy hybrid --fetch-budget 2
+kestrel search 'site:postgresql.org EXPLAIN ANALYZE BUFFERS' --query-syntax portable --engine swisscows --no-fetch --no-rank --search-budget 3 --output json
+kestrel search 'Rust E0382 use of moved value' --query-syntax portable --engine swisscows --engine bing --mode fanout --search-budget 3 --ranking-policy hybrid --fetch-budget 2
 ```
 
 ## Adapter contracts
@@ -52,7 +52,12 @@ conversion, parsers and concurrent searches require additional memory.
 
 ## Query language
 
-The default `--query-syntax portable` uses the same lexical contract for **all
+The default `--query-syntax native` sends query text through without local lexical
+checks. Shell quotes group a CLI argument; literal quote characters reach the
+provider unchanged. Provider phrase/Boolean support varies. Existing native
+hostname restrictions and HTTP(S) URL validation remain.
+
+Explicit `--query-syntax portable` uses the same lexical contract for **all
 nine providers**. Constraints are checked against each
 result's title and snippet **before quorum, merging, fetching and ranking**.
 The complete original query is still encoded and sent as a retrieval hint; we do
@@ -61,10 +66,10 @@ retrieval, and a provider that ignores the hint may supply no acceptable results
 
 ```sh
 # Shell single quotes preserve the double quotes sent to Kestrel.
-kestrel search '"machine learning"' --engine swisscows --no-fetch --no-rank
+kestrel search '"machine learning"' --query-syntax portable --engine swisscows --no-fetch --no-rank
 # Both terms, anywhere in the title/snippet, without requiring adjacency.
-kestrel search 'machine AND learning' --engine swisscows
-kestrel search '("machine learning" OR "deep learning") -jobs site:example.com'
+kestrel search 'machine AND learning' --query-syntax portable --engine swisscows
+kestrel search '("machine learning" OR "deep learning") -jobs site:example.com' --query-syntax portable
 # Provider-specific operators and previous passthrough behavior.
 kestrel search 'filetype:pdf "machine learning"' --query-syntax native
 ```
@@ -120,11 +125,11 @@ phrase and other operator support is provider-dependent and is not guaranteed
 by serialization tests. Use this mode for `filetype:`, `intitle:`, site paths,
 wildcards, or other provider syntax outside the portable subset.
 
-Rust callers can set `SearchOptions.query_syntax` to `QuerySyntax::Native` to
-retain the previous contract. `SearchOptions::default()` and the single-provider
-`search`/`search_blocking` APIs now use portable semantics; use `search_many` with
-one engine to choose native syntax. Explicit `SearchOptions` struct literals
-must add the new field or use `..Default::default()`.
+`SearchOptions::default()` and the single-provider `search`/`search_blocking`
+APIs use native passthrough. To retain the v3/v4 portable default, set
+`SearchOptions.query_syntax` to `QuerySyntax::Portable` (or pass
+`--query-syntax portable` in the CLI). Use `search_many` with one engine to
+select portable syntax for a single provider.
 
 The opt-in `benchmarks/query_semantics.py` runs the CLI matrix across all providers
 and fetch/rank modes. Live failures and empty output are separate outcomes, not
