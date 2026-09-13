@@ -89,3 +89,14 @@ measurements should be inferred from the subprocess runner.
 
 Generated results, investigation reports, and captured provider responses are kept
 locally and ignored by Git. Benchmark scripts and input datasets remain tracked.
+
+## Current-contract streaming fanout validation
+
+[Streaming validation](../docs/streaming-validation.md) compares deadline-bounded
+full fanout, completed-batch stopping, current streaming stopping, and a
+benchmark-only two-provider alternative. It uses `streaming-queries-v1.json`,
+records fresh/reused pools and collector time-to-five, and reports paired latency,
+coverage, canonical overlap and optional explicitly versioned relevance judgments.
+The ignored live test writes only to a new, explicitly requested output directory;
+`streaming_validation_report.py` produces a summary without overwriting evidence.
+See the methodology for measurement gaps and the work still required by #46.

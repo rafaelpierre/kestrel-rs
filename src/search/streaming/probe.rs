@@ -3,6 +3,8 @@ use super::*;
 use crate::model::SearchMode;
 use serde::Serialize;
 
+pub(super) mod validation;
+
 #[derive(Default, Serialize)]
 struct Observation {
     http_version: String,

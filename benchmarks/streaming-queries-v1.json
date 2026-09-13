@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "queries": [
+    {"id": "general", "category": "general", "query": "machine learning", "intent": "Find an explanation of machine learning."},
+    {"id": "science", "category": "general", "query": "solar panels electricity", "intent": "Find how solar panels generate electricity."},
+    {"id": "rust", "category": "coding", "query": "Rust ownership borrowing", "intent": "Find Rust language ownership and borrowing documentation, not the game."},
+    {"id": "postgres", "category": "technical", "query": "PostgreSQL EXPLAIN ANALYZE", "intent": "Find authoritative guidance on interpreting EXPLAIN ANALYZE."},
+    {"id": "long-tail", "category": "long-tail", "query": "tokio semaphore cancellation safety", "intent": "Find the cancellation semantics of Tokio semaphore acquisition."},
+    {"id": "fresh", "category": "freshness", "query": "Rust 1.89 release", "intent": "Find dated primary release notes for Rust 1.89; judge exact version correctness."},
+    {"id": "phrase", "category": "phrase", "query": "\"structured concurrency\"", "intent": "Find an explanation of the exact phrase."},
+    {"id": "site", "category": "site-filter", "query": "site:docs.python.org asyncio TaskGroup", "intent": "Find official Python TaskGroup reference documentation."}
+  ]
+}

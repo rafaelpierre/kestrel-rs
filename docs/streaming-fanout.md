@@ -140,3 +140,7 @@ diversity or of five fetched pages. Library callers using exhaustive
 `SearchOptions` struct literals must supply `min_results` (or use
 `..Default::default()`), and exhaustive `KestrelError` matches must handle
 `SearchDeadline`.
+
+For current-contract comparisons against a deadline-bounded full-fanout reference
+and a provider-diversity alternative, use the [#46 validation workflow](streaming-validation.md).
+Its observations are separate from the historical pilots above.
