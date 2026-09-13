@@ -340,7 +340,11 @@ fanout mode. External struct literals must add the field or use
 
 `--fetch-budget` is likewise an explicit latency/coverage tradeoff: pages that
 finish within the total budget are retained and outstanding fetches are
-cancelled. The cache is disabled unless `--cache-ttl` is supplied.
+cancelled. With caching enabled, the same absolute deadline includes cache reads,
+writes and bounded maintenance; returned text survives a persistence timeout.
+Blocking disk operations already admitted may finish after cancellation, bounded
+to four per cache instance and its clones. See [cache deadlines](docs/cache-deadlines.md).
+The cache is disabled unless `--cache-ttl` is supplied.
 
 ## Use the library
 

@@ -3,12 +3,12 @@
 use std::collections::HashSet;
 use std::time::Duration;
 
-use futures_util::future::join_all;
+use futures_util::{StreamExt, stream};
 
 use crate::cache::PageCache;
 use crate::fetcher::{
     build_client_with_transport, fetch_all_reusing_client, fetch_all_reusing_client_with_budget,
-    fetch_all_reusing_client_with_diagnostics,
+    fetch_all_reusing_client_with_deadline, fetch_all_reusing_client_with_diagnostics,
 };
 use crate::model::{Engine, FetchOptions, FetchReport, SearchOptions, SearchResult, TimeFilter};
 use crate::search::{
@@ -134,64 +134,145 @@ impl KestrelClient {
         budget: Option<Duration>,
     ) -> Result<FetchReport, KestrelError> {
         crate::telemetry::scope_result("kestrel.cache_fetch", async {
-            if budget.is_some_and(|duration| duration.is_zero()) {
-                return Err(KestrelError::InvalidRequest(
-                    "fetch budget must be greater than zero".into(),
-                ));
-            }
+            let deadline = budget
+                .map(|value| crate::numeric::deadline("fetch budget", value))
+                .transpose()?;
             crate::fetcher::validate_options(options)?;
-            if let Some(budget) = budget {
-                crate::numeric::duration("fetch budget", budget)?;
+            let mut results = vec![None; urls.len()];
+            let mut hit_indices = Vec::new();
+            let mut reads = stream::iter(0..urls.len())
+                .map(|index| async move {
+                    (index, cache.get(&urls[index], options.content_limit).await)
+                })
+                .buffer_unordered(crate::cache::CACHE_IO_CONCURRENCY);
+            let mut storage_exhausted = false;
+            for _ in 0..urls.len() {
+                match before_deadline(deadline, reads.next()).await {
+                    Ok(Some((index, content))) => {
+                        if content.is_some() {
+                            hit_indices.push(index);
+                        }
+                        results[index] = content;
+                    }
+                    Ok(None) => break,
+                    Err(()) => {
+                        storage_exhausted = true;
+                        break;
+                    }
+                }
             }
-            let cached =
-                join_all(urls.iter().map(|url| cache.get(url, options.content_limit))).await;
-            crate::telemetry::payload("cache.contents", &cached);
-            let cache_hits = cached.iter().filter(|content| content.is_some()).count();
-            let mut results = cached;
-            let misses: Vec<(usize, String)> = results
+            drop(reads);
+            crate::telemetry::payload("cache.contents", &results);
+            let missing_indices: Vec<_> = results
                 .iter()
                 .enumerate()
-                .filter(|(_, content)| content.is_none())
-                .map(|(index, _)| (index, urls[index].clone()))
+                .filter_map(|(index, content)| content.is_none().then_some(index))
                 .collect();
-            let missing_urls: Vec<String> = misses.iter().map(|(_, url)| url.clone()).collect();
-            let mut report = fetch_all_reusing_client_with_diagnostics(
-                &missing_urls,
-                options,
-                &self.fetch,
-                budget,
-            )
-            .await?;
-            let capped_urls: HashSet<&str> = report
+            let missing_urls: Vec<_> = missing_indices
+                .iter()
+                .map(|&index| urls[index].clone())
+                .collect();
+            let mut report = if missing_urls.is_empty() {
+                FetchReport {
+                    contents: Vec::new(),
+                    pages: Vec::new(),
+                    budget_exhausted: false,
+                    cancelled: 0,
+                    cache_hits: 0,
+                    cache_misses: 0,
+                }
+            } else if storage_exhausted
+                || deadline.is_some_and(|end| tokio::time::Instant::now() >= end)
+            {
+                FetchReport {
+                    contents: vec![None; missing_urls.len()],
+                    pages: Vec::new(),
+                    budget_exhausted: true,
+                    cancelled: missing_urls.len(),
+                    cache_hits: 0,
+                    cache_misses: missing_urls.len(),
+                }
+            } else {
+                fetch_all_reusing_client_with_deadline(
+                    &missing_urls,
+                    options,
+                    &self.fetch,
+                    deadline,
+                )
+                .await?
+            };
+            let capped_urls: HashSet<_> = report
                 .pages
                 .iter()
                 .filter(|page| page.response_bytes >= options.max_response_bytes)
                 .map(|page| page.url.as_str())
                 .collect();
-            for ((index, url), content) in misses.into_iter().zip(report.contents) {
-                if let Some(content) = content {
-                    // A cap-sized body may be partial, even if it ended exactly at
-                    // the cap. Do not let it satisfy a later, larger byte budget.
-                    if !capped_urls.contains(url.as_str()) {
-                        let _ = cache.put(&url, options.content_limit, &content).await;
+            // Store all completed output before awaiting persistence, so a write
+            // timeout cannot discard results from later indices in the same batch.
+            for (&index, content) in missing_indices
+                .iter()
+                .zip(std::mem::take(&mut report.contents))
+            {
+                results[index] = content;
+            }
+            let mut wrote = false;
+            for &index in &missing_indices {
+                let Some(content) = &results[index] else {
+                    continue;
+                };
+                if capped_urls.contains(urls[index].as_str()) {
+                    continue;
+                }
+                match before_deadline(
+                    deadline,
+                    cache.put(&urls[index], options.content_limit, content),
+                )
+                .await
+                {
+                    Ok(Ok(())) => wrote = true,
+                    Ok(Err(error)) => eprintln!("[kestrel] Cache write failed: {error}"),
+                    Err(()) => {
+                        storage_exhausted = true;
+                        break;
                     }
-                    results[index] = Some(content);
+                }
+            }
+            if wrote && !storage_exhausted {
+                match before_deadline(deadline, cache.prune()).await {
+                    Ok(Ok(())) => (),
+                    Ok(Err(error)) => eprintln!("[kestrel] Cache maintenance failed: {error}"),
+                    Err(()) => storage_exhausted = true,
                 }
             }
             report.pages.extend(
-                urls.iter()
-                    .zip(&results)
-                    .filter(|(url, _)| !missing_urls.contains(url))
-                    .map(|(url, _)| crate::model::PageFetchDiagnostic::cache_hit(url.clone())),
+                hit_indices.iter().map(|&index| {
+                    crate::model::PageFetchDiagnostic::cache_hit(urls[index].clone())
+                }),
             );
             report.contents = results;
-            crate::telemetry::attribute("kestrel.cache_hits", cache_hits as i64);
+            report.budget_exhausted |= storage_exhausted;
+            if storage_exhausted {
+                eprintln!(
+                    "[kestrel] Cache work reached the fetch deadline; retained completed results."
+                );
+            }
+            crate::telemetry::attribute("kestrel.cache_hits", hit_indices.len() as i64);
             crate::telemetry::payload("cache_fetch.output", &report.contents);
-            report.cache_hits = cache_hits;
+            report.cache_hits = hit_indices.len();
             report.cache_misses = missing_urls.len();
-            let _ = cache.prune().await;
             Ok(report)
         })
         .await
+    }
+}
+
+async fn before_deadline<T>(
+    deadline: Option<tokio::time::Instant>,
+    work: impl std::future::Future<Output = T>,
+) -> Result<T, ()> {
+    match deadline {
+        Some(end) if tokio::time::Instant::now() >= end => Err(()),
+        Some(end) => tokio::time::timeout_at(end, work).await.map_err(|_| ()),
+        None => Ok(work.await),
     }
 }

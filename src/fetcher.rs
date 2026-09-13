@@ -110,6 +110,18 @@ pub(crate) async fn fetch_all_reusing_client_with_diagnostics(
     client: &reqwest::Client,
     budget: Option<Duration>,
 ) -> Result<FetchReport, KestrelError> {
+    let deadline = budget
+        .map(|value| crate::numeric::deadline("fetch budget", value))
+        .transpose()?;
+    fetch_all_reusing_client_with_deadline(urls, options, client, deadline).await
+}
+
+pub(crate) async fn fetch_all_reusing_client_with_deadline(
+    urls: &[String],
+    options: &FetchOptions,
+    client: &reqwest::Client,
+    deadline: Option<tokio::time::Instant>,
+) -> Result<FetchReport, KestrelError> {
     crate::telemetry::scope_result("kestrel.fetch", async {
         crate::telemetry::payload("fetch.input", urls);
         crate::telemetry::attribute("kestrel.timeout_seconds", options.timeout.as_secs_f64());
@@ -118,8 +130,13 @@ pub(crate) async fn fetch_all_reusing_client_with_diagnostics(
             "kestrel.parse_concurrency",
             options.parse_concurrency as i64,
         );
-        if let Some(budget) = budget {
-            crate::telemetry::attribute("kestrel.fetch_budget_seconds", budget.as_secs_f64());
+        if let Some(deadline) = deadline {
+            crate::telemetry::attribute(
+                "kestrel.fetch_budget_seconds",
+                deadline
+                    .saturating_duration_since(tokio::time::Instant::now())
+                    .as_secs_f64(),
+            );
         }
         crate::telemetry::attribute("kestrel.content_limit", options.content_limit as i64);
         crate::telemetry::attribute(
@@ -127,9 +144,6 @@ pub(crate) async fn fetch_all_reusing_client_with_diagnostics(
             options.max_response_bytes as i64,
         );
         validate_options(options)?;
-        let deadline = budget
-            .map(|value| crate::numeric::deadline("fetch budget", value))
-            .transpose()?;
         let network = Arc::new(Semaphore::new(options.max_concurrency));
         let parsing = Arc::new(Semaphore::new(options.parse_concurrency));
         let mut jobs: FuturesUnordered<_> = urls

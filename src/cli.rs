@@ -148,7 +148,8 @@ struct SearchArgs {
     #[arg(long, default_value_t = 10.0, value_parser = positive_f64, value_name = "SECS")]
     timeout: f64,
 
-    /// Total seconds allowed for all candidate page fetches; completed pages are retained.
+    /// Total seconds for candidate fetches, including enabled cache reads/writes/maintenance.
+    /// Completed page text is retained when the deadline interrupts cache work.
     /// Must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     fetch_budget: Option<f64>,
@@ -1836,6 +1837,15 @@ mod tests {
         assert_eq!(fetch.max_response_bytes, library.max_response_bytes);
         assert_eq!(search.content_limit, 2_000);
         assert_eq!(fetch.content_limit, 20_000);
+    }
+
+    #[test]
+    fn generated_skill_documents_cache_deadline_and_limits() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("cache reads, page requests, writes and maintenance"));
+        assert!(skill.contains("four blocking storage jobs"));
+        assert!(skill.contains("4,096 directory entries"));
+        assert!(skill.contains("already-running blocking I/O may finish"));
     }
 
     #[test]
