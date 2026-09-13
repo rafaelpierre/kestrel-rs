@@ -218,6 +218,8 @@ fn skill_install_and_uninstall_use_compatible_paths() {
         assert!(skill.contains(guidance), "missing FTS guidance: {guidance}");
     }
     assert!(skill.contains("retained prefix"));
+    assert!(skill.contains("Completed HTML validation and extraction share one document"));
+    assert!(skill.contains("embedded CAPTCHA markup does not by itself"));
     assert!(skill.contains("round to at least one nanosecond"));
     assert!(skill.contains("Semaphore::MAX_PERMITS"));
     assert!(skill.contains("checked `3 * top-k`"));
