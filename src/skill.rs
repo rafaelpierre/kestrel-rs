@@ -59,6 +59,7 @@ page text is unavailable, including searches with `--no-fetch`.
 - JSON `elapsed_seconds` uses a monotonic clock from command-handler entry through initialization, retrieval, extraction and optional ranking. It is captured before JSON serialization/output, so it may differ from the final stderr timing. Fractional seconds are retained without rounding to three decimal places. Process startup and argument parsing are excluded. Errors keep their existing exit status and stderr diagnostics without a JSON error envelope.
 - Numeric counts and sizes must be positive integers; durations must be finite and greater than zero.
 - PDFs are skipped during content fetching.
+- Direct fetch and search page extraction remove structural chrome and explicit clutter markers using whole class tokens and scoped ID names, not arbitrary substrings. Containers named `download`, `reader`, `shadow`, and `thread` retain their content. Unrecognized compound names may retain clutter; extraction remains heuristic.
 - Page bodies stop at `--max-response-bytes` decoded bytes and the retained prefix is extracted, even when Content-Length exceeds the cap. Reaching the cap alone is not an error; content may be incomplete. Network and parsing concurrency are independent.
 - Search reports the number of successfully extracted pages that reached the byte cap on stderr; results may contain incomplete page content.
 - Byte-capped page extractions are not cached, so a later larger byte budget can fetch more content. This page-fetch cutoff does not change search-provider response limits.
