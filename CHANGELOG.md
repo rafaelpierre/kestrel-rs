@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.1](https://github.com/rafaelpierre/kestrel-rs/compare/v4.1.0...v4.1.1) - 2026-09-13
+
+### Fixed
+
+- recover interrupted benchmark records and isolate fixture proxies
+- replace obsolete quality benchmark conditions
+
+### Other
+
+- Merge pull request #140 from rafaelpierre/codex/75-benchmark-ablation
+- add current-contract streaming fanout validation ([#131](https://github.com/rafaelpierre/kestrel-rs/pull/131))
+- Merge pull request #129 from rafaelpierre/codex/32-current-fidelity
+
 ## [4.1.0](https://github.com/rafaelpierre/kestrel-rs/compare/v4.0.1...v4.1.0) - 2026-09-13
 
 ### Added
