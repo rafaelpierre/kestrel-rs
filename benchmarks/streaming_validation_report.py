@@ -107,7 +107,8 @@ def main():
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--judgments", type=Path,
-                        help="versioned JSON with judgments: {query_id: {url: true|false|null}}")
+                        help='JSON envelope: {"version": 1, "judgments": {"query_id": {"url": true}}}; '
+                             'use true, false, or null for each URL judgment')
     args = parser.parse_args()
     metadata = json.loads((args.input / "metadata.json").read_text())
     raw = (args.input / "runs.jsonl").read_bytes()

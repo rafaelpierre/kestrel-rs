@@ -1,3 +1,9 @@
+import json
+from pathlib import Path
+import re
+import subprocess
+import sys
+import tempfile
 import unittest
 from streaming_validation_report import distribution, summarize
 
@@ -32,6 +38,25 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(judged["groups"][2]["precision_at_five_fully_judged_runs"]["p50"], .2)
         failed = summarize(self.metadata(), [self.sample_run(urls=(), error="deadline")])
         self.assertIsNone(failed["groups"][2]["precision_at_five_fully_judged_runs"]["p50"])
+
+    def test_help_envelope_is_accepted_by_the_report_cli(self):
+        script = Path(__file__).with_name("streaming_validation_report.py")
+        help_text = subprocess.check_output([sys.executable, str(script), "--help"], text=True)
+        compact = " ".join(help_text.split())
+        envelope = json.loads(re.search(r"JSON envelope: (.*?);", compact).group(1))
+        self.assertEqual(envelope, {"version": 1, "judgments": {"query_id": {"url": True}}})
+        with tempfile.TemporaryDirectory() as temp:
+            directory = Path(temp)
+            (directory / "metadata.json").write_text(json.dumps(self.metadata()))
+            (directory / "runs.jsonl").write_text(json.dumps(self.sample_run()) + "\n")
+            (directory / "judgments.json").write_text(json.dumps(envelope))
+            subprocess.run([sys.executable, str(script), "--input", str(directory),
+                            "--output", str(directory / "summary.json"),
+                            "--judgments", str(directory / "judgments.json")],
+                           check=True, capture_output=True, text=True)
+            summary = json.loads((directory / "summary.json").read_text())
+            self.assertEqual(summary["groups"][2]["unjudged_returned_results"], 1)
+            self.assertIsNotNone(summary["judgments_sha256"])
 
     def test_duplicate_or_unscheduled_runs_fail(self):
         with self.assertRaisesRegex(ValueError, "duplicate"):

@@ -61,7 +61,8 @@ A prefix is a smoke test and must not be presented as the full corpus. Keep
 budgets matched across arms. Use release builds for performance observations.
 
 `metadata.json` records corpus, configuration, environment description, compiler,
-revision, tracked diff hash and test executable hash. Stage added source files
+revision, SHA-256 of the exact tracked diff stdout bytes (without text decoding
+or trimming), and test executable hash. Stage added source files
 before running so the tracked diff hash includes them. `runs.jsonl` checkpoints
 one complete record per finished call; `COMPLETE` is written only after all
 scheduled calls. A killed process may leave a truncated last line: preserve the
@@ -192,11 +193,15 @@ scheduled design in a new directory; network outcomes will vary.
 
 Raw runs SHA-256: `c0e01fe7ecccd3219e90bc0d15a5189413068802ca32604d1b5d157e01b3f068`.
 Test binary SHA-256: `219b2c4f950813ba13e02b976abdabc64d7404880ef3f1af40696daf7d818d6a`.
-Source base: `a8fe1e11c3f91fa4d89183c6f75e83b5aba2f5ab`; tracked diff SHA-256 at measurement:
+Source base: `a8fe1e11c3f91fa4d89183c6f75e83b5aba2f5ab`; legacy trimmed-text diff digest at measurement:
 `45a8a6f337415a793b83cbbb1588e0ea0f7cf7c5437cb8db7fc934c10db35216`. The report fields and this documentation were
-completed after the run; the measured Rust source did not change.
+completed after the run. Review subsequently fixed provenance capture to hash
+raw diff bytes, so this historical trimmed-text digest must not be compared with
+a raw diff SHA-256. The pilot artifacts remain unchanged; new runs use the fixed
+raw-byte capture. The review fix also makes the report help show the complete
+versioned judgments envelope.
 
-Validation passed: formatting, Clippy with warnings denied, 178 Rust tests
+Pilot validation passed: formatting, Clippy with warnings denied, 178 Rust tests
 (five ignored), four new collector/policy regression tests included in that
 count, three Python reporting tests, and the release live pilot. An initial
 full-suite run failed two existing 200 ms diagnostics phase assertions during
@@ -204,3 +209,8 @@ concurrent compilation; the unchanged suite passed on rerun. Follow-up #124
 records that test-reliability observation. The production release executable
 was not separately rebuilt: all Rust behavior changes are test-only, and the
 live pilot built and ran the optimized library test executable.
+
+Review-fix validation: formatting, Clippy, 179 Rust tests (five ignored), and
+four Python report tests passed. Added coverage preserves raw diff whitespace
+and non-UTF-8 bytes, and runs the report using the JSON envelope extracted from
+its own help text. The live pilot was not rerun for these provenance/help fixes.

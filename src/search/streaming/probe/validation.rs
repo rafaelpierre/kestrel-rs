@@ -76,13 +76,19 @@ struct Query {
     query: String,
     intent: String,
 }
-fn command(program: &str, args: &[&str]) -> String {
+fn command_bytes(program: &str, args: &[&str]) -> Vec<u8> {
     let output = std::process::Command::new(program)
         .args(args)
         .output()
         .unwrap();
     assert!(output.status.success(), "{program} failed");
-    String::from_utf8(output.stdout).unwrap().trim().to_owned()
+    output.stdout
+}
+fn command(program: &str, args: &[&str]) -> String {
+    String::from_utf8(command_bytes(program, args))
+        .unwrap()
+        .trim()
+        .to_owned()
 }
 fn positive_env(name: &str, default: usize) -> usize {
     let value = std::env::var(name)
@@ -179,7 +185,7 @@ async fn live_streaming_validation() {
     let metadata = serde_json::json!({
         "schema_version": 1, "started_utc": chrono::Utc::now().to_rfc3339(),
         "revision": command("git", &["rev-parse", "HEAD"]),
-        "tracked_diff_sha256": format!("{:x}", Sha256::digest(command("git", &["diff", "HEAD"]).as_bytes())),
+        "tracked_diff_sha256": format!("{:x}", Sha256::digest(command_bytes("git", &["diff", "HEAD"]))),
         "test_binary_sha256": format!("{:x}", Sha256::digest(std::fs::read(executable).unwrap())),
         "rustc": command("rustc", &["--version"]), "os": std::env::consts::OS,
         "arch": std::env::consts::ARCH, "context": context,
@@ -294,6 +300,36 @@ mod tests {
             })
             .collect()
     }
+    #[test]
+    fn diff_capture_preserves_trailing_whitespace_and_non_utf8_bytes() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().to_str().unwrap();
+        command("git", &["-C", path, "init", "--quiet"]);
+        std::fs::write(
+            directory.path().join("fixture"),
+            b"line \t\nnon-UTF8: \xff \t\n",
+        )
+        .unwrap();
+        command("git", &["-C", path, "add", "fixture"]);
+        let args = [
+            "-C",
+            path,
+            "diff",
+            "--cached",
+            "--no-ext-diff",
+            "--no-color",
+        ];
+        let captured = command_bytes("git", &args);
+        let raw = std::process::Command::new("git")
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(raw.status.success());
+        assert_eq!(captured, raw.stdout);
+        assert!(captured.ends_with(b"+line \t\n+non-UTF8: \xff \t\n"));
+        assert!(String::from_utf8(captured).is_err());
+    }
+
     #[tokio::test]
     async fn policies_distinguish_five_results_from_two_contributing_providers() {
         let first = records(0, 5);
