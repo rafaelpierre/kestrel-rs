@@ -73,16 +73,18 @@ The original HTML may still contain useful text outside the selected root.
 - `SearchResult::content_quality()` assesses the body, removing only the exact
   `Source: <this result's URL>\n\n` wrapper used by CLI fetching. The standalone
   assessment function expects body text without a provenance wrapper.
-- Existing public struct fields and ordinary JSON schemas are unchanged.
+- Existing public struct fields and result schemas are unchanged. Default CLI
+  diagnostics now expose advisory quality; `--no-diagnostics` restores the previous
+  envelopes. See [structured diagnostics](structured-diagnostics.md).
   Standalone fetch still returns a flagged body, URL and elapsed time successfully;
-  text output and exit codes remain compatible. There is no new CLI flag.
+  text output and exit codes remain compatible. Quality itself has no control flag.
 - Search retains content, metadata and provenance. Body/hybrid BM25 continue to
   consume flagged bodies, and other ranking policies remain unchanged. Rejection
   and ranking penalties require broader measured evidence; #78 owns ranking effects.
 - Opt-in search artifacts add `results[].content_quality` and
   `diagnostics.candidate_content_quality` (aligned with `candidates`, including
   missing bodies). Existing artifact fields remain intact. Standalone fetch
-  does not emit search artifacts. #81 still owns ordinary command diagnostics.
+  does not emit search artifacts. Default command diagnostics are documented separately.
 - Assessments are computed on demand, never written into the page cache.
   Cache keys, TTL, stored text and byte-cap exclusion remain compatible. No
   quality-version cache migration is needed: a cache hit gets the current

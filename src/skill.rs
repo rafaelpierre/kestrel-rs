@@ -25,11 +25,12 @@ const SCHEMA_AND_NOTES: &str = r#"
 ## Search JSON output schema
 
 `search --output json` returns an object with `results` (an array, empty when no
-results are found) and `elapsed_seconds` (a finite, nonnegative number in seconds).
-Example: `{"results": [], "elapsed_seconds": 0.125}`.
+results are found), `elapsed_seconds` (a finite, nonnegative number in seconds),
+and default `diagnostics` (`schema_version: 1`). Add `--no-diagnostics` to restore
+the previous envelope. Example with `--no-diagnostics`: `{"results": [], "elapsed_seconds": 0.125}`.
 This is a breaking change from the previous top-level array. Read `.results`
 instead of the root array (for example, migrate `jq '.[]'` to `jq '.results[]'`).
-There is no legacy-output flag; the library result types are unchanged.
+The opt-out restores the previous object, not the historical root array; library result types are unchanged.
 Each result in `results` has
 `title`, `url`, `display_url`, `snippet`, and `content`; optional fields are omitted
 when unavailable, rather than serialized as null:
@@ -68,7 +69,7 @@ page text is unavailable, including searches with `--no-fetch`.
   before requests, with stderr diagnostics and empty stdout. Defaults and JSON
   schemas are unchanged; replace formerly accepted overflowing values in scripts.
 - PDFs are skipped during content fetching.
-- Content-quality assessment is advisory: `boilerplate_only` recognizes a limited English whole-message vocabulary; `unflagged` does not certify useful evidence; `unknown` covers missing, mixed, insufficient, or over-limit text. Assessment examines at most 32,768 UTF-8 bytes and describes only retained text, separately from HTTP success and truncation. No quality flag, rejection, ranking penalty, or normal JSON field is added. Library assessment methods and opt-in search artifacts expose the signal; ordinary CLI users must inspect the text.
+- Content-quality assessment is advisory: `boilerplate_only` recognizes a limited English whole-message vocabulary; `unflagged` does not certify useful evidence; `unknown` covers missing, mixed, insufficient, or over-limit text. Assessment examines at most 32,768 UTF-8 bytes and describes only retained text, separately from HTTP success and truncation. No quality rejection or ranking penalty is added. Default JSON diagnostics, library methods and opt-in search artifacts expose the assessment; callers must still inspect the text.
 - When the selected HTML body consists entirely of recognized shell messages, extraction checks at most the first explicit `article` for non-shell or mixed text. Otherwise root selection is unchanged. This can recover an article hidden by a comments-only `main`; it does not repair arbitrary missing text or render JavaScript. Warm cache entries retain their stored text until expiry; assessments are recomputed, not cached.
 - Direct fetch and search HTML/XHTML extraction remove structural chrome and explicit clutter markers using whole class tokens and scoped ID names, not arbitrary substrings. Containers named `download`, `reader`, `shadow`, and `thread` retain their content. Unrecognized compound names may retain clutter; extraction remains heuristic.
 - HTML text follows document order, with line breaks between blocks and tabs between table cells. Inline emphasis and links preserve word boundaries; short answers, all heading levels, nested lists, code and table text are retained once per source occurrence. Prose whitespace collapses; `pre` preserves indentation, line breaks and repeated lines. Inline `code` uses prose whitespace rules. Entities are decoded once by HTML parsing; literal metadata lines such as `Source:` remain page content. This is plain text, not Markdown or a rendered table; CSS layout and row/column spans are not reconstructed.
@@ -161,7 +162,7 @@ coverage and the environment-only Honeycomb recipe.
    phrases and Boolean constraints; explain any proposed relaxation instead of
    silently changing the query intent. Inspect candidate evidence for relevance;
    a snippet may omit important page content. Empty results do not prove that
-   no sources exist; ordinary JSON does not identify every completion reason.
+   no sources exist; inspect `.diagnostics.search` for observed completion conditions.
    If a page fails or is unusable, try an alternative. If evidence was truncated,
    one bounded refetch with larger character/byte limits counts toward the ceiling.
    There is no find-within-page or ranked-passage command today.
@@ -335,7 +336,8 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
 
 `kestrel fetch <URL>` accepts one full HTTP or HTTPS URL. Text output contains
 `Source: <url>` followed by the extracted main-body text. `--output json` returns
-one object: `{"url": "https://example.com/page", "content": "Source: ...", "elapsed_seconds": 0.125}`.
+one object with url, content, elapsed_seconds and default diagnostics. With
+`--no-diagnostics`: `{"url": "https://example.com/page", "content": "Source: ...", "elapsed_seconds": 0.125}`.
 The default extraction limit is 20,000 characters; increase `--content-limit`
 for longer pages. Fetch does not render JavaScript.
 
@@ -593,8 +595,70 @@ KESTRELSEARCH_PROVIDER_TRACE_DIR="$trace_dir" KESTRELSEARCH_BENCHMARK_ARTIFACT_D
   journal. There are no CLI disable/location controls. Logs can include query/URL
   information; missing events do not prove that work did not happen.
 
-Normal JSON does not expose hybrid score components or useful-evidence counts.
-Structured completion reporting is tracked in #81; do not invent those fields.
+## Default structured diagnostics and migration
+
+Both JSON commands add `diagnostics` by default. This is an intentional default
+schema extension; `--no-diagnostics` restores the previous JSON object. The flag
+has no effect in text mode. No persistence or trace directory is required.
+Search diagnostics use `schema_version: 1` and contain:
+
+- `search`: normalized query_count, minimum_per_query, per-query `queries` with
+  query_index, unique_accepted, minimum_reached, deadline, providers_exhausted,
+  all_failed; aggregate counts minimum_reached_queries, deadline_queries,
+  providers_exhausted_queries, all_failed_queries, all_minimum_reached and
+  budget_exhausted. Conditions are independent and can overlap. Exhaustion
+  includes finished errors, but excludes deadline/cancellation. Successful empty
+  or all-filtered responses are not all_failed. Query indices follow trimmed,
+  nonempty, deduplicated inputs. Shared URLs count once per contributing query.
+- `search.provider_outcomes`: counts of all scheduled provider/query outcomes,
+  including omitted detail rows; absent keys mean zero.
+- `search.providers`: engine, query_index, outcome, response_completed_successfully,
+  raw, rejected, accepted_snapshot, retained_occurrences, retries, elapsed_ms,
+  timing_censored. Cancelled providers can contribute retained candidates.
+  Raw equals rejected plus accepted_snapshot in final cumulative observations;
+  never sum successive snapshots. Aggregate retained_occurrences counts source
+  occurrences, while unique_accepted counts fused URLs. Failed responses can
+  retract snapshots; rejected_response_snapshot counts those observations.
+  Snapshot publication can race with cancellation; use retained_occurrences to
+  identify contribution. timing_censored is true for deadline/cancellation,
+  false for completed success and null for unavailable error-phase semantics.
+- `candidates`: unique_accepted, fetch_score_rejected, after_fetch_score,
+  after_selection, not_selected, after_ranking, returned. The first minus the
+  score rejections equals after_fetch_score; not_selected includes score/cap
+  removals. Ranking and top-k can further reduce output without refilling.
+- `evidence`: enabled, selected, scheduled (excludes existing .pdf URL skips),
+  completed (includes errors/cache hits), extracted, usable (null),
+  usefulness_unknown (all extracted bodies), quality counts, states,
+  budget_exhausted, cancelled, cache_hits. Counts precede ranking/top-k;
+  absent count-map keys mean zero. Quality covers the post-selection pool,
+  including missing bodies, and does not certify useful evidence.
+- `pages`: candidate_index in the original unique pool, returned_index (null
+  when not returned), state, quality, timing, byte_cap_reached. States distinguish
+  no_fetch, not_selected, skipped_pdf, extracted, cache_hit, empty_extraction,
+  unsupported_content_type, response_too_large, request_failed, fetch_deadline
+  and unknown. A missing page timing is null; request-failure censoring is unknown.
+  Use `.results[returned_index].url` for selective reading of returned pages.
+
+Detail lists stop at 128 queries, 128 providers and 256 pages; corresponding
+queries_omitted/providers_omitted (inside search) and pages_omitted disclose
+truncation. Aggregates remain complete. Diagnostics omit raw query/URL strings,
+page bodies, cookies, credentials and verbose transport messages. Existing
+result fields retain their content. Hybrid score components remain unavailable.
+
+Standalone fetch diagnostics have schema_version, state, quality, usable (null),
+timing, byte_cap_reached and budget_exhausted; no search, cache or batch controls.
+Both commands retain existing error behavior: invalid arguments exit 2, runtime
+failure exits 1, stderr carries errors, stdout has no JSON error envelope.
+All-failed search and standalone fetch with no text therefore have no JSON
+report; successful empty search exits 0 with diagnostics. Failed queries within
+a successful multi-query search have all_failed=true.
+
+For retry decisions inspect `.diagnostics.search.budget_exhausted` alongside
+`.diagnostics.search.all_minimum_reached`; an observed deadline does not mean
+all results failed. Inspect snippets, then fetch a selected result URL if its
+page state is no_fetch or evidence is insufficient. A larger budget is only a
+retry choice, not a guarantee of more evidence. Do not equate unflagged or
+successful extraction with usefulness.
 
 ## Refreshing an installed skill
 

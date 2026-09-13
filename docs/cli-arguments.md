@@ -23,6 +23,10 @@ search defaults to 2,000 extracted characters per page and fetch to 20,000.
 | `--cache-ttl`, `--cache-dir`, `--cache-max-entries` | Search page-cache lifetime, location, and capacity. Directory/capacity require TTL; standalone fetch does not use the cache. |
 | `--output` | Text or JSON, independently available for both commands. Search JSON contains results and elapsed_seconds; fetch JSON contains url, content and elapsed_seconds. |
 
+Both JSON commands include default versioned diagnostics. `--no-diagnostics`
+restores their previous envelopes and has no effect on text output. See the
+[contract, bounds and migration](structured-diagnostics.md).
+
 ## HTML text layout
 
 HTML/XHTML content follows source order with line breaks between blocks, tabs
@@ -158,7 +162,7 @@ kestrel search "rust async" --min-results 15 --fetch-candidates 8 --min-fetch-sc
 Successful fetch means text was extracted, not that it supplies useful evidence.
 Known shell-only bodies remain successful text/JSON responses; search retains
 body, title, snippet, URL and provenance and applies its existing ranking policy.
-No quality control flag or normal JSON field is added. The library and opt-in
+Default JSON diagnostics expose the advisory quality assessment. The library and opt-in
 search benchmark artifacts expose versioned advisory assessments. HTML extraction
 may recover the first explicit article when the originally selected body consists
 entirely of recognized shell messages. See [policy and evaluation](content-quality.md).

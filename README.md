@@ -242,14 +242,18 @@ safe to pipe into another program. Each JSON result can include `title`, `url`,
 provider/query fields, and a `sources` list containing every deduplicated
 occurrence.
 
-JSON output includes command-level `elapsed_seconds`, a finite, nonnegative number
-that preserves fractional seconds without rounding to three decimal places:
+JSON output includes default structured `diagnostics` (`schema_version: 1`) and
+command-level `elapsed_seconds`, a finite, nonnegative number that preserves
+fractional seconds without rounding to three decimal places.
+
+With `--no-diagnostics` (the previous envelope):
 
 ```json
 {"results": [], "elapsed_seconds": 0.125}
 ```
 
-Search always returns this object, including when `results` is empty. Fetch returns
+Search always returns an object, including when `results` is empty. With
+`--no-diagnostics`, fetch returns
 `{"url": "https://example.com/page", "content": "Source: ...", "elapsed_seconds": 0.125}`.
 The JSON timer uses a monotonic clock from command-handler entry through client
 initialization, retrieval, extraction and optional ranking. It is sampled before
@@ -257,10 +261,17 @@ JSON serialization/output, so it can differ from the final stderr timing. Proces
 startup and argument parsing are excluded. Errors retain their existing exit status
 and stderr diagnostics without a JSON error envelope.
 
+**Default diagnostics migration:** both JSON commands now add a bounded
+`diagnostics` object with completion conditions, stage counts and advisory page
+evidence. Add `--no-diagnostics` to restore the previous envelopes for strict
+consumers. Text output and error/exit behavior are unchanged. See the
+[structured diagnostics contract and retry examples](docs/structured-diagnostics.md).
+
 **Breaking JSON migration:** search previously returned a top-level array; read
 `.results` now. For example, change `jq '.[]'` to `jq '.results[]'`, or Python
-`json.loads(stdout)` to `json.loads(stdout)["results"]`. No legacy-output flag is
-provided. Library result types and benchmark artifact schemas are unchanged.
+`json.loads(stdout)` to `json.loads(stdout)["results"]`. The opt-out does not restore
+the historical root array. Library result types and benchmark artifact schemas
+are unchanged.
 
 Run `kestrel search --help` for all provider filters, concurrency controls, and
 resource limits. See the [argument interaction reference](docs/cli-arguments.md)
