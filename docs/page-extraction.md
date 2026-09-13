@@ -1,6 +1,8 @@
 # Page chrome matching
 
-Direct `fetch` and search candidate fetching share the bounded HTML extractor.
+Direct `fetch` and search candidate fetching share the bounded HTML extractor
+for HTML/XHTML responses. `text/plain` bypasses DOM cleanup and preserves literal
+text; see [plain-text decoding and limits](cli-arguments.md#plain-text-responses).
 Before selecting and extracting body text, it removes `script`, `style`, `nav`,
 `header`, `footer`, `aside`, and `form` elements as before.
 

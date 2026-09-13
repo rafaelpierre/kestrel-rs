@@ -59,7 +59,7 @@ page text is unavailable, including searches with `--no-fetch`.
 - JSON `elapsed_seconds` uses a monotonic clock from command-handler entry through initialization, retrieval, extraction and optional ranking. It is captured before JSON serialization/output, so it may differ from the final stderr timing. Fractional seconds are retained without rounding to three decimal places. Process startup and argument parsing are excluded. Errors keep their existing exit status and stderr diagnostics without a JSON error envelope.
 - Numeric counts and sizes must be positive integers; durations must be finite and greater than zero.
 - PDFs are skipped during content fetching.
-- Direct fetch and search page extraction remove structural chrome and explicit clutter markers using whole class tokens and scoped ID names, not arbitrary substrings. Containers named `download`, `reader`, `shadow`, and `thread` retain their content. Unrecognized compound names may retain clutter; extraction remains heuristic.
+- Direct fetch and search HTML/XHTML extraction remove structural chrome and explicit clutter markers using whole class tokens and scoped ID names, not arbitrary substrings. Containers named `download`, `reader`, `shadow`, and `thread` retain their content. Unrecognized compound names may retain clutter; extraction remains heuristic.
 - Page bodies stop at `--max-response-bytes` decoded bytes and the retained prefix is extracted, even when Content-Length exceeds the cap. Reaching the cap alone is not an error; content may be incomplete. Network and parsing concurrency are independent.
 - Search reports the number of successfully extracted pages that reached the byte cap on stderr; results may contain incomplete page content.
 - Byte-capped page extractions are not cached, so a later larger byte budget can fetch more content. This page-fetch cutoff does not change search-provider response limits.
@@ -199,8 +199,19 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
 `Source: <url>` followed by the extracted main-body text. `--output json` returns
 one object: `{"url": "https://example.com/page", "content": "Source: ...", "elapsed_seconds": 0.125}`.
 The default extraction limit is 20,000 characters; increase `--content-limit`
-for longer pages. Fetch uses the existing HTML/text extractor and does not render
-JavaScript. Unsupported content (including PDFs), failed requests, or pages with
+for longer pages. Fetch does not render JavaScript.
+
+Direct fetch and search candidate fetching support `text/plain` as well as
+HTML/XHTML. Plain text is decoded using the declared supported charset (UTF-8
+when absent or unrecognized) and limited by Unicode characters, preserving line
+breaks, indentation, repeated lines, and literal markup/entities such as `<p>`
+and `&amp;`. HTML cleanup applies only to HTML/XHTML; responses without a content
+type retain the HTML fallback. Invalid byte sequences, including a multibyte
+character split by the byte cap, decode with replacement characters. Empty or
+whitespace-only retained plain text has no extractable content.
+The character cap applies before the CLI adds the `Source:` prefix.
+
+Unsupported content (including PDFs), failed requests, or pages with
 no extractable text produce a nonzero exit status and an error on stderr.
 `--max-response-bytes` defaults to 1,000,000 decoded body bytes. At the cap,
 fetch stops reading without waiting for the rest of the response and extracts

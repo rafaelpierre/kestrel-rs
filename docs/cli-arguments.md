@@ -22,6 +22,20 @@ search defaults to 2,000 extracted characters per page and fetch to 20,000.
 | `--cache-ttl`, `--cache-dir`, `--cache-max-entries` | Search page-cache lifetime, location, and capacity. Directory/capacity require TTL; standalone fetch does not use the cache. |
 | `--output` | Text or JSON, independently available for both commands. Search JSON contains results and elapsed_seconds; fetch JSON contains url, content and elapsed_seconds. |
 
+## Plain-text responses
+
+Direct fetch and search candidate fetching support `text/plain` as well as
+HTML/XHTML. Plain text is decoded using the declared supported charset (UTF-8
+when absent or unrecognized) and limited by Unicode characters, preserving line
+breaks, indentation, repeated lines, and literal markup/entities such as `<p>`
+and `&amp;`. HTML cleanup applies only to HTML/XHTML; responses without a content
+type retain the HTML fallback. Invalid byte sequences, including a multibyte
+character split by the byte cap, decode with replacement characters. Empty or
+whitespace-only retained plain text has no extractable content.
+
+The character cap applies to the decoded body before the CLI adds its `Source:`
+prefix. Byte limits, timeouts, and partial-response diagnostics apply as usual.
+
 ## Invalid combinations and migration
 
 `--no-fetch` conflicts with explicit `--fetch`, `--rank`, `--fetch-candidates`,
