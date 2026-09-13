@@ -1,1 +1,3 @@
-Install the package Download the archive and verify its checksum before extracting the package. Add the extracted executable directory to your shell path.
+Install the package
+Download the archive and verify its checksum before extracting the package.
+Add the extracted executable directory to your shell path.

@@ -30,10 +30,12 @@
   {
     "id": "error-documentation",
     "html": "<article><h1>Browser troubleshooting</h1><p>Your browser is not supported.</p><p>This message appears when the browser lacks the required codec.</p></article>",
-    "extracted": "Browser troubleshooting Your browser is not supported. This message appears when the browser lacks the required codec.",
+    "extracted": "Browser troubleshooting\nYour browser is not supported.\nThis message appears when the browser lacks the required codec.",
     "state": "unknown",
     "judgment": "useful",
-    "cause": "An article discussing errors is mixed, not rejected."
+    "cause": "An article discussing errors is mixed, not rejected.",
+    "original_extracted": "Browser troubleshooting Your browser is not supported. This message appears when the browser lacks the required codec.",
+    "original_state": "unknown"
   },
   {
     "id": "quoted-message",
@@ -94,10 +96,12 @@
   {
     "id": "article-before-comment-main",
     "html": "<article><h1>Music credits</h1><p>The album credits list the performers and recording engineer.</p></article><main><h2>Leave a Reply</h2><p>Your email address will not be published.</p></main>",
-    "extracted": "Music credits The album credits list the performers and recording engineer.",
+    "extracted": "Music credits\nThe album credits list the performers and recording engineer.",
     "state": "unflagged",
     "judgment": "useful",
-    "cause": "Recovery independent of article/main document order."
+    "cause": "Recovery independent of article/main document order.",
+    "original_extracted": "Music credits The album credits list the performers and recording engineer.",
+    "original_state": "unflagged"
   },
   {
     "id": "two-shell-roots",
@@ -105,30 +109,38 @@
     "extracted": "Your browser is not supported",
     "state": "boilerplate_only",
     "judgment": "unusable",
-    "cause": "An alternative article that is itself a shell does not replace the selected body."
+    "cause": "An alternative article that is itself a shell does not replace the selected body.",
+    "original_extracted": "Your browser is not supported",
+    "original_state": "boilerplate_only"
   },
   {
     "id": "article-with-inline-error",
     "html": "<article><h1>Playback troubleshooting</h1><p>If you see an unsupported browser error, install the missing media codec.</p><nav>Go back</nav></article>",
-    "extracted": "Playback troubleshooting If you see an unsupported browser error, install the missing media codec.",
+    "extracted": "Playback troubleshooting\nIf you see an unsupported browser error, install the missing media codec.",
     "state": "unflagged",
     "judgment": "useful",
-    "cause": "No broad substring rules."
+    "cause": "No broad substring rules.",
+    "original_extracted": "Playback troubleshooting If you see an unsupported browser error, install the missing media codec.",
+    "original_state": "unflagged"
   },
   {
     "id": "short-html-answer",
     "html": "<main><p>42</p></main>",
-    "extracted": null,
-    "state": "unknown",
+    "extracted": "42",
+    "state": "unflagged",
     "judgment": "useful",
-    "cause": "Inherited selected-tag paragraph minimum loses the answer; #22 owns traversal/readability. NoText is not a shell verdict."
+    "cause": "Issue #22 restores this formerly empty HTML extraction; original extraction and assessment retained below.",
+    "original_extracted": null,
+    "original_state": "unknown"
   },
   {
     "id": "html-code-block",
     "html": "<main><pre><code>let answer = 42;</code></pre></main>",
-    "extracted": null,
-    "state": "unknown",
+    "extracted": "let answer = 42;",
+    "state": "unflagged",
     "judgment": "useful",
-    "cause": "Inherited selected-tag extraction omits pre/code; #22 owns this. Plain-text code remains preserved."
+    "cause": "Issue #22 restores this formerly empty HTML extraction; original extraction and assessment retained below.",
+    "original_extracted": null,
+    "original_state": "unknown"
   }
 ]

@@ -1,10 +1,10 @@
-# Page chrome matching
+# HTML page extraction
 
 Direct `fetch` and search candidate fetching share the bounded HTML extractor
 for HTML/XHTML responses. `text/plain` bypasses DOM cleanup and preserves literal
 text; see [plain-text decoding and limits](cli-arguments.md#plain-text-responses).
-Before selecting and extracting body text, it removes `script`, `style`, `nav`,
-`header`, `footer`, `aside`, and `form` elements as before.
+Before selecting and extracting body text, it removes `head`, `template`, `script`, `style`, `nav`,
+`header`, `footer`, `aside`, and `form` elements.
 
 For `div` and `section`, class attributes are matched as whole whitespace-separated
 tokens, with ASCII case-insensitive comparison. IDs match whole names. Recognized
@@ -20,8 +20,7 @@ Arbitrary substrings and arbitrary compound-name fragments are not matched:
 are not clutter markers. A matching class or ID still removes the container and
 its descendants. This is a conservative naming heuristic, not general semantic
 classification: an unrecognized compound name can retain boilerplate, and a
-content container using an exact clutter name can still be removed. Structural
-extraction still uses the existing selected tags and limits. See the bounded
+content container using an exact clutter name can still be removed. Ordered text extraction uses the rules below. See the bounded
 [root-selection recovery and advisory quality policy](content-quality.md) added
 for #77. Output schemas, cache keys and CLI options are unchanged.
 
@@ -46,3 +45,58 @@ Reproduce with `cargo test --lib fetcher::tests` and
 temporary project/home and checks the extraction guidance and live CLI help.
 These are deterministic fixture results, not a live-web accuracy estimate or a
 latency benchmark. General readability improvements remain outside this fix.
+
+## Ordered readable text (issue #22)
+
+After chrome removal and the existing root-selection/recovery policy, a single
+iterative DOM walk emits text once in document order. It includes the root's own
+text, all heading levels, short paragraphs, inline code, nested list items,
+definition lists, block quotes, preformatted code, and table captions/cells.
+Nested wrappers do not duplicate their descendants. Text outside the selected
+root remains excluded.
+
+Prose whitespace collapses across text nodes, preserving the spaces around inline
+emphasis and links without inserting spaces inside words: `<p>The <b>Rust</b>
+language</p>` yields `The Rust language`, and `pre<em>fix</em>` yields `prefix`.
+Blocks and `br` introduce line breaks; empty wrappers do not add blank lines.
+Table rows use line breaks and sibling cells use tabs, including empty cells.
+This is plain text, not Markdown or a rectangular table model: row/column spans,
+CSS display rules and visual layout are not reconstructed.
+
+Within `pre`, DOM text retains indentation, tabs, blank lines and repeated lines,
+including leading/trailing whitespace. Inline `code` outside `pre` follows prose
+whitespace rules. HTML parsing still normalizes CRLF and the HTML-defined first
+newline in `pre`; this is not byte-for-byte HTML source recovery. Entities decode
+once during parsing, so `&amp;lt;` remains the literal text `&lt;`. Unicode joiners
+remain intact. Actual repeated blocks and literal `Source:`/`Status:` metadata
+lines are retained; the old line-deduplication and prefix filters are removed.
+
+The Unicode-scalar character limit counts code whitespace and generated
+separators. Output accumulation stops at the limit, possibly mid-block or
+mid-code; no partial scalar is emitted. The parser's response-byte cap and
+bounded blocking executor remain unchanged. Empty or whitespace-only retained
+output has no extractable content. No new dependency, flag, public field, output
+schema or cache-key change is introduced. JSON consumers should expect escaped
+newlines/tabs in HTML `content` instead of flattened prose. Cached extractions
+keep their old text until expiry or a fresh fetch (`--cache-ttl 0` for search).
+
+### Ranking decision and validation
+
+The old extractor duplicated headings to imply weights, then immediately removed
+those adjacent duplicates. This fix removes that ineffective mechanism. Body
+BM25 treats headings as ordinary body tokens once per source occurrence; existing
+title/snippet ranking weights stay in the ranking module. Corrected word
+boundaries, recovered code and short text, preserved repetition, and a different
+retained prefix can deliberately change scores. No new HTML field weighting is
+introduced without ranking evidence; broader ranking evaluation remains #78.
+
+`ordered.json` contains authored golden cases for inline links/emphasis,
+interleaved headings/paragraphs, code-only pages, tables with empty cells, nested
+lists, entities/Unicode joiners, literal metadata/repetition, malformed HTML and
+empty documents. Tests assert exact output and every Unicode character cap in
+these cases. A deep-wrapper test checks traversal without recursive extraction.
+Ranking regression tests compare extracted tokens and BM25 scores with a manually
+specified readable corpus, including equal heading/paragraph scores and newly
+recoverable code evidence. Local CLI mocks verify exact text/JSON output from the
+same golden pages. Temporary skill installation checks the new guidance alongside
+current CLI help. No live-web quality or performance improvement is claimed.

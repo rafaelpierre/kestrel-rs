@@ -1,1 +1,2 @@
-Thread API reference Spawn starts a new thread and returns a handle for joining its result.
+Thread API reference
+Spawn starts a new thread and returns a handle for joining its result.

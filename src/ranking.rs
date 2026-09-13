@@ -651,6 +651,53 @@ mod tests {
     }
 
     #[test]
+    fn extraction_restores_tokens_without_implicit_heading_weights() {
+        let html = [
+            "<main><h1>Rust</h1><p>The <b>Rust</b> language.</p></main>",
+            "<main><p>Rust</p><p>The Rust language.</p></main>",
+            "<main><pre><code>let answer = 42;</code></pre></main>",
+            "<main><p>Cooking recipes.</p></main>",
+            "<main><p>Music credits.</p></main>",
+        ];
+        let mut actual: Vec<_> = html
+            .iter()
+            .map(|html| {
+                result(
+                    "",
+                    None,
+                    crate::fetcher::parse_content(html, 20_000).as_deref(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            tokenize(actual[0].content.as_deref().unwrap()),
+            ["rust", "the", "rust", "language"]
+        );
+        let expected = [
+            "Rust The Rust language.",
+            "Rust The Rust language.",
+            "let answer = 42;",
+            "Cooking recipes.",
+            "Music credits.",
+        ];
+        for query in ["rust", "answer"] {
+            let mut baseline: Vec<_> = expected
+                .iter()
+                .map(|text| result("", None, Some(text)))
+                .collect();
+            score_results(&mut actual, query);
+            score_results(&mut baseline, query);
+            for (actual, baseline) in actual.iter().zip(baseline) {
+                assert_eq!(actual.bm25_score, baseline.bm25_score);
+            }
+            assert_eq!(actual[0].bm25_score, actual[1].bm25_score);
+            let winner = if query == "rust" { 0 } else { 2 };
+            assert!(actual[winner].bm25_score.unwrap() > 0.0);
+            assert_eq!(actual[3].bm25_score, Some(0.0));
+        }
+    }
+
+    #[test]
     fn tokenizer_normalizes_words() {
         assert_eq!(tokenize("Hello, WORLD! 123"), ["hello", "world", "123"]);
     }

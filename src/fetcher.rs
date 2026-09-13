@@ -7,7 +7,6 @@ use std::time::{Duration, Instant};
 
 use futures_util::{StreamExt, stream::FuturesUnordered};
 use once_cell::sync::Lazy;
-use regex::Regex;
 use reqwest::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use scraper::{ElementRef, Html, Selector};
 use tokio::sync::Semaphore;
@@ -41,43 +40,14 @@ const CLUTTER_MARKERS: &[&str] = &[
     "sidebar-right",
 ];
 
-static WHITESPACE: Lazy<Regex> = Lazy::new(|| Regex::new(r"\s+").expect("valid whitespace regex"));
-static NOISE: Lazy<Vec<Regex>> = Lazy::new(|| {
-    [
-        r"^Source:",
-        r"^Status:",
-        r"^Use Case:",
-        r"^Description:",
-        r"^Stars:",
-        r"^Verified:",
-        r"^Purpose:",
-        r"^Portability:",
-        r"^Token Cost:",
-    ]
-    .into_iter()
-    .map(|pattern| Regex::new(pattern).expect("valid noise regex"))
-    .collect()
+static FIXED_CHROME: Lazy<Selector> = Lazy::new(|| {
+    Selector::parse("head, template, script, style, nav, header, footer, aside, form").unwrap()
 });
-static FIXED_CHROME: Lazy<Selector> =
-    Lazy::new(|| Selector::parse("script, style, nav, header, footer, aside, form").unwrap());
 static CONTAINERS: Lazy<Selector> =
     Lazy::new(|| Selector::parse("div, section").expect("valid selector"));
 static MAIN: Lazy<Selector> = Lazy::new(|| Selector::parse("main").expect("valid selector"));
 static ARTICLE: Lazy<Selector> = Lazy::new(|| Selector::parse("article").expect("valid selector"));
 static ALL: Lazy<Selector> = Lazy::new(|| Selector::parse("*").expect("valid selector"));
-static WEIGHTED_TEXT: Lazy<Vec<(Selector, usize, usize)>> = Lazy::new(|| {
-    [("h1", 3, 5), ("h2", 2, 5), ("p", 1, 20), ("li", 1, 20)]
-        .into_iter()
-        .map(|(tag, weight, minimum)| {
-            (
-                Selector::parse(tag).expect("valid selector"),
-                weight,
-                minimum,
-            )
-        })
-        .collect()
-});
-
 /// Fetch and parse URLs concurrently while preserving input order.
 pub async fn fetch_all(
     urls: &[String],
@@ -491,8 +461,7 @@ pub(crate) fn parse_content(html: &str, content_limit: usize) -> Option<String> 
     let mut document = Html::parse_document(html);
     remove_page_chrome(&mut document);
     let root = main_content(&document);
-    let weighted = extract_weighted_text(root);
-    let content = clean_text(&weighted, content_limit);
+    let content = extract_text(root, content_limit);
     // Only reconsider an entirely recognized shell. Inspect at most the first
     // explicit article, and assess the bounded retained text without truncating
     // an over-limit assessment. Ordinary root selection remains unchanged.
@@ -501,7 +470,7 @@ pub(crate) fn parse_content(html: &str, content_limit: usize) -> Option<String> 
         && let Some(article) = document.select(&ARTICLE).next()
         && article.id() != root.id()
     {
-        let alternative = clean_text(&extract_weighted_text(article), content_limit);
+        let alternative = extract_text(article, content_limit);
         let quality = crate::assess_content_quality(alternative.as_deref());
         if alternative.is_some()
             && (quality.state == crate::ContentQualityState::Unflagged
@@ -569,44 +538,178 @@ fn main_content(document: &Html) -> ElementRef<'_> {
     document.root_element()
 }
 
-fn extract_weighted_text(root: ElementRef<'_>) -> String {
-    let mut parts = Vec::new();
-    for (selector, weight, minimum) in WEIGHTED_TEXT.iter() {
-        for element in root.select(selector) {
-            let text = element
-                .text()
-                .map(str::trim)
-                .filter(|part| !part.is_empty())
-                .collect::<String>();
-            if text.len() > *minimum {
-                parts.extend(std::iter::repeat_n(text, *weight));
+/// Walk the selected DOM once in source order, without recursive calls or
+/// duplicated ancestor text. The output allocation is bounded by the character
+/// limit; the already bounded HTML parser owns the DOM allocation.
+fn extract_text(root: ElementRef<'_>, content_limit: usize) -> Option<String> {
+    let mut output = TextOutput::new(content_limit);
+    let mut node = *root;
+    let mut entering = true;
+    let mut pre_depth = 0usize;
+    loop {
+        if let Some(element) = ElementRef::wrap(node) {
+            let name = element.value().name();
+            if name == "pre" {
+                if entering {
+                    output.boundary('\n');
+                    pre_depth += 1;
+                } else {
+                    pre_depth -= 1;
+                    output.boundary('\n');
+                }
+            } else if pre_depth == 0 {
+                if is_text_block(name) || name == "br" {
+                    output.boundary('\n');
+                } else if entering
+                    && matches!(name, "td" | "th")
+                    && element
+                        .prev_siblings()
+                        .filter_map(ElementRef::wrap)
+                        .any(|sibling| matches!(sibling.value().name(), "td" | "th"))
+                {
+                    if output.pending == Some(' ') {
+                        output.pending = None;
+                    }
+                    output.literal("\t");
+                }
+            } else if entering && name == "br" {
+                output.literal("\n");
+            }
+        } else if entering && let Some(text) = node.value().as_text() {
+            if pre_depth > 0 {
+                output.literal(text);
+            } else {
+                output.prose(text);
+            }
+        }
+        if output.remaining == 0 {
+            break;
+        }
+        if entering && let Some(child) = node.first_child() {
+            node = child;
+            continue;
+        }
+        if entering {
+            entering = false;
+            continue;
+        }
+        if node.id() == root.id() {
+            break;
+        }
+        if let Some(sibling) = node.next_sibling() {
+            node = sibling;
+            entering = true;
+        } else if let Some(parent) = node.parent() {
+            node = parent;
+        } else {
+            break;
+        }
+    }
+    output
+        .text
+        .chars()
+        .any(|c| !c.is_whitespace())
+        .then_some(output.text)
+}
+
+fn is_text_block(name: &str) -> bool {
+    matches!(
+        name,
+        "address"
+            | "article"
+            | "blockquote"
+            | "caption"
+            | "dd"
+            | "details"
+            | "div"
+            | "dl"
+            | "dt"
+            | "figcaption"
+            | "figure"
+            | "h1"
+            | "h2"
+            | "h3"
+            | "h4"
+            | "h5"
+            | "h6"
+            | "hr"
+            | "li"
+            | "main"
+            | "ol"
+            | "p"
+            | "section"
+            | "summary"
+            | "table"
+            | "tr"
+            | "ul"
+    )
+}
+
+struct TextOutput {
+    text: String,
+    remaining: usize,
+    pending: Option<char>,
+}
+
+impl TextOutput {
+    fn new(limit: usize) -> Self {
+        Self {
+            text: String::new(),
+            remaining: limit,
+            pending: None,
+        }
+    }
+
+    // Delay generated separators so empty wrappers and trailing markup do not
+    // add blank lines or consume the content budget.
+    fn boundary(&mut self, separator: char) {
+        if self.pending != Some('\n') {
+            self.pending = Some(separator);
+        }
+    }
+
+    fn push(&mut self, c: char) {
+        if self.remaining > 0 {
+            self.text.push(c);
+            self.remaining -= 1;
+        }
+    }
+
+    fn flush(&mut self) {
+        if let Some(separator) = self.pending.take()
+            && !self.text.is_empty()
+            && !self.text.ends_with('\n')
+            && (separator == '\n' || !self.text.ends_with([' ', '\t']))
+        {
+            self.push(separator);
+        }
+    }
+
+    fn literal(&mut self, text: &str) {
+        if !text.is_empty() {
+            self.flush();
+            for c in text.chars().take(self.remaining) {
+                self.text.push(c);
+                self.remaining -= 1;
             }
         }
     }
-    parts.join("\n")
-}
 
-fn clean_text(text: &str, content_limit: usize) -> Option<String> {
-    let decoded =
-        html_escape::decode_html_entities(text).replace(['\u{200b}', '\u{200c}', '\u{200d}'], "");
-    let mut deduped = Vec::new();
-    let mut previous: Option<&str> = None;
-    for line in decoded.lines() {
-        if !line.is_empty() && previous != Some(line) {
-            deduped.push(line);
+    fn prose(&mut self, text: &str) {
+        for c in text.chars() {
+            if self.remaining == 0 {
+                break;
+            }
+            // HTML whitespace collapses across text nodes, never independently
+            // at inline element boundaries. Entities are already decoded by DOM
+            // parsing; decoding again would corrupt literal &amp; examples.
+            if c.is_whitespace() {
+                self.boundary(' ');
+            } else {
+                self.flush();
+                self.push(c);
+            }
         }
-        previous = if line.is_empty() { None } else { Some(line) };
-    }
-    let retained = deduped
-        .into_iter()
-        .filter(|line| !NOISE.iter().any(|pattern| pattern.is_match(line)))
-        .collect::<Vec<_>>()
-        .join("\n");
-    let cleaned = WHITESPACE.replace_all(&retained, " ").trim().to_owned();
-    if cleaned.is_empty() {
-        None
-    } else {
-        Some(cleaned.chars().take(content_limit).collect())
     }
 }
 
@@ -741,19 +844,22 @@ mod tests {
     }
 
     #[test]
-    fn extracts_weighted_main_text_and_noise() {
+    fn extracts_main_text_and_preserves_metadata() {
         let content = parse_content(PAGE, 500).unwrap();
         assert!(content.contains("Kestrel heading"));
         assert!(content.contains("Useful section"));
         assert!(content.contains("meaningful page content"));
         assert!(!content.contains("Ignore navigation"));
-        assert!(!content.contains("ignored metadata"));
+        assert!(content.contains("Source: ignored metadata"));
     }
 
     #[test]
     fn rejects_documents_without_meaningful_text() {
         assert_eq!(
-            parse_content("<html><body><p>short</p></body></html>", 100),
+            parse_content(
+                "<html><head><title>Only metadata</title></head><body><p> </p></body></html>",
+                100
+            ),
             None
         );
     }
@@ -848,3 +954,6 @@ mod cutoff_tests;
 
 #[cfg(test)]
 mod quality_tests;
+
+#[cfg(test)]
+mod ordered_tests;

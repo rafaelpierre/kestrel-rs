@@ -125,6 +125,14 @@ reports the number of successfully extracted pages that reached the cap on stder
 Search-provider response limits are unchanged. Byte-capped extractions are not
 cached. The extractor does not render JavaScript.
 
+HTML extraction preserves document order and inline word boundaries, including
+short answers, nested lists, code and tables. Blocks use line breaks, table cells
+use tabs, and `pre` retains code indentation and repeated lines. Headings are
+included once per source occurrence without an implicit BM25 boost. Character
+limits count retained whitespace and separators; old cache entries keep their
+previous extraction until expiry or a fresh fetch. See the
+[HTML extraction contract](docs/page-extraction.md#ordered-readable-text-issue-22).
+
 Page extraction removes structural chrome (such as navigation and sidebars)
 and explicit clutter markers using whole class tokens and scoped ID names.
 Names such as `download`, `reader`, `shadow`, and `thread` retain their content;

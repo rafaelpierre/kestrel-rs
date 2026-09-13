@@ -70,10 +70,10 @@ fn root_recovery_is_limited_to_a_known_shell_and_first_article() {
         .unwrap();
     let mut document = Html::parse_document(case.html.as_deref().unwrap());
     remove_page_chrome(&mut document);
-    let old_text = clean_text(&extract_weighted_text(main_content(&document)), 20_000);
+    let old_text = extract_text(main_content(&document), 20_000);
     assert_eq!(
         old_text.as_deref(),
-        Some("Post a comment Your email address will not be published.")
+        Some("Post a comment\nYour email address will not be published.")
     );
     assert_ne!(old_text, case.extracted);
     for main in [
