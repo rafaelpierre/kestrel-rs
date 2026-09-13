@@ -25,6 +25,7 @@ const WAIT: Duration = Duration::from_millis(250);
 pub struct SearchRecovery {
     disk: PageCache,
     ttl: Duration,
+    cancel: tokio::sync::watch::Sender<bool>,
 }
 impl SearchRecovery {
     /// Create configuration without touching disk. TTL must be positive.
@@ -32,6 +33,7 @@ impl SearchRecovery {
         Ok(Self {
             disk: PageCache::new(directory, ttl)?,
             ttl,
+            cancel: tokio::sync::watch::channel(false).0,
         })
     }
     /// Set the best-effort number of retained provider units (default 1,000).
@@ -44,6 +46,18 @@ impl SearchRecovery {
         home::home_dir()
             .map(|p| p.join(".cache/kestrel/search-v1"))
             .ok_or_else(|| KestrelError::InvalidRequest("home directory is unavailable".into()))
+    }
+    /// Request bounded graceful cancellation of operations using this store.
+    pub fn cancel(&self) {
+        self.cancel.send_replace(true);
+    }
+    /// Whether graceful cancellation has been requested.
+    pub fn is_cancelled(&self) -> bool {
+        *self.cancel.borrow()
+    }
+    pub(crate) async fn cancelled(&self) {
+        let mut receiver = self.cancel.subscribe();
+        let _ = receiver.wait_for(|cancelled| *cancelled).await;
     }
     fn target(&self, key: &UnitKey) -> Result<PathBuf, std::io::Error> {
         let bytes = serde_json::to_vec(key).map_err(std::io::Error::other)?;
@@ -86,25 +100,48 @@ impl SearchRecovery {
             })
             .await
     }
-    #[cfg(test)]
-    pub(crate) async fn load(&self, key: &UnitKey) -> Option<Snapshot> {
-        let target = self.target(key).ok()?;
+    pub(crate) async fn restore(&self, key: &UnitKey) -> Result<Snapshot, &'static str> {
+        let target = self.target(key).map_err(|_| "invalid identity")?;
         let key = key.clone();
         let ttl = self.ttl;
         self.disk
             .run_io(move || {
-                Ok(read_snapshot(&target).filter(|s| {
-                    s.key == key
-                        && s.key.version == VERSION
-                        && s.state != State::Invalid
-                        && SystemTime::now()
-                            .duration_since(s.updated_at)
-                            .is_ok_and(|age| age <= ttl)
-                }))
+                match std::fs::metadata(&target) {
+                    Err(error) => {
+                        return Ok(Err(if error.kind() == std::io::ErrorKind::NotFound {
+                            "evicted or absent"
+                        } else {
+                            "storage read failure"
+                        }));
+                    }
+                    Ok(meta) if meta.len() > MAX_RECORD_BYTES as u64 => {
+                        return Ok(Err("oversized entry"));
+                    }
+                    Ok(_) => (),
+                }
+                let Some(snapshot) = read_snapshot(&target) else {
+                    return Ok(Err("corrupt or incompatible entry"));
+                };
+                if snapshot.key != key {
+                    return Ok(Err("incompatible identity"));
+                }
+                if snapshot.state == State::Invalid {
+                    return Ok(Err("invalidated provider attempt"));
+                }
+                if !SystemTime::now()
+                    .duration_since(snapshot.updated_at)
+                    .is_ok_and(|age| age <= ttl)
+                {
+                    return Ok(Err("expired or future-dated entry"));
+                }
+                Ok(Ok(snapshot))
             })
             .await
-            .ok()
-            .flatten()
+            .map_err(|_| "storage read failure")?
+    }
+    #[cfg(test)]
+    pub(crate) async fn load(&self, key: &UnitKey) -> Option<Snapshot> {
+        self.restore(key).await.ok()
     }
 }
 
@@ -125,7 +162,15 @@ impl UnitKey {
             engine,
             region: region.into(),
             time_filter,
-            coverage: "built-in-endpoints/first-response/provider-limits-v1".into(),
+            coverage: {
+                let base = "built-in-endpoints/first-response/provider-limits-v1".to_owned();
+                #[cfg(feature = "test-fixtures")]
+                let base = std::env::var("KESTREL_TEST_PROVIDER_ENDPOINT")
+                    .map_or(base.clone(), |endpoint| {
+                        format!("{base}/fixture:{endpoint}")
+                    });
+                base
+            },
         }
     }
 }
@@ -184,6 +229,7 @@ struct Queued {
 #[derive(Clone)]
 pub(crate) struct ProgressQueue {
     sender: mpsc::Sender<Queued>,
+    pub(crate) store: SearchRecovery,
     memory: Arc<Semaphore>,
     generation: (SystemTime, String),
     drain: Arc<std::sync::Mutex<Option<tokio::time::Instant>>>,
@@ -199,6 +245,19 @@ impl Drop for ProgressQueue {
 }
 impl ProgressQueue {
     pub(crate) async fn enqueue(
+        &self,
+        key: UnitKey,
+        sequence: u64,
+        state: State,
+        records: &[SearchResult],
+        deadline: Option<tokio::time::Instant>,
+    ) {
+        tokio::select! {
+            () = self.store.cancelled() => eprintln!("[kestrel] Recovery admission closed by cancellation."),
+            () = self.enqueue_inner(key, sequence, state, records, deadline) => (),
+        }
+    }
+    async fn enqueue_inner(
         &self,
         key: UnitKey,
         sequence: u64,
@@ -272,6 +331,27 @@ impl ProgressQueue {
     }
 }
 
+// Cancellation can arrive after a storage syscall starts. Continue polling that
+// same operation only within the smaller of its existing deadline and drain cap.
+pub(crate) async fn storage_wait<T>(
+    deadline: Option<tokio::time::Instant>,
+    cancellation: Option<&SearchRecovery>,
+    work: impl std::future::Future<Output = T>,
+) -> Result<T, ()> {
+    let Some(store) = cancellation else {
+        return before_deadline(deadline, work).await;
+    };
+    tokio::pin!(work);
+    if !store.is_cancelled() {
+        tokio::select! {
+            result = before_deadline(deadline,&mut work) => return result,
+            () = store.cancelled() => (),
+        }
+    }
+    let cap = tokio::time::Instant::now() + WAIT;
+    before_deadline(Some(deadline.map_or(cap, |end| end.min(cap))), &mut work).await
+}
+
 pub(crate) fn writer(
     store: Option<&SearchRecovery>,
     deadline: Option<tokio::time::Instant>,
@@ -281,7 +361,8 @@ pub(crate) fn writer(
 ) {
     let (sender, mut receiver) = mpsc::channel::<Queued>(16);
     let drain = Arc::new(std::sync::Mutex::new(None));
-    let queue = store.map(|_| ProgressQueue {
+    let queue = store.map(|store| ProgressQueue {
+        store: store.clone(),
         drain: drain.clone(),
         sender,
         memory: Arc::new(Semaphore::new(QUEUE_BYTES)),
@@ -300,7 +381,17 @@ pub(crate) fn writer(
                     .and_then(|d| *d)
                     .map_or(end, |d| d.min(end))
             });
-            match before_deadline(Some(end), store.commit(item.snapshot)).await {
+            let end = if store.is_cancelled() {
+                let cap = drain
+                    .lock()
+                    .ok()
+                    .and_then(|d| *d)
+                    .unwrap_or_else(|| tokio::time::Instant::now() + WAIT);
+                end.min(cap)
+            } else {
+                end
+            };
+            match storage_wait(Some(end), Some(store), store.commit(item.snapshot)).await {
                 Ok(Ok(true)) => committed += 1,
                 Ok(Ok(false)) => {
                     eprintln!("[kestrel] Recovery ignored a superseded generation or sequence.")
@@ -331,16 +422,24 @@ pub(crate) fn writer(
                     .and_then(|d| *d)
                     .map_or(end, |d| d.min(end))
             });
+            let end = if store.is_cancelled() {
+                let cap = drain
+                    .lock()
+                    .ok()
+                    .and_then(|d| *d)
+                    .unwrap_or_else(|| tokio::time::Instant::now() + WAIT);
+                end.min(cap)
+            } else {
+                end
+            };
             if !matches!(
-                before_deadline(Some(end), store.disk.prune()).await,
+                storage_wait(Some(end), Some(store), store.disk.prune()).await,
                 Ok(Ok(()))
             ) {
                 eprintln!("[kestrel] Recovery maintenance failed or timed out.");
             }
         }
-        eprintln!(
-            "[kestrel] Recovery: {committed} snapshots committed, {lost} unacknowledged; replay is not enabled in this slice."
-        );
+        eprintln!("[kestrel] Recovery: {committed} snapshots committed, {lost} unacknowledged.");
     };
     (queue, writer)
 }
@@ -383,6 +482,37 @@ mod tests {
             },
             checksum: String::new(),
         }
+    }
+    #[tokio::test]
+    async fn cancellation_bounds_an_already_pending_storage_wait() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = SearchRecovery::new(dir.path(), Duration::from_secs(60)).unwrap();
+        let started = tokio::time::Instant::now();
+        let wait = storage_wait(
+            Some(started + Duration::from_secs(20)),
+            Some(&store),
+            std::future::pending::<()>(),
+        );
+        let cancel = async {
+            tokio::time::sleep(Duration::from_millis(10)).await;
+            store.cancel();
+        };
+        let (result, ()) =
+            tokio::time::timeout(Duration::from_secs(1), async { tokio::join!(wait, cancel) })
+                .await
+                .unwrap();
+        assert!(result.is_err());
+        assert!(started.elapsed() < Duration::from_secs(1));
+    }
+    #[test]
+    fn recovered_client_futures_remain_send() {
+        fn assert_send<T: Send>(_: T) {}
+        let directory = tempfile::tempdir().unwrap();
+        let store = SearchRecovery::new(directory.path(), Duration::from_secs(60)).unwrap();
+        let client = crate::KestrelClient::new().unwrap().with_recovery(store);
+        let queries = vec!["fixture".to_owned()];
+        let options = crate::SearchOptions::default();
+        assert_send(client.search_many_detailed(&queries, &options));
     }
     #[tokio::test]
     async fn snapshot_replacement_completion_retraction_and_corruption() {

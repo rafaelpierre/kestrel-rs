@@ -45,7 +45,7 @@ impl KestrelClient {
         })
     }
 
-    /// Enable provider progress recording for multi-query searches. Page caching is independent.
+    /// Replay and record provider progress for multi-query searches. Page caching is independent.
     pub fn with_recovery(mut self, recovery: crate::SearchRecovery) -> Self {
         self.recovery = Some(recovery);
         self
@@ -209,6 +209,7 @@ impl KestrelClient {
                     &self.fetch,
                     deadline,
                     Some(cache),
+                    self.recovery.as_ref(),
                 ))
                 .await?
             };

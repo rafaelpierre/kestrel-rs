@@ -39,7 +39,37 @@ where
     collect_recording(pending, quorum, minimum, signal, receiver, None, None).await
 }
 
+#[cfg(test)]
 pub(super) async fn collect_recording<F>(
+    pending: FuturesUnordered<F>,
+    quorum: Option<usize>,
+    minimum: Option<usize>,
+    signal: Option<Arc<AtomicU8>>,
+    receiver: Option<mpsc::Receiver<Batch>>,
+    progress: Option<(
+        crate::recovery::ProgressQueue,
+        Vec<crate::recovery::UnitKey>,
+    )>,
+    deadline: Option<tokio::time::Instant>,
+) -> (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)
+where
+    F: Future<Output = (usize, Result<Vec<SearchResult>, KestrelError>)>,
+{
+    collect_replaying(
+        pending,
+        quorum,
+        minimum,
+        signal,
+        receiver,
+        progress,
+        deadline,
+        BTreeMap::new(),
+    )
+    .await
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(super) async fn collect_replaying<F>(
     mut pending: FuturesUnordered<F>,
     quorum: Option<usize>,
     minimum: Option<usize>,
@@ -50,6 +80,7 @@ pub(super) async fn collect_recording<F>(
         Vec<crate::recovery::UnitKey>,
     )>,
     deadline: Option<tokio::time::Instant>,
+    recovered: BTreeMap<usize, crate::recovery::Snapshot>,
 ) -> (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)
 where
     F: Future<Output = (usize, Result<Vec<SearchResult>, KestrelError>)>,
@@ -57,9 +88,21 @@ where
     let mut sequence = 0u64;
     let mut completed = BTreeMap::new();
     let mut partial = BTreeMap::new();
+    for (index, snapshot) in recovered {
+        if snapshot.state == crate::recovery::State::Complete {
+            completed.insert(index, Ok(snapshot.records));
+        } else {
+            partial.insert(index, snapshot.records);
+        }
+    }
     let mut cancelled = 0;
     while !pending.is_empty() {
         let resume = tokio::select! {
+            () = async { match &progress { Some((queue,_)) => queue.store.cancelled().await, None => std::future::pending().await } } => {
+                cancelled = pending.len();
+                break;
+            }
+
             outcome = pending.next() => {
                 let Some((index, outcome)) = outcome else { break };
                 // EOF replaces the snapshot. Deadlines retain complete records;

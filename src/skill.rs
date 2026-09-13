@@ -222,10 +222,10 @@ For a known-URL task, skip the discovery command entirely.
 Connection pools are reused within one process/retained library client. Separate
 CLI calls can each incur initialization and cannot reuse the previous process's
 pool. Search's opt-in extracted-page cache reuses unexpired completed extractions,
-keyed by conservative request URL, extraction version, content limit and response-byte allowance; provider discovery still runs. Standalone
+keyed by conservative request URL, extraction version, content limit and response-byte allowance; provider discovery still runs unless compatible provider recovery is enabled. Standalone
 fetch does not use that cache, and byte-capped extractions are excluded. Eligible pages commit incrementally while other fetches continue. A fresh process can
 reuse committed pages, but accepted or queued text is not yet durable. This is page-only
-recovery; provider discovery still repeats (provider recovery is tracked in #70). With `--fetch-budget`,
+recovery; add independent `--recovery-ttl` flags to reuse provider work too. With `--fetch-budget`,
 one deadline covers cache reads, page requests, writes and maintenance. Completed
 text remains available even if persistence times out; `budget_exhausted` may be
 true with all pages extracted. At most four blocking storage jobs are admitted
@@ -250,65 +250,94 @@ and encoded paths; fragments are ignored because HTTP does not send them.
 Legacy unversioned and page-text-v2 entries are misses and are not migrated. Search-result
 deduplication remains unchanged; this fix applies to persistent page text.
 
-## Provider progress recording
+## Recovering interrupted searches
 
-Search can now record provider snapshots independently of page caching:
+Enable provider recovery independently of page caching, including metadata-only
+searches. Repeat the same command after interruption:
 
 ```sh
-kestrel search "rust ownership" --no-fetch --recovery-ttl 300 --recovery-dir ./progress --search-budget 3
+# Initial invocation
+kestrel search "rust ownership" -q "rust borrowing" --no-fetch --recovery-ttl 300 --recovery-dir ./progress --search-budget 3
+# Retry with a fresh three-second budget
+kestrel search "rust ownership" -q "rust borrowing" --no-fetch --recovery-ttl 300 --recovery-dir ./progress --search-budget 3
 ```
 
-`--recovery-ttl` enables recording and must be positive and finite. The directory
-and capacity flags require it; defaults are `~/.cache/kestrel/search-v1` and 1000
-units. Without it, no provider storage is touched. Direct single-provider library
-`search` and standalone CLI `fetch` do not use this store. The library enables
-multi-query recording with `KestrelClient::with_recovery(SearchRecovery)`.
+For page evidence, enable both stores and repeat both directories and allowances:
 
-This slice records but does not replay provider work. #125 adds restart replay,
-current-minimum accounting and compatible request skipping. Repeating this
-command currently still invokes providers. Page recovery from #122 is separate.
+```sh
+kestrel search "rust ownership" --recovery-ttl 300 --recovery-dir ./progress --cache-ttl 300 --cache-dir ./pages --content-limit 3000 --max-response-bytes 4000000 --search-budget 3 --fetch-budget 5
+# Retry
+kestrel search "rust ownership" --recovery-ttl 300 --recovery-dir ./progress --cache-ttl 300 --cache-dir ./pages --content-limit 3000 --max-response-bytes 4000000 --search-budget 3 --fetch-budget 5
+```
 
-The collector queues cumulative normalized snapshots before acknowledging the
-provider's next read. Batch adapters enqueue their records immediately on return.
-The writer is polled alongside all query collectors, so disk waits do not prevent
-network progress until queue backpressure applies. No collector lock spans I/O.
-Each query/provider unit retains its original ranks and source occurrences;
-current result merging handles duplicates across units. Snapshot replacement is
-not append-only union: removed records disappear in the next committed sequence.
+`--recovery-ttl` must be positive and finite. Directory and capacity flags require
+it; defaults are `~/.cache/kestrel/search-v1` and 1000 provider units. Without it,
+provider storage is untouched and discovery repeats normally. Page cache flags
+remain independent and conflict with `--no-fetch`. Direct single-provider library
+`search` and standalone CLI `fetch` do not use provider recovery. The library
+uses `KestrelClient::with_recovery(SearchRecovery)` for multi-query calls.
 
-Each checksummed envelope includes schema/adapter version, query, provider,
-region, time filter, built-in request endpoint/coverage version, generation start
-and UUID, increasing sequence, commit-queue timestamp, records and state.
-Successful EOF commits final records and completion in one atomic envelope;
-errors commit an empty invalid tombstone. Deadlines preserve the last incomplete
-snapshot. Empty successful provider results are valid complete state. A later
-invocation's generation supersedes an older one; stale sequence/generation writes
-are rejected while holding the same OS lock as replacement and eviction.
+## Replay and necessary requests
 
-The shared page/storage primitive uses bounded blocking-worker admission,
-OS-managed locks (250 ms acquisition limit), same-directory temporary files,
-file sync and atomic replacement, plus directory sync on Unix. It does not
-promise power-loss durability on platforms without directory sync. Checksums
-cover metadata and records; torn, corrupt, oversized and expired entries miss.
-A crash before a retraction commit can leave the prior incomplete snapshot; it
-must never be interpreted as complete provider work. Clock ordering is local
-system-time ordering plus UUID tie-break, not a distributed consensus protocol.
+Validated committed records enter the existing collector in the current query
+and provider order. They retain original ranks/source occurrences and count toward
+the current per-query minimum. Reordered or extended query lists reuse compatible
+units; cross-query/provider duplicates merge through the ordinary collector.
 
-One joined writer accepts 16 snapshots with a 64 MiB admission budget; each
-snapshot is conservatively size-checked before copying and limited to 4 MiB on
-serialization. One in-flight worker may retain another snapshot. Serialization,
-checksums, locking and filesystem calls run on bounded blocking workers. Queue
-backpressure respects the invocation's absolute search deadline. Without a
-search budget, each storage wait and final drain is at most 250 ms. A running
-syscall may complete after cancellation; only acknowledged commits are reported.
-Maintenance scans at most 4096 entries; capacity is best effort. Failures and
-oversized snapshots produce stderr diagnostics without changing ordinary JSON.
+Compatible complete units skip their requests, including completed empty responses.
+Incomplete units retry only if the current minimum is still unmet. A smaller target
+can return from incomplete replay without any request. A larger target retries
+unfinished units with a fresh invocation deadline. Completed first-response coverage
+is not proof that the provider's whole index is exhausted; increasing a target does
+not introduce pagination or re-request an already complete compatible response.
+A new stream snapshot replaces its unit's recovered partial state. Failed/malformed
+outcomes retract that unit; deadline cancellation retains its valid partial records.
 
-Tests cover real streamed records committed before EOF and retained after caller
-cancellation or an abruptly killed fresh subprocess, snapshot replacement/retraction, atomic completion metadata,
-corruption, generation ordering, TTL, competing handles and queue saturation.
-The page-process kill test also validates the shared atomic primitive.
-#125 adds full provider subprocess replay and repeated-interruption coverage.
+Keys include schema/adapter version, exact normalized query, provider, region,
+time filter and built-in endpoint/coverage version. Changed settings safely miss.
+Relative time filters (`d`, `w`, `m`, `y`) always miss because their moving window
+has no stable adapter coverage anchor. Page keys additionally require exact
+character and response-byte allowances; byte-capped pages are never cached.
+No byte-range or compressed-prefix resumption is implemented.
+
+## Commit and cancellation boundaries
+
+Accepted means current collector state; enqueued means bounded storage admission.
+Only an acknowledged atomic commit establishes retained storage. Streaming records
+are queued before provider EOF; batch results are queued when available. Complete
+records and completion metadata occupy one checksummed envelope. Errors write an
+empty invalid tombstone; snapshots replace rather than union obsolete records.
+A crash before a retraction commits can leave the prior incomplete snapshot.
+
+OS locks serialize generation/sequence comparison, replacement and eviction. Older
+generations cannot replace newer state. Temporary-file sync, atomic rename and
+Unix directory sync provide the documented commit boundary; filesystem/hardware
+failures and power-loss behavior on other platforms remain outside that promise.
+Checksums cover metadata and records. Expired, future-dated, invalidated, corrupt,
+oversized, incompatible and evicted/absent entries miss, with stderr reasons.
+
+One joined provider writer admits 16 snapshots and 64 MiB, with a 4 MiB envelope
+cap and at most one additional in-flight copy. The page writer admits 16 entries
+and 16 MiB. Blocking jobs retain four admission permits per store after async
+cancellation. Storage and queue waits consume the same absolute search/fetch
+budget as their operation. Without a total budget, each write/maintenance wait
+and final drain is at most 250 ms. Maintenance scans at most 4096 entries;
+capacity remains best effort. Reads do not refresh TTL, which starts at snapshot
+queue time. No detached async writer is left running.
+
+With provider recovery enabled, Ctrl-C and Unix SIGTERM request cancellation,
+stop provider/page collection and allow at most 250 ms of graceful drain before
+status 130. Already-running filesystem calls can finish later; runtime shutdown
+may wait for them. No late commit is guaranteed or counted as acknowledged.
+Dropping a library future immediately drops its queued work; `SearchRecovery::cancel`
+requests graceful cancellation instead. Construct a new store/client for a fresh
+invocation after explicit cancellation. SIGKILL cannot drain.
+
+Ordinary JSON shapes are unchanged. Provider diagnostics describe requests made in
+this invocation, so a fully recovered run has no new provider request rows. Recovery
+counts, skipped requests, miss reasons and commit failures appear on stderr. A hit
+means compatible retained text, not proof that it answers the search question.
+
 
 "#);
     for name in ["search", "fetch"] {

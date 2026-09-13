@@ -122,7 +122,7 @@ pub(crate) async fn fetch_all_reusing_client_with_deadline(
     client: &reqwest::Client,
     deadline: Option<tokio::time::Instant>,
 ) -> Result<FetchReport, KestrelError> {
-    fetch_all_reusing_client_with_cache(urls, options, client, deadline, None).await
+    fetch_all_reusing_client_with_cache(urls, options, client, deadline, None, None).await
 }
 
 pub(crate) async fn fetch_all_reusing_client_with_cache(
@@ -131,6 +131,7 @@ pub(crate) async fn fetch_all_reusing_client_with_cache(
     client: &reqwest::Client,
     deadline: Option<tokio::time::Instant>,
     cache: Option<&crate::cache::PageCache>,
+    cancellation: Option<&crate::SearchRecovery>,
 ) -> Result<FetchReport, KestrelError> {
     crate::telemetry::scope_result("kestrel.fetch", async {
         crate::telemetry::payload("fetch.input", urls);
@@ -170,14 +171,20 @@ pub(crate) async fn fetch_all_reusing_client_with_cache(
                 }
             })
             .collect();
-        let (queue, writer) = crate::cache::page_writer(cache, options.content_limit, deadline);
+        let (queue, writer) = crate::cache::page_writer(cache, options.content_limit, deadline, cancellation);
         let collector = async move {
             let mut results = vec![None; urls.len()];
             let mut diagnostics = vec![None; urls.len()];
             let mut budget_exhausted = false;
             let mut cancelled = 0;
             while !jobs.is_empty() {
-                let item = match crate::numeric::before_deadline(deadline, jobs.next()).await {
+                let next = tokio::select! {
+                    item = crate::numeric::before_deadline(deadline, jobs.next()) => item,
+                    () = async { match cancellation { Some(store) => store.cancelled().await, None => std::future::pending().await } } => {
+                        cancelled=jobs.len(); break;
+                    }
+                };
+                let item = match next {
                     Ok(Some(item)) => item,
                     Ok(None) => break,
                     Err(()) => {
@@ -192,10 +199,10 @@ pub(crate) async fn fetch_all_reusing_client_with_cache(
                 diagnostics[index] = Some(item.diagnostic);
                 if let (Some(queue), Some(content)) = (&queue, &results[index])
                     && eligible
-                    && queue
-                        .enqueue(&urls[index], content, deadline)
-                        .await
-                        .is_err()
+                    && tokio::select! {
+                        result = queue.enqueue(&urls[index], content, deadline) => result,
+                        () = async { match cancellation { Some(store) => store.cancelled().await, None => std::future::pending().await } } => Err(()),
+                    }.is_err()
                 {
                     budget_exhausted |=
                         deadline.is_some_and(|end| tokio::time::Instant::now() >= end);

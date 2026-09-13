@@ -425,71 +425,132 @@ fn run_fanout_query<'a>(
     deadline: Option<tokio::time::Instant>,
     progress: Option<crate::recovery::ProgressQueue>,
 ) -> impl Future<Output = (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)> + 'a {
-    let mut query_span = crate::telemetry::Span::new("kestrel.query");
-    let query_context = query_span.context();
-    let _query_context = query_context.clone().attach();
-    crate::telemetry::payload("query.input", &query);
-    let pending = FuturesUnordered::new();
-    let (sender, receiver) = tokio::sync::mpsc::channel(1);
-    let fanout_cancelled = Arc::new(AtomicU8::new(FANOUT_RUNNING));
-    for (index, engine) in engines.iter().copied().enumerate() {
-        let semaphore = Arc::clone(&semaphore);
-        let diagnostics = Arc::clone(&diagnostics);
-        let job = run_one(
-            query,
-            engine,
-            clients,
-            semaphore,
-            diagnostics,
-            region,
-            time_filter,
-            deadline,
-            Some(Arc::clone(&fanout_cancelled)),
-        );
-        let publisher = streaming::Publisher {
-            sender: sender.clone(),
-            index,
-            engine,
-            query: query.to_owned(),
-        };
-        pending.push(async move {
-            let outcome = if min_results.is_some() {
-                streaming::PUBLISHER.scope(publisher, job).await
-            } else {
-                job.await
-            };
-            (index, outcome)
-        });
-    }
-    drop(sender);
-    let progress = progress.map(|queue| {
-        (
-            queue,
-            engines
-                .iter()
-                .map(|engine| crate::recovery::UnitKey::new(query, *engine, region, time_filter))
-                .collect(),
-        )
-    });
+    let engines = engines.to_vec();
     async move {
-        let output = streaming::collect_recording(
-            pending,
-            provider_quorum,
-            min_results,
-            Some(fanout_cancelled),
-            if min_results.is_some() {
-                Some(receiver)
+        let mut query_span = crate::telemetry::Span::new("kestrel.query");
+        let query_context = query_span.context();
+        let _query_context = query_context.clone().attach();
+        crate::telemetry::payload("query.input", &query);
+        drop(_query_context);
+        let keys: Vec<_> = engines
+            .iter()
+            .map(|engine| crate::recovery::UnitKey::new(query, *engine, region, time_filter))
+            .collect();
+        let mut recovered = std::collections::BTreeMap::new();
+        if let Some(queue) = &progress {
+            // Relative windows change continuously; until adapters expose a stable anchor,
+            // these units conservatively miss on every invocation.
+            if time_filter == TimeFilter::Any {
+                for (index, key) in keys.iter().enumerate() {
+                    let end = deadline
+                        .or_else(|| Some(tokio::time::Instant::now() + Duration::from_millis(250)));
+                    match crate::numeric::before_deadline(end, queue.store.restore(key)).await {
+                        Ok(Ok(snapshot)) => {
+                            recovered.insert(index, snapshot);
+                        }
+                        Ok(Err(reason)) => {
+                            eprintln!("[kestrel] Recovery miss: {reason}; requesting provider.")
+                        }
+                        Err(()) => eprintln!(
+                            "[kestrel] Recovery read deadline; requesting only within remaining budget."
+                        ),
+                    }
+                }
             } else {
-                None
-            },
-            progress,
-            deadline,
-        )
-        .await;
-        query_span.finish();
-        output
+                eprintln!(
+                    "[kestrel] Recovery miss: moving recency window has no stable coverage anchor."
+                );
+            }
+            let unique = recovered
+                .values()
+                .flat_map(|s| s.records.iter().map(result_key))
+                .collect::<HashSet<_>>()
+                .len();
+            let complete = recovered
+                .values()
+                .filter(|s| s.state == crate::recovery::State::Complete)
+                .count();
+            eprintln!(
+                "[kestrel] Recovery loaded {} unit(s): {complete} complete, {} incomplete, {unique} unique records.",
+                recovered.len(),
+                recovered.len() - complete
+            );
+        }
+        let target_reached = min_results.is_some_and(|n| {
+            recovered
+                .values()
+                .flat_map(|s| s.records.iter().map(result_key))
+                .collect::<HashSet<_>>()
+                .len()
+                >= n
+        });
+        let pending = FuturesUnordered::new();
+        let (sender, receiver) = tokio::sync::mpsc::channel(1);
+        let fanout_cancelled = Arc::new(AtomicU8::new(FANOUT_RUNNING));
+        for (index, engine) in engines.iter().copied().enumerate() {
+            if progress.as_ref().is_some_and(|p| p.store.is_cancelled())
+                || target_reached
+                || recovered
+                    .get(&index)
+                    .is_some_and(|s| s.state == crate::recovery::State::Complete)
+            {
+                eprintln!(
+                    "[kestrel] Recovery skipped {engine} request: compatible completion or current minimum satisfied."
+                );
+                continue;
+            }
+            let semaphore = Arc::clone(&semaphore);
+            let diagnostics = Arc::clone(&diagnostics);
+            let job = run_one(
+                query,
+                engine,
+                clients,
+                semaphore,
+                diagnostics,
+                region,
+                time_filter,
+                deadline,
+                Some(Arc::clone(&fanout_cancelled)),
+            );
+            let publisher = streaming::Publisher {
+                sender: sender.clone(),
+                index,
+                engine,
+                query: query.to_owned(),
+            };
+            pending.push(async move {
+                let outcome = if min_results.is_some() {
+                    streaming::PUBLISHER.scope(publisher, job).await
+                } else {
+                    job.await
+                };
+                (index, outcome)
+            });
+        }
+        drop(sender);
+        let progress = progress.map(|queue| (queue, keys));
+        async move {
+            let output = streaming::collect_replaying(
+                pending,
+                provider_quorum,
+                min_results,
+                Some(fanout_cancelled),
+                if min_results.is_some() {
+                    Some(receiver)
+                } else {
+                    None
+                },
+                progress,
+                deadline,
+                recovered,
+            )
+            .await;
+            query_span.finish();
+            output
+        }
+        .with_context(query_context)
+        .await
     }
-    .with_context(query_context)
 }
 
 #[cfg(test)]
@@ -792,6 +853,45 @@ async fn run_provider(
     time_filter: TimeFilter,
     clients: &SearchClients,
 ) -> Result<ProviderResponse, KestrelError> {
+    #[cfg(feature = "test-fixtures")]
+    if let Ok(endpoint) = std::env::var("KESTREL_TEST_PROVIDER_ENDPOINT") {
+        let mut endpoint =
+            Url::parse(&endpoint).map_err(|e| KestrelError::InvalidRequest(e.to_string()))?;
+        if endpoint.scheme() != "http"
+            || !matches!(endpoint.host_str(), Some("127.0.0.1" | "[::1]"))
+        {
+            return Err(KestrelError::InvalidRequest(
+                "test fixture endpoint must be loopback HTTP".into(),
+            ));
+        }
+        endpoint.set_path(&format!("/{engine}"));
+        let (body, retries) = if engine == Engine::Yahoo {
+            request_yahoo_with_retries(query, || {
+                clients
+                    .yahoo
+                    .as_ref()
+                    .expect("Yahoo client requested")
+                    .get(endpoint.as_str())
+                    .query(&[("q", query)])
+            })
+            .await?
+        } else {
+            request_standard_with_retries(&clients.standard, engine, query, || {
+                clients
+                    .standard
+                    .get(endpoint.as_str())
+                    .query(&[("q", query)])
+            })
+            .await?
+        };
+        let mut response = ProviderResponse {
+            results: parse_provider_response(engine, &body)?,
+            retries,
+            raw_result_count: 0,
+        };
+        filter_response(query, &mut response);
+        return Ok(response);
+    }
     let mut result = match engine {
         Engine::Duckduckgo => {
             search_duckduckgo(query, region, time_filter, &clients.standard).await

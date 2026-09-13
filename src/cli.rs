@@ -77,7 +77,7 @@ struct SearchArgs {
     #[arg(long, value_parser = positive_usize, value_name = "N")]
     min_results: Option<usize>,
 
-    /// Total search seconds, including provider queueing and retries (default: 5).
+    /// Total search seconds, including enabled recovery I/O, provider queueing and retries (default: 5).
     /// Must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     search_budget: Option<f64>,
@@ -160,7 +160,7 @@ struct SearchArgs {
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     cache_ttl: Option<f64>,
 
-    /// Record provider progress for this many seconds; replay is not yet enabled.
+    /// Replay and record compatible provider progress for this many seconds (opt-in).
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     recovery_ttl: Option<f64>,
 
@@ -338,7 +338,7 @@ pub async fn run() -> ExitCode {
                 ExitCode::FAILURE
             }
         },
-        Commands::Search(arguments) => run_search(*arguments).await,
+        Commands::Search(arguments) => Box::pin(run_search(*arguments)).await,
         Commands::Fetch(arguments) => run_fetch(arguments).await,
         Commands::Skill { command } => match run_skill(command) {
             Ok(()) => ExitCode::SUCCESS,
@@ -473,17 +473,33 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             return ExitCode::FAILURE;
         }
     };
-    let client = if let Some(ttl) = arguments.recovery_ttl {
+    let recovery = if let Some(ttl) = arguments.recovery_ttl {
         let store = arguments.recovery_dir.clone().map_or_else(kestrelsearch::SearchRecovery::default_directory, Ok)
             .and_then(|path| kestrelsearch::SearchRecovery::new(path, Duration::from_secs_f64(ttl)))
             .and_then(|store| store.with_max_entries(arguments.recovery_max_entries.unwrap_or(1000)));
-        match store { Ok(store) => client.with_recovery(store), Err(error) => {
+        match store { Ok(store) => Some(store), Err(error) => {
             eprintln!("[kestrel] Invalid recovery configuration: {error}"); return ExitCode::FAILURE;
         } }
-    } else { client };
+    } else { None };
+    let client = match &recovery { Some(store) => client.with_recovery(store.clone()), None => client };
+    let interrupted = async {
+        if recovery.is_none() { std::future::pending::<()>().await; }
+        wait_for_shutdown().await;
+        if let Some(store) = &recovery { store.cancel(); }
+    };
+    tokio::pin!(interrupted);
     timings.insert("initialize".into(), elapsed_millis(initialize_started));
     let started = Instant::now();
-    let search_report = match client.search_many_detailed(&queries, &options).await {
+    let mut search = Box::pin(client.search_many_detailed(&queries, &options));
+    let search_result = tokio::select! {
+        result = &mut search => result,
+        () = &mut interrupted => {
+            eprintln!("[kestrel] Interrupted; draining committed provider work for at most 250 ms.");
+            let _ = tokio::time::timeout(Duration::from_millis(250), &mut search).await;
+            return ExitCode::from(130);
+        }
+    };
+    let search_report = match search_result {
         Ok(report) => report,
         Err(error) => {
             eprintln!("[kestrel] Search failed: {error}");
@@ -573,14 +589,20 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
         timings.extend(selection.timings);
         candidate_counts.extend(selection.counts);
         let fetch_started = Instant::now();
-        fetch_diagnostics =
-            match attach_page_content(&client, &mut results, &arguments, &mut io::stderr()).await {
-                Ok(report) => Some(report),
-                Err(error) => {
-                    eprintln!("[kestrel] Fetch failed: {error}");
-                    return ExitCode::FAILURE;
-                }
-            };
+        let mut stderr = io::stderr();
+        let mut pages = Box::pin(attach_page_content(&client, &mut results, &arguments, &mut stderr));
+        let page_result = tokio::select! {
+            result = &mut pages => result,
+            () = &mut interrupted => {
+                eprintln!("[kestrel] Interrupted; draining page work for at most 250 ms.");
+                let _ = tokio::time::timeout(Duration::from_millis(250), &mut pages).await;
+                return ExitCode::from(130);
+            }
+        };
+        fetch_diagnostics = match page_result {
+            Ok(report) => Some(report),
+            Err(error) => { eprintln!("[kestrel] Fetch failed: {error}"); return ExitCode::FAILURE; }
+        };
         timings.insert("fetch".into(), elapsed_millis(fetch_started));
     }
 
@@ -2130,7 +2152,7 @@ fn skill_documents_incremental_page_recovery() {
 
 #[cfg(test)]
 #[test]
-fn recovery_flags_and_generated_skill_match_recording_contract() {
+fn recovery_flags_and_generated_skill_match_replay_contract() {
     for args in [
         vec!["--no-fetch", "--recovery-ttl", "60"],
         vec![
@@ -2159,10 +2181,37 @@ fn recovery_flags_and_generated_skill_match_recording_contract() {
         "--recovery-ttl",
         "--recovery-dir",
         "--recovery-max-entries",
-        "records but does not replay",
+        "Recovering interrupted searches",
         "64 MiB",
         "invalid tombstone",
     ] {
         assert!(skill.contains(text), "missing {text}");
+    }
+}
+
+async fn wait_for_shutdown() {
+    #[cfg(unix)]
+    {
+        let mut terminate =
+            match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+                Ok(signal) => Some(signal),
+                Err(error) => {
+                    eprintln!("[kestrel] SIGTERM handler unavailable: {error}");
+                    None
+                }
+            };
+        let result = tokio::select! {
+            result = tokio::signal::ctrl_c() => result,
+            () = async { match &mut terminate { Some(signal) => { let _ = signal.recv().await; }, None => std::future::pending().await } } => Ok(()),
+        };
+        if let Err(error) = result {
+            eprintln!("[kestrel] Interrupt handler unavailable: {error}");
+            std::future::pending::<()>().await;
+        }
+    }
+    #[cfg(not(unix))]
+    if let Err(error) = tokio::signal::ctrl_c().await {
+        eprintln!("[kestrel] Interrupt handler unavailable: {error}");
+        std::future::pending::<()>().await;
     }
 }

@@ -312,13 +312,14 @@ impl PageWriteQueue {
     }
 }
 
-pub(crate) fn page_writer(
-    cache: Option<&PageCache>,
+pub(crate) fn page_writer<'a>(
+    cache: Option<&'a PageCache>,
     content_limit: usize,
     deadline: Option<tokio::time::Instant>,
+    cancellation: Option<&'a crate::SearchRecovery>,
 ) -> (
     Option<PageWriteQueue>,
-    impl std::future::Future<Output = bool> + '_,
+    impl std::future::Future<Output = bool> + 'a,
 ) {
     let (sender, mut receiver) = tokio::sync::mpsc::channel::<PageWrite>(PAGE_QUEUE_ENTRIES);
     let drain = Arc::new(std::sync::Mutex::new(None));
@@ -338,8 +339,15 @@ pub(crate) fn page_writer(
             let end = deadline.or_else(|| {
                 Some(drain_end.map_or(now + STORAGE_WAIT, |end| end.min(now + STORAGE_WAIT)))
             });
-            match crate::numeric::before_deadline(
+            let end = if cancellation.is_some_and(|s| s.is_cancelled()) {
+                let cap = drain_end.unwrap_or(now + STORAGE_WAIT);
+                Some(end.map_or(cap, |end| end.min(cap)))
+            } else {
+                end
+            };
+            match crate::recovery::storage_wait(
                 end,
+                cancellation,
                 cache.put(&page.url, content_limit, &page.content),
             )
             .await
@@ -374,7 +382,13 @@ pub(crate) fn page_writer(
             let end = deadline.or_else(|| {
                 Some(drain_end.map_or(now + STORAGE_WAIT, |end| end.min(now + STORAGE_WAIT)))
             });
-            match crate::numeric::before_deadline(end, cache.prune()).await {
+            let end = if cancellation.is_some_and(|s| s.is_cancelled()) {
+                let cap = drain_end.unwrap_or(now + STORAGE_WAIT);
+                Some(end.map_or(cap, |end| end.min(cap)))
+            } else {
+                end
+            };
+            match crate::recovery::storage_wait(end, cancellation, cache.prune()).await {
                 Ok(Ok(())) => (),
                 Ok(Err(error)) => eprintln!("[kestrel] Page cache maintenance failed: {error}"),
                 Err(()) => {
