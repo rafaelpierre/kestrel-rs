@@ -136,6 +136,10 @@ impl KestrelClient {
                 "fetch budget must be greater than zero".into(),
             ));
         }
+        crate::fetcher::validate_options(options)?;
+        if let Some(budget) = budget {
+            crate::numeric::duration("fetch budget", budget)?;
+        }
         let cached = join_all(urls.iter().map(|url| cache.get(url, options.content_limit))).await;
         let cache_hits = cached.iter().filter(|content| content.is_some()).count();
         let mut results = cached;

@@ -57,7 +57,16 @@ page text is unavailable, including searches with `--no-fetch`.
 - Progress logs go to **stderr**; use `--output json` for machine-readable **stdout**.
 - Successful `search` and `fetch` commands report elapsed wall-clock seconds to three decimal places on stderr, e.g. `[kestrel] Search completed in 1.234 seconds.` or `[kestrel] Fetch completed in 0.125 seconds.` This includes initialization, retrieval, extraction, optional ranking, and result output; it excludes argument parsing and process startup. Empty successful searches also report time. Text output is unchanged, and failures do not print a success completion line.
 - JSON `elapsed_seconds` uses a monotonic clock from command-handler entry through initialization, retrieval, extraction and optional ranking. It is captured before JSON serialization/output, so it may differ from the final stderr timing. Fractional seconds are retained without rounding to three decimal places. Process startup and argument parsing are excluded. Errors keep their existing exit status and stderr diagnostics without a JSON error envelope.
-- Numeric counts and sizes must be positive integers; durations must be finite and greater than zero.
+- Numeric counts and sizes must be positive integers. Durations must be finite,
+  round to at least one nanosecond, and fit a monotonic clock deadline; values
+  such as `1e-100` and `1e100` are rejected. Concurrency must be between 1 and
+  Tokio's `Semaphore::MAX_PERMITS` (platform-dependent), inclusive.
+- With fetching enabled, the default candidate count uses checked `3 * top-k`.
+  If that exceeds the platform integer range, lower `--top-k` or explicitly set
+  `--fetch-candidates`. No multiplication is required with `--no-fetch` or an
+  explicit candidate count. Invalid numeric inputs exit with usage status 2
+  before requests, with stderr diagnostics and empty stdout. Defaults and JSON
+  schemas are unchanged; replace formerly accepted overflowing values in scripts.
 - PDFs are skipped during content fetching.
 - Direct fetch and search HTML/XHTML extraction remove structural chrome and explicit clutter markers using whole class tokens and scoped ID names, not arbitrary substrings. Containers named `download`, `reader`, `shadow`, and `thread` retain their content. Unrecognized compound names may retain clutter; extraction remains heuristic.
 - Page bodies stop at `--max-response-bytes` decoded bytes and the retained prefix is extracted, even when Content-Length exceeds the cap. Reaching the cap alone is not an error; content may be incomplete. Network and parsing concurrency are independent.

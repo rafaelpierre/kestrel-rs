@@ -53,7 +53,8 @@ latency-sensitive phase, rather than adding it immediately before every request.
 | TCP_NODELAY | On | Avoid Nagle delays on small requests |
 | DNS cache | 256 names / 60 seconds | Reuse successful system-resolver answers across reconnects |
 
-Options validate before client construction. Fixed stream windows allow 65,535
+Options validate before client construction. Durations must be nonzero and fit
+a monotonic clock deadline; warm-up timeouts use the same validation. Fixed stream windows allow 65,535
 bytes through 16 MiB; connection windows allow 65,535 bytes through 64 MiB. These
 are flow-control credits, not hard total memory bounds. Adaptive mode overrides
 fixed windows and may grow them. Page fetching retains at most

@@ -46,6 +46,17 @@ impl Default for TransportOptions {
 
 impl TransportOptions {
     pub fn validate(&self) -> Result<(), KestrelError> {
+        for (name, value) in [
+            ("pool idle timeout", self.pool_idle_timeout),
+            ("connect timeout", self.connect_timeout),
+            ("HTTP/2 PING timeout", self.http2_ping_timeout),
+            ("DNS cache TTL", self.dns_cache_ttl),
+        ] {
+            crate::numeric::duration(name, value)?;
+        }
+        if let Some(interval) = self.http2_ping_interval {
+            crate::numeric::duration("HTTP/2 PING interval", interval)?;
+        }
         let invalid = self.pool_idle_timeout.is_zero()
             || self.connect_timeout.is_zero()
             || self.http2_ping_timeout.is_zero()

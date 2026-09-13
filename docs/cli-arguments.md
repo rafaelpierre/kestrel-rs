@@ -66,6 +66,27 @@ For example, replace `search "rust" --no-fetch --timeout 10 --rank` with
 to explicitly rank metadata. Replace `search "rust" --rank --ranking-policy hybrid`
 with `search "rust" --ranking-policy hybrid`.
 
-The numeric overflow work tracked in issue #24 is separate from this argument
-interaction audit. Engine defaults and fetch response-limit changes are likewise
-tracked separately in #62 and #53.
+## Numeric boundaries
+
+Counts and sizes must be positive integers representable by the platform's
+`usize`. Provider, page and parser concurrency additionally cannot exceed
+Tokio's `Semaphore::MAX_PERMITS` (inclusive, platform-dependent).
+
+All CLI seconds values must convert to a nonzero `Duration` and fit a monotonic
+clock deadline. This rejects nonfinite values, zero, values rounding below one
+nanosecond (such as `1e-100`), and overflowing values (such as `1e100`).
+With fetching enabled and no explicit `--fetch-candidates`, `3 * top-k` must fit
+`usize`. Lower `--top-k` or set `--fetch-candidates` explicitly; metadata-only
+searches do not calculate that default.
+
+Invalid numeric arguments fail before requests with usage status 2, stderr
+explanations and empty stdout. Previously some values panicked or wrapped.
+Ordinary defaults and JSON schemas are unchanged. Regenerate installed skills
+and replace overflowing values in scripts.
+
+Library search/fetch options reject out-of-range concurrency and zero or
+unrepresentable timeout/budget deadlines with `KestrelError::InvalidRequest`,
+including empty input and cached fetch paths. Cached fetch validates before
+cache I/O. Transport and warm-up durations also validate deadline capacity.
+These representability checks are not practical memory or latency budgets;
+callers should still choose limits appropriate to their workload.
