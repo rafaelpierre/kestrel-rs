@@ -347,6 +347,12 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
 - Search defaults to a five-second total deadline and can return fewer results if
   providers finish or the deadline expires. `--no-search-budget` disables this
   deadline but keeps result-count early stopping and individual request timeouts.
+- Provider HTML/JSON parsing, including incremental records and completed envelopes,
+  uses at most ten queued/running blocking workers per retained client, shared by
+  its clones and calls. Cancellation retains capacity until the worker exits.
+  Separate clients/free-function calls have separate limits. `--search-concurrency`
+  still bounds each call's requests; `--parse-concurrency` controls page extraction,
+  not provider workers. Parser queueing is included in the search budget.
 - The search budget excludes page fetching. `--fetch-budget` separately bounds the
   candidate-fetch stage and retains completed pages; it is unset by default.
   `--timeout` controls individual page requests, not the total search duration.

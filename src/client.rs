@@ -17,6 +17,11 @@ use crate::search::{
 };
 
 /// A reusable Kestrel client that retains HTTP connection pools across calls.
+///
+/// Provider parsing has a fixed aggregate limit of ten queued/running blocking
+/// workers shared across this client and its clones. Cancelled calls retain
+/// worker capacity until the work exits. Per-call search concurrency still limits
+/// requests; fetched-page extraction uses its separate parsing configuration.
 #[derive(Clone)]
 pub struct KestrelClient {
     pub(crate) search: SearchClients,

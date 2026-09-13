@@ -188,6 +188,7 @@ async fn live_streaming_validation() {
             .unwrap();
         *yahoo.headers_mut() = profile.headers();
         SearchClients {
+            parsers: parsing::ParserPool::default(),
             standard,
             yahoo: Some(yahoo),
         }
