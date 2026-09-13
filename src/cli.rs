@@ -149,17 +149,18 @@ struct SearchArgs {
     timeout: f64,
 
     /// Total seconds for candidate fetches, including enabled cache reads/writes/maintenance.
-    /// Completed page text is retained when the deadline interrupts cache work.
+    /// Eligible pages commit while other fetches run; completed text survives storage timeout.
     /// Must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     fetch_budget: Option<f64>,
 
     /// Cache extracted page text for this many seconds (disabled by default).
+    /// Keys preserve request URL distinctions; legacy unversioned entries are misses.
     /// Must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     cache_ttl: Option<f64>,
 
-    /// Directory for extracted-page cache entries.
+    /// Directory for incrementally committed extracted-page cache entries.
     #[arg(long, value_name = "PATH", requires = "cache_ttl")]
     cache_dir: Option<PathBuf>,
 
@@ -1849,6 +1850,14 @@ mod tests {
     }
 
     #[test]
+    fn generated_skill_documents_conservative_cache_identity() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("Cache keys preserve"));
+        assert!(skill.contains("Legacy unversioned and page-text-v2 entries are misses"));
+        assert!(skill.contains("deduplication remains unchanged"));
+    }
+
+    #[test]
     fn generated_skill_documents_result_minimum_precedence() {
         let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let skill = generate_skill_md(&mut Cli::command());
@@ -2077,5 +2086,24 @@ mod tests {
         assert!(skill.contains("--max-response-bytes 65536"));
         assert!(skill.contains("defaults to 1,000,000 decoded body bytes"));
         assert_eq!(skill.matches("[default: 1000000]").count(), 2);
+    }
+}
+
+#[cfg(test)]
+#[path = "cli/recovery_tests.rs"]
+mod recovery_tests;
+
+#[cfg(test)]
+#[test]
+fn skill_documents_incremental_page_recovery() {
+    let skill = kestrelsearch::skill::generate_skill_md(&mut Cli::command());
+    for phrase in [
+        "Eligible pages commit incrementally",
+        "16 entries and 16 MiB",
+        "page-text-v2",
+        "response-byte allowance",
+        "page-only",
+    ] {
+        assert!(skill.contains(phrase), "missing {phrase}");
     }
 }

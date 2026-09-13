@@ -1,6 +1,7 @@
 //! Optional persistent cache for extracted page text.
 
-use std::io::Read;
+use serde::{Deserialize, Serialize};
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::Semaphore;
@@ -11,15 +12,30 @@ use std::time::{Duration, SystemTime};
 
 use sha2::{Digest, Sha256};
 
-use crate::search::{KestrelError, canonical_url};
+use crate::search::KestrelError;
 
-/// A TTL-bound disk cache keyed by canonical URL and extraction limit.
+// Bump when extraction semantics or the persistent identity contract changes.
+const EXTRACTION_CACHE_VERSION: &str = "page-text-v3";
+
+#[derive(Deserialize, Serialize)]
+struct CachedPage {
+    version: String,
+    url: String,
+    content_limit: usize,
+    max_response_bytes: usize,
+    created_at: SystemTime,
+    content_sha256: String,
+    content: String,
+}
+
+/// A TTL-bound disk cache keyed by conservative request URL, extraction version and limit.
 #[derive(Clone, Debug)]
 pub struct PageCache {
     directory: PathBuf,
     ttl: Duration,
     max_entries: usize,
     io: Arc<Semaphore>,
+    max_response_bytes: usize,
 }
 
 impl PageCache {
@@ -34,6 +50,7 @@ impl PageCache {
             ttl,
             max_entries: 1_000,
             io: Arc::new(Semaphore::new(CACHE_IO_CONCURRENCY)),
+            max_response_bytes: crate::fetcher::DEFAULT_MAX_RESPONSE_BYTES,
         })
     }
 
@@ -54,42 +71,49 @@ impl PageCache {
             .ok_or_else(|| KestrelError::InvalidRequest("home directory is unavailable".into()))
     }
 
+    pub(crate) fn for_response_limit(&self, limit: usize) -> Self {
+        let mut cache = self.clone();
+        cache.max_response_bytes = limit;
+        cache
+    }
+
     pub(crate) async fn get(&self, url: &str, content_limit: usize) -> Option<String> {
         let target = self.target(url, content_limit);
+        let expected_url = request_url(url);
         let ttl = self.ttl;
+        let response_limit = self.max_response_bytes;
         self.run_io(move || {
-            let metadata = match std::fs::metadata(&target) {
-                Ok(metadata) => metadata,
-                Err(_) => return Ok(None),
-            };
-            let fresh = metadata.modified().ok().is_some_and(|modified| {
-                SystemTime::now()
-                    .duration_since(modified)
-                    .is_ok_and(|age| age <= ttl)
-            });
-            if !fresh {
-                // Expiry is a miss; cleanup must not delete a concurrent writer's replacement.
-                return Ok(None);
-            }
-            let max_bytes = content_limit.saturating_mul(4);
-            if metadata.len() > max_bytes as u64 {
-                return Ok(None);
-            }
             let file = match std::fs::File::open(target) {
                 Ok(file) => file,
                 Err(_) => return Ok(None),
             };
-            let mut text = String::new();
-            if file
-                .take((max_bytes as u64).saturating_add(1))
-                .read_to_string(&mut text)
-                .is_err()
-                || text.len() > max_bytes
-                || text.chars().count() > content_limit
+            // JSON escaping uses at most six bytes per scalar, plus bounded metadata.
+            let max_bytes = content_limit.saturating_mul(6).saturating_add(65_536);
+            if file.metadata()?.len() > max_bytes as u64 {
+                return Ok(None);
+            }
+            let mut bytes = Vec::new();
+            file.take((max_bytes as u64).saturating_add(1))
+                .read_to_end(&mut bytes)?;
+            if bytes.len() > max_bytes {
+                return Ok(None);
+            }
+            let Ok(page) = serde_json::from_slice::<CachedPage>(&bytes) else {
+                return Ok(None);
+            };
+            if page.version != EXTRACTION_CACHE_VERSION
+                || page.url != expected_url
+                || page.content_limit != content_limit
+                || page.max_response_bytes != response_limit
+                || page.content.chars().count() > content_limit
+                || page.content_sha256 != format!("{:x}", Sha256::digest(page.content.as_bytes()))
+                || !SystemTime::now()
+                    .duration_since(page.created_at)
+                    .is_ok_and(|age| age <= ttl)
             {
                 return Ok(None);
             }
-            Ok(Some(text))
+            Ok(Some(page.content))
         })
         .await
         .ok()
@@ -125,26 +149,65 @@ impl PageCache {
     ) -> Result<(), KestrelError> {
         let cache = self.clone();
         let target = self.target(url, content_limit);
-        let content = content.to_owned();
+        let mut page = CachedPage {
+            version: EXTRACTION_CACHE_VERSION.into(),
+            url: request_url(url),
+            content_limit,
+            max_response_bytes: self.max_response_bytes,
+            created_at: SystemTime::now(),
+            content_sha256: String::new(),
+            content: content.to_owned(),
+        };
         self.run_io(move || {
+            page.content_sha256 = format!("{:x}", Sha256::digest(page.content.as_bytes()));
             std::fs::create_dir_all(&cache.directory)?;
-            let temporary = cache
-                .directory
-                .join(format!(".{}.tmp", uuid::Uuid::new_v4().simple()));
-            if let Err(error) = std::fs::write(&temporary, content)
-                .and_then(|()| std::fs::rename(&temporary, &target))
+            let _lock = cache.lock()?;
+            let mut temporary = tempfile::NamedTempFile::new_in(&cache.directory)?;
             {
-                let _ = std::fs::remove_file(temporary);
-                return Err(error);
+                let mut writer = std::io::BufWriter::new(temporary.as_file_mut());
+                serde_json::to_writer(&mut writer, &page).map_err(std::io::Error::other)?;
+                writer.flush()?;
             }
+            temporary.as_file().sync_all()?;
+            temporary.persist(&target).map_err(|error| error.error)?;
+            #[cfg(unix)]
+            std::fs::File::open(&cache.directory)?.sync_all()?;
             Ok(())
         })
         .await
     }
 
+    fn lock(&self) -> Result<std::fs::File, std::io::Error> {
+        let lock = std::fs::File::options()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(false)
+            .open(self.directory.join(".page-cache.lock"))?;
+        let started = std::time::Instant::now();
+        loop {
+            match lock.try_lock() {
+                Ok(()) => return Ok(lock),
+                Err(std::fs::TryLockError::WouldBlock)
+                    if started.elapsed() < Duration::from_millis(250) =>
+                {
+                    std::thread::sleep(Duration::from_millis(2));
+                }
+                Err(std::fs::TryLockError::WouldBlock) => {
+                    return Err(std::io::Error::new(
+                        std::io::ErrorKind::TimedOut,
+                        "page cache lock deadline",
+                    ));
+                }
+                Err(std::fs::TryLockError::Error(error)) => return Err(error),
+            }
+        }
+    }
+
     pub(crate) async fn prune(&self) -> Result<(), KestrelError> {
         let cache = self.clone();
         self.run_io(move || {
+            let _lock = cache.lock()?;
             let mut entries = Vec::new();
             for entry in std::fs::read_dir(&cache.directory)?.take(PRUNE_SCAN_LIMIT) {
                 let entry = entry?;
@@ -171,13 +234,18 @@ impl PageCache {
     }
 
     fn target(&self, url: &str, content_limit: usize) -> PathBuf {
-        let canonical = canonical_url(url);
-        let key_url = if canonical.is_empty() {
-            url
-        } else {
-            &canonical
-        };
-        let digest = Sha256::digest(format!("{key_url}\0{content_limit}").as_bytes());
+        // Search deduplication is a heuristic, not proof of HTTP resource identity.
+        // Fragments are not sent to the server. Preserve query order, tracking
+        // parameters, encoded paths and trailing slashes. URL parsing applies only
+        // standard URL normalization (for example default ports and host case).
+        let key_url = request_url(url);
+        let digest = Sha256::digest(
+            format!(
+                "{EXTRACTION_CACHE_VERSION}\0{key_url}\0{content_limit}\0{}",
+                self.max_response_bytes
+            )
+            .as_bytes(),
+        );
         self.directory.join(format!("{digest:x}.txt"))
     }
 
@@ -186,17 +254,164 @@ impl PageCache {
     }
 }
 
+fn request_url(url: &str) -> String {
+    match url::Url::parse(url) {
+        Ok(mut parsed) => {
+            parsed.set_fragment(None);
+            parsed.to_string()
+        }
+        Err(_) => url.to_owned(),
+    }
+}
+
+const PAGE_QUEUE_ENTRIES: usize = 16;
+const PAGE_QUEUE_BYTES: usize = 16 * 1024 * 1024;
+const STORAGE_WAIT: Duration = Duration::from_millis(250);
+
+struct PageWrite {
+    url: String,
+    content: String,
+    _memory: tokio::sync::OwnedSemaphorePermit,
+}
+
+pub(crate) struct PageWriteQueue {
+    sender: tokio::sync::mpsc::Sender<PageWrite>,
+    memory: Arc<Semaphore>,
+    drain: Arc<std::sync::Mutex<Option<tokio::time::Instant>>>,
+}
+
+impl Drop for PageWriteQueue {
+    fn drop(&mut self) {
+        if let Ok(mut end) = self.drain.lock() {
+            *end = Some(tokio::time::Instant::now() + STORAGE_WAIT);
+        }
+    }
+}
+
+impl PageWriteQueue {
+    pub(crate) async fn enqueue(
+        &self,
+        url: &str,
+        content: &str,
+        deadline: Option<tokio::time::Instant>,
+    ) -> Result<(), ()> {
+        let bytes = content.len().saturating_add(url.len()).max(1);
+        if bytes > PAGE_QUEUE_BYTES || url.len() > 8_192 {
+            eprintln!(
+                "[kestrel] Page cache skipped an oversized entry; extracted text is retained."
+            );
+            return Ok(());
+        }
+        let memory = crate::numeric::before_deadline(
+            deadline,
+            self.memory.clone().acquire_many_owned(bytes as u32),
+        )
+        .await?
+        .map_err(|_| ())?;
+        crate::numeric::before_deadline(
+            deadline,
+            self.sender.send(PageWrite {
+                url: url.to_owned(),
+                content: content.to_owned(),
+                _memory: memory,
+            }),
+        )
+        .await?
+        .map_err(|_| ())
+    }
+}
+
+pub(crate) fn page_writer(
+    cache: Option<&PageCache>,
+    content_limit: usize,
+    deadline: Option<tokio::time::Instant>,
+) -> (
+    Option<PageWriteQueue>,
+    impl std::future::Future<Output = bool> + '_,
+) {
+    let (sender, mut receiver) = tokio::sync::mpsc::channel::<PageWrite>(PAGE_QUEUE_ENTRIES);
+    let drain = Arc::new(std::sync::Mutex::new(None));
+    let queue = cache.map(|_| PageWriteQueue {
+        sender,
+        memory: Arc::new(Semaphore::new(PAGE_QUEUE_BYTES)),
+        drain: drain.clone(),
+    });
+    let writer = async move {
+        let Some(cache) = cache else { return false };
+        let mut committed = 0;
+        let mut failed = 0;
+        let mut exhausted = false;
+        while let Some(page) = receiver.recv().await {
+            let now = tokio::time::Instant::now();
+            let drain_end = drain.lock().ok().and_then(|end| *end);
+            let end = deadline.or_else(|| {
+                Some(drain_end.map_or(now + STORAGE_WAIT, |end| end.min(now + STORAGE_WAIT)))
+            });
+            match crate::numeric::before_deadline(
+                end,
+                cache.put(&page.url, content_limit, &page.content),
+            )
+            .await
+            {
+                Ok(Ok(())) => committed += 1,
+                Ok(Err(error)) => {
+                    failed += 1;
+                    eprintln!("[kestrel] Page cache commit failed: {error}");
+                }
+                Err(()) => {
+                    failed += 1;
+                    exhausted |= deadline.is_some_and(|end| tokio::time::Instant::now() >= end);
+                    eprintln!(
+                        "[kestrel] Page cache storage wait expired; extracted text is retained."
+                    );
+                }
+            }
+            if deadline.is_some_and(|end| tokio::time::Instant::now() >= end)
+                || (deadline.is_none()
+                    && drain_end.is_some_and(|end| tokio::time::Instant::now() >= end))
+            {
+                receiver.close();
+                while receiver.try_recv().is_ok() {
+                    failed += 1;
+                }
+                break;
+            }
+        }
+        if committed > 0 {
+            let drain_end = drain.lock().ok().and_then(|end| *end);
+            let now = tokio::time::Instant::now();
+            let end = deadline.or_else(|| {
+                Some(drain_end.map_or(now + STORAGE_WAIT, |end| end.min(now + STORAGE_WAIT)))
+            });
+            match crate::numeric::before_deadline(end, cache.prune()).await {
+                Ok(Ok(())) => (),
+                Ok(Err(error)) => eprintln!("[kestrel] Page cache maintenance failed: {error}"),
+                Err(()) => {
+                    exhausted |= deadline.is_some_and(|end| tokio::time::Instant::now() >= end)
+                }
+            }
+        }
+        if committed > 0 || failed > 0 {
+            eprintln!(
+                "[kestrel] Page cache: {committed} committed, {failed} uncommitted; accepted text alone is not a commit."
+            );
+        }
+        exhausted
+    };
+    (queue, writer)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[tokio::test]
-    async fn keys_by_canonical_url_and_content_limit() {
+    async fn keys_preserve_resource_distinctions_and_extraction_limit() {
         let _telemetry = crate::telemetry::test_export_guard();
         let directory = tempfile::tempdir().unwrap();
         let cache = PageCache::new(directory.path(), Duration::from_secs(60)).unwrap();
         cache
-            .put("https://example.com/page?utm_source=test", 2_000, "cached")
+            .put("https://example.com/page#one", 2_000, "cached")
             .await
             .unwrap();
         assert_eq!(
@@ -372,6 +587,107 @@ mod tests {
         assert!(
             remaining > 1 && remaining < 5000,
             "one maintenance pass must make progress without scanning the entire oversized directory"
+        );
+    }
+    #[tokio::test]
+    async fn damaged_expired_and_incompatible_entries_are_misses() {
+        let directory = tempfile::tempdir().unwrap();
+        let cache = PageCache::new(directory.path(), Duration::from_secs(60)).unwrap();
+        let url = "https://example.com/page";
+        cache.put(url, 100, "complete text").await.unwrap();
+        assert_eq!(cache.get(url, 100).await.as_deref(), Some("complete text"));
+        assert!(cache.get(url, 200).await.is_none());
+        assert!(cache.for_response_limit(500).get(url, 100).await.is_none());
+        let target = cache.target(url, 100);
+        let original = std::fs::read(&target).unwrap();
+        for field in [
+            "content",
+            "version",
+            "url",
+            "created_at",
+            "max_response_bytes",
+        ] {
+            let mut page: serde_json::Value = serde_json::from_slice(&original).unwrap();
+            page[field] = match field {
+                "created_at" => serde_json::to_value(SystemTime::UNIX_EPOCH).unwrap(),
+                "max_response_bytes" => serde_json::json!(1),
+                _ => serde_json::json!("damaged"),
+            };
+            std::fs::write(&target, serde_json::to_vec(&page).unwrap()).unwrap();
+            assert!(
+                cache.get(url, 100).await.is_none(),
+                "accepted damaged {field}"
+            );
+        }
+        std::fs::write(&target, &original[..original.len() / 2]).unwrap();
+        assert!(cache.get(url, 100).await.is_none());
+        std::fs::write(&target, vec![b'x'; 70_000]).unwrap();
+        assert!(cache.get(url, 100).await.is_none());
+        // Interrupted temporary files are never replayed as entries.
+        std::fs::write(directory.path().join(".tmp-interrupted"), &original).unwrap();
+        assert!(cache.get(url, 100).await.is_none());
+    }
+
+    #[tokio::test]
+    async fn concurrent_handles_commit_whole_entries_and_release_locks() {
+        let directory = tempfile::tempdir().unwrap();
+        let first = PageCache::new(directory.path(), Duration::from_secs(60)).unwrap();
+        let second = PageCache::new(directory.path(), Duration::from_secs(60)).unwrap();
+        let url = "https://example.com/shared";
+        let (a, b) = tokio::join!(
+            first.put(url, 100, "first complete record"),
+            second.put(url, 100, "second complete record")
+        );
+        a.unwrap();
+        b.unwrap();
+        let result = first.get(url, 100).await.unwrap();
+        assert!(result == "first complete record" || result == "second complete record");
+        let lock = first.lock().unwrap();
+        assert!(second.put(url, 100, "blocked").await.is_err());
+        drop(lock);
+        second.put(url, 100, "after lock release").await.unwrap();
+        assert_eq!(
+            first.get(url, 100).await.as_deref(),
+            Some("after lock release")
+        );
+    }
+
+    #[test]
+    fn conservative_identity_and_legacy_invalidation() {
+        let cache = PageCache::new("cache", Duration::from_secs(60)).unwrap();
+        let base = "https://example.com/page";
+        for distinct in [
+            "https://example.com/page/",
+            "https://example.com/page?utm_source=test",
+            "https://example.com/page?a=1",
+            "http://example.com/page",
+        ] {
+            assert_ne!(cache.target(base, 2000), cache.target(distinct, 2000));
+        }
+        for (left, right) in [
+            ("https://example.com/a%2Fb", "https://example.com/a/b"),
+            ("https://example.com/%70age", base),
+            (
+                "https://example.com/page?a=1&b=2",
+                "https://example.com/page?b=2&a=1",
+            ),
+            (
+                "https://example.com/page?a=1&a=2",
+                "https://example.com/page?a=2&a=1",
+            ),
+        ] {
+            assert_ne!(cache.target(left, 2000), cache.target(right, 2000));
+        }
+        for equivalent in [
+            "https://EXAMPLE.com:443/page",
+            "https://example.com/page#section",
+        ] {
+            assert_eq!(cache.target(base, 2000), cache.target(equivalent, 2000));
+        }
+        let legacy = Sha256::digest(format!("{base}\0{}", 2000).as_bytes());
+        assert_ne!(
+            cache.target(base, 2000),
+            cache.directory.join(format!("{legacy:x}.txt"))
         );
     }
 }

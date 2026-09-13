@@ -1,6 +1,5 @@
 //! Reusable search and fetch clients for connection pooling across calls.
 
-use std::collections::HashSet;
 use std::time::Duration;
 
 use futures_util::{StreamExt, stream};
@@ -8,9 +7,10 @@ use futures_util::{StreamExt, stream};
 use crate::cache::PageCache;
 use crate::fetcher::{
     build_client_with_transport, fetch_all_reusing_client, fetch_all_reusing_client_with_budget,
-    fetch_all_reusing_client_with_deadline, fetch_all_reusing_client_with_diagnostics,
+    fetch_all_reusing_client_with_cache, fetch_all_reusing_client_with_diagnostics,
 };
 use crate::model::{Engine, FetchOptions, FetchReport, SearchOptions, SearchResult, TimeFilter};
+use crate::numeric::before_deadline;
 use crate::search::{
     KestrelError, SearchClients, search_many_reusing_clients, search_many_reusing_clients_detailed,
     search_with_clients,
@@ -138,6 +138,7 @@ impl KestrelClient {
                 .map(|value| crate::numeric::deadline("fetch budget", value))
                 .transpose()?;
             crate::fetcher::validate_options(options)?;
+            let cache = &cache.for_response_limit(options.max_response_bytes);
             let mut results = vec![None; urls.len()];
             let mut hit_indices = Vec::new();
             let mut reads = stream::iter(0..urls.len())
@@ -193,56 +194,21 @@ impl KestrelClient {
                     cache_misses: missing_urls.len(),
                 }
             } else {
-                fetch_all_reusing_client_with_deadline(
+                Box::pin(fetch_all_reusing_client_with_cache(
                     &missing_urls,
                     options,
                     &self.fetch,
                     deadline,
-                )
+                    Some(cache),
+                ))
                 .await?
             };
-            let capped_urls: HashSet<_> = report
-                .pages
-                .iter()
-                .filter(|page| page.response_bytes >= options.max_response_bytes)
-                .map(|page| page.url.as_str())
-                .collect();
-            // Store all completed output before awaiting persistence, so a write
-            // timeout cannot discard results from later indices in the same batch.
+            // Preserve all completed output, including results retained at a storage deadline.
             for (&index, content) in missing_indices
                 .iter()
                 .zip(std::mem::take(&mut report.contents))
             {
                 results[index] = content;
-            }
-            let mut wrote = false;
-            for &index in &missing_indices {
-                let Some(content) = &results[index] else {
-                    continue;
-                };
-                if capped_urls.contains(urls[index].as_str()) {
-                    continue;
-                }
-                match before_deadline(
-                    deadline,
-                    cache.put(&urls[index], options.content_limit, content),
-                )
-                .await
-                {
-                    Ok(Ok(())) => wrote = true,
-                    Ok(Err(error)) => eprintln!("[kestrel] Cache write failed: {error}"),
-                    Err(()) => {
-                        storage_exhausted = true;
-                        break;
-                    }
-                }
-            }
-            if wrote && !storage_exhausted {
-                match before_deadline(deadline, cache.prune()).await {
-                    Ok(Ok(())) => (),
-                    Ok(Err(error)) => eprintln!("[kestrel] Cache maintenance failed: {error}"),
-                    Err(()) => storage_exhausted = true,
-                }
             }
             report.pages.extend(
                 hit_indices.iter().map(|&index| {
@@ -263,16 +229,5 @@ impl KestrelClient {
             Ok(report)
         })
         .await
-    }
-}
-
-async fn before_deadline<T>(
-    deadline: Option<tokio::time::Instant>,
-    work: impl std::future::Future<Output = T>,
-) -> Result<T, ()> {
-    match deadline {
-        Some(end) if tokio::time::Instant::now() >= end => Err(()),
-        Some(end) => tokio::time::timeout_at(end, work).await.map_err(|_| ()),
-        None => Ok(work.await),
     }
 }

@@ -122,6 +122,16 @@ pub(crate) async fn fetch_all_reusing_client_with_deadline(
     client: &reqwest::Client,
     deadline: Option<tokio::time::Instant>,
 ) -> Result<FetchReport, KestrelError> {
+    fetch_all_reusing_client_with_cache(urls, options, client, deadline, None).await
+}
+
+pub(crate) async fn fetch_all_reusing_client_with_cache(
+    urls: &[String],
+    options: &FetchOptions,
+    client: &reqwest::Client,
+    deadline: Option<tokio::time::Instant>,
+    cache: Option<&crate::cache::PageCache>,
+) -> Result<FetchReport, KestrelError> {
     crate::telemetry::scope_result("kestrel.fetch", async {
         crate::telemetry::payload("fetch.input", urls);
         crate::telemetry::attribute("kestrel.timeout_seconds", options.timeout.as_secs_f64());
@@ -160,33 +170,48 @@ pub(crate) async fn fetch_all_reusing_client_with_deadline(
                 }
             })
             .collect();
-        let mut results = vec![None; urls.len()];
-        let mut diagnostics = vec![None; urls.len()];
-        let mut budget_exhausted = false;
-        let mut cancelled = 0;
-        if let Some(deadline) = deadline {
-            let deadline = tokio::time::sleep_until(deadline);
-            tokio::pin!(deadline);
-            loop {
-                tokio::select! {
-                    item = jobs.next() => {
-                        let Some((index, item)) = item else { break };
-                        results[index] = item.content;
-                        diagnostics[index] = Some(item.diagnostic);
-                    }
-                    () = &mut deadline => {
-                        budget_exhausted = !jobs.is_empty();
+        let (queue, writer) = crate::cache::page_writer(cache, options.content_limit, deadline);
+        let collector = async move {
+            let mut results = vec![None; urls.len()];
+            let mut diagnostics = vec![None; urls.len()];
+            let mut budget_exhausted = false;
+            let mut cancelled = 0;
+            while !jobs.is_empty() {
+                let item = match crate::numeric::before_deadline(deadline, jobs.next()).await {
+                    Ok(Some(item)) => item,
+                    Ok(None) => break,
+                    Err(()) => {
+                        budget_exhausted = true;
                         cancelled = jobs.len();
                         break;
-                    },
-                }
-            }
-        } else {
-            while let Some((index, item)) = jobs.next().await {
+                    }
+                };
+                let (index, item) = item;
+                let eligible = item.diagnostic.response_bytes < options.max_response_bytes;
                 results[index] = item.content;
                 diagnostics[index] = Some(item.diagnostic);
+                if let (Some(queue), Some(content)) = (&queue, &results[index])
+                    && eligible
+                    && queue
+                        .enqueue(&urls[index], content, deadline)
+                        .await
+                        .is_err()
+                {
+                    budget_exhausted |=
+                        deadline.is_some_and(|end| tokio::time::Instant::now() >= end);
+                    cancelled = jobs.len();
+                    break;
+                }
             }
-        }
+            drop(jobs);
+            drop(queue);
+            (results, diagnostics, budget_exhausted, cancelled)
+        };
+        // Both futures are owned by this invocation. Cancellation drops them
+        // together; a bounded blocking commit may still finish independently.
+        let ((results, diagnostics, mut budget_exhausted, cancelled), storage_exhausted) =
+            tokio::join!(collector, writer);
+        budget_exhausted |= storage_exhausted;
         crate::telemetry::attribute("kestrel.budget_exhausted", budget_exhausted);
         crate::telemetry::attribute("kestrel.cancelled_pages", cancelled as i64);
         Ok(FetchReport {

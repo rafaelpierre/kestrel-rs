@@ -16,7 +16,7 @@ The implementation now:
 - Reads through four concurrent futures, preserving each hit at its input index.
 - Carries the same absolute deadline into the fetcher instead of resetting a
   full network allowance after storage.
-- Transfers all completed page results to output before awaiting any writes.
+- Retains each completed page result before queueing its incremental write.
 - Stops waiting for writes/maintenance at the same deadline and retains text.
 - Uses indexed hit metadata, avoiding repeated scans of the missing URL list.
 - Skips pruning for hit-only calls and when no write succeeded.
@@ -40,12 +40,14 @@ cache objects have independent limits; this is not a process-global or
 cross-process concurrency cap. Network/parsing concurrency controls are unchanged.
 
 Filesystem metadata, reading, writing, rename and pruning run on blocking workers.
-Reads reject files larger than four bytes per requested Unicode scalar and enforce
-that bound while reading, including a one-byte overflow probe. They also reject
-invalid UTF-8 and text exceeding the character limit. Expired entries are misses;
+Reads reject JSON entries larger than six bytes per requested Unicode scalar plus
+64 KiB metadata and enforce that bound while reading, including a one-byte overflow
+probe. They also reject malformed JSON, checksums/identity mismatches and text
+exceeding the character limit. Expired entries are misses;
 reads no longer unlink them, avoiding removal of a concurrent replacement at that
 boundary. Writes retain atomic replacement and clean their own temporary file on
-failure. Stronger durability/concurrent-store policy remains owned by #122/#123.
+failure. Incremental writes, file synchronization and cross-process locks are described in
+[incremental page commits](incremental-page-cache.md).
 
 Maintenance inspects at most 4,096 directory entries and retains only text-entry
 metadata from that window. It removes the oldest excess entries in the observed
