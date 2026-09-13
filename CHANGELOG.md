@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.0](https://github.com/rafaelpierre/kestrel-rs/compare/v4.0.1...v4.1.0) - 2026-09-13
+
+### Added
+
+- add opt-in metadata threshold before page fetching ([#130](https://github.com/rafaelpierre/kestrel-rs/pull/130))
+- add opt-in metadata threshold before page fetching
+- assess extracted content and recover shell-only roots
+
+### Fixed
+
+- normalize queries before fetch-score filtering
+
+### Other
+
+- Merge pull request #94 from rafaelpierre/codex/25-atomic-config
+- Merge pull request #95 from rafaelpierre/codex/77-content-quality
+- Merge pull request #88 from rafaelpierre/codex/82-adaptive-skill
+- teach bounded discovery and selective reading in generated skill
+
 ## [4.0.1](https://github.com/rafaelpierre/kestrel-rs/compare/v4.0.0...v4.0.1) - 2026-09-13
 
 ### Fixed
