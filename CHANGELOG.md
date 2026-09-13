@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.1](https://github.com/rafaelpierre/kestrel-rs/compare/v4.0.0...v4.0.1) - 2026-09-13
+
+### Fixed
+
+- reject overflowing search and fetch numeric options
+- preserve plain-text responses during page extraction
+
+### Other
+
+- Merge pull request #87 from rafaelpierre/codex/21-plain-text-extraction
+
 ## [4.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v3.0.0...v4.0.0) - 2026-09-13
 
 ### Fixed

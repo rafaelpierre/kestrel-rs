@@ -1248,7 +1248,7 @@ dependencies = [
 
 [[package]]
 name = "kestrel-rs"
-version = "4.0.0"
+version = "4.0.1"
 dependencies = [
  "assert_cmd",
  "async-trait",
