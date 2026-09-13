@@ -157,6 +157,11 @@ with these instructions rather than guessing its contents.
 
 ### Required execution and evidence
 
+- Use only keyword-based full-text search (FTS) queries. NEVER send conversational
+  questions or semantic prompts to `search`; translate them to lexical terms while
+  preserving intent, entities, identifiers, phrases, negation, domains, versions
+  and dates. This applies to initial and recovery queries and does not introduce
+  a local Boolean parser. See the [dataset revision notes](benchmarks/codex-search-2026-09-11/README.md).
 - Start each question with its exact manifest query and retain its ID/intent.
   Use Kestrel's tested executable and the current generated skill to discover,
   inspect and selectively read. Do not fill gaps from model memory, another

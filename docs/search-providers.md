@@ -52,6 +52,13 @@ conversion, parsers and concurrent searches require additional memory.
 
 ## Query language
 
+Write keyword-based full-text search (FTS) queries. Agents must NEVER submit
+conversational questions or semantic prompts. Translate the request into lexical
+terms while preserving its constraints: `Rayleigh scattering blue sky` expresses
+the search intent of "why is the sky blue". Keep entities, technical identifiers,
+requested phrases, negation, domains, versions and dates. FTS is agent input
+formulation guidance; it adds no runtime rewriting, validation or query parser.
+
 Queries are sent to providers unchanged. In `kestrel search "machine learning"`,
 shell quotes group one argument; no local AND constraint is inferred.
 `kestrel search '"machine learning"'` sends literal phrase quotes to providers.

@@ -1,5 +1,10 @@
 # CLI comparison benchmark
 
+The canonical ten-question evidence gate uses keyword FTS queries; agents must
+translate conversational requests before searching. Its [dataset revision notes](codex-search-2026-09-11/README.md)
+record the corrected inputs and unchanged answer requirements. Historical query
+sets and measurements remain historical; compare scores only with matched inputs.
+
 For initialization, deadline and cleanup attribution, use the
 [short-budget investigation harness](budget-overhead/README.md). It compares
 controlled fresh processes with retained clients using an isolated benchmark
