@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v5.0.0...v6.0.0) - 2026-09-13
+
+### Added
+
+- [**breaking**] add default structured CLI diagnostics
+
+### Other
+
+- Merge pull request #149 from rafaelpierre/release-plz-2026-09-13T15-39-09Z
+- isolate structured diagnostics fixtures from proxy settings
+
 ## [5.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v4.1.1...v5.0.0) - 2026-09-13
 
 ### Added
