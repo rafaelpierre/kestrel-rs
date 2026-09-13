@@ -34,7 +34,7 @@
   },
   {
     "id": "q07",
-    "query": "Rust E0382 moved value fix",
+    "query": "Rust E0382 use of moved value",
     "intent": "Explain and fix Rust's use-of-moved-value error E0382."
   },
   {
