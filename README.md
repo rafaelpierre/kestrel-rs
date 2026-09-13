@@ -362,6 +362,13 @@ and deadline data without changing normal result objects. Cache entries are
 keyed by canonical URL and content limit so differently truncated extractions
 cannot be mixed.
 
+## OpenTelemetry / Honeycomb
+
+Set an OTLP endpoint to export hierarchical search/fetch traces. The maintained
+test runner attributes each Rust/Python test and its CLI subprocesses; content
+capture is opt-in and bounded. See [configuration, Honeycomb setup and test
+coverage](docs/telemetry.md). Ordinary credential-free tests remain available.
+
 ## Agent skill
 
 Kestrel can install a `SKILL.md` that teaches Claude Code, Codex, or VS Code

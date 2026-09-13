@@ -71,6 +71,7 @@ pub(crate) fn parse_time(engine: Engine, micros: u128) {
 #[tokio::test]
 #[ignore = "live providers: explicit feasibility benchmark"]
 async fn live_streaming_feasibility() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let engines = vec![
         Engine::Duckduckgo,
         Engine::Bing,
@@ -157,6 +158,7 @@ async fn live_streaming_feasibility() {
 #[tokio::test]
 #[ignore = "live providers: repeated four-query fusion and latency evidence"]
 async fn live_fusion_latency_evidence() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let engines = vec![
         Engine::Duckduckgo,
         Engine::Bing,

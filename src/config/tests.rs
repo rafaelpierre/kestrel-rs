@@ -8,6 +8,7 @@ const TEST_LOCK_TIMEOUT: Duration = Duration::from_secs(10);
 
 #[test]
 fn records_deduplicates_and_removes() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let directory = tempfile::tempdir().unwrap();
     let store = ConfigStore::new(directory.path().join("config.toml"));
     let skill = directory.path().join("skills/SKILL.md");
@@ -25,6 +26,7 @@ fn records_deduplicates_and_removes() {
 
 #[test]
 fn missing_skill_table_is_preserved_on_remove() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let directory = tempfile::tempdir().unwrap();
     let path = directory.path().join("config.toml");
     fs::write(&path, "title = 'empty'\n").unwrap();
@@ -38,6 +40,7 @@ fn missing_skill_table_is_preserved_on_remove() {
 // exposing a test-only CLI/environment interface in the production binary.
 #[test]
 fn process_worker() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let Some(root) = std::env::var_os("KESTREL_CONFIG_TEST_ROOT") else {
         return;
     };
@@ -122,6 +125,7 @@ impl Drop for Worker {
 
 #[test]
 fn independent_processes_retain_additions_and_removals() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for mode in ["new", "mixed"] {
         let directory = tempfile::tempdir().unwrap();
         let root = directory.path().canonicalize().unwrap();
@@ -164,6 +168,7 @@ fn independent_processes_retain_additions_and_removals() {
 
 #[test]
 fn transaction_lock_times_out_and_is_released_when_process_exits() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let directory = tempfile::tempdir().unwrap();
     let root = directory.path().canonicalize().unwrap();
     let store = ConfigStore::new(root.join("config.toml"));
@@ -190,6 +195,7 @@ fn transaction_lock_times_out_and_is_released_when_process_exits() {
 
 #[test]
 fn failures_before_replacement_preserve_old_bytes_and_clean_staging() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let directory = tempfile::tempdir().unwrap();
     let store = ConfigStore::new(directory.path().join("config.toml"));
     let original = "# precious\ntitle = 'original'\n";
@@ -218,6 +224,7 @@ fn failures_before_replacement_preserve_old_bytes_and_clean_staging() {
 
 #[test]
 fn invalid_toml_is_untouched_and_errors_release_lock() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let directory = tempfile::tempdir().unwrap();
     let store = ConfigStore::new(directory.path().join("config.toml"));
     let original = "[invalid TOML";
@@ -237,6 +244,7 @@ fn invalid_toml_is_untouched_and_errors_release_lock() {
 #[cfg(unix)]
 #[test]
 fn preserves_permissions_and_symlink_destination() {
+    let _telemetry = crate::telemetry::test_export_guard();
     use std::os::unix::fs::{PermissionsExt, symlink};
     let directory = tempfile::tempdir().unwrap();
     let target = directory.path().join("real.toml");
@@ -270,6 +278,7 @@ fn preserves_permissions_and_symlink_destination() {
 #[cfg(unix)]
 #[test]
 fn dangling_symlink_is_not_replaced() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let directory = tempfile::tempdir().unwrap();
     let link = directory.path().join("config.toml");
     let target = directory.path().join("missing.toml");
@@ -282,6 +291,7 @@ fn dangling_symlink_is_not_replaced() {
 
 #[test]
 fn waiting_writer_succeeds_after_other_process_releases_lock() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let directory = tempfile::tempdir().unwrap();
     let root = directory.path().canonicalize().unwrap();
     let store = ConfigStore::new(root.join("config.toml"));

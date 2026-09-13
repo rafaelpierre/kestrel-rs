@@ -154,6 +154,7 @@ impl Incremental {
         probe::parse_time(self.publisher.engine, parse_started.elapsed().as_micros());
         record_phase(Phase::Body);
         if let Some(mut results) = snapshot? {
+            crate::telemetry::results("stream.raw_snapshot", &results);
             let raw_count = results.len();
             normalize_provider_results(&mut results, &self.publisher.query);
             let _ = PROVIDER_DIAGNOSTIC.try_with(|(diagnostics, index)| {
@@ -167,6 +168,7 @@ impl Incremental {
             let results = with_provenance(results, self.publisher.engine, &self.publisher.query);
             #[cfg(test)]
             probe::results(self.publisher.engine, &results);
+            crate::telemetry::results("stream.accepted_snapshot", &results);
             if results == self.previous {
                 return Ok(());
             }

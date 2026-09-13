@@ -15,6 +15,7 @@ pub mod providers;
 pub mod ranking;
 pub mod search;
 pub mod skill;
+pub mod telemetry;
 pub mod transport;
 mod warmup;
 pub use transport::TransportOptions;

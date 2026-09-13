@@ -487,6 +487,7 @@ mod tests {
 
     #[test]
     fn mojeek_distinguishes_challenges_results_empty_and_unknown() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let challenge = include_str!("../tests/fixtures/providers/mojeek-challenge.html");
         assert!(
             parse(Engine::Mojeek, challenge)
@@ -541,6 +542,7 @@ mod tests {
 
     #[test]
     fn exact_queries_survive_browser_and_transport_encoding() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let client = reqwest::Client::new();
         for query in [
             "\"machine learning\"",
@@ -593,6 +595,7 @@ mod tests {
 
     #[test]
     fn parses_provider_specific_contracts() {
+        let _telemetry = crate::telemetry::test_export_guard();
         for (engine, fixture) in [
             (
                 Engine::Dogpile,
@@ -641,6 +644,7 @@ mod tests {
 
     #[test]
     fn envelope_and_response_errors_are_not_empty_success() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let fixture = include_str!("../tests/fixtures/providers/swisscows.json");
         let payload = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(fixture);
         assert_eq!(
@@ -683,6 +687,7 @@ mod tests {
 
     #[test]
     fn region_and_time_filters_are_explicit() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let client = reqwest::Client::new();
         let req = request(&client, Engine::Swisscows, "query", "uk-en", TimeFilter::W)
             .unwrap()

@@ -275,6 +275,7 @@ mod tests {
 
     #[test]
     fn rejects_invalid_policy() {
+        let _telemetry = crate::telemetry::test_export_guard();
         assert!(TransportOptions::default().validate().is_ok());
         for options in [
             TransportOptions {
@@ -316,6 +317,7 @@ mod tests {
 
     #[test]
     fn dns_cache_expires_and_bounds_entries() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let cache = CachedDns::new(&TransportOptions {
             dns_cache_capacity: 2,
             ..Default::default()
@@ -338,6 +340,7 @@ mod tests {
 
     #[tokio::test]
     async fn dns_adapter_resolves_system_hosts_and_preserves_zero_port() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let cache = CachedDns::new(&TransportOptions::default());
         let addresses = cache.lookup("localhost".into()).await.unwrap();
         assert!(!addresses.is_empty());
@@ -347,6 +350,7 @@ mod tests {
 
     #[tokio::test]
     async fn h2_reuses_cloned_pool_and_respects_peer_stream_limit() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let server = h2_server(2, 128, Duration::from_millis(15)).await;
         let client = h2_client(&TransportOptions::default());
         client
@@ -372,6 +376,7 @@ mod tests {
 
     #[tokio::test]
     async fn h2_large_bodies_progress_with_fixed_and_adaptive_windows() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let server = h2_server(10, 2 * 1024 * 1024, Duration::ZERO).await;
         for adaptive_window in [false, true] {
             let client = h2_client(&TransportOptions {
@@ -402,6 +407,7 @@ mod tests {
 
     #[tokio::test]
     async fn impersonated_h2_pool_reuses_connections() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let server = h2_server(2, 256 * 1024, Duration::ZERO).await;
         let client = TransportOptions::default()
             .impersonated_builder(crate::http_client::BrowserProfile::random())
@@ -420,6 +426,7 @@ mod tests {
 
     #[tokio::test]
     async fn warmup_and_fetch_share_pool_across_kestrel_clones() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let server = h2_server(2, 128, Duration::ZERO).await;
         let mut client = crate::KestrelClient::new().unwrap();
         client.fetch = h2_client(&TransportOptions::default());
@@ -452,6 +459,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "manual local transport benchmark; run with --ignored --nocapture"]
     async fn benchmark_cold_and_warm_h2() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let server = h2_server(100, 1024, Duration::ZERO).await;
         let options = TransportOptions::default();
         let mut cold = Vec::new();
@@ -510,6 +518,7 @@ mod tls_tests {
     // or disabling certificate verification, using a freshly generated test CA.
     #[tokio::test]
     async fn tls13_alpn_and_http1_fallback_reuse_both_client_pools() {
+        let _telemetry = crate::telemetry::test_export_guard();
         for h2 in [true, false] {
             let rcgen::CertifiedKey { cert, signing_key } =
                 rcgen::generate_simple_self_signed(vec!["localhost".into()]).unwrap();

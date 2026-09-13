@@ -40,6 +40,7 @@ fn json_files(directory: &std::path::Path) -> Vec<serde_json::Value> {
 
 #[tokio::test]
 async fn both_backends_record_status_challenge_retry_after_and_raw_correlation() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for yahoo in [false, true] {
         for status in [200, 403, 429] {
             let server = MockServer::start().await;
@@ -95,6 +96,7 @@ async fn both_backends_record_status_challenge_retry_after_and_raw_correlation()
 
 #[tokio::test]
 async fn recovery_and_exhaustion_have_one_logical_outcome() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for yahoo in [false, true] {
         for recover in [false, true] {
             let server = MockServer::start().await;
@@ -135,6 +137,7 @@ async fn recovery_and_exhaustion_have_one_logical_outcome() {
 
 #[tokio::test]
 async fn typed_connection_errors_have_no_http_status_or_challenge_judgment() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let url = format!("http://{}", listener.local_addr().unwrap());
     drop(listener);
@@ -153,6 +156,7 @@ async fn typed_connection_errors_have_no_http_status_or_challenge_judgment() {
 
 #[tokio::test]
 async fn queued_and_never_polled_jobs_finalize_on_drop() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for polled in [false, true] {
         for quorum in [false, true] {
             let directory = tempfile::tempdir().unwrap();
@@ -200,6 +204,7 @@ async fn queued_and_never_polled_jobs_finalize_on_drop() {
 
 #[tokio::test]
 async fn deadline_during_backoff_keeps_completed_attempt() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for yahoo in [false, true] {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
@@ -251,11 +256,13 @@ async fn deadline_during_backoff_keeps_completed_attempt() {
 
 #[tokio::test]
 async fn quorum_drops_inflight_send_and_preserves_shared_run_id() {
+    let _telemetry = crate::telemetry::test_export_guard();
     threshold_drops_inflight_send(None, "cancelled_quorum").await;
 }
 
 #[tokio::test]
 async fn minimum_drops_inflight_send_and_preserves_shared_run_id() {
+    let _telemetry = crate::telemetry::test_export_guard();
     threshold_drops_inflight_send(Some(1), "cancelled_min_results").await;
 }
 
@@ -336,6 +343,7 @@ async fn threshold_drops_inflight_send(min_results: Option<usize>, expected: &st
 
 #[tokio::test]
 async fn incomplete_bodies_keep_headers_and_typed_error() {
+    let _telemetry = crate::telemetry::test_export_guard();
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     for yahoo in [false, true] {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -367,6 +375,7 @@ async fn incomplete_bodies_keep_headers_and_typed_error() {
 
 #[tokio::test]
 async fn client_timeouts_are_typed_and_censored() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for yahoo in [false, true] {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
@@ -412,6 +421,7 @@ async fn client_timeouts_are_typed_and_censored() {
 
 #[tokio::test]
 async fn deadline_during_body_preserves_headers_and_censors_only_active_phase() {
+    let _telemetry = crate::telemetry::test_export_guard();
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     for yahoo in [false, true] {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -467,6 +477,7 @@ async fn deadline_during_body_preserves_headers_and_censors_only_active_phase() 
 
 #[test]
 fn tls_classification_uses_backend_types() {
+    let _telemetry = crate::telemetry::test_export_guard();
     assert!(is_tls_error(&rustls::Error::General("test".into())));
     assert!(is_tls_error(&primp_tls::Error::General("test".into())));
     assert!(is_tls_error(&std::io::Error::other(
@@ -482,6 +493,7 @@ fn tls_classification_uses_backend_types() {
 
 #[tokio::test]
 async fn opt_out_creates_no_raw_capture_and_redirect_counts_are_explicit() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let server = MockServer::start().await;
     Mock::given(wiremock::matchers::path("/start"))
         .respond_with(
@@ -508,6 +520,7 @@ async fn opt_out_creates_no_raw_capture_and_redirect_counts_are_explicit() {
 
 #[tokio::test]
 async fn quorum_during_real_retry_backoff_does_not_cancel_completed_response() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for yahoo in [false, true] {
         let server = MockServer::start().await;
         Mock::given(method("GET"))
@@ -586,6 +599,7 @@ async fn quorum_during_real_retry_backoff_does_not_cancel_completed_response() {
 
 #[tokio::test]
 async fn successful_http_challenge_is_one_logical_failure_without_changing_result_schema() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .respond_with(
@@ -640,6 +654,7 @@ async fn successful_http_challenge_is_one_logical_failure_without_changing_resul
 
 #[tokio::test]
 async fn oversized_responses_preserve_status_and_stop_retries() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for yahoo in [false, true] {
         for status in [200, 500] {
             let server = MockServer::start().await;
@@ -696,6 +711,7 @@ async fn oversized_responses_preserve_status_and_stop_retries() {
 
 #[test]
 fn mojeek_challenge_observation_matches_provider_parser() {
+    let _telemetry = crate::telemetry::test_export_guard();
     assert_eq!(
         classify_challenge(
             Engine::Mojeek,

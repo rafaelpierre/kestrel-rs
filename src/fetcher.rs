@@ -110,61 +110,81 @@ pub(crate) async fn fetch_all_reusing_client_with_diagnostics(
     client: &reqwest::Client,
     budget: Option<Duration>,
 ) -> Result<FetchReport, KestrelError> {
-    validate_options(options)?;
-    let deadline = budget
-        .map(|value| crate::numeric::deadline("fetch budget", value))
-        .transpose()?;
-    let network = Arc::new(Semaphore::new(options.max_concurrency));
-    let parsing = Arc::new(Semaphore::new(options.parse_concurrency));
-    let mut jobs: FuturesUnordered<_> = urls
-        .iter()
-        .enumerate()
-        .map(|(index, url)| {
-            let network = Arc::clone(&network);
-            let parsing = Arc::clone(&parsing);
-            async move {
-                (
-                    index,
-                    fetch_one_detailed(url, client, network, parsing, options).await,
-                )
-            }
-        })
-        .collect();
-    let mut results = vec![None; urls.len()];
-    let mut diagnostics = vec![None; urls.len()];
-    let mut budget_exhausted = false;
-    let mut cancelled = 0;
-    if let Some(deadline) = deadline {
-        let deadline = tokio::time::sleep_until(deadline);
-        tokio::pin!(deadline);
-        loop {
-            tokio::select! {
-                item = jobs.next() => {
-                    let Some((index, item)) = item else { break };
-                    results[index] = item.content;
-                    diagnostics[index] = Some(item.diagnostic);
+    crate::telemetry::scope_result("kestrel.fetch", async {
+        crate::telemetry::payload("fetch.input", urls);
+        crate::telemetry::attribute("kestrel.timeout_seconds", options.timeout.as_secs_f64());
+        crate::telemetry::attribute("kestrel.fetch_concurrency", options.max_concurrency as i64);
+        crate::telemetry::attribute(
+            "kestrel.parse_concurrency",
+            options.parse_concurrency as i64,
+        );
+        if let Some(budget) = budget {
+            crate::telemetry::attribute("kestrel.fetch_budget_seconds", budget.as_secs_f64());
+        }
+        crate::telemetry::attribute("kestrel.content_limit", options.content_limit as i64);
+        crate::telemetry::attribute(
+            "kestrel.max_response_bytes",
+            options.max_response_bytes as i64,
+        );
+        validate_options(options)?;
+        let deadline = budget
+            .map(|value| crate::numeric::deadline("fetch budget", value))
+            .transpose()?;
+        let network = Arc::new(Semaphore::new(options.max_concurrency));
+        let parsing = Arc::new(Semaphore::new(options.parse_concurrency));
+        let mut jobs: FuturesUnordered<_> = urls
+            .iter()
+            .enumerate()
+            .map(|(index, url)| {
+                let network = Arc::clone(&network);
+                let parsing = Arc::clone(&parsing);
+                async move {
+                    (
+                        index,
+                        fetch_one_detailed(url, client, network, parsing, options).await,
+                    )
                 }
-                () = &mut deadline => {
-                    budget_exhausted = !jobs.is_empty();
-                    cancelled = jobs.len();
-                    break;
-                },
+            })
+            .collect();
+        let mut results = vec![None; urls.len()];
+        let mut diagnostics = vec![None; urls.len()];
+        let mut budget_exhausted = false;
+        let mut cancelled = 0;
+        if let Some(deadline) = deadline {
+            let deadline = tokio::time::sleep_until(deadline);
+            tokio::pin!(deadline);
+            loop {
+                tokio::select! {
+                    item = jobs.next() => {
+                        let Some((index, item)) = item else { break };
+                        results[index] = item.content;
+                        diagnostics[index] = Some(item.diagnostic);
+                    }
+                    () = &mut deadline => {
+                        budget_exhausted = !jobs.is_empty();
+                        cancelled = jobs.len();
+                        break;
+                    },
+                }
+            }
+        } else {
+            while let Some((index, item)) = jobs.next().await {
+                results[index] = item.content;
+                diagnostics[index] = Some(item.diagnostic);
             }
         }
-    } else {
-        while let Some((index, item)) = jobs.next().await {
-            results[index] = item.content;
-            diagnostics[index] = Some(item.diagnostic);
-        }
-    }
-    Ok(FetchReport {
-        contents: results,
-        pages: diagnostics.into_iter().flatten().collect(),
-        budget_exhausted,
-        cancelled,
-        cache_hits: 0,
-        cache_misses: urls.len(),
+        crate::telemetry::attribute("kestrel.budget_exhausted", budget_exhausted);
+        crate::telemetry::attribute("kestrel.cancelled_pages", cancelled as i64);
+        Ok(FetchReport {
+            contents: results,
+            pages: diagnostics.into_iter().flatten().collect(),
+            budget_exhausted,
+            cancelled,
+            cache_hits: 0,
+            cache_misses: urls.len(),
+        })
     })
+    .await
 }
 
 // Append only the prefix that fits. Return false as soon as the cap is reached,
@@ -217,46 +237,60 @@ async fn fetch_one_detailed(
     parsing: Arc<Semaphore>,
     options: &FetchOptions,
 ) -> FetchItem {
-    let started = Instant::now();
-    let mut http_version = None;
-    let mut item = match fetch_one_inner(
-        url,
-        client,
-        network,
-        parsing,
-        options,
-        started,
-        &mut http_version,
-    )
-    .await
-    {
-        Ok(item) => item,
-        Err(error) => {
-            crate::log_event!(
-                "fetch_failed",
-                "url" => url,
-                "error_type" => "request",
-                "error" => error.to_string(),
-            );
-            FetchItem {
-                content: None,
-                diagnostic: PageFetchDiagnostic {
-                    url: url.to_owned(),
-                    outcome: FetchOutcome::RequestFailed,
-                    http_version: None,
-                    queue_ms: 0,
-                    request_ms: 0,
-                    download_ms: 0,
-                    parse_queue_ms: 0,
-                    parse_ms: 0,
-                    total_ms: elapsed_millis(started),
-                    response_bytes: 0,
-                },
+    crate::telemetry::scope("kestrel.page", async {
+        crate::telemetry::payload("page.input", &url);
+        let started = Instant::now();
+        let mut http_version = None;
+        let mut item = match fetch_one_inner(
+            url,
+            client,
+            network,
+            parsing,
+            options,
+            started,
+            &mut http_version,
+        )
+        .await
+        {
+            Ok(item) => item,
+            Err(error) => {
+                crate::log_event!(
+                    "fetch_failed",
+                    "url" => url,
+                    "error_type" => "request",
+                    "error" => error.to_string(),
+                );
+                FetchItem {
+                    content: None,
+                    diagnostic: PageFetchDiagnostic {
+                        url: url.to_owned(),
+                        outcome: FetchOutcome::RequestFailed,
+                        http_version: None,
+                        queue_ms: 0,
+                        request_ms: 0,
+                        download_ms: 0,
+                        parse_queue_ms: 0,
+                        parse_ms: 0,
+                        total_ms: elapsed_millis(started),
+                        response_bytes: 0,
+                    },
+                }
             }
+        };
+        item.diagnostic.http_version = http_version;
+        crate::telemetry::payload("page.output", &item.content);
+        crate::telemetry::payload("page.diagnostic", &item.diagnostic);
+        crate::telemetry::attribute("kestrel.outcome", format!("{:?}", item.diagnostic.outcome));
+        crate::telemetry::attribute(
+            "kestrel.response_bytes",
+            item.diagnostic.response_bytes as i64,
+        );
+        if item.content.is_none() {
+            crate::telemetry::error("page_fetch_failed");
         }
-    };
-    item.diagnostic.http_version = http_version;
-    item
+        item
+    })
+    .await
 }
 
 async fn fetch_one_inner(
@@ -271,11 +305,24 @@ async fn fetch_one_inner(
     let queue_started = Instant::now();
     // Keep the download slot until a parser takes ownership of this body.
     // This bounds downloading/waiting bodies to max_concurrency per batch.
-    let network_permit = network.acquire().await.expect("semaphore remains open");
+    let network_permit = crate::telemetry::scope("kestrel.queue", network.acquire())
+        .await
+        .expect("semaphore remains open");
+    let mut attempt = crate::telemetry::Span::new("kestrel.http_attempt");
     let (body, encoding, content_kind, queue_ms, request_ms, download_ms, response_bytes) = {
         let queue_ms = elapsed_millis(queue_started);
         let request_started = Instant::now();
-        let response = client.get(url).timeout(options.timeout).send().await?;
+        use opentelemetry::trace::FutureExt;
+        let response = crate::telemetry::scope(
+            "kestrel.send",
+            client.get(url).timeout(options.timeout).send(),
+        )
+        .with_context(attempt.context())
+        .await?;
+        attempt.attribute(
+            "http.response.status_code",
+            i64::from(response.status().as_u16()),
+        );
         *http_version = Some(format!("{:?}", response.version()));
         let response = response.error_for_status()?;
         let request_ms = elapsed_millis(request_started);
@@ -332,6 +379,7 @@ async fn fetch_one_inner(
         } else {
             ContentKind::Html
         };
+        let mut body_span = crate::telemetry::Span::with_parent("kestrel.body", &attempt.context());
         let download_started = Instant::now();
         let mut stream = response.bytes_stream();
         let mut body = Vec::with_capacity(
@@ -356,6 +404,8 @@ async fn fetch_one_inner(
         drop(stream);
         let download_ms = elapsed_millis(download_started);
         let response_bytes = body.len();
+        body_span.finish();
+        attempt.finish();
         (
             body,
             encoding,
@@ -367,6 +417,7 @@ async fn fetch_one_inner(
         )
     };
 
+    drop(attempt);
     let limit = options.content_limit;
     let parse_queue_started = Instant::now();
     let parse_permit = parsing
@@ -376,25 +427,35 @@ async fn fetch_one_inner(
     drop(network_permit);
     let parse_queue_ms = elapsed_millis(parse_queue_started);
     let parse_started = Instant::now();
+    let context = crate::telemetry::parent_context();
     let content = tokio::task::spawn_blocking(move || {
-        // Blocking work survives cancellation of its async caller. Keep its
-        // slot until the body and DOM are released, including while queued.
-        let _permit = parse_permit;
-        let body = body;
-        let (text, _, _) = encoding.decode(&body);
-        match content_kind {
-            ContentKind::Html => parse_content(&text, limit),
-            ContentKind::PlainText => {
-                // Preserve literal markup, whitespace, and repeated lines. Test
-                // the retained prefix so a whitespace-only cutoff is NoContent.
-                let retained: String = text.chars().take(limit).collect();
-                (!retained.trim().is_empty()).then_some(retained)
+        let _context = context.attach();
+        crate::telemetry::scope_sync("kestrel.extraction", || {
+            // Blocking work survives cancellation of its async caller. Keep its
+            // slot until the body and DOM are released, including while queued.
+            let _permit = parse_permit;
+            let body = body;
+            let (text, _, _) = encoding.decode(&body);
+            match content_kind {
+                ContentKind::Html => parse_content(&text, limit),
+                ContentKind::PlainText => {
+                    // Preserve literal markup, whitespace, and repeated lines. Test
+                    // the retained prefix so a whitespace-only cutoff is NoContent.
+                    let retained: String = text.chars().take(limit).collect();
+                    (!retained.trim().is_empty()).then_some(retained)
+                }
             }
-        }
+        })
     })
     .await
     .map_err(|error| KestrelError::Search(format!("HTML parser task failed: {error}")))?;
     let parse_ms = elapsed_millis(parse_started);
+    crate::telemetry::scope_sync("kestrel.content_quality", || {
+        crate::telemetry::payload(
+            "quality",
+            &crate::assess_content_quality(content.as_deref()),
+        );
+    });
     let outcome = if content.is_some() {
         FetchOutcome::Success
     } else {
@@ -721,6 +782,7 @@ mod tests {
 
     #[test]
     fn retains_crossing_chunk_prefix_without_exceeding_cap() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let mut body = vec![b'x'; 15];
         assert!(!append_body_chunk(&mut body, &[b'y'; 100], 16));
         assert_eq!(body, [vec![b'x'; 15], vec![b'y']].concat());
@@ -735,6 +797,7 @@ mod tests {
 
     #[test]
     fn parser_backpressure_bounds_large_batches_and_survives_cancellation() {
+        let _telemetry = crate::telemetry::test_export_guard();
         // Occupy the only blocking worker so parsers deterministically retain
         // their bodies without finishing. No timing assumptions about HTML CPU.
         let runtime = tokio::runtime::Builder::new_multi_thread()
@@ -845,6 +908,7 @@ mod tests {
 
     #[test]
     fn extracts_main_text_and_preserves_metadata() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let content = parse_content(PAGE, 500).unwrap();
         assert!(content.contains("Kestrel heading"));
         assert!(content.contains("Useful section"));
@@ -855,6 +919,7 @@ mod tests {
 
     #[test]
     fn rejects_documents_without_meaningful_text() {
+        let _telemetry = crate::telemetry::test_export_guard();
         assert_eq!(
             parse_content(
                 "<html><head><title>Only metadata</title></head><body><p> </p></body></html>",
@@ -866,6 +931,7 @@ mod tests {
 
     #[test]
     fn legitimate_container_names_retain_nested_main_content() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let text = "This useful download instruction must remain visible in the extracted content.";
         for name in [
             "download",
@@ -897,6 +963,7 @@ mod tests {
 
     #[test]
     fn explicit_chrome_markers_remove_meaningful_nested_text() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let text = "The useful documentation paragraph remains available after chrome removal.";
         for attributes in [
             r#"class="ad""#,
@@ -918,6 +985,7 @@ mod tests {
 
     #[test]
     fn documentation_fixtures_retain_body_and_exclude_chrome() {
+        let _telemetry = crate::telemetry::test_export_guard();
         for (html, expected) in [
             (
                 include_str!("../tests/fixtures/extraction/book.html"),
@@ -941,6 +1009,7 @@ mod tests {
 
     #[test]
     fn nested_clutter_is_removed() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let html = r#"<main><div class="sidebar"><section>Ignored nested clutter</section></div><p>This meaningful content remains available after nested clutter is removed.</p></main>"#;
         assert_eq!(
             parse_content(html, 500).as_deref(),

@@ -28,6 +28,7 @@ fn batch(index: usize, values: Vec<SearchResult>) -> Job {
 
 #[tokio::test]
 async fn unique_threshold_ignores_duplicates_and_preserves_fusion() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let pending = FuturesUnordered::<Job>::new();
     pending.push(batch(
         1,
@@ -51,6 +52,7 @@ async fn unique_threshold_ignores_duplicates_and_preserves_fusion() {
 
 #[tokio::test]
 async fn minimum_overrides_quorum_without_allowing_quorum_to_stop_early() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for (first, second, minimum) in [
         (vec!["a", "b", "c", "d", "e"], vec!["f"], 5),
         (vec!["a"], vec!["b"], 5),
@@ -73,6 +75,7 @@ async fn minimum_overrides_quorum_without_allowing_quorum_to_stop_early() {
 
 #[tokio::test]
 async fn exhausted_providers_return_partial_results_or_existing_failure() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for has_results in [false, true] {
         let pending = FuturesUnordered::<Job>::new();
         pending.push(Box::pin(async {
@@ -95,6 +98,7 @@ async fn exhausted_providers_return_partial_results_or_existing_failure() {
 
 #[test]
 fn minimum_validation_rejects_zero() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for (mode, minimum, valid) in [
         (SearchMode::Fanout, 0, false),
         (SearchMode::Fanout, 5, true),
@@ -110,6 +114,7 @@ fn minimum_validation_rejects_zero() {
 
 #[tokio::test]
 async fn threshold_cancels_http2_body_without_closing_shared_connection() {
+    let _telemetry = crate::telemetry::test_export_guard();
     use http_body_util::StreamBody;
     use hyper::{
         body::{Bytes, Frame},

@@ -71,10 +71,12 @@ pub(crate) struct Lifecycle {
     pub intervals: Vec<Interval>,
 }
 
-#[derive(Debug)]
 pub(crate) struct Recorder {
     snapshot: Lifecycle,
     current: Option<(Phase, Instant)>,
+    telemetry_parent: opentelemetry::Context,
+    telemetry_attempt: Option<crate::telemetry::Span>,
+    telemetry_phase: Option<crate::telemetry::Span>,
 }
 
 impl Recorder {
@@ -84,12 +86,15 @@ impl Recorder {
     }
 
     pub fn with_run(run_id: String) -> Self {
+        let search_id = uuid::Uuid::new_v4().to_string();
+        crate::telemetry::attribute("kestrel.run_id", run_id.clone());
+        crate::telemetry::attribute("kestrel.search_id", search_id.clone());
         Self {
             snapshot: Lifecycle {
                 schema_version: 1,
                 run_id,
                 benchmark_run_id: std::env::var("KESTRELSEARCH_BENCHMARK_RUN_ID").ok(),
-                search_id: uuid::Uuid::new_v4().to_string(),
+                search_id,
                 send_attempts: 0,
                 count_unit: "application_send",
                 redirect_hops_observed: false,
@@ -99,6 +104,9 @@ impl Recorder {
                 intervals: Vec::new(),
             },
             current: Some((Phase::NotStarted, Instant::now())),
+            telemetry_parent: crate::telemetry::parent_context(),
+            telemetry_attempt: None,
+            telemetry_phase: Some(crate::telemetry::Span::new("kestrel.not_started")),
         }
     }
 
@@ -108,13 +116,54 @@ impl Recorder {
 
     pub fn transition_censored(&mut self, phase: Phase, censored: bool) {
         self.close(censored);
+        if matches!(phase, Phase::Backoff) {
+            self.end_attempt();
+        }
+        let parent = self
+            .telemetry_attempt
+            .as_ref()
+            .map(|s| s.context())
+            .unwrap_or_else(|| self.telemetry_parent.clone());
+        self.telemetry_phase = Some(crate::telemetry::Span::with_parent(
+            match phase {
+                Phase::NotStarted => "kestrel.not_started",
+                Phase::Queue => "kestrel.queue",
+                Phase::Send => "kestrel.send",
+                Phase::Body => "kestrel.body",
+                Phase::Parse => "kestrel.parse",
+                Phase::Processing => "kestrel.processing",
+                Phase::Backoff => "kestrel.backoff",
+            },
+            &parent,
+        ));
         self.current = Some((phase, Instant::now()));
     }
 
     pub fn start_attempt(&mut self) {
         // Close backoff/queue before assigning the next attempt ID.
         self.close(false);
+        self.end_attempt();
         self.snapshot.send_attempts += 1;
+        let attempt =
+            crate::telemetry::Span::with_parent("kestrel.http_attempt", &self.telemetry_parent);
+        attempt.attribute("kestrel.run_id", self.snapshot.run_id.clone());
+        attempt.attribute("kestrel.search_id", self.snapshot.search_id.clone());
+        attempt.attribute(
+            "kestrel.attempt_id",
+            format!(
+                "{}:{}",
+                self.snapshot.search_id, self.snapshot.send_attempts
+            ),
+        );
+        attempt.attribute(
+            "kestrel.attempt_ordinal",
+            self.snapshot.send_attempts as i64,
+        );
+        self.telemetry_phase = Some(crate::telemetry::Span::with_parent(
+            "kestrel.send",
+            &attempt.context(),
+        ));
+        self.telemetry_attempt = Some(attempt);
         self.snapshot.attempts.push(Attempt {
             run_id: self.snapshot.run_id.clone(),
             search_id: self.snapshot.search_id.clone(),
@@ -188,6 +237,7 @@ impl Recorder {
             }
             self.close(cancelled);
         }
+        self.end_attempt();
         self.snapshot.clone()
     }
 
@@ -202,7 +252,26 @@ impl Recorder {
         self.snapshot.send_attempts.saturating_sub(1)
     }
 
+    fn end_attempt(&mut self) {
+        if let Some(mut span) = self.telemetry_attempt.take() {
+            if let Some(attempt) = self.snapshot.attempts.last() {
+                if let Some(status) = attempt.http_status {
+                    span.attribute("http.response.status_code", i64::from(status));
+                }
+                span.attribute("kestrel.outcome", attempt.outcome.unwrap_or("unknown"));
+                span.attribute("kestrel.challenge", format!("{:?}", attempt.challenge));
+                if let Some(kind) = attempt.transport_error {
+                    span.attribute("error.type", format!("{kind:?}"));
+                }
+            }
+            span.finish();
+        }
+    }
     fn close(&mut self, censored: bool) {
+        if let Some(mut span) = self.telemetry_phase.take() {
+            span.attribute("kestrel.censored", censored);
+            span.finish();
+        }
         if let Some((phase, started)) = self.current.take() {
             let attempt_id = if matches!(phase, Phase::NotStarted | Phase::Queue | Phase::Backoff) {
                 None
@@ -225,6 +294,7 @@ mod tests {
 
     #[test]
     fn backoff_cancellation_preserves_sends_and_completed_intervals() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let mut recorder = Recorder::new();
         recorder.start_attempt();
         recorder.transition(Phase::Body);
@@ -252,6 +322,7 @@ mod tests {
 
     #[test]
     fn queued_cancellation_is_not_a_send() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let mut recorder = Recorder::new();
         recorder.transition(Phase::Queue);
         let snapshot = recorder.finish(true);
@@ -263,6 +334,7 @@ mod tests {
 
     #[test]
     fn completed_search_has_no_censored_intervals() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let mut recorder = Recorder::new();
         recorder.start_attempt();
         recorder.transition(Phase::Body);

@@ -177,6 +177,7 @@ fn fanout_options(variant: &str, budget: Duration) -> SearchOptions {
 #[tokio::test]
 #[ignore = "live network experiment; set KESTREL_BING_EXPERIMENT_DIR to a new directory"]
 async fn capture_live_matrix() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let directory =
         std::env::var("KESTREL_BING_EXPERIMENT_DIR").expect("explicit output directory required");
     let directory = Path::new(&directory);
@@ -310,6 +311,7 @@ async fn capture_live_matrix() {
 
 #[test]
 fn evidence_removes_tracking_and_credentials() {
+    let _telemetry = crate::telemetry::test_export_guard();
     assert_eq!(
         clean_url(
             "https://user:secret@bing.com/search?q=moon+gravity&cc=gb&rdrig=secret#secret",
@@ -326,6 +328,7 @@ fn evidence_removes_tracking_and_credentials() {
 
 #[test]
 fn paired_filter_views_preserve_raw_evidence_and_distinguish_native() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let raw = parse_bing_results(include_str!(
         "../../tests/fixtures/providers/bing-unrelated.html"
     ));
@@ -349,6 +352,7 @@ fn paired_filter_views_preserve_raw_evidence_and_distinguish_native() {
 
 #[test]
 fn current_matrix_uses_result_minima_and_matched_budgets() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let budget = Duration::from_secs(5);
     for (variant, minimum) in [
         ("fanout-passthrough-min5", 5),
@@ -365,6 +369,7 @@ fn current_matrix_uses_result_minima_and_matched_budgets() {
 
 #[test]
 fn replays_sanitized_live_response_blocks() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let quoted = parse_provider_response(
         Engine::Bing,
         include_str!("../../tests/fixtures/providers/bing-live-quoted.html"),

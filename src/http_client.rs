@@ -75,6 +75,7 @@ mod tests {
 
     #[test]
     fn profiles_vary_and_keep_browser_headers_consistent() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let mut agents = std::collections::HashSet::new();
         for browser in [
             Impersonate::ChromeV146,
@@ -114,6 +115,7 @@ mod tests {
 
     #[tokio::test]
     async fn retries_use_same_headers_and_request_headers_override_defaults() {
+        let _telemetry = crate::telemetry::test_export_guard();
         use wiremock::{Mock, MockServer, ResponseTemplate, matchers::any};
         let server = MockServer::start().await;
         Mock::given(any())
@@ -147,6 +149,7 @@ mod tests {
     }
     #[tokio::test]
     async fn http2_multiplexes_and_clones_reuse_the_connection() {
+        let _telemetry = crate::telemetry::test_export_guard();
         use http_body_util::Full;
         use hyper::{body::Bytes, server::conn::http2, service::service_fn};
         use hyper_util::rt::{TokioExecutor, TokioIo};
@@ -216,6 +219,7 @@ mod tests {
 
     #[tokio::test]
     async fn http1_fallback_keeps_the_socket_alive() {
+        let _telemetry = crate::telemetry::test_export_guard();
         use std::io::{Read, Write};
         let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
         listener.set_nonblocking(true).unwrap();

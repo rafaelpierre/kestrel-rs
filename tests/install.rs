@@ -8,6 +8,7 @@ use predicates::prelude::*;
 
 #[test]
 fn installs_runnable_copy_and_repeated_self_install_is_a_noop() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let temporary = tempfile::tempdir().unwrap();
     let directory = temporary.path().join("nested/bin");
     Command::cargo_bin("kestrel")
@@ -44,6 +45,7 @@ fn installs_runnable_copy_and_repeated_self_install_is_a_noop() {
 
 #[test]
 fn default_install_uses_home_and_reports_path_conflicts() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let temporary = tempfile::tempdir().unwrap();
     let competing = temporary.path().join("other-bin");
     fs::create_dir(&competing).unwrap();
@@ -69,6 +71,7 @@ fn default_install_uses_home_and_reports_path_conflicts() {
 
 #[test]
 fn preserves_existing_files_and_symlinks_without_confirmation() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let temporary = tempfile::tempdir().unwrap();
     let destination = temporary.path().join("kestrel");
     let target = temporary.path().join("managed-binary");
@@ -117,6 +120,7 @@ fn preserves_existing_files_and_symlinks_without_confirmation() {
 
 #[test]
 fn rejects_conflicting_scopes_and_empty_directory() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     Command::cargo_bin("kestrel")
         .unwrap()
         .args(["install", "--system", "--dir", "/unused"])
@@ -133,6 +137,7 @@ fn rejects_conflicting_scopes_and_empty_directory() {
 
 #[test]
 fn prompts_and_only_replaces_when_confirmed() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     for answer in ["n\n", "\n", "maybe\n", "y\n", " YES \n"] {
         for link in [false, true] {
             let temporary = tempfile::tempdir().unwrap();
@@ -183,6 +188,7 @@ fn prompts_and_only_replaces_when_confirmed() {
 
 #[test]
 fn replaces_dangling_symlink_after_confirmation() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let temporary = tempfile::tempdir().unwrap();
     let destination = temporary.path().join("kestrel");
     let target = temporary.path().join("missing");

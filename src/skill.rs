@@ -91,6 +91,46 @@ page text is unavailable, including searches with `--no-fetch`.
 pub fn generate_skill_md(root: &mut Command) -> String {
     root.build();
     let mut rendered = HEADER.to_owned();
+    rendered.push_str(
+        r#"## Optional OpenTelemetry / Honeycomb tracing
+
+The CLI exports traces when `OTEL_EXPORTER_OTLP_ENDPOINT` is set (appends
+`/v1/traces`); `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` overrides it with a full URL.
+Set `OTEL_EXPORTER_OTLP_HEADERS="x-honeycomb-team=$HONEYCOMB_API_KEY"` in the shell
+using your secret manager; never put the real key in a prompt or committed file.
+Use `https://api.eu1.honeycomb.io` for EU or `https://api.honeycomb.io` for US.
+`OTEL_SERVICE_NAME` defaults to `kestrel`. Protocol defaults to `http/protobuf`;
+`http/json` is also supported, gRPC is not. Trace-specific protocol/headers/timeout
+variables override their general OTLP equivalents. Export timeout defaults to
+3000 ms (1–30000); `KESTRELSEARCH_OTEL_SHUTDOWN_MS` defaults to 5000 ms (1–30000).
+
+`KESTRELSEARCH_OTEL_CONTENT=none` is the default. `sanitized` exports bounded
+queries, intermediate retrieval snapshots, page text, ranking and final results.
+URL credentials/query strings/fragments and OTLP header values are redacted; this
+is not a general PII filter. Use sanitized data. `KESTRELSEARCH_OTEL_PAYLOAD_BYTES`
+defaults to 8192 (1–65536); `KESTRELSEARCH_OTEL_RESULT_LIMIT` to 20 (1–100).
+Truncated payloads are explicitly marked JSON prefixes; omitted results are counted.
+Each span has a 64 KiB aggregate content budget; exhaustion is marked explicitly.
+`KESTRELSEARCH_OTEL_ENABLED=false` disables the exporter. Without an endpoint
+there is no remote export. Invalid telemetry configuration/export failures go to
+stderr without changing result JSON or functional exit status. Bounded shutdown
+can lose spans on abrupt kill.
+
+`OTEL_TRACES_SAMPLER` defaults to `parentbased_always_on`; also supported:
+`always_on`, `always_off`, `traceidratio`, `parentbased_traceidratio` (ratio modes
+require finite `OTEL_TRACES_SAMPLER_ARG` in 0–1). Test workflows use `always_on`.
+`TRACEPARENT`/`TRACESTATE` carry subprocess parents. Benchmark run IDs retain
+`KESTRELSEARCH_BENCHMARK_RUN_ID`; test correlation uses `KESTRELSEARCH_OTEL_RUN_ID`
+and `KESTRELSEARCH_OTEL_TEST_ID`. Resource attributes can identify revision/CI runs.
+
+In a source checkout, `python3 scripts/test_traces.py` traces Rust and Python tests;
+`--include-ignored` explicitly enables ignored/live cases. Ordinary `cargo test`
+is still the parallel correctness check. `scripts/verify_test_traces.py` verifies
+local OTLP delivery, not Honeycomb ingestion. See `docs/telemetry.md` for lifecycle,
+coverage and the environment-only Honeycomb recipe.
+
+"#,
+    );
     let _ = writeln!(
         rendered,
         "## Installation\n\n```bash\ncargo install {}\n```\n",

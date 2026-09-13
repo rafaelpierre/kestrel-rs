@@ -128,6 +128,7 @@ mod tests {
 
     #[tokio::test]
     async fn keys_by_canonical_url_and_content_limit() {
+        let _telemetry = crate::telemetry::test_export_guard();
         let directory = tempfile::tempdir().unwrap();
         let cache = PageCache::new(directory.path(), Duration::from_secs(60)).unwrap();
         cache

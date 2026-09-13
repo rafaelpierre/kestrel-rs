@@ -31,13 +31,15 @@ impl KestrelClient {
 
     /// Build retained pools with an explicit transport policy. Clones share the pools.
     pub fn with_transport(transport: crate::TransportOptions) -> Result<Self, KestrelError> {
-        transport.validate()?;
-        Ok(Self {
-            search: SearchClients::with_transport(
-                &[Engine::Duckduckgo, Engine::Bing, Engine::Yahoo],
-                &transport,
-            )?,
-            fetch: build_client_with_transport(&transport)?,
+        crate::telemetry::scope_sync("kestrel.initialize", || {
+            transport.validate()?;
+            Ok(Self {
+                search: SearchClients::with_transport(
+                    &[Engine::Duckduckgo, Engine::Bing, Engine::Yahoo],
+                    &transport,
+                )?,
+                fetch: build_client_with_transport(&transport)?,
+            })
         })
     }
 
@@ -131,54 +133,65 @@ impl KestrelClient {
         cache: &PageCache,
         budget: Option<Duration>,
     ) -> Result<FetchReport, KestrelError> {
-        if budget.is_some_and(|duration| duration.is_zero()) {
-            return Err(KestrelError::InvalidRequest(
-                "fetch budget must be greater than zero".into(),
-            ));
-        }
-        crate::fetcher::validate_options(options)?;
-        if let Some(budget) = budget {
-            crate::numeric::duration("fetch budget", budget)?;
-        }
-        let cached = join_all(urls.iter().map(|url| cache.get(url, options.content_limit))).await;
-        let cache_hits = cached.iter().filter(|content| content.is_some()).count();
-        let mut results = cached;
-        let misses: Vec<(usize, String)> = results
-            .iter()
-            .enumerate()
-            .filter(|(_, content)| content.is_none())
-            .map(|(index, _)| (index, urls[index].clone()))
-            .collect();
-        let missing_urls: Vec<String> = misses.iter().map(|(_, url)| url.clone()).collect();
-        let mut report =
-            fetch_all_reusing_client_with_diagnostics(&missing_urls, options, &self.fetch, budget)
-                .await?;
-        let capped_urls: HashSet<&str> = report
-            .pages
-            .iter()
-            .filter(|page| page.response_bytes >= options.max_response_bytes)
-            .map(|page| page.url.as_str())
-            .collect();
-        for ((index, url), content) in misses.into_iter().zip(report.contents) {
-            if let Some(content) = content {
-                // A cap-sized body may be partial, even if it ended exactly at
-                // the cap. Do not let it satisfy a later, larger byte budget.
-                if !capped_urls.contains(url.as_str()) {
-                    let _ = cache.put(&url, options.content_limit, &content).await;
-                }
-                results[index] = Some(content);
+        crate::telemetry::scope_result("kestrel.cache_fetch", async {
+            if budget.is_some_and(|duration| duration.is_zero()) {
+                return Err(KestrelError::InvalidRequest(
+                    "fetch budget must be greater than zero".into(),
+                ));
             }
-        }
-        report.pages.extend(
-            urls.iter()
-                .zip(&results)
-                .filter(|(url, _)| !missing_urls.contains(url))
-                .map(|(url, _)| crate::model::PageFetchDiagnostic::cache_hit(url.clone())),
-        );
-        report.contents = results;
-        report.cache_hits = cache_hits;
-        report.cache_misses = missing_urls.len();
-        let _ = cache.prune().await;
-        Ok(report)
+            crate::fetcher::validate_options(options)?;
+            if let Some(budget) = budget {
+                crate::numeric::duration("fetch budget", budget)?;
+            }
+            let cached =
+                join_all(urls.iter().map(|url| cache.get(url, options.content_limit))).await;
+            crate::telemetry::payload("cache.contents", &cached);
+            let cache_hits = cached.iter().filter(|content| content.is_some()).count();
+            let mut results = cached;
+            let misses: Vec<(usize, String)> = results
+                .iter()
+                .enumerate()
+                .filter(|(_, content)| content.is_none())
+                .map(|(index, _)| (index, urls[index].clone()))
+                .collect();
+            let missing_urls: Vec<String> = misses.iter().map(|(_, url)| url.clone()).collect();
+            let mut report = fetch_all_reusing_client_with_diagnostics(
+                &missing_urls,
+                options,
+                &self.fetch,
+                budget,
+            )
+            .await?;
+            let capped_urls: HashSet<&str> = report
+                .pages
+                .iter()
+                .filter(|page| page.response_bytes >= options.max_response_bytes)
+                .map(|page| page.url.as_str())
+                .collect();
+            for ((index, url), content) in misses.into_iter().zip(report.contents) {
+                if let Some(content) = content {
+                    // A cap-sized body may be partial, even if it ended exactly at
+                    // the cap. Do not let it satisfy a later, larger byte budget.
+                    if !capped_urls.contains(url.as_str()) {
+                        let _ = cache.put(&url, options.content_limit, &content).await;
+                    }
+                    results[index] = Some(content);
+                }
+            }
+            report.pages.extend(
+                urls.iter()
+                    .zip(&results)
+                    .filter(|(url, _)| !missing_urls.contains(url))
+                    .map(|(url, _)| crate::model::PageFetchDiagnostic::cache_hit(url.clone())),
+            );
+            report.contents = results;
+            crate::telemetry::attribute("kestrel.cache_hits", cache_hits as i64);
+            crate::telemetry::payload("cache_fetch.output", &report.contents);
+            report.cache_hits = cache_hits;
+            report.cache_misses = missing_urls.len();
+            let _ = cache.prune().await;
+            Ok(report)
+        })
+        .await
     }
 }

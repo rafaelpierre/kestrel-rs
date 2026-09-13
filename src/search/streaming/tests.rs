@@ -108,6 +108,7 @@ async fn server(h2: bool, compressed: bool) -> Server {
 
 #[tokio::test]
 async fn both_clients_stream_normalized_results_and_cancel_unfinished_bodies() {
+    let _telemetry = crate::telemetry::test_export_guard();
     for h2 in [false, true] {
         for compressed in [false, true] {
             tokio::time::timeout(Duration::from_secs(5), async {
@@ -268,6 +269,7 @@ async fn both_clients_stream_normalized_results_and_cancel_unfinished_bodies() {
 
 #[tokio::test]
 async fn failed_provider_retracts_partial_results_and_does_not_satisfy_quorum() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let (sender, receiver) = mpsc::channel(1);
     let pending = FuturesUnordered::<Job<'_>>::new();
     pending.push(Box::pin(async move {
@@ -300,6 +302,7 @@ async fn failed_provider_retracts_partial_results_and_does_not_satisfy_quorum() 
 
 #[tokio::test]
 async fn deadline_keeps_closed_records_and_releases_provider_permits() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let (sender, receiver) = mpsc::channel(1);
     let pending = FuturesUnordered::<Job<'_>>::new();
     let diagnostics = Arc::new(Mutex::new(Vec::new()));
@@ -340,6 +343,7 @@ async fn deadline_keeps_closed_records_and_releases_provider_permits() {
 
 #[tokio::test]
 async fn simultaneous_queries_have_independent_thresholds_and_provenance() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let query = |query: &'static str, count| async move {
         let (sender, receiver) = mpsc::channel(1);
         let pending = FuturesUnordered::<Job<'_>>::new();
@@ -376,6 +380,7 @@ async fn simultaneous_queries_have_independent_thresholds_and_provenance() {
 
 #[tokio::test]
 async fn failures_empty_responses_and_filtered_records_never_reach_the_minimum() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let (sender, receiver) = mpsc::channel(1);
     let pending = FuturesUnordered::<Job<'_>>::new();
     pending.push(Box::pin(async {
@@ -425,6 +430,7 @@ async fn failures_empty_responses_and_filtered_records_never_reach_the_minimum()
 
 #[tokio::test]
 async fn default_query_mode_counts_metadata_without_query_terms_and_cancels_stragglers() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let (sender, receiver) = mpsc::channel(1);
     let pending = FuturesUnordered::<Job<'_>>::new();
     let publisher = Publisher {
@@ -469,6 +475,7 @@ async fn default_query_mode_counts_metadata_without_query_terms_and_cancels_stra
 
 #[tokio::test]
 async fn site_constraints_filter_streamed_records_before_counting() {
+    let _telemetry = crate::telemetry::test_export_guard();
     let (sender, mut receiver) = mpsc::channel(1);
     let publisher = Publisher {
         sender,
@@ -492,6 +499,7 @@ async fn site_constraints_filter_streamed_records_before_counting() {
 
 #[tokio::test]
 async fn benchmark_minimum_arms_and_fixed_pool_exercise_larger_fetch_caps() {
+    let _telemetry = crate::telemetry::test_export_guard();
     use crate::{FetchOptions, fetcher::fetch_all_reusing_client};
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
