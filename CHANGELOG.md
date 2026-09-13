@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v3.0.0...v4.0.0) - 2026-09-13
+
+### Fixed
+
+- preserve content with incidental chrome substrings
+- [**breaking**] clarify search controls and reject conflicting arguments
+
+### Other
+
+- Merge pull request #49 from rafaelpierre/release-plz-2026-09-12T15-11-55Z
+
 ## [3.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v2.0.0...v3.0.0) - 2026-09-12
 
 ### Added
