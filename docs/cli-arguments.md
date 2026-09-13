@@ -23,6 +23,13 @@ search defaults to 2,000 extracted characters per page and fetch to 20,000.
 | `--cache-ttl`, `--cache-dir`, `--cache-max-entries` | Search page-cache lifetime, location, and capacity. Directory/capacity require TTL; standalone fetch does not use the cache. |
 | `--output` | Text or JSON, independently available for both commands. Search JSON contains results and elapsed_seconds; fetch JSON contains url, content and elapsed_seconds. |
 
+## HTML text layout
+
+HTML/XHTML content follows source order with line breaks between blocks, tabs
+between table cells and preserved `pre` formatting. Short answers and all heading
+levels are retained. Character limits include whitespace and separators; schemas
+and CLI flags are unchanged. See [ordered extraction and ranking implications](page-extraction.md#ordered-readable-text-issue-22).
+
 ## Plain-text responses
 
 Direct fetch and search candidate fetching support `text/plain` as well as

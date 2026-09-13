@@ -1,1 +1,2 @@
-Ownership chapter Each value has an owner and is dropped when its owner leaves scope.
+Ownership chapter
+Each value has an owner and is dropped when its owner leaves scope.

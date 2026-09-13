@@ -201,6 +201,19 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(skill.contains("Semaphore::MAX_PERMITS"));
     assert!(skill.contains("checked `3 * top-k`"));
     assert!(skill.contains("whole class tokens"));
+    for guidance in [
+        "HTML text follows document order",
+        "tabs between table cells",
+        "`pre` preserves indentation",
+        "Entities are decoded once",
+        "HTML headings have no implicit ranking boost",
+        "including retained whitespace and generated separators",
+    ] {
+        assert!(
+            skill.contains(guidance),
+            "missing extraction guidance: {guidance}"
+        );
+    }
     assert!(skill.contains("Content-quality assessment is advisory"));
     assert!(skill.contains("32,768 UTF-8 bytes"));
     assert!(skill.contains("comments-only `main`"));
@@ -796,6 +809,54 @@ async fn quality_keeps_shell_fetch_successful_and_recovers_explicit_article() {
                     assert!(value.get("content_quality").is_none());
                 } else {
                     assert!(String::from_utf8(output.stdout).unwrap().contains(expected));
+                }
+            }
+        }
+    })
+    .await
+    .unwrap();
+}
+
+#[tokio::test]
+async fn ordered_html_fetch_matches_golden_in_text_and_json() {
+    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
+    let server = MockServer::start().await;
+    let cases: Vec<serde_json::Value> =
+        serde_json::from_str(include_str!("fixtures/extraction/ordered.json")).unwrap();
+    for case in cases.iter().filter(|case| case["expected"].is_string()) {
+        Mock::given(path(format!("/{}", case["id"].as_str().unwrap())))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_raw(case["html"].as_str().unwrap(), "text/html"),
+            )
+            .expect(2)
+            .mount(&server)
+            .await;
+    }
+    let base = server.uri();
+    tokio::task::spawn_blocking(move || {
+        let user_home = tempfile::tempdir().unwrap();
+        for case in cases.iter().filter(|case| case["expected"].is_string()) {
+            let url = format!("{}/{}", base, case["id"].as_str().unwrap());
+            let expected = format!("Source: {url}\n\n{}", case["expected"].as_str().unwrap());
+            for format in ["text", "json"] {
+                let output = Command::cargo_bin("kestrel")
+                    .unwrap()
+                    .env("HOME", user_home.path())
+                    .args(["fetch", &url, "--output", format])
+                    .assert()
+                    .success()
+                    .get_output()
+                    .clone();
+                if format == "json" {
+                    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+                    assert_eq!(value["content"], expected);
+                    assert_eq!(value.as_object().unwrap().len(), 3);
+                } else {
+                    assert_eq!(
+                        String::from_utf8(output.stdout).unwrap(),
+                        format!("{expected}\n")
+                    );
                 }
             }
         }

@@ -61,8 +61,8 @@ This recovers an explicit article hidden by a comments-only `main`. It is not a
 universal readability fix: an unrelated first article could be selected, missing
 JavaScript content cannot be recovered, and content removed by existing structural
 chrome rules cannot be restored. #20 supplies whole-token chrome matching; #22
-still owns tag traversal, order, word boundaries, short HTML paragraphs and code.
-The original HTML may contain useful text that the selected-tag extractor misses.
+adds [ordered text, short answers and code](page-extraction.md#ordered-readable-text-issue-22).
+The original HTML may still contain useful text outside the selected root.
 
 ## Library, CLI, ranking and cache compatibility
 
@@ -104,23 +104,24 @@ sanitized original HTML.
 Development fixtures were used to define the policy. The separate held-out set
 was authored after the vocabulary was written and evaluated without tuning that
 vocabulary. Both sets have the same author; they are not an independent benchmark.
-Two held-out extraction-boundary cases explicitly record inherited short-HTML/code
-loss. Short answers and code in `text/plain` remain intact. A corrected development
-expected string includes `Something went wrong.` (21 bytes, above the existing
-paragraph minimum); that correction did not change the classifier.
+Issue #22 updates exact extraction expectations for source order and line breaks.
+The HTML cases retain `original_extracted` and `original_state` to preserve the
+original observations. The two formerly empty short-answer/code HTML cases now
+retain `42` and `let answer = 42;` and assess as unflagged. Vocabulary, usefulness
+judgments and the original HTML/text inputs are unchanged.
 
-At a 20,000-character extraction limit, default existing chrome/tag rules, no cache
-and no network, one deterministic run gives:
+At a 20,000-character extraction limit, default chrome/root rules, no cache
+and no network, the deterministic corpus counts remain:
 
 | Set | Cases | Shell true positives | Shell false positives | Missed unusable cases | Useful cases not flagged |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Development | 6 | 2 | 0 | 1 | 3 |
 | Held-out | 18 | 3 | 0 | 4 | 11 |
 
-Unknown and unflagged count as **not flagged** in this table. Therefore the two
-useful but empty HTML extractions count as not flagged, not as successfully
-recovered evidence. The table measures the shell flag, not complete extraction
-accuracy. There are no observed false-positive shell flags in these 24 fixtures;
+Unknown and unflagged count as **not flagged** in this table. The two formerly
+empty HTML cases now retain evidence, but their change from unknown to unflagged
+does not change these counts. The table measures the shell flag, not complete
+extraction accuracy. There are no observed false-positive shell flags in these 24 fixtures;
 that does not establish a population false-positive rate.
 
 The five missed unusable cases are title/navigation/reply mixtures, a lone generic

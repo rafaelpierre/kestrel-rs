@@ -1,0 +1,52 @@
+[
+  {
+    "id": "inline",
+    "html": "<main><p>The <b>Rust</b> language has <a href=\"/\">useful ownership</a> semantics.</p><p>pre<em>fix</em>, <code>foo_bar()</code> &amp; café.</p></main>",
+    "expected": "The Rust language has useful ownership semantics.\nprefix, foo_bar() & café."
+  },
+  {
+    "id": "order",
+    "html": "<main><p>First paragraph.</p><h2>Later heading</h2><p>Second paragraph.</p><h3>Third heading</h3><h4>Four</h4><h5>Five</h5><h6>Six</h6><p>42</p></main>",
+    "expected": "First paragraph.\nLater heading\nSecond paragraph.\nThird heading\nFour\nFive\nSix\n42"
+  },
+  {
+    "id": "code-only",
+    "html": "<main><pre><code>  fn main() {\n\tprintln!(&quot;hi&quot;);\n\n    repeat();\n    repeat();\n}\n</code></pre></main>",
+    "expected": "  fn main() {\n\tprintln!(\"hi\");\n\n    repeat();\n    repeat();\n}\n"
+  },
+  {
+    "id": "tables",
+    "html": "<main><table><caption>Values</caption><thead><tr><th>Name</th> <th>Value</th><th>Note</th></tr></thead><tbody><tr><td>Rust <b>version</b> </td> <td>1.89</td><td></td></tr><tr><td></td><td></td><td>last</td></tr></tbody></table><p>After.</p></main>",
+    "expected": "Values\nName\tValue\tNote\nRust version\t1.89\t\n\t\tlast\nAfter."
+  },
+  {
+    "id": "nested-list",
+    "html": "<main><ul><li>Parent <em>one</em><ul><li>Child A</li><li><p>Child B</p></li></ul>Parent tail</li><li>Sibling</li></ul><dl><dt>Term</dt><dd>Definition</dd></dl></main>",
+    "expected": "Parent one\nChild A\nChild B\nParent tail\nSibling\nTerm\nDefinition"
+  },
+  {
+    "id": "entities",
+    "html": "<main><p>&amp;lt;tag&amp;gt; &lt;tag&gt; &amp;amp; &nbsp; café &#x1F469;&#x200D;&#x1F4BB; فارسی‌زبان</p><pre>&amp;lt;\n  &lt;tag&gt;</pre></main>",
+    "expected": "&lt;tag&gt; <tag> &amp; café 👩‍💻 فارسی‌زبان\n&lt;\n  <tag>"
+  },
+  {
+    "id": "boundaries",
+    "html": "<main><div>Loose <span>inline</span> text<br>next line</div><blockquote>Quote</blockquote><p>Source: original attribution</p><p>Status: ready</p><p>Repeat</p><p>Repeat</p><pre>  code\n    body</pre><p>Tail</p></main>",
+    "expected": "Loose inline text\nnext line\nQuote\nSource: original attribution\nStatus: ready\nRepeat\nRepeat\n  code\n    body\nTail"
+  },
+  {
+    "id": "malformed",
+    "html": "<main><p>First <b>bold</b><p>Next &amp; final",
+    "expected": "First bold\nNext & final"
+  },
+  {
+    "id": "root",
+    "html": "<div class=\"content\">Direct <code>code()</code> text<p>Nested</p>Tail</div>",
+    "expected": "Direct code() text\nNested\nTail"
+  },
+  {
+    "id": "empty",
+    "html": "<html><head><title>Metadata</title></head><body><template>Hidden</template><main><p> \n </p><pre> \t </pre></main></body></html>",
+    "expected": null
+  }
+]
