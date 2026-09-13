@@ -202,6 +202,20 @@ raise both the collection threshold and fetch limit, for example
 Neither collection nor fetching guarantees five final results: requests can fail
 and BM25 can filter candidates. Kestrel does not refill failed fetch slots.
 
+Use optional `--min-fetch-score SCORE` to reject weak title/snippet candidates
+before the fetch cap. This positive-IDF BM25 gate runs even for small pools and
+without `--pre-rank`; it removes rejected candidates from final output as well
+as fetching. It is disabled by default and requires portable syntax and fetching.
+Scores are finite nonnegative numbers with an inclusive cutoff (zero keeps zero
+scores), and depend on the candidate pool; no universal nonzero cutoff is
+recommended. For example, `kestrel search "rust async" --min-results 15
+--fetch-candidates 8 --min-fetch-score 0.1 --no-rank` illustrates syntax, not a
+calibrated threshold. Queries without affirmative lexical terms bypass the gate;
+all-rejected searches return empty without page/cache work or automatic refill.
+See [argument responsibilities](docs/cli-arguments.md#optional-fetch-score-threshold)
+for multi-query handling, diagnostics and interactions. Regenerate installed
+skills using the updated binary.
+
 `--provider-quorum` is retained for compatibility but ignored by result-count
 fanout. `--search-budget` covers provider search; page fetching has its own
 `--fetch-budget`. Use `--no-fetch` when only search results are needed.

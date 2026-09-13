@@ -96,6 +96,11 @@ struct SearchArgs {
     #[arg(long, value_parser = positive_usize, value_name = "N")]
     fetch_candidates: Option<usize>,
 
+    /// Minimum positive-IDF title/snippet BM25 before the fetch cap (disabled by default).
+    /// Inclusive, finite and nonnegative; zero keeps zero scores. Portable syntax only.
+    #[arg(long, value_parser = nonnegative_f64, value_name = "SCORE")]
+    min_fetch_score: Option<f64>,
+
     /// Pre-rank titles/snippets before selecting pages to fetch.
     #[arg(long)]
     pre_rank: bool,
@@ -106,7 +111,7 @@ struct SearchArgs {
 
     /// Skip page retrieval and default BM25; conflicts with explicit fetch-stage options.
     #[arg(long, conflicts_with_all = [
-        "fetch", "rank", "fetch_candidates", "pre_rank", "content_limit",
+        "fetch", "rank", "fetch_candidates", "min_fetch_score", "pre_rank", "content_limit",
         "max_response_bytes", "timeout", "fetch_budget", "cache_ttl", "cache_dir",
         "cache_max_entries", "concurrency", "parse_concurrency",
     ])]
@@ -386,7 +391,15 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             )
             .exit();
     }
-    let candidate_limit = arguments.candidate_limit().unwrap_or_else(|message| {
+    if arguments.min_fetch_score.is_some()
+        && arguments.query_syntax == kestrelsearch::QuerySyntax::Native
+    {
+        Cli::command().error(
+            clap::error::ErrorKind::ArgumentConflict,
+            "--min-fetch-score requires --query-syntax portable; remove the threshold or use portable syntax",
+        ).exit();
+    }
+    arguments.candidate_limit().unwrap_or_else(|message| {
         Cli::command()
             .error(clap::error::ErrorKind::ValueValidation, message)
             .exit()
@@ -478,19 +491,17 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
     let should_rank = !arguments.no_rank;
     let mut fetch_diagnostics = None;
     if should_fetch {
-        if arguments.pre_rank && results.len() > candidate_limit {
-            eprintln!("[kestrel] Pre-ranking candidates from titles and snippets...");
-            let pre_rank_started = Instant::now();
-            results = pre_rank_candidates(results, &queries);
-            timings.insert("pre_rank".into(), elapsed_millis(pre_rank_started));
-        }
-        if results.len() > candidate_limit {
-            eprintln!(
-                "[kestrel] Fetching the first {candidate_limit} candidates before ranking (from {} search results).",
-                results.len()
-            );
-            results.truncate(candidate_limit);
-        }
+        let selection =
+            match select_fetch_candidates(results, &arguments, &queries, &mut io::stderr()).await {
+                Ok(selection) => selection,
+                Err(error) => {
+                    eprintln!("[kestrel] Candidate selection failed: {error}");
+                    return ExitCode::FAILURE;
+                }
+            };
+        results = selection.results;
+        timings.extend(selection.timings);
+        candidate_counts.extend(selection.counts);
         let fetch_started = Instant::now();
         fetch_diagnostics =
             match attach_page_content(&client, &mut results, &arguments, &mut io::stderr()).await {
@@ -572,12 +583,96 @@ fn print_completion(command: &str, started: Instant) {
     );
 }
 
+struct CandidateSelection {
+    results: Vec<SearchResult>,
+    timings: BTreeMap<String, u64>,
+    counts: BTreeMap<String, usize>,
+}
+
+async fn select_fetch_candidates(
+    mut results: Vec<SearchResult>,
+    arguments: &SearchArgs,
+    queries: &[String],
+    diagnostics: &mut impl Write,
+) -> Result<CandidateSelection, kestrelsearch::KestrelError> {
+    let mut timings = BTreeMap::new();
+    let mut counts = BTreeMap::new();
+    if let Some(minimum) = arguments.min_fetch_score {
+        let started = Instant::now();
+        let queries = queries.to_vec();
+        let (filtered, report) = tokio::task::spawn_blocking(move || {
+            kestrelsearch::ranking::filter_fetch_candidates(&mut results, &queries, minimum)
+                .map(|report| (results, report))
+        })
+        .await
+        .map_err(|error| {
+            kestrelsearch::KestrelError::Search(format!("fetch score task failed: {error}"))
+        })??;
+        results = filtered;
+        timings.insert("fetch_score".into(), elapsed_millis(started));
+        counts.insert("after_fetch_score".into(), results.len());
+        counts.insert("fetch_score_rejected".into(), report.rejected);
+        counts.insert(
+            "fetch_score_bypassed_queries".into(),
+            report.bypassed_queries,
+        );
+        let _ = writeln!(
+            diagnostics,
+            "[kestrel] Fetch score threshold excluded {} candidate(s).",
+            report.rejected
+        );
+        if report.bypassed_queries > 0 {
+            let _ = writeln!(
+                diagnostics,
+                "[kestrel] Fetch score threshold bypassed for {} query(s) without affirmative lexical terms.",
+                report.bypassed_queries
+            );
+        }
+    }
+    let limit = arguments
+        .candidate_limit()
+        .map_err(|message| kestrelsearch::KestrelError::InvalidRequest(message.into()))?;
+    if arguments.pre_rank && results.len() > limit {
+        let _ = writeln!(
+            diagnostics,
+            "[kestrel] Pre-ranking candidates from titles and snippets..."
+        );
+        let started = Instant::now();
+        results = pre_rank_candidates(results, queries);
+        timings.insert("pre_rank".into(), elapsed_millis(started));
+    }
+    if results.len() > limit {
+        let _ = writeln!(
+            diagnostics,
+            "[kestrel] Fetching the first {limit} candidates before ranking (from {} search results).",
+            results.len()
+        );
+        results.truncate(limit);
+    }
+    Ok(CandidateSelection {
+        results,
+        timings,
+        counts,
+    })
+}
+
 async fn attach_page_content(
     client: &KestrelClient,
     results: &mut [SearchResult],
     arguments: &SearchArgs,
     diagnostics: &mut impl Write,
 ) -> Result<FetchReport, kestrelsearch::search::KestrelError> {
+    // An all-rejected pool must not initialize or touch a page cache.
+    if results.is_empty() {
+        return Ok(FetchReport {
+            contents: Vec::new(),
+            pages: Vec::new(),
+            budget_exhausted: false,
+            cancelled: 0,
+            cache_hits: 0,
+            cache_misses: 0,
+        });
+    }
     let fetchable: Vec<(usize, String)> = results
         .iter()
         .enumerate()
@@ -915,6 +1010,14 @@ fn concurrency_usize(value: &str) -> Result<usize, String> {
     Ok(value)
 }
 
+fn nonnegative_f64(value: &str) -> Result<f64, String> {
+    let value: f64 = value.parse().map_err(|_| "must be a number".to_string())?;
+    if !value.is_finite() || value < 0.0 {
+        return Err("must be finite and nonnegative".into());
+    }
+    Ok(value)
+}
+
 fn positive_f64(value: &str) -> Result<f64, String> {
     let value = value.parse::<f64>().map_err(|error| error.to_string())?;
     let duration = Duration::try_from_secs_f64(value)
@@ -983,6 +1086,15 @@ mod tests {
             vec!["--no-fetch", "--ranking-policy", "hybrid"],
             vec!["--no-fetch", "--ranking-policy", "rrf"],
             vec!["--pre-rank", "--no-rank"],
+            vec!["--min-fetch-score", "0", "--no-rank"],
+            vec!["--min-fetch-score", "1e100", "--ranking-policy", "body"],
+            vec![
+                "--min-fetch-score",
+                "0.1",
+                "--pre-rank",
+                "--ranking-policy",
+                "hybrid",
+            ],
             vec!["--ranking-policy", "body"],
             vec!["--fetch", "--ranking-policy", "body"],
             vec![
@@ -1209,6 +1321,241 @@ mod tests {
     fn selections_reject_invalid_entries() {
         let paths = vec![PathBuf::from("one"), PathBuf::from("two")];
         assert_eq!(select_installations("2,2,nope,3", &paths), [&paths[1]]);
+    }
+
+    #[tokio::test]
+    async fn fetch_threshold_filters_before_cap_and_cache_without_refilling_failures() {
+        use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
+        let server = MockServer::start().await;
+        for endpoint in ["/irrelevant", "/beyond-cap"] {
+            Mock::given(path(endpoint))
+                .respond_with(ResponseTemplate::new(200))
+                .expect(0)
+                .mount(&server)
+                .await;
+        }
+        Mock::given(path("/good"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .insert_header("content-type", "text/plain")
+                    .set_body_string("rust evidence"),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(path("/failed"))
+            .respond_with(ResponseTemplate::new(404))
+            .expect(2)
+            .mount(&server)
+            .await;
+        let Commands::Search(mut args) = Cli::try_parse_from([
+            "kestrel",
+            "search",
+            "rust",
+            "--min-fetch-score",
+            "0.01",
+            "--fetch-candidates",
+            "2",
+            "--no-rank",
+        ])
+        .unwrap()
+        .command
+        else {
+            panic!("expected search");
+        };
+        let directory = tempfile::tempdir().unwrap();
+        args.cache_ttl = Some(60.0);
+        args.cache_dir = Some(directory.path().join("cache"));
+        let client = KestrelClient::new().unwrap();
+        let candidate = |endpoint: &str, title: &str| SearchResult {
+            title: title.into(),
+            url: format!("{}{endpoint}", server.uri()),
+            display_url: String::new(),
+            snippet: String::new(),
+            content: None,
+            bm25_score: None,
+            engine: None,
+            query: None,
+            engine_rank: None,
+            sources: Vec::new(),
+        };
+        for expected_cache_hits in [0, 1] {
+            let input = vec![
+                candidate("/irrelevant", "cooking"),
+                candidate("/good", "rust"),
+                candidate("/failed", "rust"),
+                candidate("/beyond-cap", "rust"),
+            ];
+            let mut diagnostics = Vec::new();
+            let mut selected =
+                select_fetch_candidates(input, &args, &["rust".into()], &mut diagnostics)
+                    .await
+                    .unwrap();
+            assert_eq!(selected.counts["after_fetch_score"], 3);
+            assert_eq!(selected.counts["fetch_score_rejected"], 1);
+            assert_eq!(selected.results.len(), 2);
+            assert!(selected.results[0].url.ends_with("/good"));
+            let report =
+                attach_page_content(&client, &mut selected.results, &args, &mut diagnostics)
+                    .await
+                    .unwrap();
+            assert_eq!(report.cache_hits, expected_cache_hits);
+            assert!(selected.results[0].content.is_some());
+            assert!(selected.results[1].content.is_none());
+            assert!(selected.results.iter().all(|r| r.bm25_score.is_none()));
+            assert!(
+                String::from_utf8(diagnostics)
+                    .unwrap()
+                    .contains("excluded 1 candidate(s)")
+            );
+        }
+        server.verify().await;
+    }
+
+    #[tokio::test]
+    async fn fetch_threshold_small_pool_empty_selection_and_absent_flag() {
+        use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
+        let server = MockServer::start().await;
+        Mock::given(path("/good"))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .insert_header("content-type", "text/plain")
+                    .set_body_string("rust evidence"),
+            )
+            .expect(1)
+            .mount(&server)
+            .await;
+        Mock::given(path("/bad"))
+            .respond_with(ResponseTemplate::new(200))
+            .expect(0)
+            .mount(&server)
+            .await;
+        let Commands::Search(mut args) =
+            Cli::try_parse_from(["kestrel", "search", "rust", "--min-fetch-score", "0.01"])
+                .unwrap()
+                .command
+        else {
+            panic!("expected search");
+        };
+        let candidate = |endpoint: &str, title: &str| SearchResult {
+            title: title.into(),
+            url: format!("{}{endpoint}", server.uri()),
+            display_url: String::new(),
+            snippet: String::new(),
+            content: None,
+            bm25_score: None,
+            engine: None,
+            query: None,
+            engine_rank: None,
+            sources: Vec::new(),
+        };
+        let input = vec![candidate("/bad", "cooking"), candidate("/good", "rust")];
+        let mut diagnostics = Vec::new();
+        let client = KestrelClient::new().unwrap();
+        // Gate applies below the default cap, also when pre-rank is enabled.
+        args.pre_rank = true;
+        let mut selected =
+            select_fetch_candidates(input.clone(), &args, &["rust".into()], &mut diagnostics)
+                .await
+                .unwrap();
+        assert_eq!(selected.results.len(), 1);
+        assert!(!selected.timings.contains_key("pre_rank"));
+        attach_page_content(&client, &mut selected.results, &args, &mut diagnostics)
+            .await
+            .unwrap();
+        args.min_fetch_score = Some(f64::MAX);
+        let directory = tempfile::tempdir().unwrap();
+        let cache_path = directory.path().join("must-not-be-created");
+        args.cache_ttl = Some(60.0);
+        args.cache_dir = Some(cache_path.clone());
+        let mut selected =
+            select_fetch_candidates(input.clone(), &args, &["rust".into()], &mut diagnostics)
+                .await
+                .unwrap();
+        assert!(selected.results.is_empty());
+        let report = attach_page_content(&client, &mut selected.results, &args, &mut diagnostics)
+            .await
+            .unwrap();
+        assert!(report.pages.is_empty());
+        assert_eq!(report.cache_misses, 0);
+        assert!(!cache_path.exists());
+        args.min_fetch_score = None;
+        let selected =
+            select_fetch_candidates(input.clone(), &args, &["rust".into()], &mut diagnostics)
+                .await
+                .unwrap();
+        assert_eq!(selected.results, input);
+        assert!(selected.counts.is_empty());
+        assert!(selected.timings.is_empty());
+        server.verify().await;
+    }
+
+    #[tokio::test]
+    async fn fetch_threshold_skill_recipe_and_pre_rank_preserve_selection_contract() {
+        let Commands::Search(mut args) = Cli::try_parse_from([
+            "kestrel",
+            "search",
+            "rust async",
+            "--min-results",
+            "15",
+            "--fetch-candidates",
+            "8",
+            "--min-fetch-score",
+            "0.1",
+            "--no-rank",
+        ])
+        .unwrap()
+        .command
+        else {
+            panic!("expected search");
+        };
+        let input: Vec<_> = (0..11)
+            .map(|index| SearchResult {
+                title: if index == 0 {
+                    "cooking".into()
+                } else {
+                    "rust async".into()
+                },
+                url: format!("https://example.com/{index}"),
+                display_url: String::new(),
+                snippet: String::new(),
+                content: None,
+                bm25_score: None,
+                engine: Some(Engine::Bing),
+                query: Some("rust async".into()),
+                engine_rank: Some(index + 1),
+                sources: Vec::new(),
+            })
+            .collect();
+        for pre_rank in [false, true] {
+            args.pre_rank = pre_rank;
+            let selected = select_fetch_candidates(
+                input.clone(),
+                &args,
+                &["rust async".into()],
+                &mut Vec::new(),
+            )
+            .await
+            .unwrap();
+            assert_eq!(selected.results, input[1..9]);
+            assert_eq!(selected.counts["after_fetch_score"], 10);
+            assert_eq!(selected.timings.contains_key("pre_rank"), pre_rank);
+        }
+        let mut diagnostics = Vec::new();
+        let mut input = input;
+        for hit in &mut input {
+            hit.query = Some("site:example.com".into());
+        }
+        let selected =
+            select_fetch_candidates(input, &args, &["site:example.com".into()], &mut diagnostics)
+                .await
+                .unwrap();
+        assert_eq!(selected.counts["fetch_score_bypassed_queries"], 1);
+        assert!(
+            String::from_utf8(diagnostics)
+                .unwrap()
+                .contains("without affirmative lexical terms")
+        );
     }
 
     #[tokio::test]

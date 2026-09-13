@@ -203,6 +203,27 @@ impl QueryPlan {
         Ok(Self(Some(expression)))
     }
 
+    /// Affirmative text leaves only; Boolean operators and hostname constraints
+    /// are not evidence terms. Nested negations restore positive polarity.
+    pub(crate) fn affirmative_text(&self) -> Vec<&str> {
+        fn collect<'a>(expr: &'a Expr, negated: bool, text: &mut Vec<&'a str>) {
+            match expr {
+                Expr::Text(value) if !negated => text.push(value),
+                Expr::Not(inner) => collect(inner, !negated, text),
+                Expr::And(a, b) | Expr::Or(a, b) => {
+                    collect(a, negated, text);
+                    collect(b, negated, text);
+                }
+                Expr::Text(_) | Expr::Site(_) => {}
+            }
+        }
+        let mut text = Vec::new();
+        if let Some(expr) = &self.0 {
+            collect(expr, false, &mut text);
+        }
+        text
+    }
+
     pub(crate) fn is_native(&self) -> bool {
         self.0.is_none()
     }
@@ -261,6 +282,27 @@ mod tests {
             .unwrap()
             .matches(&hit(title, snippet))
     }
+    #[test]
+    fn affirmative_terms_follow_boolean_polarity() {
+        for (query, expected) in [
+            (
+                r#"("rust async" OR café) NOT python site:example.com"#,
+                vec!["rust async", "café"],
+            ),
+            ("NOT NOT rust NOT (python OR java)", vec!["rust"]),
+            ("NOT (rust AND NOT café)", vec!["café"]),
+            ("site:example.com -python", vec![]),
+            (r#""AND" OR and"#, vec!["and", "and"]),
+        ] {
+            assert_eq!(
+                QueryPlan::parse(query, QuerySyntax::Portable)
+                    .unwrap()
+                    .affirmative_text(),
+                expected
+            );
+        }
+    }
+
     #[test]
     fn phrase_and_conjunction_are_distinct() {
         assert!(matches(

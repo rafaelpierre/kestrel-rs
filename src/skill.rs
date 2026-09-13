@@ -230,7 +230,7 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
   `--no-rank` skips final ranking but still fetches pages unless `--no-fetch` is set;
   it can be combined with `--pre-rank`, which can change candidate order.
 - With `--no-fetch`, omit explicit fetch-stage options: `--fetch-candidates`,
-  `--pre-rank`, `--content-limit`, `--max-response-bytes`, `--timeout`,
+  `--pre-rank`, `--min-fetch-score`, `--content-limit`, `--max-response-bytes`, `--timeout`,
   `--fetch-budget`, `--cache-ttl`, `--cache-dir`, `--cache-max-entries`,
   `--concurrency`, and `--parse-concurrency`. Defaults do not cause conflicts.
   Previously these settings were silently ignored; remove them from search-only
@@ -239,6 +239,30 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
   `--no-fetch --ranking-policy body` (previously runtime status 1).
 - `--pre-rank` scores titles/snippets before selecting fetch candidates, and only
   takes effect when fetching and the candidate count exceeds the fetch limit.
+- `--min-fetch-score SCORE` is an opt-in metadata gate, disabled by default.
+  It requires portable query syntax and page fetching; native syntax and
+  `--no-fetch` conflict with it (usage status 2 before requests, empty stdout).
+  SCORE must be finite and nonnegative; negative values, NaN and infinities are
+  invalid. The comparison is inclusive (`score >= SCORE`), so zero keeps zero
+  scores. This is positive-IDF BM25 over doubled title plus snippet, not the
+  final content-only `bm25_score`; internal gate scores do not change the JSON
+  schema. Scores depend on the query and complete candidate pool, not a fixed
+  relevance scale. There is no recommended nonzero cutoff.
+  Scoring uses affirmative portable query text (phrases tokenized as words),
+  excluding Boolean operators, negated text and site constraints; double negation
+  restores affirmative text. A query without affirmative lexical terms bypasses
+  the gate with a stderr diagnostic. A shared URL survives if any contributing
+  query qualifies or bypasses, with all provenance preserved.
+  The gate runs before `--pre-rank` and the fetch cap, even for small pools and
+  without `--pre-rank`; it removes rejected candidates from fetching AND final
+  results. It works with `--no-rank` and every fetch-compatible final policy.
+  It does not change provider stopping, refill candidates or relax itself when
+  all candidates fail. All-rejected searches perform no page/cache work and
+  return a successful empty result. Fewer than top-k results is valid.
+  Stderr reports rejected candidates; benchmark diagnostics add `fetch_score`
+  timing and `after_fetch_score`, `fetch_score_rejected`, and
+  `fetch_score_bypassed_queries` counts. Provider and fetch budgets keep their
+  existing scope; metadata scoring is outside both network-stage budgets.
 - Experimental `--ranking-policy` choices: `provider` preserves candidate order;
   `snippet` uses titles/snippets; `body` uses content-only BM25 and requires fetching;
   `hybrid` combines title/snippet/body evidence and retains results without bodies;
@@ -306,6 +330,7 @@ These are separate stages, not aliases for one count:
 | --- | --- | --- |
 | `--min-results N` | Stop provider collection at N unique accepted candidates **per query** | 5; a larger threshold gives later results a chance but can take longer. Deadlines or exhausted providers may leave fewer. |
 | `--fetch-candidates N` | Maximum candidates selected for page fetching across the merged queries | 3 × top-k; does not request more provider results. More candidates can supply alternatives when pages fail or rank poorly, at greater fetch/parse cost. |
+| `--min-fetch-score SCORE` | Inclusive metadata BM25 gate before the fetch cap | Disabled; finite nonnegative, portable syntax only. Rejected candidates also leave final output; no universal cutoff. |
 | `-k N`, `--top-k N` | Same option: maximum final results across all queries | 5; not a guaranteed result count, collection threshold, or fetch count. |
 | `--content-limit CHARS` | Maximum extracted body characters **per page**, before body ranking | Search: 2,000; standalone fetch: 20,000. Shorter text reduces output and ranking input but can omit relevant passages. Not a token limit or total-output cap. |
 | `--max-response-bytes BYTES` | Maximum retained decoded response bytes **per page** | 1,000,000; reaching the cap extracts the prefix. A smaller cap reduces retained/downloaded body work but may cut off the article entirely. |
@@ -334,6 +359,18 @@ use the byte cap for that. Increasing the character limit cannot recover bytes
 already cut off by the byte cap. Longer prefixes can expose more useful evidence
 but can also contain more irrelevant material; BM25 is lexical, not a guarantee
 of semantic quality.
+
+## Optional fetch relevance gate
+
+```bash
+kestrel search "rust async" --min-results 15 --fetch-candidates 8 --min-fetch-score 0.1 --no-rank
+```
+
+The `0.1` above illustrates syntax, not a calibrated recommendation. Validate
+against sources needed for your task; increasing the threshold may lose useful
+pages whose metadata provides weak evidence. Omit the flag to preserve current
+selection. Regenerate installed skills with the updated binary to learn this
+new option.
 
 ## Recipes: speed, coverage and relevance
 

@@ -224,6 +224,20 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(skill.contains("Fetch completed in 0.125 seconds."));
     assert!(skill.contains("Empty successful searches also report time"));
     assert!(skill.contains("--query-syntax"));
+    for contract in [
+        "--min-fetch-score",
+        "score >= SCORE",
+        "zero keeps zero",
+        "affirmative lexical terms",
+        "fetch_score_bypassed_queries",
+        "fetching AND final",
+        "no page/cache work",
+    ] {
+        assert!(
+            skill.contains(contract),
+            "missing fetch score contract: {contract}"
+        );
+    }
     assert!(skill.contains("Defaults do not cause conflicts"));
     assert!(skill.contains("## Choosing limits: collected, fetched, returned"));
     assert!(skill.contains("## Recipes: speed, coverage and relevance"));
@@ -681,6 +695,35 @@ async fn fetch_plain_text_preserves_body_in_text_and_json() {
     })
     .await
     .unwrap();
+}
+
+#[test]
+fn fetch_score_invalid_options_fail_before_requests() {
+    for flags in [
+        vec!["--min-fetch-score=-1"],
+        vec!["--min-fetch-score=NaN"],
+        vec!["--min-fetch-score=inf"],
+        vec!["--min-fetch-score=-inf"],
+        vec!["--min-fetch-score=1e999"],
+        vec!["--min-fetch-score=abc"],
+        vec!["--min-fetch-score=1", "--no-fetch"],
+        vec!["--min-fetch-score=1", "--query-syntax=native"],
+    ] {
+        Command::cargo_bin("kestrel")
+            .unwrap()
+            .args(["search", "rust"])
+            .args(flags)
+            .assert()
+            .code(2)
+            .stdout("")
+            .stderr(predicate::str::contains("Searching").not());
+    }
+    Command::cargo_bin("kestrel")
+        .unwrap()
+        .args(["fetch", "https://example.com", "--min-fetch-score=1"])
+        .assert()
+        .code(2)
+        .stdout("");
 }
 
 #[tokio::test]
