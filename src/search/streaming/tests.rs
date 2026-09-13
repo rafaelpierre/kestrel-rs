@@ -553,3 +553,43 @@ async fn benchmark_minimum_arms_and_fixed_pool_exercise_larger_fetch_caps() {
         assert!(sizes[0] < sizes[1] && sizes[1] < sizes[2], "{sizes:?}");
     }).await.expect("local benchmark fixtures must finish promptly");
 }
+
+#[tokio::test]
+#[ignore = "subprocess helper; invoked by recovery_audit::interrupted_work_is_repeated"]
+async fn recovery_provider_child() {
+    let directory = std::path::PathBuf::from(std::env::var_os("KESTREL_AUDIT_DIR").unwrap());
+    let endpoint = format!(
+        "{}/provider",
+        std::env::var("KESTREL_AUDIT_ENDPOINT").unwrap()
+    );
+    crate::recovery_audit::EVENTS
+        .scope(directory, async {
+            let client = reqwest::Client::builder().no_proxy().build().unwrap();
+            let (sender, receiver) = mpsc::channel(1);
+            let publisher = Publisher {
+                sender,
+                index: 0,
+                engine: Engine::Bing,
+                query: "audit query".into(),
+            };
+            let pending: FuturesUnordered<Job<'_>> = FuturesUnordered::new();
+            pending.push(Box::pin(async {
+                let result = PUBLISHER
+                    .scope(publisher, async {
+                        let (text, _) = request_standard_with_retries(
+                            &client,
+                            Engine::Bing,
+                            "audit query",
+                            || client.get(&endpoint),
+                        )
+                        .await?;
+                        parse_provider_response(Engine::Bing, &text)
+                    })
+                    .await;
+                (0, result)
+            }));
+            let _ = collect(pending, None, Some(5), None, Some(receiver)).await;
+            panic!("provider must remain blocked before EOF");
+        })
+        .await;
+}

@@ -342,6 +342,10 @@ fanout mode. External struct literals must add the field or use
 finish within the total budget are retained and outstanding fetches are
 cancelled. The cache is disabled unless `--cache-ttl` is supplied.
 
+The [interrupted-search recovery contract](docs/cache-recovery-contract.md)
+records current cache limitations and the proposed delivery interfaces. Provider
+progress recovery is not yet implemented.
+
 ## Use the library
 
 Reuse a `KestrelClient` across calls to retain its search and fetch connection

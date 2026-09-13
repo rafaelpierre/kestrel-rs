@@ -13,6 +13,8 @@ mod numeric;
 mod provider_diagnostics;
 pub mod providers;
 pub mod ranking;
+#[cfg(test)]
+mod recovery_audit;
 pub mod search;
 pub mod skill;
 pub mod telemetry;

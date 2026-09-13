@@ -1839,6 +1839,16 @@ mod tests {
     }
 
     #[test]
+    fn generated_skill_describes_current_recovery_boundary() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("wait until the fetch batch returns"));
+        assert!(skill.contains("Accepted provider records are held only"));
+        assert!(skill.contains("omit cache flags for fresh search page extraction"));
+        assert!(Cli::try_parse_from(["kestrel", "search", "audit", "--cache-ttl", "0"]).is_err());
+        assert!(!skill.contains("--recovery-ttl"));
+    }
+
+    #[test]
     fn generated_skill_documents_result_minimum_precedence() {
         let _telemetry = kestrelsearch::telemetry::test_export_guard();
         let skill = generate_skill_md(&mut Cli::command());

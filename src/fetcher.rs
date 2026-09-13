@@ -302,6 +302,10 @@ async fn fetch_one_detailed(
             }
         };
         item.diagnostic.http_version = http_version;
+        #[cfg(test)]
+        if let Some(content) = &item.content {
+            crate::recovery_audit::observe("page-extracted", content);
+        }
         crate::telemetry::payload("page.output", &item.content);
         crate::telemetry::payload("page.diagnostic", &item.diagnostic);
         crate::telemetry::attribute("kestrel.outcome", format!("{:?}", item.diagnostic.outcome));
