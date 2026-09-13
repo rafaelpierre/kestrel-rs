@@ -19,6 +19,10 @@ path = "src/lib.rs"
 name = "kestrel"
 path = "src/main.rs"
 
+[features]
+# Deterministic loopback-only provider injection for CLI subprocess tests.
+test-fixtures = []
+
 [dependencies]
 async-trait = "0.1"
 base64 = "0.22"
@@ -47,7 +51,7 @@ serde_json = "1"
 sha2 = "0.10"
 thiserror = "2"
 tempfile = "3"
-tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time", "fs", "net"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "sync", "time", "fs", "net", "signal"] }
 toml_edit = "0.25"
 url = "2"
 uuid = { version = "1", features = ["v4"] }

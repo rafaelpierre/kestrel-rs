@@ -555,41 +555,171 @@ async fn benchmark_minimum_arms_and_fixed_pool_exercise_larger_fetch_caps() {
 }
 
 #[tokio::test]
-#[ignore = "subprocess helper; invoked by recovery_audit::interrupted_work_is_repeated"]
-async fn recovery_provider_child() {
-    let directory = std::path::PathBuf::from(std::env::var_os("KESTREL_AUDIT_DIR").unwrap());
-    let endpoint = format!(
-        "{}/provider",
-        std::env::var("KESTREL_AUDIT_ENDPOINT").unwrap()
-    );
-    crate::recovery_audit::EVENTS
-        .scope(directory, async {
-            let client = reqwest::Client::builder().no_proxy().build().unwrap();
-            let (sender, receiver) = mpsc::channel(1);
-            let publisher = Publisher {
-                sender,
-                index: 0,
-                engine: Engine::Bing,
-                query: "audit query".into(),
-            };
-            let pending: FuturesUnordered<Job<'_>> = FuturesUnordered::new();
-            pending.push(Box::pin(async {
-                let result = PUBLISHER
-                    .scope(publisher, async {
-                        let (text, _) = request_standard_with_retries(
-                            &client,
-                            Engine::Bing,
-                            "audit query",
-                            || client.get(&endpoint),
-                        )
-                        .await?;
-                        parse_provider_response(Engine::Bing, &text)
+async fn records_commit_before_eof_and_survive_caller_cancellation() {
+    let _telemetry = crate::telemetry::test_export_guard();
+    let server = server(false, false).await;
+    let directory = tempfile::tempdir().unwrap();
+    let store = crate::SearchRecovery::new(directory.path(), Duration::from_secs(60)).unwrap();
+    let key = crate::recovery::UnitKey::new("fixture", Engine::Bing, "", TimeFilter::Any);
+    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+    let (sender, receiver) = mpsc::channel(1);
+    let publisher = Publisher {
+        sender,
+        index: 0,
+        engine: Engine::Bing,
+        query: "fixture".into(),
+    };
+    let pending = FuturesUnordered::<Job<'_>>::new();
+    let endpoint = format!("{}/bing", server.url);
+    pending.push(Box::pin(async move {
+        let result = PUBLISHER
+            .scope(publisher, async {
+                let (body, retries) =
+                    request_standard_with_retries(&client, Engine::Bing, "fixture", || {
+                        client.get(&endpoint)
                     })
-                    .await;
-                (0, result)
-            }));
-            let _ = collect(pending, None, Some(5), None, Some(receiver)).await;
-            panic!("provider must remain blocked before EOF");
-        })
-        .await;
+                    .await?;
+                let _ = retries;
+                Ok(with_provenance(
+                    parse_provider_response(Engine::Bing, &body)?,
+                    Engine::Bing,
+                    "fixture",
+                ))
+            })
+            .await;
+        (0, result)
+    }));
+    let (queue, writer) = crate::recovery::writer(Some(&store), None);
+    let collect = collect_recording(
+        pending,
+        None,
+        Some(100),
+        None,
+        Some(receiver),
+        Some((queue.unwrap(), vec![key.clone()])),
+        None,
+    );
+    let running = async { tokio::join!(collect, writer) };
+    let observe = async {
+        loop {
+            if let Some(snapshot) = store.load(&key).await {
+                assert_eq!(snapshot.state, crate::recovery::State::Incomplete);
+                if snapshot.records.len() == 3 {
+                    break;
+                }
+            }
+            tokio::task::yield_now().await;
+        }
+    };
+    tokio::time::timeout(Duration::from_secs(5),async {
+        tokio::select! { _ = running => panic!("provider reached EOF unexpectedly"), () = observe => () }
+    }).await.unwrap();
+    // The losing operation future was dropped; its acknowledged snapshot remains.
+    let snapshot = store.load(&key).await.unwrap();
+    assert_eq!(snapshot.records.len(), 3);
+    assert_eq!(snapshot.state, crate::recovery::State::Incomplete);
+    assert_eq!(server.count.load(Ordering::SeqCst), 1);
+}
+
+#[tokio::test]
+#[ignore = "fresh-process helper for committed_provider_snapshot_survives_kill"]
+async fn provider_recording_child() {
+    let directory = std::env::var_os("KESTREL_PROVIDER_STORE").unwrap();
+    let endpoint = std::env::var("KESTREL_PROVIDER_ENDPOINT").unwrap();
+    let store = crate::SearchRecovery::new(directory, Duration::from_secs(60)).unwrap();
+    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+    let (sender, receiver) = mpsc::channel(1);
+    let publisher = Publisher {
+        sender,
+        index: 0,
+        engine: Engine::Bing,
+        query: "fixture".into(),
+    };
+    let pending = FuturesUnordered::<Job<'_>>::new();
+    pending.push(Box::pin(async move {
+        let outcome = PUBLISHER
+            .scope(publisher, async {
+                let (body, _) =
+                    request_standard_with_retries(&client, Engine::Bing, "fixture", || {
+                        client.get(&endpoint)
+                    })
+                    .await?;
+                Ok(with_provenance(
+                    parse_provider_response(Engine::Bing, &body)?,
+                    Engine::Bing,
+                    "fixture",
+                ))
+            })
+            .await;
+        (0, outcome)
+    }));
+    let key = crate::recovery::UnitKey::new("fixture", Engine::Bing, "", TimeFilter::Any);
+    let (queue, writer) = crate::recovery::writer(Some(&store), None);
+    let collect = collect_recording(
+        pending,
+        None,
+        Some(100),
+        None,
+        Some(receiver),
+        Some((queue.unwrap(), vec![key])),
+        None,
+    );
+    tokio::join!(collect, writer);
+    panic!("provider must still be waiting for EOF");
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn committed_provider_snapshot_survives_kill() {
+    struct Process(std::process::Child);
+    impl Drop for Process {
+        fn drop(&mut self) {
+            let _ = self.0.kill();
+            let _ = self.0.wait();
+        }
+    }
+    let server = server(false, false).await;
+    let directory = tempfile::tempdir().unwrap();
+    let log = directory.path().join("child.log");
+    let output = std::fs::File::create(&log).unwrap();
+    let mut child = Process(
+        std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "search::streaming::tests::provider_recording_child",
+                "--ignored",
+                "--nocapture",
+            ])
+            .env("KESTREL_PROVIDER_STORE", directory.path())
+            .env("KESTREL_PROVIDER_ENDPOINT", format!("{}/bing", server.url))
+            .env("KESTRELSEARCH_OTEL_ENABLED", "false")
+            .stdout(std::process::Stdio::from(output.try_clone().unwrap()))
+            .stderr(std::process::Stdio::from(output))
+            .spawn()
+            .unwrap(),
+    );
+    let store = crate::SearchRecovery::new(directory.path(), Duration::from_secs(60)).unwrap();
+    let key = crate::recovery::UnitKey::new("fixture", Engine::Bing, "", TimeFilter::Any);
+    tokio::time::timeout(Duration::from_secs(10), async {
+        loop {
+            if store.load(&key).await.is_some_and(|s| s.records.len() == 3) {
+                break;
+            }
+            assert!(
+                child.0.try_wait().unwrap().is_none(),
+                "{}",
+                std::fs::read_to_string(&log).unwrap()
+            );
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+    })
+    .await
+    .unwrap();
+    child.0.kill().unwrap();
+    assert!(!child.0.wait().unwrap().success());
+    let fresh = crate::SearchRecovery::new(directory.path(), Duration::from_secs(60)).unwrap();
+    let snapshot = fresh.load(&key).await.unwrap();
+    assert_eq!(snapshot.state, crate::recovery::State::Incomplete);
+    assert_eq!(snapshot.records.len(), 3);
+    assert_eq!(snapshot.records[0].sources[0].query, "fixture");
+    assert_eq!(server.count.load(Ordering::SeqCst), 1);
 }

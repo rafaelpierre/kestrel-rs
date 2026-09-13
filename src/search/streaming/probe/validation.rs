@@ -140,6 +140,7 @@ async fn measured_search(
                 options.provider_quorum,
                 Some(options.min_results.unwrap_or(5)),
                 deadline,
+                None,
             ),
         )
         .await;
