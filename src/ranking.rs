@@ -210,7 +210,8 @@ pub struct FetchScoreReport {
 /// plus snippet, using an inclusive, finite nonnegative minimum. Scores are
 /// corpus-dependent and remain internal; content and public BM25 are untouched.
 ///
-/// Queries must use portable syntax. Each query is scored against its complete
+/// Queries must use portable syntax. As in search, edges are trimmed, blank
+/// queries dropped and duplicates removed. Each query is scored against its complete
 /// contributing pool before filtering. A URL survives if any contributing query
 /// meets the minimum (or has no affirmative lexical terms). Candidates without
 /// provenance matching a supplied query are evaluated against all supplied queries.
@@ -226,14 +227,13 @@ pub fn filter_fetch_candidates(
     use crate::query::{QueryPlan, QuerySyntax};
     use crate::search::KestrelError;
 
-    if !minimum.is_finite() || minimum < 0.0 || queries.is_empty() {
+    let query_order = crate::search::normalize_queries(queries);
+    if !minimum.is_finite() || minimum < 0.0 || query_order.is_empty() {
         return Err(KestrelError::InvalidRequest(
             "fetch score requires a finite nonnegative minimum and at least one portable query"
                 .into(),
         ));
     }
-    let mut seen = HashSet::new();
-    let query_order: Vec<_> = queries.iter().filter(|q| seen.insert(q.as_str())).collect();
     let terms: Vec<Vec<String>> = query_order
         .iter()
         .map(|query| {
@@ -605,6 +605,35 @@ mod tests {
         assert_eq!(report.bypassed_queries, 1);
         assert_eq!(report.rejected, 1);
         assert_eq!(hits.len(), 1);
+    }
+
+    #[test]
+    fn fetch_score_normalizes_queries_before_provenance_matching() {
+        let input = vec![
+            result("python", Some("rust"), None),
+            result("python", Some("python"), None),
+        ];
+        let mut expected = input.clone();
+        filter_fetch_candidates(&mut expected, &["rust".into(), "python".into()], 0.1).unwrap();
+        assert_eq!(expected.len(), 1);
+        assert_eq!(expected[0].query.as_deref(), Some("python"));
+        let mut actual = input.clone();
+        filter_fetch_candidates(
+            &mut actual,
+            &[
+                "  rust ".into(),
+                " ".into(),
+                "python".into(),
+                "rust".into(),
+                " python ".into(),
+            ],
+            0.1,
+        )
+        .unwrap();
+        assert_eq!(actual, expected);
+        let mut actual = input.clone();
+        assert!(filter_fetch_candidates(&mut actual, &[" ".into(), "\t".into()], 0.1).is_err());
+        assert_eq!(actual, input);
     }
 
     #[test]

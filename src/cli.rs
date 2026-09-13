@@ -182,6 +182,17 @@ struct SearchArgs {
 }
 
 impl SearchArgs {
+    fn queries(&self) -> Vec<String> {
+        let mut queries = vec![self.query.clone()];
+        queries.extend(self.additional_queries.clone());
+        if self.min_fetch_score.is_some() {
+            // Match search provenance for every later stage of gated searches.
+            kestrelsearch::search::normalize_queries(&queries)
+        } else {
+            queries
+        }
+    }
+
     fn candidate_limit(&self) -> Result<usize, &'static str> {
         if self.no_fetch {
             Ok(0)
@@ -404,8 +415,7 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             .error(clap::error::ErrorKind::ValueValidation, message)
             .exit()
     });
-    let mut queries = vec![arguments.query.clone()];
-    queries.extend(arguments.additional_queries.clone());
+    let queries = arguments.queries();
     let query_label = queries.join(" | ");
     let options = arguments.search_options();
     eprintln!(
@@ -1321,6 +1331,40 @@ mod tests {
     fn selections_reject_invalid_entries() {
         let paths = vec![PathBuf::from("one"), PathBuf::from("two")];
         assert_eq!(select_installations("2,2,nope,3", &paths), [&paths[1]]);
+    }
+
+    #[tokio::test]
+    async fn gated_search_normalizes_queries_for_search_and_selection() {
+        let Commands::Search(mut args) = Cli::try_parse_from([
+            "kestrel",
+            "search",
+            "  rust  ",
+            "--query",
+            " ",
+            "--query",
+            "python",
+            "--query",
+            "rust",
+            "--min-fetch-score",
+            "0.1",
+        ])
+        .unwrap()
+        .command
+        else {
+            panic!("expected search");
+        };
+        assert_eq!(args.queries(), ["rust", "python"]);
+        let input: Vec<SearchResult> = serde_json::from_value(serde_json::json!([
+            {"title":"python", "url":"https://example.com/first", "display_url":"", "snippet":"", "content":null, "query":"rust"},
+            {"title":"python", "url":"https://example.com/second", "display_url":"", "snippet":"", "content":null, "query":"python"}
+        ])).unwrap();
+        let selected = select_fetch_candidates(input, &args, &args.queries(), &mut Vec::new())
+            .await
+            .unwrap();
+        assert_eq!(selected.results.len(), 1);
+        assert_eq!(selected.results[0].query.as_deref(), Some("python"));
+        args.min_fetch_score = None;
+        assert_eq!(args.queries(), ["  rust  ", " ", "python", "rust"]);
     }
 
     #[tokio::test]

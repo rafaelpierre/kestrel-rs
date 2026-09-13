@@ -108,6 +108,12 @@ fail before requests with usage status 2. Native query syntax and `--no-fetch`
 conflict with this flag, also with status 2, stderr explanations and empty stdout.
 Standalone `fetch` has no query and does not accept the option.
 
+With the gate enabled, the CLI passes the same trimmed, deduplicated query list
+to search and later stages. Whitespace-only queries are discarded; at least one
+nonempty query is required. The library gate shares search's normalization, so
+padded queries cannot lose their provenance match or gain an unrelated query's
+score. No query or provenance field is rewritten by filtering.
+
 Only affirmative text leaves of the portable query expression contribute scoring
 terms. Phrases are tokenized rather than scored as exact phrases; existing query
 constraint matching remains intact. Operators, negated text and site constraints

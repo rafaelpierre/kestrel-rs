@@ -248,6 +248,9 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
   final content-only `bm25_score`; internal gate scores do not change the JSON
   schema. Scores depend on the query and complete candidate pool, not a fixed
   relevance scale. There is no recommended nonzero cutoff.
+  With the gate enabled, search and later stages share trimmed, deduplicated
+  queries; whitespace-only queries are dropped and at least one nonempty query
+  is required. This keeps score groups aligned with provider provenance.
   Scoring uses affirmative portable query text (phrases tokenized as words),
   excluding Boolean operators, negated text and site constraints; double negation
   restores affirmative text. A query without affirmative lexical terms bypasses

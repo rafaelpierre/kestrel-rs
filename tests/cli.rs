@@ -230,6 +230,7 @@ fn skill_install_and_uninstall_use_compatible_paths() {
         "zero keeps zero",
         "affirmative lexical terms",
         "fetch_score_bypassed_queries",
+        "whitespace-only queries are dropped",
         "fetching AND final",
         "no page/cache work",
     ] {
