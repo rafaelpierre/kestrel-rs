@@ -13,6 +13,7 @@ pub mod model;
 mod numeric;
 mod provider_diagnostics;
 pub mod providers;
+pub mod proxy;
 pub mod ranking;
 pub mod recovery;
 pub use recovery::SearchRecovery;

@@ -78,6 +78,8 @@ page text is unavailable, including searches with `--no-fetch`.
 
 ## Notes
 
+- Automatic proxy routing is not exposed by the CLI. The library-only `proxy::hproxy::HProxyDiscovery` adapter loads a bounded HTTP/CONNECT list only when explicitly awaited; it does not change search/fetch routing or existing environment/system proxy settings. SOCKS discovery selection is unsupported.
+
 - This `SKILL.md` is compatible with Claude Code, Codex, and GitHub Copilot in VS Code.
 - Progress logs go to **stderr**; use `--output json` for machine-readable **stdout**.
 - Successful `search` and `fetch` commands report elapsed wall-clock seconds to three decimal places on stderr, e.g. `[kestrel] Search completed in 1.234 seconds.` or `[kestrel] Fetch completed in 0.125 seconds.` This includes initialization, retrieval, extraction, optional ranking, and result output; it excludes argument parsing and process startup. Empty successful searches also report time. Text output is unchanged, and failures do not print a success completion line.
