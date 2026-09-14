@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [9.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v8.0.0...v9.0.0) - 2026-09-14
+
+### Added
+
+- [**breaking**] default CLI search to lexical hybrid ranking
+
 ## [8.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v7.1.0...v8.0.0) - 2026-09-14
 
 ### Fixed
