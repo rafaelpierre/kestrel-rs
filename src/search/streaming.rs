@@ -108,7 +108,10 @@ where
                 // EOF replaces the snapshot. Deadlines retain complete records;
                 // malformed/error responses retract them before the threshold.
                 if let Some((queue, keys)) = &progress {
-                    sequence = sequence.saturating_add(1);
+                    // One sequence across this query's discovery retries, within
+                    // the invocation's shared bounded persistence writer.
+                    sequence = DISCOVERY_SEQUENCE.try_with(|counter| counter.fetch_add(1, Ordering::Relaxed) + 1)
+                        .unwrap_or_else(|_| sequence.saturating_add(1));
                     match &outcome {
                         Ok(records) => queue.enqueue(keys[index].clone(), sequence, crate::recovery::State::Complete, records, deadline).await,
                         Err(KestrelError::SearchDeadline) => (),
@@ -131,7 +134,10 @@ where
                 match event {
                     Some(batch) => {
                         if let Some((queue, keys)) = &progress {
-                            sequence = sequence.saturating_add(1);
+                            // One sequence across this query's discovery retries, within
+                    // the invocation's shared bounded persistence writer.
+                    sequence = DISCOVERY_SEQUENCE.try_with(|counter| counter.fetch_add(1, Ordering::Relaxed) + 1)
+                        .unwrap_or_else(|_| sequence.saturating_add(1));
                             queue.enqueue(keys[batch.index].clone(), sequence, crate::recovery::State::Incomplete, &batch.results, deadline).await;
                         }
                         partial.insert(batch.index, batch.results);

@@ -21,6 +21,7 @@ use crate::model::{
 
 use crate::provider_diagnostics::{Challenge, Phase, Recorder, TransportKind};
 
+mod discovery;
 mod parsing;
 mod streaming;
 
@@ -30,6 +31,8 @@ const FANOUT_QUORUM: u8 = 1;
 const FANOUT_MIN_RESULTS: u8 = 2;
 
 tokio::task_local! {
+    static DISCOVERY_ATTEMPT: usize;
+    static DISCOVERY_SEQUENCE: std::sync::atomic::AtomicU64;
     static PROVIDER_RECORDER: Arc<Mutex<Recorder>>;
     static DIAGNOSTIC_RUN_ID: String;
     static PROVIDER_DIAGNOSTIC: (Arc<Mutex<Vec<ProviderSearchDiagnostic>>>, usize);
@@ -418,27 +421,31 @@ async fn search_many_with_clients_in_run(
     );
     let semaphore = Arc::new(Semaphore::new(options.max_concurrency));
     let diagnostics = Arc::new(Mutex::new(Vec::new()));
-    let deadline = options
-        .search_budget
-        .map(|budget| crate::numeric::deadline("search budget", budget))
+    let policy = discovery::Policy::new(options.search_budget);
+    let overall_deadline = policy
+        .overall
+        .map(|budget| crate::numeric::deadline("discovery allowance", budget))
         .transpose()?;
-
-    let (progress, writer) = crate::recovery::writer(recovery, deadline);
+    let (progress, writer) = crate::recovery::writer(recovery, overall_deadline);
     let jobs = queries
         .iter()
-        .map(|query| {
-            run_fanout_query(
-                query,
-                &engines,
-                clients,
-                Arc::clone(&semaphore),
-                Arc::clone(&diagnostics),
-                &options.region,
-                options.time_filter,
-                options.provider_quorum,
-                Some(options.min_results.unwrap_or(5)),
-                deadline,
-                progress.clone(),
+        .enumerate()
+        .map(|(index, query)| {
+            DISCOVERY_SEQUENCE.scope(
+                std::sync::atomic::AtomicU64::new(0),
+                discovery::run(
+                    query,
+                    index,
+                    &engines,
+                    options,
+                    clients,
+                    Arc::clone(&semaphore),
+                    Arc::clone(&diagnostics),
+                    recovery,
+                    progress.clone(),
+                    policy,
+                    overall_deadline,
+                ),
             )
         })
         .collect::<Vec<_>>();
@@ -453,7 +460,8 @@ async fn search_many_with_clients_in_run(
         .into_iter()
         .flat_map(|(outcomes, _)| outcomes)
         .collect();
-    let results = crate::telemetry::scope_sync("kestrel.merge", || merge_outcomes(outcomes))?;
+    let results = crate::telemetry::scope_sync("kestrel.merge", || merge_outcomes(outcomes))
+        .map_err(|_| discovery::failure(&diagnostics.lock().expect("diagnostic lock")))?;
     crate::telemetry::results("search.output", &results);
     let providers = Arc::try_unwrap(diagnostics)
         .expect("all search diagnostic references dropped")
@@ -727,6 +735,7 @@ fn run_one_job<'a>(
         let mut entries = diagnostics.lock().expect("diagnostic lock");
         let index = entries.len();
         entries.push(ProviderSearchDiagnostic {
+            discovery_attempt: DISCOVERY_ATTEMPT.try_with(|a| *a).unwrap_or(1),
             engine,
             query: query.to_owned(),
             elapsed_ms: 0,
@@ -813,13 +822,18 @@ fn run_one_job<'a>(
                 }
                 Err(error) => {
                     let message = error.to_string();
-                    entry.outcome =
-                        if matches!(error, KestrelError::ProviderResponseTooLarge { .. }) {
-                            "response_too_large"
+                    entry.outcome = if matches!(error, KestrelError::SearchDeadline) {
+                        if recorder.lock().expect("recorder lock").rate_limited() {
+                            "rate_limited_deadline"
                         } else {
-                            provider_error_outcome(&message)
+                            "deadline"
                         }
-                        .into();
+                    } else if matches!(error, KestrelError::ProviderResponseTooLarge { .. }) {
+                        "response_too_large"
+                    } else {
+                        provider_error_outcome(&message)
+                    }
+                    .into();
                     entry.error = Some(message);
                 }
             }
@@ -833,9 +847,7 @@ fn run_one_job<'a>(
 }
 
 fn provider_error_outcome(message: &str) -> &'static str {
-    if message.contains("deadline exceeded") {
-        "deadline"
-    } else if message.contains("bot challenge") {
+    if message.contains("bot challenge") {
         "challenge"
     } else if message.contains("unrecognized search page") {
         "unrecognized"
@@ -923,6 +935,10 @@ async fn run_provider_inner(
     time_filter: TimeFilter,
     clients: &SearchClients,
 ) -> Result<ProviderResponse, KestrelError> {
+    #[cfg(test)]
+    if let Ok(fixture) = discovery::tests::FIXTURE.try_with(Clone::clone) {
+        return fixture.respond(query, engine).await;
+    }
     #[cfg(feature = "test-fixtures")]
     if let Ok(endpoint) = std::env::var("KESTREL_TEST_PROVIDER_ENDPOINT") {
         let mut endpoint =
@@ -1225,6 +1241,7 @@ where
     let engine = Engine::Yahoo;
     let mut last_error = None;
     for attempt in 1..=3 {
+        let mut server_delay = None;
         record_attempt();
         let response = build().send().await;
         observe(|r| {
@@ -1241,6 +1258,7 @@ where
                     .get("retry-after")
                     .and_then(|v| v.to_str().ok())
                     .map(str::to_owned);
+                server_delay = retry_after.as_deref().and_then(discovery::retry_after);
                 observe(|r| r.headers(status, retry_after));
                 let final_url = response.url().to_string();
                 let http_version = format!("{:?}", response.version());
@@ -1276,6 +1294,11 @@ where
                             attempt,
                             &html,
                         );
+                        if challenge == Challenge::Detected && !(200..300).contains(&status) {
+                            return Err(KestrelError::Search(format!(
+                                "{engine} returned a bot challenge (HTTP {status})"
+                            )));
+                        }
                         if (200..300).contains(&status) {
                             record_phase(Phase::Parse);
                             return results.map(|results| (results, attempt - 1)).ok_or_else(
@@ -1314,7 +1337,21 @@ where
             }
         }
         log_retry(engine, query, attempt, last_error.as_ref());
-        retry_delay(attempt).await;
+        if let Some(delay) = server_delay {
+            // Do not shorten server guidance or permit an unbounded wait when
+            // callers disable the discovery deadline. End this request instead.
+            if delay > SEARCH_TIMEOUT {
+                return Err(last_error.unwrap_or_else(|| {
+                    KestrelError::Search(
+                        "server retry delay exceeds 15s request retry allowance".into(),
+                    )
+                }));
+            }
+            record_phase(Phase::Backoff);
+            tokio::time::sleep(delay).await;
+        } else {
+            retry_delay(attempt).await;
+        }
     }
     Err(last_error.unwrap_or_else(|| KestrelError::Search("request failed".into())))
 }
@@ -1330,6 +1367,7 @@ where
 {
     let mut last_error = None;
     for attempt in 1..=3 {
+        let mut server_delay = None;
         record_attempt();
         let response = build().send().await;
         observe(|r| {
@@ -1346,6 +1384,7 @@ where
                     .get("retry-after")
                     .and_then(|v| v.to_str().ok())
                     .map(str::to_owned);
+                server_delay = retry_after.as_deref().and_then(discovery::retry_after);
                 observe(|r| r.headers(status, retry_after));
                 let final_url = response.url().to_string();
                 let http_version = format!("{:?}", response.version());
@@ -1381,6 +1420,11 @@ where
                             attempt,
                             &html,
                         );
+                        if challenge == Challenge::Detected && !(200..300).contains(&status) {
+                            return Err(KestrelError::Search(format!(
+                                "{engine} returned a bot challenge (HTTP {status})"
+                            )));
+                        }
                         if (200..300).contains(&status) {
                             record_phase(Phase::Parse);
                             return results.map(|results| (results, attempt - 1)).ok_or_else(
@@ -1420,7 +1464,21 @@ where
             }
         }
         log_retry(engine, query, attempt, last_error.as_ref());
-        retry_delay(attempt).await;
+        if let Some(delay) = server_delay {
+            // Do not shorten server guidance or permit an unbounded wait when
+            // callers disable the discovery deadline. End this request instead.
+            if delay > SEARCH_TIMEOUT {
+                return Err(last_error.unwrap_or_else(|| {
+                    KestrelError::Search(
+                        "server retry delay exceeds 15s request retry allowance".into(),
+                    )
+                }));
+            }
+            record_phase(Phase::Backoff);
+            tokio::time::sleep(delay).await;
+        } else {
+            retry_delay(attempt).await;
+        }
     }
     Err(last_error.unwrap_or_else(|| KestrelError::Search("request failed".into())))
 }
@@ -2277,6 +2335,64 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn server_retry_guidance_cannot_be_bypassed_at_deadline() {
+        use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+        for yahoo in [false, true] {
+            let server = MockServer::start().await;
+            Mock::given(method("GET"))
+                .respond_with(
+                    ResponseTemplate::new(429)
+                        .insert_header("retry-after", "1")
+                        .set_body_string("rate limited"),
+                )
+                .expect(1)
+                .mount(&server)
+                .await;
+            let engine = if yahoo { Engine::Yahoo } else { Engine::Bing };
+            let clients = SearchClients::new(&[engine]).unwrap();
+            let diagnostics = Arc::new(Mutex::new(Vec::new()));
+            let request = async {
+                if yahoo {
+                    request_yahoo_with_retries("q", retain_body, || {
+                        clients.yahoo.as_ref().unwrap().get(server.uri())
+                    })
+                    .await?;
+                } else {
+                    request_standard_with_retries(
+                        &clients.standard,
+                        engine,
+                        "q",
+                        retain_body,
+                        || clients.standard.get(server.uri()),
+                    )
+                    .await?;
+                }
+                Ok(ProviderResponse {
+                    results: Vec::new(),
+                    raw_result_count: 0,
+                    retries: 0,
+                })
+            };
+            let result = run_one_job(
+                "q",
+                engine,
+                Arc::new(Semaphore::new(1)),
+                diagnostics.clone(),
+                Some(tokio::time::Instant::now() + Duration::from_millis(100)),
+                None,
+                request,
+            )
+            .await;
+            assert!(matches!(result, Err(KestrelError::SearchDeadline)));
+            assert_eq!(
+                diagnostics.lock().unwrap()[0].outcome,
+                "rate_limited_deadline"
+            );
+            server.verify().await;
+        }
+    }
+
+    #[tokio::test]
     async fn provider_http_errors_keep_retry_policy_under_limit() {
         let _telemetry = crate::telemetry::test_export_guard();
         use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
@@ -2518,17 +2634,10 @@ mod tests {
                 response.unwrap_err()
             };
             let message = error.to_string();
-            assert_eq!(
-                provider_error_outcome(&message),
-                if status == 200 {
-                    "challenge"
-                } else {
-                    "request_error"
-                }
-            );
+            assert_eq!(provider_error_outcome(&message), "challenge");
             if status == 403 {
                 assert!(message.contains("HTTP 403"));
-                assert!(!message.contains("bot challenge"));
+                assert!(message.contains("bot challenge"));
             }
         }
     }
@@ -2947,6 +3056,7 @@ mod tests {
     async fn dropped_provider_preserves_retries_and_censored_backoff() {
         let _telemetry = crate::telemetry::test_export_guard();
         let diagnostics = Arc::new(Mutex::new(vec![ProviderSearchDiagnostic {
+            discovery_attempt: 1,
             engine: Engine::Bing,
             query: "test".into(),
             elapsed_ms: 0,

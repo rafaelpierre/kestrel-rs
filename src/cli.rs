@@ -77,12 +77,14 @@ struct SearchArgs {
     #[arg(long, value_parser = positive_usize, value_name = "N")]
     min_results: Option<usize>,
 
-    /// Total search seconds, including enabled recovery I/O, provider queueing and retries (default: 5).
+    /// First discovery budget in seconds (default: 5), including recovery I/O and request retries.
+    /// Empty deadline-limited queries retry twice with +5s allowances capped at 15s.
+    /// Budgets >=15s use one attempt; defaults allow up to 32s across attempts/backoff.
     /// Must round to at least 1 ns and fit a monotonic clock deadline.
     #[arg(long, value_parser = positive_f64, value_name = "SECS")]
     search_budget: Option<f64>,
 
-    /// Disable the total search deadline; per-request timeouts still apply.
+    /// Disable the discovery deadline and automatic discovery retries; request timeouts still apply.
     #[arg(long, conflicts_with = "search_budget")]
     no_search_budget: bool,
 
@@ -1964,6 +1966,28 @@ mod tests {
         assert_eq!(fetch.max_response_bytes, library.max_response_bytes);
         assert_eq!(search.content_limit, 2_000);
         assert_eq!(fetch.content_limit, 20_000);
+    }
+
+    #[test]
+    fn generated_skill_documents_discovery_retry_contract() {
+        let skill = generate_skill_md(&mut Cli::command());
+        for term in [
+            "32s",
+            "discovery_attempt",
+            "rate_limited_deadline",
+            "nine total",
+            "B >=15s",
+            "no JSON error envelope",
+        ] {
+            assert!(skill.contains(term), "missing {term}");
+        }
+        let mut root = Cli::command();
+        let help = root
+            .find_subcommand_mut("search")
+            .unwrap()
+            .render_long_help()
+            .to_string();
+        assert!(help.contains("Budgets >=15s use one attempt"));
     }
 
     #[test]
