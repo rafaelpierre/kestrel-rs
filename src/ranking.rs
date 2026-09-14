@@ -30,7 +30,7 @@ fn evidence_tokens(text: &str) -> Vec<String> {
         .collect()
 }
 
-/// Experimental policies; legacy content-only BM25 remains the default.
+/// Experimental policies; content-only BM25 remains the default.
 #[derive(Clone, Copy, Debug, clap::ValueEnum)]
 pub enum RankingPolicy {
     Provider,
@@ -173,7 +173,7 @@ fn positive_bm25_scores(corpus: &[Vec<String>], query: &[String]) -> Vec<f64> {
         .collect()
 }
 
-/// Rank fetched results with rank_bm25's BM25Okapi defaults.
+/// Rank fetched results with positive-IDF BM25 (k1 = 1.5, b = 0.75).
 pub fn rank_results(mut results: Vec<SearchResult>, query: &str) -> Vec<SearchResult> {
     crate::telemetry::scope_results("kestrel.rank_results", || {
         crate::telemetry::results("ranking.input", &results);
@@ -190,7 +190,7 @@ fn score_results(results: &mut [SearchResult], query: &str) {
         .iter()
         .map(|result| tokenize(result.content.as_deref().unwrap_or_default()))
         .collect();
-    let scores = bm25_okapi_scores(&corpus, &tokenize(query));
+    let scores = bm25_scores(&corpus, &tokenize(query));
     for (result, score) in results.iter_mut().zip(scores) {
         result.bm25_score = Some(score);
     }
@@ -441,7 +441,7 @@ fn score_snippet_group(
         .collect();
     for (index, score) in indexes
         .into_iter()
-        .zip(bm25_okapi_scores(&corpus, &tokenize(query)))
+        .zip(bm25_scores(&corpus, &tokenize(query)))
     {
         scores[index] = score;
     }
@@ -474,75 +474,51 @@ fn interleave(buckets: Vec<Vec<SearchResult>>) -> Vec<SearchResult> {
     ranked
 }
 
-fn bm25_okapi_scores(corpus: &[Vec<String>], query: &[String]) -> Vec<f64> {
-    const K1: f64 = 1.5;
-    const B: f64 = 0.75;
-    const EPSILON: f64 = 0.25;
+// The input is already tokenized by Kestrel. Keep token identity exact rather than
+// using the crate's default hashed embedding space or linguistic normalization.
+#[derive(Default)]
+struct PreparedTokens;
 
-    let corpus_size = corpus.len();
-    if corpus_size == 0 {
+impl bm25::Tokenizer for PreparedTokens {
+    fn tokenize(&self, text: &str) -> Vec<String> {
+        text.split_whitespace().map(str::to_owned).collect()
+    }
+}
+
+struct ExactToken;
+
+impl bm25::TokenEmbedder for ExactToken {
+    type EmbeddingSpace = String;
+
+    fn embed(token: &str) -> String {
+        token.to_owned()
+    }
+}
+
+fn bm25_scores(corpus: &[Vec<String>], query: &[String]) -> Vec<f64> {
+    if corpus.is_empty() {
         return Vec::new();
     }
-    let doc_lengths: Vec<usize> = corpus.iter().map(Vec::len).collect();
-    let average_length = doc_lengths.iter().sum::<usize>() as f64 / corpus_size as f64;
-    let frequencies: Vec<HashMap<&str, usize>> = corpus
-        .iter()
-        .map(|document| {
-            let mut counts = HashMap::new();
-            for token in document {
-                *counts.entry(token.as_str()).or_default() += 1;
-            }
-            counts
-        })
-        .collect();
-    let mut document_frequency: HashMap<&str, usize> = HashMap::new();
-    for counts in &frequencies {
-        for token in counts.keys() {
-            *document_frequency.entry(token).or_default() += 1;
-        }
+    let documents: Vec<String> = corpus.iter().map(|tokens| tokens.join(" ")).collect();
+    let references: Vec<&str> = documents.iter().map(String::as_str).collect();
+    let embedder =
+        bm25::EmbedderBuilder::<ExactToken, PreparedTokens>::with_tokenizer_and_fit_to_corpus(
+            PreparedTokens,
+            &references,
+        )
+        .k1(1.5)
+        .b(0.75)
+        .build();
+    let mut scorer = bm25::Scorer::<usize, String>::new();
+    for (index, document) in documents.iter().enumerate() {
+        scorer.upsert(&index, embedder.embed(document));
     }
-    if document_frequency.is_empty() {
-        return vec![0.0; corpus_size];
-    }
-
-    let mut idf: HashMap<&str, f64> = document_frequency
-        .iter()
-        .map(|(token, frequency)| {
-            let value =
-                ((corpus_size as f64 - *frequency as f64 + 0.5) / (*frequency as f64 + 0.5)).ln();
-            (*token, value)
-        })
-        .collect();
-    let average_idf = idf.values().sum::<f64>() / idf.len() as f64;
-    let floor = EPSILON * average_idf;
-    for value in idf.values_mut() {
-        if *value < 0.0 {
-            *value = floor;
-        }
-    }
-
-    frequencies
-        .iter()
-        .zip(doc_lengths)
-        .map(|(counts, document_length)| {
-            query
-                .iter()
-                .filter_map(|term| idf.get(term.as_str()).map(|idf| (term, idf)))
-                .map(|(term, idf)| {
-                    let frequency = counts.get(term.as_str()).copied().unwrap_or_default() as f64;
-                    if frequency == 0.0 {
-                        return 0.0;
-                    }
-                    let normalized_length = if average_length == 0.0 {
-                        0.0
-                    } else {
-                        document_length as f64 / average_length
-                    };
-                    idf * (frequency * (K1 + 1.0)
-                        / (frequency + K1 * (1.0 - B + B * normalized_length)))
-                })
-                .sum()
-        })
+    let query = embedder.embed(&query.join(" "));
+    // Score in input order; matches() traverses a HashSet and would lose stable
+    // ties. Every index was inserted above, including empty documents. The crate
+    // computes in f32; widening preserves the public JSON number/f64 API.
+    (0..documents.len())
+        .map(|index| f64::from(scorer.score(&index, &query).unwrap_or_default()))
         .collect()
 }
 
@@ -580,6 +556,71 @@ mod tests {
                     .sum()
             })
             .collect()
+    }
+
+    #[test]
+    fn crate_bm25_preserves_positive_matches_at_half_and_full_frequency() {
+        for documents in [vec!["uv", "python"], vec!["uv", "uv"], vec!["uv"]] {
+            let corpus: Vec<_> = documents.iter().map(|text| tokenize(text)).collect();
+            let scores = bm25_scores(&corpus, &tokenize("uv"));
+            for (document, score) in documents.iter().zip(scores) {
+                assert!(score.is_finite());
+                assert_eq!(score > 0.0, document.contains("uv"));
+            }
+        }
+        let scores = bm25_scores(&[tokenize("uv"), tokenize("python")], &tokenize("uv"));
+        assert!((scores[0] - 2.0_f64.ln()).abs() < 1e-6);
+        assert_eq!(scores[1], 0.0);
+    }
+
+    #[test]
+    fn crate_bm25_matches_independent_reference_with_f32_tolerance() {
+        for size in 0..25 {
+            let corpus: Vec<Vec<String>> = (0..size)
+                .map(|i| {
+                    (0..(i * 13 % 37))
+                        .map(|j| ["rust", "café", "3.0", "日本語", "other"][(i + j * j) % 5].into())
+                        .collect()
+                })
+                .collect();
+            for query in [
+                vec![],
+                vec!["missing"],
+                vec!["rust", "café", "rust", "3.0"],
+                vec!["日本語"],
+            ] {
+                let query: Vec<String> = query.into_iter().map(str::to_owned).collect();
+                for (actual, expected) in bm25_scores(&corpus, &query)
+                    .into_iter()
+                    .zip(reference_positive_scores(&corpus, &query))
+                {
+                    assert!(actual.is_finite());
+                    assert!(
+                        (actual - expected).abs() <= 2e-6 * expected.abs().max(1.0),
+                        "{actual} vs {expected}"
+                    );
+                }
+            }
+        }
+        assert_eq!(
+            bm25_scores(&[vec![], vec![]], &tokenize("rust")),
+            [0.0, 0.0]
+        );
+    }
+
+    #[test]
+    fn body_ranking_keeps_equal_scores_in_input_order() {
+        let _telemetry = crate::telemetry::test_export_guard();
+        let input = vec![
+            result("first", None, Some("uv guide")),
+            result("second", None, Some("uv guide")),
+        ];
+        let ranked = rank_results(input, "uv");
+        assert_eq!(
+            ranked.iter().map(|r| r.title.as_str()).collect::<Vec<_>>(),
+            ["first", "second"]
+        );
+        assert_eq!(ranked[0].bm25_score, ranked[1].bm25_score);
     }
 
     #[test]
@@ -914,7 +955,7 @@ mod tests {
                 .iter()
                 .map(|item| item.title.as_str())
                 .collect::<Vec<_>>(),
-            ["High"]
+            ["High", "Low"]
         );
     }
 

@@ -589,3 +589,7 @@ The library also exposes [semantic scoring building blocks](docs/semantic-scorin
 for bounded backend adapters and deterministic lexical/semantic rank combination.
 These primitives ship without a production backend or semantic CLI mode; the
 existing experimental `hybrid` ranking policy remains lexical.
+
+### BM25 score compatibility
+
+Content-only BM25 and optional pre-ranking use the `bm25` crate with positive IDF `ln(1 + (N - df + 0.5) / (df + 0.5))`, k1=1.5 and b=0.75. Matching terms remain positive even in half or all documents. Kestrel preserves its tokenization, query grouping and stable ties; titles/snippets are not added to default body ranking. Scores are computed in f32 and exposed as JSON numbers/f64, so values and ordering can differ from older releases. Scores are relative to the candidate pool, not calibrated relevance probabilities. Experimental snippet/hybrid scoring and the optional fetch-score threshold retain their existing f64 implementation.
