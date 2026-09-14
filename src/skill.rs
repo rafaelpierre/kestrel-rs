@@ -123,7 +123,7 @@ page text is unavailable, including searches with `--no-fetch`.
 - JSON provider diagnostics add discovery_attempt (one-based, distinct from request retries) and rate_limited_deadline. Provider outcome totals/rows include every attempt; query completion uses the latest observation per provider. Grouped final errors count latest provider/query outcomes, not cumulative attempts. Runtime failures still exit 1 with stderr and no JSON error envelope; completed empty searches can still exit 0. --no-diagnostics retains the previous successful envelope. Regenerate installed skills for this changed budget contract.
 - Search, page fetching, and parsing concurrency each default to 10.
 - `--parse-concurrency` bounds queued/running page extraction jobs for the CLI. Library `KestrelClient` clones share an aggregate parser capacity (default 10), configurable with `with_parser_capacity(n)` or `with_transport_and_parser_capacity(transport, n)`. Each batch also obeys its own `FetchOptions::parse_concurrency`; larger per-call limits do not raise the shared cap. Free fetch functions and separately constructed clients own independent capacity. Download limits remain per call. Cancellation/budget expiry returns without waiting for blocking parsers, whose capacity remains occupied until body/DOM release; runtime shutdown may still wait for them. Provider parsing is separate.
-- Search/fetch clients select random browser headers and reuse HTTP/2 or HTTP/1.1 connections within the process.
+- Search/fetch clients select only Firefox 146 on Windows or Chrome 146 on macOS browser headers and reuse HTTP/2 or HTTP/1.1 connections within the process.
 "#;
 
 pub fn generate_skill_md(root: &mut Command) -> String {
@@ -141,6 +141,12 @@ Use `https://api.eu1.honeycomb.io` for EU or `https://api.honeycomb.io` for US.
 `http/json` is also supported, gRPC is not. Trace-specific protocol/headers/timeout
 variables override their general OTLP equivalents. Export timeout defaults to
 3000 ms (1–30000); `KESTRELSEARCH_OTEL_SHUTDOWN_MS` defaults to 5000 ms (1–30000).
+
+HTTP attempt spans include `user_agent.original` and bounded allowlisted
+`http.request.header.*` browser negotiation headers (Accept, language/encoding,
+content type, client hints, Sec-Fetch and Upgrade-Insecure-Requests). Provider
+overrides are reflected; credentials, cookies, Origin and Referer are excluded.
+These describe the initial application request, not redirect or proxy wire headers.
 
 `KESTRELSEARCH_OTEL_CONTENT=none` is the default. `sanitized` exports bounded
 queries, intermediate retrieval snapshots, page text, ranking and final results.
@@ -881,4 +887,16 @@ from this reference; the generated reference reflects the executable that wrote 
 "#,
     );
     rendered
+}
+
+#[cfg(test)]
+mod header_contract_tests {
+    #[test]
+    fn generated_skill_describes_profile_and_header_contract() {
+        let _telemetry = crate::telemetry::test_export_guard();
+        let skill = super::generate_skill_md(&mut clap::Command::new("kestrel"));
+        assert!(skill.contains("Firefox 146 on Windows or Chrome 146 on macOS"));
+        assert!(skill.contains("user_agent.original"));
+        assert!(skill.contains("credentials, cookies, Origin and Referer are excluded"));
+    }
 }

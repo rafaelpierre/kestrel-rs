@@ -429,7 +429,7 @@ mod tests {
         let _telemetry = crate::telemetry::test_export_guard();
         let server = h2_server(2, 128, Duration::ZERO).await;
         let mut client = crate::KestrelClient::new().unwrap();
-        client.fetch = h2_client(&TransportOptions::default());
+        client.fetch = h2_client(&TransportOptions::default()).into();
         let warm = client
             .warm_up_fetch(
                 &[

@@ -15,7 +15,7 @@ use url::Url;
 
 // Keep production and request-construction regressions on the same path.
 pub(crate) fn bing_request(
-    client: &reqwest::Client,
+    client: &crate::http_client::Client,
     query: &str,
     region: &str,
 ) -> reqwest::RequestBuilder {
@@ -39,7 +39,7 @@ pub(crate) async fn search_bing(
     query: &str,
     region: &str,
     time_filter: TimeFilter,
-    client: &reqwest::Client,
+    client: &crate::http_client::Client,
 ) -> Result<ProviderResponse, ProviderFailure> {
     if time_filter != TimeFilter::Any {
         crate::log_event!(

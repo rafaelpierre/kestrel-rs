@@ -86,6 +86,28 @@ async fn exports_fetch_hierarchy_payload_limits_and_inherited_parent() {
     );
     let requests = server.received_requests().await.unwrap();
     let spans = spans(&requests);
+    let wire = requests.iter().find(|r| r.method == "GET").unwrap();
+    let attempt = spans
+        .iter()
+        .find(|s| s["name"] == "kestrel.http_attempt")
+        .unwrap();
+    for (header, key) in [
+        ("user-agent", "user_agent.original"),
+        ("accept", "http.request.header.accept"),
+        ("accept-language", "http.request.header.accept_language"),
+    ] {
+        let attr = attempt["attributes"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|a| a["key"] == key)
+            .unwrap();
+        assert_eq!(
+            attr["value"]["stringValue"],
+            wire.headers[header].to_str().unwrap()
+        );
+    }
+
     let root = spans
         .iter()
         .find(|s| s["name"] == "kestrel.cli.fetch")
@@ -323,5 +345,79 @@ async fn slow_exporter_times_out_without_holding_command_open() {
     assert!(
         started.elapsed() < std::time::Duration::from_secs(5),
         "export must time out before the ten-second receiver delay"
+    );
+}
+
+#[cfg(feature = "test-fixtures")]
+#[tokio::test]
+async fn provider_retries_export_matching_headers_without_content_capture() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
+    let server = MockServer::start().await;
+    fixture(&server, 200).await;
+    for endpoint in ["/bing", "/yahoo"] {
+        Mock::given(method("GET"))
+            .and(path(endpoint))
+            .respond_with(ResponseTemplate::new(500).set_body_string("temporary failure"))
+            .expect(3)
+            .mount(&server)
+            .await;
+    }
+    let mut cmd = command(&server.uri());
+    cmd.env("KESTRELSEARCH_OTEL_CONTENT", "none")
+        .env("KESTREL_TEST_PROVIDER_ENDPOINT", server.uri())
+        .args([
+            "search",
+            "fixture",
+            "--engine",
+            "bing",
+            "--engine",
+            "yahoo",
+            "--no-fetch",
+            "--no-search-budget",
+            "--output",
+            "json",
+        ]);
+    let output = tokio::task::spawn_blocking(move || cmd.output().unwrap())
+        .await
+        .unwrap();
+    assert!(
+        !output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let requests = server.received_requests().await.unwrap();
+    let data = spans(&requests);
+    let attempts: Vec<_> = data
+        .iter()
+        .filter(|s| s["name"] == "kestrel.http_attempt")
+        .collect();
+    assert_eq!(attempts.len(), 6);
+    let wire: Vec<_> = requests.iter().filter(|r| r.method == "GET").collect();
+    assert_eq!(wire.len(), 6);
+    for request in &wire {
+        assert_eq!(request.headers["user-agent"], wire[0].headers["user-agent"]);
+    }
+    for attempt in attempts {
+        for (header, key) in [
+            ("user-agent", "user_agent.original"),
+            ("accept", "http.request.header.accept"),
+            ("accept-language", "http.request.header.accept_language"),
+        ] {
+            let attr = attempt["attributes"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|a| a["key"] == key)
+                .unwrap();
+            assert_eq!(
+                attr["value"]["stringValue"],
+                wire[0].headers[header].to_str().unwrap()
+            );
+        }
+    }
+    assert!(
+        !serde_json::to_string(&data)
+            .unwrap()
+            .contains("temporary failure")
     );
 }

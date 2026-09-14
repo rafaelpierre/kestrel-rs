@@ -122,7 +122,7 @@ async fn both_clients_stream_normalized_results_and_cancel_unfinished_bodies() {
                 }
                 let clients = SearchClients {
                     parsers: parsing::ParserPool::default(),
-                    standard: standard.build().unwrap(),
+                    standard: standard.build().unwrap().into(),
                     yahoo: Some(yahoo.build().unwrap()),
                 };
                 // Prewarm both pools, then create unrelated in-flight responses.
@@ -500,7 +500,7 @@ async fn benchmark_minimum_arms_and_fixed_pool_exercise_larger_fetch_caps() {
 
     tokio::time::timeout(Duration::from_secs(10), async {
         let provider = server(false, false).await;
-        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let client: crate::http_client::Client = reqwest::Client::builder().no_proxy().build().unwrap().into();
         let mut sizes = Vec::new();
         for minimum in [1, 5, 15] {
             let (sender, receiver) = mpsc::channel(1);
@@ -555,7 +555,11 @@ async fn records_commit_before_eof_and_survive_caller_cancellation() {
     let directory = tempfile::tempdir().unwrap();
     let store = crate::SearchRecovery::new(directory.path(), Duration::from_secs(60)).unwrap();
     let key = crate::recovery::UnitKey::new("fixture", Engine::Bing, "", TimeFilter::Any);
-    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+    let client: crate::http_client::Client = reqwest::Client::builder()
+        .no_proxy()
+        .build()
+        .unwrap()
+        .into();
     let (sender, receiver) = mpsc::channel(1);
     let publisher = Publisher {
         sender,
@@ -625,7 +629,11 @@ async fn provider_recording_child() {
     let directory = std::env::var_os("KESTREL_PROVIDER_STORE").unwrap();
     let endpoint = std::env::var("KESTREL_PROVIDER_ENDPOINT").unwrap();
     let store = crate::SearchRecovery::new(directory, Duration::from_secs(60)).unwrap();
-    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+    let client: crate::http_client::Client = reqwest::Client::builder()
+        .no_proxy()
+        .build()
+        .unwrap()
+        .into();
     let (sender, receiver) = mpsc::channel(1);
     let publisher = Publisher {
         sender,

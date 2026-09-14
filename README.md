@@ -435,7 +435,9 @@ persistence before first use. See [local diagnostic limits and lifecycle](docs/l
 
 ## OpenTelemetry / Honeycomb
 
-Set an OTLP endpoint to export hierarchical search/fetch traces. The maintained
+Set an OTLP endpoint to export hierarchical search/fetch traces, including the
+selected User-Agent and bounded browser negotiation headers. Search/fetch clients
+use only Firefox 146 on Windows or Chrome 146 on macOS. The maintained
 test runner attributes each Rust/Python test and its CLI subprocesses; content
 capture is opt-in and bounded. See [configuration, Honeycomb setup and test
 coverage](docs/telemetry.md). Ordinary credential-free tests remain available.

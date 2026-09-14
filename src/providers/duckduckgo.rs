@@ -11,7 +11,7 @@ use crate::{
 use scraper::Html;
 
 pub(crate) fn duckduckgo_request(
-    client: &reqwest::Client,
+    client: &crate::http_client::Client,
     query: &str,
     region: &str,
     time_filter: TimeFilter,
@@ -30,7 +30,7 @@ pub(crate) async fn search_duckduckgo(
     query: &str,
     region: &str,
     time_filter: TimeFilter,
-    client: &reqwest::Client,
+    client: &crate::http_client::Client,
 ) -> Result<ProviderResponse, ProviderFailure> {
     let (results, retries) =
         request_standard_with_retries(client, Engine::Duckduckgo, query, extract_completed, || {

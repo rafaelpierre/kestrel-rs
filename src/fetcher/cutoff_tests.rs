@@ -91,11 +91,12 @@ async fn h2_cap_cancels_stream_without_aborting_another_request_or_pool() {
             });
         }
     });
-    let client = reqwest::Client::builder()
+    let client: crate::http_client::Client = reqwest::Client::builder()
         .no_proxy()
         .http2_prior_knowledge()
         .build()
-        .unwrap();
+        .unwrap()
+        .into();
     let base = format!("http://{address}");
     client
         .get(format!("{base}/warm"))
@@ -182,7 +183,11 @@ async fn h1_cap_disconnects_without_waiting_for_eof_or_next_chunk() {
             max_response_bytes: PREFIX.len(),
             ..FetchOptions::default()
         };
-        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let client: crate::http_client::Client = reqwest::Client::builder()
+            .no_proxy()
+            .build()
+            .unwrap()
+            .into();
         let report = tokio::time::timeout(
             Duration::from_secs(3),
             fetch_all_reusing_client_with_diagnostics(
@@ -238,7 +243,11 @@ async fn failure_before_cap_does_not_return_partial_success() {
             timeout: Duration::from_millis(100),
             ..FetchOptions::default()
         };
-        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let client: crate::http_client::Client = reqwest::Client::builder()
+            .no_proxy()
+            .build()
+            .unwrap()
+            .into();
         let report = tokio::time::timeout(
             Duration::from_secs(3),
             fetch_all_reusing_client_with_diagnostics(

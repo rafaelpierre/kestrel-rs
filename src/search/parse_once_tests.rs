@@ -265,7 +265,11 @@ async fn completed_transport_extracts_in_worker_without_retrying_parse_failures(
                         })
                         .await
                     } else {
-                        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+                        let client: crate::http_client::Client = reqwest::Client::builder()
+                            .no_proxy()
+                            .build()
+                            .unwrap()
+                            .into();
                         request_standard_with_retries(
                             &client,
                             engine,

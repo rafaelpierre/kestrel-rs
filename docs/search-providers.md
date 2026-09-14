@@ -82,9 +82,10 @@ The query smoke matrix now exercises passthrough and labels it explicitly.
 
 ## Random headers and pooled transport
 
-Every new search/fetch client randomly selects a coherent Chrome/Firefox desktop
-profile, OS and English language preference using the existing `primp` profile
-catalogue. The profile stays fixed across that client's requests and retries.
+Every new search/fetch client randomly selects one of exactly two coherent
+profiles: Chrome 146 on macOS or Firefox 146 on Windows. An English language
+preference (US or GB) is selected independently using the existing `primp`
+profile catalogue. Chrome 148, Linux and other browser/OS pairings are excluded. The profile stays fixed across that client's requests and retries.
 Provider-specific Origin, Referer, JSON Accept and content type take precedence.
 Yahoo also uses the selected browser's TLS and HTTP/2 impersonation profile.
 

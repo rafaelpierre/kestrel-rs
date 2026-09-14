@@ -9,7 +9,11 @@ async fn request(yahoo: bool, url: &str) -> Result<(String, usize), ProviderFail
         let client = primp::Client::builder().no_proxy().build().unwrap();
         request_yahoo_with_retries("test", retain_body, || client.get(url)).await
     } else {
-        let client = reqwest::Client::builder().no_proxy().build().unwrap();
+        let client: crate::http_client::Client = reqwest::Client::builder()
+            .no_proxy()
+            .build()
+            .unwrap()
+            .into();
         request_standard_with_retries(&client, Engine::Bing, "test", retain_body, || {
             client.get(url)
         })
@@ -432,7 +436,11 @@ async fn client_timeouts_are_typed_and_censored() {
                     })
                     .await
                 } else {
-                    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+                    let client: crate::http_client::Client = reqwest::Client::builder()
+                        .no_proxy()
+                        .build()
+                        .unwrap()
+                        .into();
                     request_standard_with_retries(
                         &client,
                         Engine::Bing,

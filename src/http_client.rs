@@ -25,20 +25,15 @@ impl BrowserProfile {
     }
 
     pub fn random() -> Self {
-        let browsers = [
-            Impersonate::ChromeV146,
-            Impersonate::ChromeV148,
-            Impersonate::FirefoxV146,
+        let profiles = [
+            (Impersonate::ChromeV146, ImpersonateOS::MacOS),
+            (Impersonate::FirefoxV146, ImpersonateOS::Windows),
         ];
-        let systems = [
-            ImpersonateOS::Windows,
-            ImpersonateOS::MacOS,
-            ImpersonateOS::Linux,
-        ];
+        let (browser, os) = profiles[rand::random_range(0..profiles.len())];
         let languages = ["en-US,en;q=0.9", "en-GB,en;q=0.9"];
         Self {
-            browser: browsers[rand::random_range(0..browsers.len())],
-            os: systems[rand::random_range(0..systems.len())],
+            browser,
+            os,
             language: languages[rand::random_range(0..languages.len())],
         }
     }
@@ -50,6 +45,49 @@ impl BrowserProfile {
         headers.remove("connection");
         headers.remove("keep-alive");
         headers
+    }
+}
+
+/// Retain generated defaults with the pool; request overrides still take precedence.
+#[derive(Clone, Debug)]
+pub(crate) struct Client {
+    inner: reqwest::Client,
+    headers: HeaderMap,
+}
+impl Client {
+    pub(crate) fn new(
+        profile: BrowserProfile,
+        transport: &crate::TransportOptions,
+        timeout: Option<std::time::Duration>,
+    ) -> Result<Self, reqwest::Error> {
+        let mut builder = standard_builder(profile, transport);
+        if let Some(timeout) = timeout {
+            builder = builder.timeout(timeout);
+        }
+        Ok(Self {
+            inner: builder.build()?,
+            headers: profile.headers(),
+        })
+    }
+    pub(crate) fn request_headers(&self, overrides: &HeaderMap) -> HeaderMap {
+        let mut headers = self.headers.clone();
+        headers.extend(overrides.clone());
+        headers
+    }
+}
+impl std::ops::Deref for Client {
+    type Target = reqwest::Client;
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+#[cfg(test)]
+impl From<reqwest::Client> for Client {
+    fn from(inner: reqwest::Client) -> Self {
+        Self {
+            inner,
+            headers: HeaderMap::new(),
+        }
     }
 }
 
@@ -77,76 +115,128 @@ mod tests {
     fn profiles_vary_and_keep_browser_headers_consistent() {
         let _telemetry = crate::telemetry::test_export_guard();
         let mut agents = std::collections::HashSet::new();
-        for browser in [
-            Impersonate::ChromeV146,
-            Impersonate::ChromeV148,
-            Impersonate::FirefoxV146,
+        for (browser, os) in [
+            (Impersonate::ChromeV146, ImpersonateOS::MacOS),
+            (Impersonate::FirefoxV146, ImpersonateOS::Windows),
         ] {
-            for os in [
-                ImpersonateOS::Windows,
-                ImpersonateOS::MacOS,
-                ImpersonateOS::Linux,
-            ] {
-                let profile = BrowserProfile {
-                    browser,
-                    os,
-                    language: "en-GB,en;q=0.9",
-                };
-                let headers = profile.headers();
-                agents.insert(headers["user-agent"].to_str().unwrap().to_owned());
-                assert_eq!(headers["accept-language"], "en-GB,en;q=0.9");
-                assert!(!headers.contains_key("connection"));
-                assert!(!headers.contains_key("keep-alive"));
-                if matches!(browser, Impersonate::FirefoxV146) {
-                    assert!(!headers.contains_key("sec-ch-ua"));
-                    assert!(
-                        headers["user-agent"]
-                            .to_str()
-                            .unwrap()
-                            .contains("Firefox/146")
-                    );
-                } else {
-                    assert!(headers.contains_key("sec-ch-ua"));
-                }
+            let profile = BrowserProfile {
+                browser,
+                os,
+                language: "en-GB,en;q=0.9",
+            };
+            let headers = profile.headers();
+            agents.insert(headers["user-agent"].to_str().unwrap().to_owned());
+            assert_eq!(headers["accept-language"], "en-GB,en;q=0.9");
+            assert!(!headers.contains_key("connection"));
+            assert!(!headers.contains_key("keep-alive"));
+            if matches!(browser, Impersonate::FirefoxV146) {
+                assert!(!headers.contains_key("sec-ch-ua"));
+                assert!(
+                    headers["user-agent"]
+                        .to_str()
+                        .unwrap()
+                        .contains("Firefox/146")
+                );
+            } else {
+                assert!(headers.contains_key("sec-ch-ua"));
             }
         }
-        assert_eq!(agents.len(), 9);
+        assert_eq!(agents.len(), 2);
+        for _ in 0..256 {
+            let profile = BrowserProfile::random();
+            assert!(matches!(
+                (profile.browser, profile.os),
+                (Impersonate::ChromeV146, ImpersonateOS::MacOS)
+                    | (Impersonate::FirefoxV146, ImpersonateOS::Windows)
+            ));
+        }
+    }
+
+    #[test]
+    fn retained_defaults_respect_provider_overrides_and_clone() {
+        let _telemetry = crate::telemetry::test_export_guard();
+        let client = Client::new(
+            BrowserProfile::bing_experiment(),
+            &crate::TransportOptions::default(),
+            None,
+        )
+        .unwrap();
+        let request = client
+            .get("http://localhost/")
+            .header("accept", "application/json")
+            .build()
+            .unwrap();
+        let headers = client.clone().request_headers(request.headers());
+        assert_eq!(headers["accept"], "application/json");
+        assert_eq!(headers.get_all("accept").iter().count(), 1);
+        assert_eq!(
+            headers["user-agent"],
+            BrowserProfile::bing_experiment().headers()["user-agent"]
+        );
     }
 
     #[tokio::test]
     async fn retries_use_same_headers_and_request_headers_override_defaults() {
         let _telemetry = crate::telemetry::test_export_guard();
         use wiremock::{Mock, MockServer, ResponseTemplate, matchers::any};
-        let server = MockServer::start().await;
-        Mock::given(any())
-            .respond_with(ResponseTemplate::new(200))
-            .mount(&server)
-            .await;
-        let profile = BrowserProfile::random();
-        let expected = profile.headers();
-        let client = standard_builder(profile, &crate::TransportOptions::default())
-            .build()
-            .unwrap();
-        for _ in 0..2 {
-            client
-                .get(server.uri())
-                .header("accept", "application/json")
-                .send()
-                .await
-                .unwrap()
-                .bytes()
-                .await
+        for (browser, os) in [
+            (Impersonate::ChromeV146, ImpersonateOS::MacOS),
+            (Impersonate::FirefoxV146, ImpersonateOS::Windows),
+        ] {
+            let server = MockServer::start().await;
+            Mock::given(any())
+                .respond_with(ResponseTemplate::new(200))
+                .mount(&server)
+                .await;
+            let profile = BrowserProfile {
+                browser,
+                os,
+                language: "en-GB,en;q=0.9",
+            };
+            let expected = profile.headers();
+            let client = Client::new(profile, &crate::TransportOptions::default(), None).unwrap();
+            let mut yahoo = impersonated_builder(profile, &crate::TransportOptions::default())
+                .build()
                 .unwrap();
-        }
-        for request in server.received_requests().await.unwrap() {
-            assert_eq!(request.headers["user-agent"], expected["user-agent"]);
-            assert_eq!(
-                request.headers["accept-language"],
-                expected["accept-language"]
-            );
-            assert_eq!(request.headers["accept"], "application/json");
+            *yahoo.headers_mut() = expected.clone();
+            for _ in 0..2 {
+                client
+                    .get(server.uri())
+                    .header("accept", "application/json")
+                    .send()
+                    .await
+                    .unwrap()
+                    .bytes()
+                    .await
+                    .unwrap();
+                yahoo
+                    .get(server.uri())
+                    .header("accept", "application/json")
+                    .send()
+                    .await
+                    .unwrap()
+                    .bytes()
+                    .await
+                    .unwrap();
+            }
+            let requests = server.received_requests().await.unwrap();
+            assert_eq!(requests.len(), 4);
+            for request in requests {
+                assert_eq!(request.headers["user-agent"], expected["user-agent"]);
+                assert_eq!(
+                    request.headers["accept-language"],
+                    expected["accept-language"]
+                );
+                assert_eq!(request.headers["accept"], "application/json");
+                assert_eq!(request.headers.get_all("accept").iter().count(), 1);
+                assert_eq!(
+                    request.headers.get("sec-ch-ua-platform"),
+                    expected.get("sec-ch-ua-platform")
+                );
+            }
         }
     }
+
     #[tokio::test]
     async fn http2_multiplexes_and_clones_reuse_the_connection() {
         let _telemetry = crate::telemetry::test_export_guard();
