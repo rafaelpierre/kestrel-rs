@@ -66,7 +66,7 @@ when unavailable, rather than serialized as null:
 | `display_url` | string | Shortened URL shown by the search engine |
 | `snippet` | string | Search-result snippet |
 | `content` | string or null | Extracted main-body text prefixed with `Source: <url>` |
-| `bm25_score` | number, optional | Content-only BM25 score; experimental snippet/hybrid/RRF scores are not exposed |
+| `bm25_score` | number, optional | Content-only BM25 score; snippet/hybrid/RRF scores are not exposed |
 | `engine` | string, optional | Engine that supplied the retained result |
 | `query` | string, optional | Query that supplied the retained result |
 | `engine_rank` | integer, optional | Original provider/query position |
@@ -103,9 +103,10 @@ page text is unavailable, including searches with `--no-fetch`.
 - Page bodies stop at `--max-response-bytes` decoded bytes and the retained prefix is extracted, even when Content-Length exceeds the cap. Reaching the cap alone is not an error; content may be incomplete. Network and parsing concurrency are independent.
 - Search reports the number of successfully extracted pages that reached the byte cap on stderr; results may contain incomplete page content.
 - Byte-capped page extractions are not cached, so a later larger byte budget can fetch more content. This page-fetch cutoff does not change search-provider response limits.
-- By default, at most three times `--top-k` candidates are fetched before BM25 ranking.
-- Content-only BM25 and optional pre-ranking use the `bm25` crate with positive IDF `ln(1 + (N - df + 0.5) / (df + 0.5))`, k1=1.5 and b=0.75. Matching terms remain positive even in half or all documents. Kestrel preserves its tokenization, query grouping and stable ties; titles/snippets are not added to default body ranking. Scores are computed in f32 and exposed as JSON numbers/f64, so values and ordering can differ from older releases. Scores are relative to the candidate pool, not calibrated relevance probabilities. Experimental snippet/hybrid scoring and the optional fetch-score threshold retain their existing f64 implementation.
-- BM25 filtering removes zero-relevance results unless an entire query group scores zero.
+- By default, at most three times `--top-k` candidates are fetched before hybrid ranking.
+- Content-only BM25 and optional pre-ranking use the `bm25` crate with positive IDF `ln(1 + (N - df + 0.5) / (df + 0.5))`, k1=1.5 and b=0.75. Matching terms remain positive even in half or all documents. Kestrel preserves its tokenization, query grouping and stable ties; titles/snippets are not added to explicit body-only ranking. Scores are computed in f32 and exposed as JSON numbers/f64, so values and ordering can differ from older releases. Scores are relative to the candidate pool, not calibrated relevance probabilities. Snippet/hybrid scoring and the optional fetch-score threshold retain their existing f64 implementation.
+- Default lexical hybrid ranks doubled title, snippet and available body, retaining candidates without bodies. `--no-fetch` ranks metadata alone. Use `--ranking-policy body` for previous body-only ordering/filtering; `--no-fetch --no-rank` restores previous metadata order. Hybrid scores stay internal and `bm25_score` is absent under hybrid. Library ranking APIs are unchanged.
+- Explicit body BM25 filtering removes zero-relevance results unless an entire query group scores zero.
 - Use `--no-fetch` for a fast, low-cost keyword search.
 - Provider-native passthrough is the default and only query behavior: shell quotes group one argument without adding local AND or phrase checks. Literal quotes and operators are sent unchanged; provider support varies. Missing title/snippet terms do not reject results. Existing standalone hostname restrictions and HTTP(S) URL validation remain. BM25/ranking handles relevance.
 - Portable mode and --query-syntax have been removed. Remove that flag from saved commands; there is no replacement local Boolean/phrase filter. Do not infer full-page relevance from a snippet.
@@ -411,9 +412,9 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
 
 - Quote the primary query; repeat `-q`/`--query` for additional queries. Explicit
   `-e`/`--engine` selections replace the default engine list.
-- Fetching and content-only BM25 ranking are enabled by default; `--fetch` and
+- Fetching and lexical hybrid ranking are enabled by default; `--fetch` and
   `--rank` are optional enable switches, not boolean-valued parameters.
-  `--no-fetch` skips page retrieval and default BM25 ranking and conflicts with
+  `--no-fetch` skips page retrieval while hybrid ranks titles/snippets and conflicts with
   explicit `--rank`. Choose either `--rank` or `--ranking-policy`, never both.
   `--no-rank` skips final ranking but still fetches pages unless `--no-fetch` is set;
   it can be combined with `--pre-rank`, which can change candidate order.
@@ -454,9 +455,9 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
   timing and `after_fetch_score`, `fetch_score_rejected`, and
   `fetch_score_bypassed_queries` counts. Provider and fetch budgets keep their
   existing scope; metadata scoring is outside both network-stage budgets.
-- Experimental `--ranking-policy` choices: `provider` preserves candidate order;
+- `--ranking-policy` overrides default lexical hybrid. Choices: `provider` preserves candidate order;
   `snippet` uses titles/snippets; `body` uses content-only BM25 and requires fetching;
-  `hybrid` combines title/snippet/body evidence and retains results without bodies;
+  `hybrid` (default) combines doubled title/snippet/body evidence and retains results without bodies;
   `rrf` combines provider ranks without tokenizing titles, snippets or bodies.
   Snippet/hybrid and `--min-fetch-score` precompute query-term BM25 statistics;
   scores, inclusive thresholds and stable ties are unchanged.
@@ -563,7 +564,7 @@ Returning top 4” describes successive stages, not conflicting options. The
 number collected depends on the installed version and query count; older builds
 could collect eight for one query before current result-count stopping. The five
 selected candidates are not replenished from the unselected results after a
-failure. Default body BM25 removes nonpositive scores when a query group has
+failure. Explicit body BM25 removes nonpositive scores when a query group has
 positive scores; if the entire group scores zero, it retains the group. Thus a
 fetch failure can reduce the final count, but successful-fetch count and returned
 count are not always equal. `-k 5` promises at most five, never exactly five.
@@ -603,7 +604,7 @@ kestrel search '"machine learning"' -k 5 --no-fetch --ranking-policy snippet --o
 ```
 
 Both skip page downloads and extraction, generally the largest saving. The first
-keeps merged provider order; the second adds inexpensive title/snippet ranking.
+uses default hybrid over metadata; the second explicitly selects snippet ranking.
 Neither evaluates page-body evidence. Do not add fetch-stage limits to no-fetch
 commands. Narrowing `--engine` reduces provider requests but can lose coverage.
 
@@ -614,20 +615,20 @@ kestrel search '"machine learning"' -k 5 --min-results 5 --fetch-candidates 5 --
 ```
 
 Collect up to the per-query threshold, select at most five candidates, and rank
-short extracted bodies. The search budget bounds provider work, the fetch budget
+titles, snippets and short extracted bodies. The search budget bounds provider work, the fetch budget
 bounds the entire page-fetch stage, and timeout bounds each page request. Tight
 budgets cancel slow work and may leave fewer useful results. They are separate
 stage limits, not an exact end-to-end deadline including initialization/output.
 This favors less work and shorter output over ranking breadth or complete pages.
 
-### More evidence and alternatives for body ranking
+### More evidence and alternatives for hybrid ranking
 
 ```bash
 kestrel search '"machine learning"' -k 5 --min-results 15 --fetch-candidates 15 --content-limit 5000 --search-budget 10 --fetch-budget 10
 ```
 
 Seek fifteen candidates, fetch at most fifteen, then choose up to five using
-body BM25. Compared with the bounded recipe, this allows more collection time,
+hybrid scoring. Compared with the bounded recipe, this allows more collection time,
 more page work and longer passages. It gives ranking more opportunities to find
 relevant evidence and tolerate failures, but may be slower and is not guaranteed
 to return five or improve relevance. Raising only fetch-candidates would not
@@ -641,10 +642,10 @@ kestrel search '"machine learning"' -k 5 --min-results 20 --fetch-candidates 8 -
 
 Pre-rank titles/snippets from the collected pool, then fetch at most eight pages.
 This reduces page requests relative to fetching all twenty, while still allowing
-body ranking. Snippets can miss valuable pages, and collecting twenty may itself
+hybrid ranking with available body evidence. Snippets can miss valuable pages, and collecting twenty may itself
 be slow. Pre-ranking has no effect if the pool is no larger than the fetch limit.
 
-### Keep metadata candidates when page fetching fails
+### Default hybrid retains metadata when page fetching fails
 
 ```bash
 kestrel search '"machine learning"' -k 5 --min-results 15 --fetch-candidates 15 --ranking-policy hybrid --content-limit 3000 --fetch-budget 5

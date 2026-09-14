@@ -21,8 +21,8 @@ documented below.
 - Canonical-URL deduplication with provider and query provenance retained.
 - Bounded concurrent downloads and HTML parsing, with response-size and
   extracted-content limits.
-- BM25 ranking over extracted page content, with optional title/snippet
-  pre-ranking before fetching.
+- Default lexical hybrid ranking over titles, snippets and available page content,
+  with optional title/snippet pre-ranking before fetching.
 - Result-count early stopping, total fetch budget, and TTL disk cache.
 - Async and blocking library APIs, reusable HTTP connection pools, and detailed
   provider/page diagnostics.
@@ -94,7 +94,7 @@ The default command searches DuckDuckGo, Bing, Yahoo, Dogpile, Ecosia, Swisscows
 Yep, Qwant, and Mojeek concurrently, retaining
 results from successful providers when others fail (including bot challenges).
 It fetches up to three times `--top-k` candidates, extracts up to 2,000 characters
-per page, ranks them with BM25, and returns the best five results:
+per page, ranks them with lexical hybrid scoring, and returns the best five results:
 
 ```bash
 kestrel search "python dataclasses"
@@ -221,7 +221,7 @@ independent of `--top-k` (the final result ceiling) and `--fetch-candidates`
 raise both the collection threshold and fetch limit, for example
 `kestrel search '"machine learning"' --min-results 15 --fetch-candidates 15 -k 5`.
 Neither collection nor fetching guarantees five final results: requests can fail
-and BM25 can filter candidates. Kestrel does not refill failed fetch slots.
+and explicit body BM25 can filter candidates. Kestrel does not refill failed fetch slots.
 
 Use optional `--min-fetch-score SCORE` to reject weak title/snippet candidates
 before the fetch cap. This positive-IDF BM25 gate runs even for small pools and
@@ -588,8 +588,21 @@ filters, limits, failure behavior and contract-verification limitations.
 The library also exposes [semantic scoring building blocks](docs/semantic-scoring.md)
 for bounded backend adapters and deterministic lexical/semantic rank combination.
 These primitives ship without a production backend or semantic CLI mode; the
-existing experimental `hybrid` ranking policy remains lexical.
+default CLI `hybrid` ranking policy remains lexical.
 
 ### BM25 score compatibility
 
-Content-only BM25 and optional pre-ranking use the `bm25` crate with positive IDF `ln(1 + (N - df + 0.5) / (df + 0.5))`, k1=1.5 and b=0.75. Matching terms remain positive even in half or all documents. Kestrel preserves its tokenization, query grouping and stable ties; titles/snippets are not added to default body ranking. Scores are computed in f32 and exposed as JSON numbers/f64, so values and ordering can differ from older releases. Scores are relative to the candidate pool, not calibrated relevance probabilities. Experimental snippet/hybrid scoring and the optional fetch-score threshold retain their existing f64 implementation.
+Content-only BM25 and optional pre-ranking use the `bm25` crate with positive IDF `ln(1 + (N - df + 0.5) / (df + 0.5))`, k1=1.5 and b=0.75. Matching terms remain positive even in half or all documents. Kestrel preserves its tokenization, query grouping and stable ties; titles/snippets are not added to explicit body-only ranking. Scores are computed in f32 and exposed as JSON numbers/f64, so values and ordering can differ from older releases. Scores are relative to the candidate pool, not calibrated relevance probabilities. Snippet/hybrid scoring and the optional fetch-score threshold retain their existing f64 implementation.
+
+### Default CLI ranking
+
+Search now defaults to lexical hybrid ranking over doubled title, snippet and
+available body text, retaining candidates whose pages could not be fetched.
+`--no-fetch` uses the same policy over metadata alone. `--rank` explicitly enables
+this default; `--no-rank` preserves candidate order. Explicit `--ranking-policy`
+values override the default. Use `--ranking-policy body` to restore the previous
+fetched-search behavior, or `--no-fetch --no-rank` for previous metadata ordering.
+This intentionally changes CLI ordering and retention, including results with
+missing content. Hybrid scores remain internal: `bm25_score` still means
+content-only BM25 and is absent under hybrid. Library ranking APIs are unchanged.
+Hybrid cannot recover relevant URLs missing from provider responses.

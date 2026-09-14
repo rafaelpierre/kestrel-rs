@@ -116,7 +116,8 @@ async fn capture_preserves_candidates_and_does_not_change_ordinary_output() {
                         assert!(candidate["content"].as_str().unwrap().len() > 10000);
                         assert!(!candidate["sources"].as_array().unwrap().is_empty());
                     }
-                    assert!(artifact["results"][0]["bm25_score"].is_number());
+                    // Default hybrid scores are internal, including in captured output.
+                    assert!(artifact["results"][0]["bm25_score"].is_null());
                 } else {
                     assert!(!artifacts.exists());
                 }
