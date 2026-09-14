@@ -1,4 +1,57 @@
 use super::*;
+use crate::provider_diagnostics::Challenge;
+
+#[test]
+fn adapter_normalization_and_fusion_preserve_ranks_sources_and_partial_success() {
+    let bing = r#"<li class='b_algo'><h2><a href='javascript:alert(1)'>Invalid</a></h2></li>
+        <li class='b_algo'><h2><a href='https://example.org/shared/?utm_source=bing'>Bing shared</a></h2></li>
+        <li class='b_algo'><h2><a href='https://example.org/bing'>Bing unique</a></h2></li>"#;
+    let dogpile = r#"{"results":[
+        {"clickUrl":"https://example.org/shared#section","title":"Dogpile shared","description":"Other snippet"},
+        {"clickUrl":"https://example.org/dogpile","title":"Dogpile unique","description":"Unique"}] }"#;
+    let mut outcomes = Vec::new();
+    for (engine, body) in [(Engine::Bing, bing), (Engine::Dogpile, dogpile)] {
+        let parsed = ParsedResponse::new(engine, body);
+        let mut response = ProviderResponse {
+            results: extract_completed(engine, body, &parsed).unwrap(),
+            retries: 0,
+            raw_result_count: 0,
+        };
+        filter_response("site:example.org", &mut response);
+        assert_eq!(
+            response.raw_result_count,
+            if engine == Engine::Bing { 3 } else { 2 }
+        );
+        outcomes.push(Ok(with_provenance(
+            response.results,
+            engine,
+            "site:example.org",
+        )));
+    }
+    outcomes.insert(1, Err(KestrelError::SearchDeadline));
+    let merged = merge_outcomes(outcomes).unwrap();
+    assert_eq!(
+        merged.iter().map(|r| r.title.as_str()).collect::<Vec<_>>(),
+        ["Bing shared", "Bing unique", "Dogpile unique"]
+    );
+    assert_eq!(merged[0].engine_rank, Some(2));
+    assert_eq!(merged[0].url, "https://example.org/shared/?utm_source=bing");
+    assert_eq!(
+        merged[0].sources,
+        vec![
+            crate::SourceOccurrence {
+                engine: Engine::Bing,
+                query: "site:example.org".into(),
+                rank: 2
+            },
+            crate::SourceOccurrence {
+                engine: Engine::Dogpile,
+                query: "site:example.org".into(),
+                rank: 1
+            },
+        ]
+    );
+}
 
 #[test]
 fn completed_html_validation_and_extraction_share_document() {

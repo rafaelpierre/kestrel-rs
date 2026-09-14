@@ -1,9 +1,29 @@
 //! Provider-independent, bounded fanout events. Only adapters inspect wire formats.
-use super::*;
+use super::{
+    DISCOVERY_SEQUENCE, FANOUT_MIN_RESULTS, PROVIDER_DIAGNOSTIC, record_phase,
+    results::{normalize_provider_results, result_key, with_provenance},
+    transport::ProviderBody,
+};
+#[cfg(test)]
+use crate::search::{Duration, Instant, Mutex, SearchClients, SearchOptions};
+use crate::{
+    error::KestrelError,
+    model::{Engine, SearchResult},
+    provider_diagnostics::Phase,
+};
+use futures_util::{StreamExt, stream::FuturesUnordered};
 use std::collections::BTreeMap;
+use std::collections::HashSet;
+use std::{
+    future::Future,
+    sync::{
+        Arc,
+        atomic::{AtomicU8, Ordering},
+    },
+};
 use tokio::sync::{mpsc, oneshot};
 
-mod records;
+use crate::providers::records;
 
 tokio::task_local! {
     pub(super) static PUBLISHER: Publisher;

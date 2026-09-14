@@ -12,7 +12,7 @@ use std::time::{Duration, SystemTime};
 
 use sha2::{Digest, Sha256};
 
-use crate::search::KestrelError;
+use crate::error::KestrelError;
 
 // Bump when extraction semantics or the persistent identity contract changes.
 const EXTRACTION_CACHE_VERSION: &str = "page-text-v3";

@@ -277,7 +277,7 @@ pub fn filter_fetch_candidates(
     minimum: f64,
 ) -> Result<FetchScoreReport, crate::search::KestrelError> {
     crate::telemetry::scope_sync("kestrel.filter_fetch_candidates", || {
-        use crate::search::KestrelError;
+        use crate::error::KestrelError;
 
         let query_order = crate::search::normalize_queries(queries);
         if !minimum.is_finite() || minimum < 0.0 || query_order.is_empty() {

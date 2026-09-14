@@ -1,7 +1,7 @@
 //! Checked numeric boundaries shared by library request entry points.
 use std::time::{Duration, Instant};
 
-use crate::search::KestrelError;
+use crate::error::KestrelError;
 
 pub(crate) fn duration(name: &str, value: Duration) -> Result<(), KestrelError> {
     if value.is_zero() || Instant::now().checked_add(value).is_none() {
