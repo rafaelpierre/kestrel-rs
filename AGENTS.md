@@ -33,6 +33,20 @@ with these instructions rather than guessing its contents.
   succeeded without checking the result. If access or credentials are missing,
   report the exact blocker and continue any independent work that is possible.
 
+## Local Honeycomb configuration
+
+- Before asking for Honeycomb credentials, check the local `.env` configuration.
+  The existing telemetry configuration is in
+  `/Users/rafaelpierre/projects/kestrel-rs-issue-146/.env`; isolated worktrees do
+  not automatically inherit it. Also check the active worktree and primary
+  checkout for a local `.env` if the configuration has been moved.
+- Use `HONEYCOMB_API_KEY` from that file for authorized OTLP ingestion. Load only
+  the needed variables into the diagnostic subprocess; keep secrets out of
+  command output, traces, reports, commits and PRs. Never commit `.env`.
+- Honeycomb MCP access does not configure CLI trace export. Confirm the endpoint
+  and environment, enable export for the requested run, and verify the run ID
+  through Honeycomb MCP before claiming traces were ingested.
+
 ## Scope work through GitHub issues
 
 - Before implementing a feature, search the GitHub backlog, including closed

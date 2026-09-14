@@ -45,7 +45,9 @@ impersonation, explicit `gb-en` region, and the previously observed browser
 are matched. This does not reproduce the historical three-second experiments.
 
 Use `--encodings` for a separate two-variant experiment comparing `+` and `%20`
-space encoding while preserving the decoded query. Optional `--raw` retains local
+space encoding while preserving the decoded query. The standard arm now uses
+`%20`; `bing-plus-space` explicitly restores `+` for comparison. Historical
+`bing-percent-space` arms predate this change. Optional `--raw` retains local
 unredacted HTML in the ignored output directory. It is disabled by default.
 Sanitized JSON retains public query/result text, response hashes, HTTP status and
 version, selected cache headers and elapsed time. Cookies and authorization are

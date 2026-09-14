@@ -1965,6 +1965,14 @@ mod tests {
     }
 
     #[test]
+    fn generated_skill_documents_bing_encoding() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("Bing serializes query spaces as `%20`"));
+        assert!(skill.contains("literal plus signs as `%2B`"));
+        assert!(skill.contains("Requests send `q` and optional region `cc`"));
+    }
+
+    #[test]
     fn generated_skill_documents_discovery_retry_contract() {
         let skill = generate_skill_md(&mut Cli::command());
         for term in [

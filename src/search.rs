@@ -1513,6 +1513,8 @@ mod tests {
         let _telemetry = crate::telemetry::test_export_guard();
         let client = reqwest::Client::new();
         for query in [
+            "python uv guide",
+            "literal %20 + repeated  spaces",
             "\"machine learning\"",
             "machine AND learning",
             "machine learning",
@@ -1530,6 +1532,15 @@ mod tests {
                 assert_eq!(request.url().host_str(), Some("www.bing.com"));
                 assert_eq!(request.url().path(), "/search");
                 assert_eq!(request.url().fragment(), None);
+                let encoded = request.url().query().unwrap();
+                assert!(!encoded.contains('+'), "{query}: {encoded}");
+                assert!(encoded.contains("%20"), "{query}: {encoded}");
+                if query == "python uv guide" && region.is_empty() {
+                    assert_eq!(encoded, "q=python%20uv%20guide");
+                }
+                if query.contains('+') {
+                    assert!(encoded.contains("%2B"), "{query}: {encoded}");
+                }
                 let pairs: Vec<_> = request.url().query_pairs().into_owned().collect();
                 let mut expected = vec![("q".to_owned(), query.to_owned())];
                 if let Some(country) = country {
