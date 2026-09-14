@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [8.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v7.1.0...v8.0.0) - 2026-09-14
+
+### Fixed
+
+- use positive-IDF bm25 crate for body ranking
+- count hybrid benchmark costs once per arm
+
+### Other
+
+- Merge pull request #197 from rafaelpierre/codex/78-hybrid-evidence
+- Merge branch 'main' into codex/78-hybrid-evidence
+- Merge pull request #195 from rafaelpierre/codex/84-workflow-evaluator
+- Merge pull request #194 from rafaelpierre/codex/189-discovery-retries
+- Merge pull request #193 from rafaelpierre/codex/notion-investigation-reports
+
 ## [7.1.0](https://github.com/rafaelpierre/kestrel-rs/compare/v7.0.0...v7.1.0) - 2026-09-14
 
 ### Added
