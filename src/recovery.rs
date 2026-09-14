@@ -597,14 +597,87 @@ mod tests {
                 .enqueue(key(), seq, State::Incomplete, &[record()], None)
                 .await;
         }
+        assert_eq!(queue.sender.capacity(), 0);
+        let admitted_memory = queue.memory.available_permits();
+        assert!(admitted_memory < QUEUE_BYTES);
+        {
+            let records = [record()];
+            let pending = queue.enqueue(key(), 17, State::Complete, &records, None);
+            tokio::pin!(pending);
+            assert!(futures_util::poll!(&mut pending).is_pending());
+            // A blocked send holds a byte permit; dropping it must return that permit.
+            assert!(queue.memory.available_permits() < admitted_memory);
+        }
+        assert_eq!(queue.memory.available_permits(), admitted_memory);
         let limit = tokio::time::Instant::now() + Duration::from_millis(20);
         queue
             .enqueue(key(), 17, State::Complete, &[record()], Some(limit))
             .await;
         assert_eq!(queue.sender.capacity(), 0);
-        assert!(queue.memory.available_permits() < QUEUE_BYTES);
+        assert_eq!(queue.memory.available_permits(), admitted_memory);
+        {
+            let records = [record()];
+            let pending = queue.enqueue(key(), 18, State::Complete, &records, None);
+            tokio::pin!(pending);
+            assert!(futures_util::poll!(&mut pending).is_pending());
+            store.cancel();
+            assert!(futures_util::poll!(&mut pending).is_ready());
+        }
+        assert_eq!(queue.sender.capacity(), 0);
+        assert_eq!(queue.memory.available_permits(), admitted_memory);
+
+        // Admission is not persistence. Never poll the writer in this queue test:
+        // dropping its receiver must release all queued memory without disk I/O.
+        let memory = queue.memory.clone();
         drop(queue);
-        writer.await;
-        assert_eq!(store.load(&key()).await.unwrap().sequence, 16);
+        drop(writer);
+        assert_eq!(memory.available_permits(), QUEUE_BYTES);
+        assert!(!store.target(&key()).unwrap().exists());
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn queue_drain_deadline_releases_uncommitted_snapshots() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = SearchRecovery::new(dir.path(), Duration::from_secs(60)).unwrap();
+        // Occupy every storage worker until explicitly released. This reproduces
+        // storage contention without relying on the host's filesystem speed.
+        let mut releases = Vec::new();
+        let mut workers = Vec::new();
+        for _ in 0..crate::cache::CACHE_IO_CONCURRENCY {
+            let (started, ready) = tokio::sync::oneshot::channel();
+            let (release, wait) = std::sync::mpsc::channel::<()>();
+            releases.push(release);
+            let disk = store.disk.clone();
+            workers.push(tokio::spawn(async move {
+                disk.run_io(move || {
+                    let _ = started.send(());
+                    let _ = wait.recv();
+                    Ok(())
+                })
+                .await
+                .unwrap();
+            }));
+            ready.await.unwrap();
+        }
+        let (queue, writer) = writer(Some(&store), None);
+        let queue = queue.unwrap();
+        for seq in 1..=16 {
+            queue
+                .enqueue(key(), seq, State::Incomplete, &[record()], None)
+                .await;
+        }
+        let memory = queue.memory.clone();
+        drop(queue);
+        // The production drain cap must finish even while storage remains busy.
+        // This outer timeout is only a deadlock guard, not a disk-speed assertion.
+        let drained = tokio::time::timeout(Duration::from_secs(5), writer).await;
+        drop(releases);
+        for worker in workers {
+            worker.await.unwrap();
+        }
+        drained.unwrap();
+        assert_eq!(memory.available_permits(), QUEUE_BYTES);
+        assert!(store.load(&key()).await.is_none());
+        assert!(!store.target(&key()).unwrap().exists());
     }
 }
