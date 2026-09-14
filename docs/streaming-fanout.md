@@ -82,8 +82,10 @@ cancelled/deadline-expired call returns without waiting for a started parser;
 the parser may finish later, and runtime shutdown may wait for it. With many
 concurrent calls, queueing can reduce candidates received before a deadline.
 No provider ordering, result threshold, retry policy or response-size limit changes.
-Completed-response representation sharing remains separate work in
-[issue #116](https://github.com/rafaelpierre/kestrel-rs/issues/116); this change moves existing parsing off async polls without changing its classifications.
+Completed-response diagnostics and extraction share a worker-local representation
+under [issue #116](https://github.com/rafaelpierre/kestrel-rs/issues/116).
+See the [parse inventory](provider-parse-reuse.md) for distinct streaming prefix,
+snapshot, envelope and EOF inputs; worker bounds and classifications are preserved.
 
 ## Verification
 

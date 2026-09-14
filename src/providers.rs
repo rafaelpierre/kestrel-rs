@@ -216,22 +216,32 @@ pub(crate) fn parse_html(engine: Engine, doc: &Html) -> Result<Vec<SearchResult>
     }
 }
 
+#[cfg(test)]
 pub(crate) fn parse(engine: Engine, text: &str) -> Result<Vec<SearchResult>, KestrelError> {
     if engine == Engine::Mojeek {
         return parse_mojeek(&Html::parse_document(text));
     }
-    if engine == Engine::Qwant {
-        return parse_qwant(text);
-    }
     if engine == Engine::Ecosia {
         return parse_ecosia(&Html::parse_document(text));
     }
-    let bad = || {
-        KestrelError::Search(format!(
-            "{engine} returned an unrecognized search page or response"
-        ))
-    };
-    let mut data: Value = serde_json::from_str(text).map_err(|_| bad())?;
+    let data = serde_json::from_str(text).map_err(|_| unrecognized(engine))?;
+    parse_json(engine, &data)
+}
+
+pub(crate) fn unrecognized(engine: Engine) -> KestrelError {
+    KestrelError::Search(format!(
+        "{engine} returned an unrecognized search page or response"
+    ))
+}
+
+/// Extract from the same JSON value used for response-level classification.
+pub(crate) fn parse_json(engine: Engine, data: &Value) -> Result<Vec<SearchResult>, KestrelError> {
+    if engine == Engine::Qwant {
+        return parse_qwant(data);
+    }
+    let bad = || unrecognized(engine);
+    let decoded;
+    let mut data = data;
     if engine == Engine::Yep && data.get(0).and_then(Value::as_str) != Some("Ok") {
         return Err(bad());
     }
@@ -243,7 +253,8 @@ pub(crate) fn parse(engine: Engine, text: &str) -> Result<Vec<SearchResult>, Kes
         let bytes = base64::engine::general_purpose::URL_SAFE_NO_PAD
             .decode(part.trim_end_matches('='))
             .map_err(|_| bad())?;
-        data = serde_json::from_slice(&bytes).map_err(|_| bad())?;
+        decoded = serde_json::from_slice(&bytes).map_err(|_| bad())?;
+        data = &decoded;
     }
     let array = match engine {
         Engine::Dogpile => data.get("results"),
@@ -377,10 +388,9 @@ fn parse_ecosia(doc: &Html) -> Result<Vec<SearchResult>, KestrelError> {
     Ok(results)
 }
 
-fn parse_qwant(text: &str) -> Result<Vec<SearchResult>, KestrelError> {
+fn parse_qwant(data: &Value) -> Result<Vec<SearchResult>, KestrelError> {
     let bad =
         || KestrelError::Search("qwant returned an unrecognized search page or response".into());
-    let data: Value = serde_json::from_str(text).map_err(|_| bad())?;
     if data.get("url").and_then(Value::as_str).is_some() {
         return Err(KestrelError::Search(
             "qwant returned a bot challenge".into(),

@@ -6,10 +6,13 @@ use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 async fn request(yahoo: bool, url: &str) -> Result<(String, usize), KestrelError> {
     if yahoo {
         let client = primp::Client::builder().no_proxy().build().unwrap();
-        request_yahoo_with_retries("test", || client.get(url)).await
+        request_yahoo_with_retries("test", retain_body, || client.get(url)).await
     } else {
         let client = reqwest::Client::builder().no_proxy().build().unwrap();
-        request_standard_with_retries(&client, Engine::Bing, "test", || client.get(url)).await
+        request_standard_with_retries(&client, Engine::Bing, "test", retain_body, || {
+            client.get(url)
+        })
+        .await
     }
 }
 
@@ -422,15 +425,19 @@ async fn client_timeouts_are_typed_and_censored() {
             .scope(Arc::clone(&recorder), async {
                 if yahoo {
                     let client = primp::Client::builder().no_proxy().build().unwrap();
-                    request_yahoo_with_retries("test", || {
+                    request_yahoo_with_retries("test", retain_body, || {
                         client.get(server.uri()).timeout(Duration::from_millis(20))
                     })
                     .await
                 } else {
                     let client = reqwest::Client::builder().no_proxy().build().unwrap();
-                    request_standard_with_retries(&client, Engine::Bing, "test", || {
-                        client.get(server.uri()).timeout(Duration::from_millis(20))
-                    })
+                    request_standard_with_retries(
+                        &client,
+                        Engine::Bing,
+                        "test",
+                        retain_body,
+                        || client.get(server.uri()).timeout(Duration::from_millis(20)),
+                    )
                     .await
                 }
             })

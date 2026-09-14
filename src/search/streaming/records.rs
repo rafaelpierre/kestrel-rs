@@ -46,13 +46,14 @@ impl JsonState {
             return Ok(None);
         };
         self.passes += 1;
-        if classify_challenge(self.engine, &snapshot) == Challenge::Detected {
+        let document = ParsedResponse::new(self.engine, &snapshot);
+        if document.challenge(self.engine, &snapshot) == Challenge::Detected {
             return Err(KestrelError::Search(format!(
                 "{} returned a bot challenge",
                 self.engine
             )));
         }
-        Ok(parse_provider_response(self.engine, &snapshot).ok())
+        Ok(extract_dispatched(self.engine, &snapshot, &document).ok())
     }
 }
 
@@ -597,6 +598,27 @@ mod tests {
             "incremental JSON worker+parse wall={:?}, heartbeat ticks={beats}; fixture allocation excluded, network=0; allocator bytes not measured",
             started.elapsed()
         );
+    }
+
+    #[test]
+    fn json_snapshot_classification_and_extraction_share_one_value() {
+        for (engine, text) in fixtures().into_iter().filter(|(engine, _)| {
+            matches!(
+                engine,
+                Engine::Dogpile | Engine::Yep | Engine::Swisscows | Engine::Qwant
+            )
+        }) {
+            let expected = parse_provider_response(engine, text).unwrap();
+            let mut state = JsonState {
+                engine,
+                text: String::new(),
+                json: JsonRecords::default(),
+                passes: 0,
+            };
+            RESPONSE_PARSES.with(|count| count.set(0));
+            assert_eq!(state.push(text).unwrap().unwrap(), expected, "{engine}");
+            assert_eq!(RESPONSE_PARSES.with(|count| count.get()), 1, "{engine}");
+        }
     }
 
     #[tokio::test]
