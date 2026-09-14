@@ -32,28 +32,74 @@ pub fn write_artifact(
     mode: SearchMode,
     diagnostics: ArtifactDiagnostics<'_>,
 ) -> io::Result<Option<PathBuf>> {
-    let (Ok(directory), Ok(run_id)) = (
-        std::env::var("KESTRELSEARCH_BENCHMARK_ARTIFACT_DIR"),
-        std::env::var("KESTRELSEARCH_BENCHMARK_RUN_ID"),
-    ) else {
+    let Some(config) = ArtifactConfig::from_env() else {
         return Ok(None);
     };
-    write_artifact_to(
-        Path::new(&directory),
-        &run_id,
-        query,
-        results,
-        timings_ms,
-        queries,
-        engines,
-        mode,
-        diagnostics.providers,
-        diagnostics.provider_cancellations,
-        diagnostics.fetch,
-        diagnostics.candidates,
-        diagnostics.candidate_counts,
-    )
-    .map(Some)
+    config
+        .write(
+            query,
+            results,
+            timings_ms,
+            queries,
+            engines,
+            mode,
+            diagnostics,
+        )
+        .map(Some)
+}
+
+/// Resolved opt-in artifact destination. Retain it for a complete search so
+/// snapshot allocation and artifact writing use the same configuration.
+#[derive(Debug)]
+pub struct ArtifactConfig {
+    directory: PathBuf,
+    run_id: String,
+}
+
+impl ArtifactConfig {
+    /// Capture is enabled only when both environment variables are valid Unicode.
+    pub fn from_env() -> Option<Self> {
+        Self::from_values(
+            std::env::var("KESTRELSEARCH_BENCHMARK_ARTIFACT_DIR").ok(),
+            std::env::var("KESTRELSEARCH_BENCHMARK_RUN_ID").ok(),
+        )
+    }
+
+    fn from_values(directory: Option<String>, run_id: Option<String>) -> Option<Self> {
+        Some(Self {
+            directory: directory?.into(),
+            run_id: run_id?,
+        })
+    }
+
+    /// Write final results and the caller's retained pre-ranking candidates.
+    #[allow(clippy::too_many_arguments)]
+    pub fn write(
+        &self,
+        query: &str,
+        results: &[SearchResult],
+        timings_ms: &BTreeMap<String, u64>,
+        queries: &[String],
+        engines: &[Engine],
+        mode: SearchMode,
+        diagnostics: ArtifactDiagnostics<'_>,
+    ) -> io::Result<PathBuf> {
+        write_artifact_to(
+            &self.directory,
+            &self.run_id,
+            query,
+            results,
+            timings_ms,
+            queries,
+            engines,
+            mode,
+            diagnostics.providers,
+            diagnostics.provider_cancellations,
+            diagnostics.fetch,
+            diagnostics.candidates,
+            diagnostics.candidate_counts,
+        )
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -240,6 +286,15 @@ pub(crate) fn capture_provider_lifecycle(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn artifact_configuration_requires_both_values() {
+        assert!(ArtifactConfig::from_values(None, None).is_none());
+        assert!(ArtifactConfig::from_values(Some("dir".into()), None).is_none());
+        assert!(ArtifactConfig::from_values(None, Some("run".into())).is_none());
+        // Preserve the previous environment contract, including empty values.
+        assert!(ArtifactConfig::from_values(Some(String::new()), Some(String::new())).is_some());
+    }
 
     #[test]
     fn writes_compact_result_metadata() {

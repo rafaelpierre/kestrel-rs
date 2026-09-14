@@ -145,3 +145,8 @@ successful search artifacts. Standalone fetch does not write search artifacts.
 Those potentially sensitive formats remain unchanged; see
 [provider diagnostics](provider-diagnostics.md). Transport/warm-up/batch-fetch
 controls remain library-only; this change does not expose new controls for them.
+
+Candidate evidence is summarized before ranking; final result positions are added
+after truncation. JSON diagnostics do not retain a duplicate set of candidate page
+bodies. A full pre-ranking snapshot is retained only when both benchmark artifact
+environment variables are present; that configuration is resolved once.
