@@ -1,0 +1,1335 @@
+{
+  "version": 1,
+  "assessor": "Codex GPT-6, unblinded",
+  "definition": "Relevance 0 wrong/generic, 1 background, 2 directly relevant. Evidence 1 requires at least one substantive retained supporting fact, not a full gate answer or extraction success. All first-prefix and pre-rank selected candidates judged; unseen inputs remain unknown.",
+  "judgments": [
+    {
+      "query_id": "music-bss",
+      "url": "https://dictionary.cambridge.org/dictionary/english/broken",
+      "content_sha256": "682accda19c959d48cd99af08b5313c9608bd0996d5da0c886c34df840b292f0",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://genius.com/artists/Broken-social-scene/songs",
+      "content_sha256": "39137f881448f1230522a909bee416b9ede7d511cf58d70d61c7e08fdd3ede9a",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.merriam-webster.com/dictionary/broken",
+      "content_sha256": "94fc241289b624bf699c40d522beaf0375dc5f2e005e7406fdc022eb7f56e615",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://genius.com/Broken-social-scene-anthems-for-a-seventeen-year-old-girl-lyrics",
+      "content_sha256": "8e7afece21ac718bf1e43b05fbcc49ee37f36bbcc61b8e402506a797f73ea2c3",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Directly addresses the declared entity and property. Retained text provides a substantive supporting fact; this does not certify the complete answer."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.youtube.com/watch?v=hPC2Fp7IT7o",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://pitchfork.com/news/meryl-streep-and-tracey-ullman-join-broken-social-scene-at-new-york-show-watch/",
+      "content_sha256": "0837742ef5abfa213bb299c324355b228dc34828705ab190bd91d9f2f797aabc",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Directly addresses the declared entity and property. Retained text provides a substantive supporting fact; this does not certify the complete answer."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://en.wikipedia.org/wiki/Broken_(British_TV_series)",
+      "content_sha256": "9067d5e0aedc06ff3ceddfb4cd31364c1a7400a2d4d09f1737ed343aec551b98",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.billboard.com/music/rock/broken-social-scene-anthems-for-a-seventeen-year-old-girl-oral-history-1235302363/",
+      "content_sha256": "4219c927129287ce0e5bdc326572d663d35d7fa1a1910d0486e1026fcaca0269",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://en.wikipedia.org/wiki/Broken_(2012_film)",
+      "content_sha256": "9505a178397c5d439d45ca0ddf1eef648f12f354f10f6f7a9d9e674056a2ca7d",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://consequence.net/2025/04/broken-social-scene-you-forgot-it-in-people-maggie-rogers-tribute-album/",
+      "content_sha256": "1a8893f7be8ad4a297d89d62eeeba8e35d6841d96b174d7ad0f07cd5191d13f9",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.imdb.com/title/tt6078644",
+      "content_sha256": "6e1b2005d6232d8c3117d7da059d7e68da97b3b3f982c390446e78e28ec49999",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.npr.org/2017/07/03/534134749/first-listen-broken-social-scene-hug-of-thunder",
+      "content_sha256": "4afdd1036c533dd3247be68ad9a2418de2ee10fb3d78fd647e5334285c3bd475",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Related background, not the requested fact. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.bbc.co.uk/programmes/b08s7nyz",
+      "content_sha256": "5198366b4719bd08a019efeebc6fb336928d7b2d0c2438526d18fa4e65000a38",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://en.wikipedia.org/wiki/Broken_Social_Scene",
+      "content_sha256": "b9bda9e87f66b30c962f6ae7b39fbda9c3d572dbe2c41f983049a10888ddb483",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.thefreedictionary.com/broken",
+      "content_sha256": "3c6cd8b80b03004b0c9186697449647437088b0c3b083d22a35337e9026cda26",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://scottpilgrim.fandom.com/wiki/Metric",
+      "content_sha256": "225f6faa76384d558beba040ceb9d66b34e7fa12e904c22728ea0b04395110fd",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Directly addresses the declared entity and property. Retained text provides a substantive supporting fact; this does not certify the complete answer."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://en.wikipedia.org/wiki/Scott_Pilgrim_Takes_Off",
+      "content_sha256": "cd056cab1ada94b0914221ca4c3ee35146a40d1628beb97d455bdca8445062b6",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://m.youtube.com/watch?v=1xcSDYy3Dl4",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://en.wikipedia.org/wiki/Scott_Pilgrim_vs._the_World_(soundtrack)",
+      "content_sha256": "92e4e75499af323e7bf68baeceb5c1a4df16f0bbec6bff92f2bab5b4870d74aa",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://genius.com/Metric-black-sheep-brie-larson-vocal-version-lyrics",
+      "content_sha256": "9f09e5d4a6dd0f9b7d85860807de9252449a9fe5bdcd81b84439a4000d8b5b0e",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://variety.com/2010/film/reviews/scott-pilgrim-vs-the-world-1117943219/",
+      "content_sha256": "2a034448f7f67bfeadc69e615d6dcc872b14324b19c2a5a6516fa05a64b1c960",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://m.youtube.com/watch?v=-jMruFHTwrY",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://pitchfork.com/reviews/albums/14577-scott-pilgrim-vs-the-world-ost/",
+      "content_sha256": "71abdf75655a79c1e9ed155fc0ce786acfa2b2d8f0637316a1df0728e34374fd",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Directly addresses the declared entity and property. Retained text provides a substantive supporting fact; this does not certify the complete answer."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://soundcloud.com/scottpilgrimmusic/metric-black-sheep",
+      "content_sha256": "1bd8719f988cbf8b6c0ee42d45a1bf0909d12106f32df4c6e536fd1142a0d604",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://pitchfork.com/news/39313-broken-social-scenes-brendan-canning-talks-scott-pilgrim-soundtrack/",
+      "content_sha256": "f3b1988c3165d092169a06d9842eb6ca637d8f66f08a4c66f7527e8101e71035",
+      "relevance": 1,
+      "evidence": 1,
+      "rationale": "Related background, not the requested fact. Retained text provides a substantive supporting fact; this does not certify the complete answer."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://en.m.wikipedia.org/wiki/Metric_(band)",
+      "content_sha256": "2b9bf991d0024f042a222a299eb116fa049ca5daf6226523d4d32e759448e7b3",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Related background, not the requested fact. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://www.abkco.com/film/scott-pilgrim-vs-world/",
+      "content_sha256": "b25084ac3193142725daffd1cb89704522ae23a7c76b563f2743603ff83288f6",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://music.youtube.com/watch?v=uRVEdO5iUSg",
+      "content_sha256": "57331a6050724b661ecb9e8816d09e6c5ad0c55fa262e4ca44419989e0d03b4a",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://shop.abkco.com/products/scott-pilgrim-vs-the-world-original-motion-picture-soundtrack-envy-adams-edition-d2c-exclusive",
+      "content_sha256": "fb789cbe083a6931fbae4cab492152593585485f910582c75fefb1d60319de9f",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Directly addresses the declared entity and property. Retained text provides a substantive supporting fact; this does not certify the complete answer."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://m.imdb.com/title/tt21085048/",
+      "content_sha256": "568b721a14040f98db24bd2b33acb1012112df62433ef141207a50efc04ce143",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Directly addresses the declared entity and property. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://scottpilgrim.fandom.com/wiki/Metric",
+      "content_sha256": "36acdfa70df6ade2b18ab61b6f95b78e1f84d9d9684697978b188779fe8d486e",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://www.miniplay.com/sonic-games",
+      "content_sha256": "7458776a7eec73d7a143f18d30006b99cdcd46c5367a4c885cb3ae2237b51f77",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://en.wikipedia.org/wiki/Sonic_Youth_(EP)",
+      "content_sha256": "004800517baf968ca8ce0957d87fbb08d20750c126e0d47245c2718b03ccc219",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://www.sega.com/sonic-the-hedgehog",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://en.wikipedia.org/wiki/Sonic_Death",
+      "content_sha256": "8fa3966dbfb172b0b5a90cf4244ae19eb76149034f4baee7f3da4f98c9c1005e",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://en.wikipedia.org/wiki/Sonic_the_Hedgehog",
+      "content_sha256": "6e502910bb5471d57cc501241b3e7a70e9682308881ad6f8a295c4f0b13273f2",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://en.wikipedia.org/wiki/EVOL_(Sonic_Youth_album)",
+      "content_sha256": "6bc8160a7009651529ba964c1f8436b72be187d244d641c18067f3abfc980067",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://www.youtube.com/c/SonictheHedgehog",
+      "content_sha256": "7b59fa61427409f2f74f828c0c773a317e27543598b81b67887bb38ff5b10570",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://www.encyclopedia.com/people/literature-and-arts/music-popular-and-jazz-biographies/sonic-youth",
+      "content_sha256": "45d01f5d0f9b2ed8679850d5bc6d76b61d57a14dfdb504fd0f97f814f4e9da37",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://www.youtube.com/watch?v=kJJZ6Cq9tqg",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://en.wikipedia.org/wiki/Thurston_Moore",
+      "content_sha256": "a5fb3d26f32738c030d896ec70e767d4c4aca7e56cf14897b294ff4084d65bb9",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Related background, not the requested fact. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://kbhgames.com/tag/sonic",
+      "content_sha256": "7b3dbdc43e14bfb3ddacd7a9e9b5ef0fe8086fce17af8c3b710cfa7aa17e4f99",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://en.wikipedia.org/wiki/Lee_Ranaldo",
+      "content_sha256": "7877bad135fa90806d2d78b498d9653da636e2c4d3dfe53177053f07dbcde2ae",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Related background, not the requested fact. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://sonic.fandom.com/wiki/Sonic_the_Hedgehog",
+      "content_sha256": "7712006922a87f6e06d38d9abbbd08e6bc18165501f2f34aca613af9a5ab1bcb",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://stringjoy.com/sonic-youth-alternate-tunings/",
+      "content_sha256": "d5188249a7d9f52dbe5b8886c9916e0fb08568d10f55d80bb57d8f79ba374c1f",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://en.wikipedia.org/wiki/Sonic_the_Hedgehog_(character)",
+      "content_sha256": "80c181eb24455a168beefa98e2d55c5e6c021558119c41b14dc3157bb5cb7dc5",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://www.miniplay.com/sonic-games",
+      "content_sha256": "f6cd24f85ea5d8c7400208b94fe781ef878a3b46638ae259c4a2c07e2323548e",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.kurtgeiger.com/",
+      "content_sha256": "418bf04e5f00d3324f0caa30e30fecb413032a954841140bb1a677771a3e36fe",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://en.wikipedia.org/wiki/Courtney_Barnett",
+      "content_sha256": "3f50e7a03d3bdd75f7c86f3299cc4f5ef3a814b36c8771eba26a2306fe8297e0",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://en.m.wikipedia.org/wiki/Kurt_Cobain",
+      "content_sha256": "92fc2db13e750090daadaa7563a7e9ea49187f97f4942d258db45a63959fd3a8",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://en.wikipedia.org/wiki/Kurt_Vile",
+      "content_sha256": "d6b8a4a86010c4ab855b354138c652255121fd515a9c9bae5cadd0a2809406e5",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.msn.com/en-us/news/crime/inside-kurt-cobain-s-heartbreaking-autopsy-report-from-overdose-to-his-final-note/ar-AA1QJWSy",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://en.wikipedia.org/wiki/Lotta_Sea_Lice",
+      "content_sha256": "6c0f5517ccb11cba07f5c304c6a46df58b3ef437c058ef63322ff182411fed21",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.thefreedictionary.com/Kurt",
+      "content_sha256": "389d524d78d6d1d5fa9abd8eae6365c7ad8cd0d85e76a5e276bc0dc6d6ce0eb6",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://en.wikipedia.org/wiki/Courtney_Barnett_discography",
+      "content_sha256": "93d0569aaee2fc593f4d7639bd04c49a4bbef42edebbc5c99a8ca55c906a5c01",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.kurtgeiger.com/women/shoes",
+      "content_sha256": "78f959aed1e3212afaffee5a69e296265aa0d20815dc206b0ada89cbee2e54b0",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://en.wikipedia.org/wiki/List_of_awards_and_nominations_received_by_Courtney_Barnett",
+      "content_sha256": "cd57e550583248fd5347fa98e1f44590ab25d34c520d3f2dd9f2f9ad4615ffe1",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://en.m.wikipedia.org/wiki/Suicide_of_Kurt_Cobain",
+      "content_sha256": "139ef4a1940ef9fb3735008b8eaa0d9ef0da0e4bde410c560c9ac7cef90b5921",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://matadorrecords.com/pages/artists/kurt-vile",
+      "content_sha256": "1b692bf52a995583869256aa98e00df14bc3472ff48f704b07daa0fbaec50fa0",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Related background, not the requested fact. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://global.kurtgeiger.com/sale",
+      "content_sha256": "8cc6ac60430ad56116202bc8566cc8736ef2bcb677e70afe626c5f9e676b3f74",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://matadorrecords.com/products/bottle-it-in",
+      "content_sha256": "0d05eea747ad2933e8b9a0c4e6840739f89b1b732b0f4ec5a2187cb0f728b1c5",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Related background, not the requested fact. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.kurtgeiger.us/women/bags",
+      "content_sha256": "11b6148b900c285531eb3f23527a458eafbea0d8bbbafd5ddbecba537d609aed",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.python.org/",
+      "content_sha256": "d32267f2ce4a60073bedd5b3077a36364a4b859d417d6b4bc267e9b33e438b4e",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.geeksforgeeks.org/python/python-taskgroups-with-asyncio/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Directly addresses the declared entity and property. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.python.org/downloads/",
+      "content_sha256": "ce3a774bab96980edb88d85d73d6607cc228236c0cfe692e3d8f962296417405",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://peps.python.org/pep-0654/",
+      "content_sha256": "67beae5f6da7ea9f83e9d8669c98436ae72b9c5e0610392852eac720d397dc7c",
+      "relevance": 1,
+      "evidence": 1,
+      "rationale": "Related background, not the requested fact. Retained text provides a substantive supporting fact; this does not certify the complete answer."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.online-python.com/",
+      "content_sha256": "a57b564e23617b8a48d53e4bef5d7f92c582720250bb7ce7bd007162c18fc026",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://towardsdatascience.com/using-tqdm-with-asyncio-in-python-5c0f6e747d55/",
+      "content_sha256": "f58093a80840eace6e56e41dd77dc52dcea3f4fd985271af9c856a7c508a961b",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Related background, not the requested fact. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.w3schools.com/python/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://superfastpython.com/python-asyncio/",
+      "content_sha256": "210e1d57db9784148e6fd2e689d7ee4f8b85ccf734af9bbddd312eca8ca0a618",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://en.wikipedia.org/wiki/Python_(programming_language)",
+      "content_sha256": "85d43edf7aae279a0cd1b5c326621f82f3351baddfd7bbf4308ec8549898eb55",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://realpython.com/python311-exception-groups/",
+      "content_sha256": "bbe821bc1b81ee1dccbfae211305597b4a45779747fa8df991f9e2708899a128",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Directly addresses the declared entity and property. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://docs.python.org/",
+      "content_sha256": "9eae61cacdc8b7c7f95759bdefae768d96caf95c110eb02688746c855221a498",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://superfastpython.com/asyncio-cancel-all-tasks-if-task-fails/",
+      "content_sha256": "42e7db75997b84dfc12a75d7b9bd019dc015059150a0b37051e6c0ccd3bf868d",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Directly addresses the declared entity and property. Retained text provides a substantive supporting fact; this does not certify the complete answer."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.programiz.com/python-programming/online-compiler/",
+      "content_sha256": "4b99ce6036fa340abf7da01f34344ceba9452e132255a096b2e6d8cc62cdf488",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://superfastpython.com/asyncio-gather-exception/",
+      "content_sha256": "96c0b11c3551f905df0b76674b72ca7f19f20060c04b29f9a6909a03f0954a66",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://docs.python.org/3/tutorial/index.html",
+      "content_sha256": "e4b1dde38f9f9e8216385a2c0c413df32af6669a1d3543a1e0ab0237aee0e276",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/docs/current/sql-explain.html",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Directly addresses the declared entity and property. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/docs/current/using-explain.html",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Directly addresses the declared entity and property. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://wiki.postgresql.org/wiki/Slow_Query_Questions",
+      "content_sha256": "252abf07f3cde432839fe9aae0dfb0c14c20a65ebc16894fa12e2b9eb1b6da83",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/CA%2BTgmobLpsPt4mZ9j2CR_GUdmbjWZA786sxZie6ntRo-Z9zv0Q%40mail.gmail.com",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/CA+TgmobLpsPt4mZ9j2CR_GUdmbjWZA786sxZie6ntRo-Z9zv0Q@mail.gmail.com",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Related background, not the requested fact. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/CAEepm%3D21xgihg%3DWaG%2BO5MFotEZfN6kFETpfw%2BRkSnEqNQqGn2Q%40mail.gmail.com",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/CAJgoLkLCCKy1hAFpoUzwaRq91cA%3Dm%3D-J03MBpUo-d7-oXy6MzA%40mail.gmail.com",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/CAApHDvprmkqPF-k2dDc30rOJ%3Do27RQt1CPjnEcouskRbp%3DE1uw%40mail.gmail.com",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/f035dbd6-e8a7-4660-a54d-75a01f43fc32%40vondra.me",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/20091210152627.GK15554%40alvh.no-ip.org",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/CAApHDvo526G4F-XxE21G24PE%3Dd5-zs9rusga69%3Dc0Z7zD_RKxQ%40mail.gmail.com",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Related background, not the requested fact. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/E1tLJ8I-002ApU-7t%40gemulon.postgresql.org",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/407d949e1002091654g400b1af3s70be0477e9acd5c0@mail.gmail.com",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/20091015201252.A2EC.52131E4D%40oss.ntt.co.jp",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://commitfest.postgresql.org/patch/1326/",
+      "content_sha256": "aaeda36646c0228f8743ed8869e448fbb5dedf848c8f332ebd7ee14e6d8bddd8",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Related background, not the requested fact. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://rust.facepunch.com/",
+      "content_sha256": "9c882d1519a05db3de130c3c2591395c1cb28a41f67a3322cc2cbe32a7a48f16",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://stanford-cs242.github.io/f18/lectures/05-1-rust-memory-safety.html",
+      "content_sha256": "8d5048b52be213faa984a60d13ac6f9ea6f20cae4d8b24671f96a656a207600b",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://rust-lang.org/",
+      "content_sha256": "5e155d43ba8322c1046a2cbbfc00feddeeffee49619d034c3a59e9ca9ccba657",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://yangandmore.github.io/2021/12/20/Rust-%E6%97%A0%E7%95%8F%E5%B9%B6%E5%8F%91/",
+      "content_sha256": "dd76ab226f8eb1354d1884d3506e8fc6c598c6d6143e4326d394167d534cf9db",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Related background, not the requested fact. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://rust-lang.org/tools/install/",
+      "content_sha256": "4e6bc1798fcda5daa4dcec8e9298496b440ae86ffbf02f287233b3840a803f0b",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://zenn.dev/nxted_sapporo/articles/b360cccd53cd76",
+      "content_sha256": "25bad66518af1fb72004bde81d81ce4bd309ff99ad1684f94b60b97a00a6dd22",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Directly addresses the declared entity and property. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://store.steampowered.com/app/252490/Rust/",
+      "content_sha256": "96b35cb0d36b9e4dfdd59cf61e34a515e37baa6d151076b3db8cdeea53ed8254",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://github.com/Dhghomon/easy_rust",
+      "content_sha256": "5dc7b583b5a53fb9d2e1ac6dc4f6650c48abfe22842e283baa2bb3982df78ad0",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://en.wikipedia.org/wiki/Rust_(programming_language)",
+      "content_sha256": "3380357987fdd71a98f2cf385cf46d22eec24a6c6952d71ade6e8001a7c620c8",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q07",
+      "url": "http://stevedonovan.github.io/rust-gentle-intro/2-structs-enums-lifetimes.html",
+      "content_sha256": "7b4ed7b5ba911866fcfeaacb245a53fb97c25b9dff15935775d0b132964b5564",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://rust.facepunch.com/play",
+      "content_sha256": "734c86e7877e5c3df08f57f2cf4137fb08b68a25fcde7a57e3ec4c4969b8aec3",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://doc.rust-lang.org/error_codes/E0382.html",
+      "content_sha256": "7649bf9b25801472c8f71b0fd9d41e1d5f3342657ffc51db7b066c3fc889c39c",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Directly addresses the declared entity and property. Retained text provides a substantive supporting fact; this does not certify the complete answer."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://en.wikipedia.org/wiki/Rust_(video_game)",
+      "content_sha256": "8528effcce9325124823d31288bc7af39648f2e55fbcc035593f2d7a851e7414",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://github.com/buyukakyuz/rustmm",
+      "content_sha256": "e17ff20b6ea59a083a6f3c33cdf4549e20d43277dfb372af0b15e6ef86ef9964",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Related background, not the requested fact. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://github.com/rust-lang/rust",
+      "content_sha256": "2db188c9fc3a5f3f2d6b78334fe7a3eb9191c396e9eb08df2e0da0538a1f7c46",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.sciencemuseum.org.uk/visit",
+      "content_sha256": "ddfbe40aa869d0a0210cec7aff80a554e73d9325ad64de1ef42734bf813d6c8a",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Directly addresses the declared entity and property. Retained text provides a substantive supporting fact; this does not certify the complete answer."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.nhm.ac.uk/visit.html",
+      "content_sha256": "faf9dbadc8736eb686b7977b3e1832ff71efecc558839f7c7292c16c99429f77",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://whichmuseum.co.uk/museum/science-museum-london-4545/opening-hours",
+      "content_sha256": "03f3a469789f1ce3a70a45efa7e4348714adefb67943da88ea29663109105244",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.visitlondon.com/things-to-do/place/52747-science-museum",
+      "content_sha256": "b21d0e639a7307a46ee69263161e4ab9f17acf0f14adabb92954837a11125339",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.sciencemuseum.org.uk/home",
+      "content_sha256": "231098733b5cec76d7e7ea1cd623be52a82bce65f2023ab96a18d06fa0c34329",
+      "relevance": 1,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: related background. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.britannica.com/topic/Science-Museum-London",
+      "content_sha256": "cd019515b0bf7c4c574f518915e03feb92e3c8d5ac629b885b8fc175543207a3",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.wonderfulmuseums.com/museum/london-science-museum-opening-times/",
+      "content_sha256": "79c1c35f222a382bccce79f31afbc55f24c9a7075024975cbbd610388a84e057",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://en.wikipedia.org/wiki/Science_Museum,_London",
+      "content_sha256": "479e926efa431c49aa21ed8a175f3d0cd54a8d32260f36522c7f7564dbb09ba2",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.opening-hours-uk.co.uk/opening-hours/science-museum-london",
+      "content_sha256": "2f7abf41d122f77313ba3e786fb5bd441a22bba60092195a28bf38d36306f93e",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.nhm.ac.uk/",
+      "content_sha256": "64736266de4baabb4de1dee65f9504dbcfe9917da6f5e7ad5e882234447739c8",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://whichmuseum.co.uk/museum/science-museum-london-48415/opening-hours",
+      "content_sha256": "ecc83a538cc7e66779cb8ec4ab32d844c7fa97adc4df26aacddf8d85b8700d52",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.museumslondon.org/category/14/science-technology-industry",
+      "content_sha256": "31e89c8dc08892ca8b39abcd5b7f1dba860954caa397ecaa2a431351de148816",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Wrong entity or generic landing/tool page. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.breaks.com/attractions/london/science-museum-3te5eyt7/",
+      "content_sha256": "235392e597cb37b5a911117d88e3cb552ad2daded6a81d12798bff09c152cfab",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.visitlondon.com/things-to-do/sightseeing/london-attraction/museum/top-10-best-science-museums-in-london",
+      "content_sha256": "6ae4e077b30c25ed070f4221b616c6ab26d21bd5c7cbd49b6a74d3496151758a",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Related background, not the requested fact. Retained text does not establish a useful requested fact (missing, chrome, unrelated, introductory, or conflicting)."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.timeout.com/london/museums/science-museum",
+      "content_sha256": "573c191105811d0ad852296c6e5b96258dda9e0bca0380748a18cc69f7f02658",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://stereogum.com/1833510/the-10-best-broken-social-scene-songs/lists",
+      "content_sha256": "42929427c012373a3c0467beaea4c5cc18cdd5877c8ac7f54edaa5f48cd46552",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://stereogum.com/2255400/yeule-anthems-for-a-seventeen-year-old-girl-broken-social-scene-cover/music",
+      "content_sha256": "1aeed836fb0d18cbd0d1a8e0e4fec3a811c206f70b051cf59efd90bce7d377bc",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://dictionary.cambridge.org/us/dictionary/english/broken",
+      "content_sha256": "096c7e2a200b3ec088b996a5fcaade51c8b99265cfeff6e60bcea7f73822ebb7",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://au.rollingstone.com/music/music-lists/-85412/broken-social-scene-anthems-for-a-seventeen-year-old-girl-85573/",
+      "content_sha256": "312e50a37efb0a995265141eff3cd0a4bca284ca1335b51c1fa6167b08b66bb2",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-bss",
+      "url": "https://www.imdb.com/title/tt1441940",
+      "content_sha256": "f991a784e95d3a1ae86ef3bfa3d417cc8d9672e18d93cc9fbaaface7172afdb8",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://www.rollingstone.com/tv-movies/tv-movie-news/beck-cuts-scott-pilgrim-songs-236763/",
+      "content_sha256": "62e1553d2c070143328d47a3f49b382caf576277afef475887d2b362caea02d7",
+      "relevance": 1,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: related background. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://en.wikipedia.org/wiki/Scott_Pilgrim_vs._the_World",
+      "content_sha256": "b13d90642814a15d7b92b1cbebaafce62f82248bbb1f55207e589f6cb51cf734",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://music.youtube.com/watch?v=ArkDWrHmmXI",
+      "content_sha256": "351848fcb4c315f5be8560afe4a92bfedd5cbcbc9e53bb70a7035c067ab6d0e6",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://myanimelist.net/forum/?topicid=2132889",
+      "content_sha256": "925ac3eec938d5a2d5e0d92b6ac6d781bb3aa7ae6446b1e69054fc1c47c7d73f",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-metric",
+      "url": "https://m.imdb.com/name/nm1900479/",
+      "content_sha256": "e54af0a97220a7bcb063cbf298187ec40bdae8c1644230916f3de41880d68f6a",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://www.fender.com/articles/setup/alternate-guitar-tuning",
+      "content_sha256": "2b51afe8abf39eb3feb7158116166a6cea7e6df04fa3fbdd417611e957ce2a09",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://www.allmusic.com/artist/sonic-youth-mn0000755156",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://asia.sega.com/SonicTheHedgehog/en/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-sonic",
+      "url": "https://www.sonicdrivein.com/?msockid=191b43efcb6c6c5b3a0a543bcabc6d0e",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.psychedelicbabymag.com/2017/10/courtney-barnett-kurt-vile-lotta-sea.html",
+      "content_sha256": "233b76b6ffc747d90aded7931ca9c37236ee13e481575546a91406263c610fad",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.kurtgeiger.com/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.youtube.com/watch?v=JQs5XagfheI",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.shoeaholics.com/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.kurtgeiger.us/women/bags",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://www.kurtgeiger.com/women/shoes",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "music-duet",
+      "url": "https://global.kurtgeiger.com/sale",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.digitalocean.com/community/tutorials/python-valueerror-exception-handling-examples",
+      "content_sha256": "fe16860a0518727206572e506be3d16e23ee487a39e19a8fcd293be1dc3699bb",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.geeksforgeeks.org/python/exception-groups-in-python/",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://www.w3schools.com/python/python_intro.asp",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://github.com/python/cpython/issues/116720",
+      "content_sha256": "f4e4480e3bed9c16b64e74a4b29a74a9872fbac8343bf763e4b7afa9f26832fb",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://wiki.python.org/moin/BeginnersGuide",
+      "content_sha256": "62bbad6cb14e0c72f7c9f111e0685ffcd4ae24f2b87dfe2af698b1eaa8b35af9",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://stackoverflow.com/questions/74898922/exception-handling-in-python-asyncio-code",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q03",
+      "url": "https://stackoverflow.com/questions/77864441/still-getting-task-exception-was-never-retrieved-even-after-calling-exception",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/E1tLTfF-002FXL-3y%40gemulon.postgresql.org",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/20220124173548.GV23027%40telsasoft.com",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/CAKFQuwbnT_B9i4NFWXX0V%3DxdcsTi0XTHvm6NVcr8XHi39O_A7w%40mail.gmail.com",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/CAAhFRxgVg%2BEbdyryZ8BOdrMtkfYPYxfi99v5-Cg2GBO%2BJEb1JQ%40mail.gmail.com",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q04",
+      "url": "https://www.postgresql.org/message-id/20220330192105.GI28503%40telsasoft.com",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://github.com/rust-lang/rust/issues/87276",
+      "content_sha256": "375e0949ce607988aadd41f9487ade0f2fdee24f3ece4387bbd030ac429512b6",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://www.w3schools.com/rust/index.php",
+      "content_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://doc.rust-lang.org/book/print.html",
+      "content_sha256": "a69225a8342bfec09ca28a1a5ccfa3c56de267bf8483a4739a5ed94a580f559a",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://steamcommunity.com/app/252490",
+      "content_sha256": "5dc389aa7421544d0182c7b7f0799417a6ddb5d84db0897a3c52e1b037e21165",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://medium.com/@deckarep/paradigms-of-rust-for-the-go-developer-210f67cd6a29",
+      "content_sha256": "e79c7139421c81e1cd08d5a4ff5b496749eace4b98c8a9ffafd1aa67de1dac7a",
+      "relevance": 2,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: direct topic. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q07",
+      "url": "https://dev-doc.rust-lang.org/beta/book/print.html",
+      "content_sha256": "f3a49ea3f869e30f827337067cf00ae6ce7c9d750e73d682c30fe70a3b48c01d",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.londoncitybreak.com/science-museum",
+      "content_sha256": "20df7aad6e949d8633a569bd741978904befb7295210f87d41d0055dc9fccf72",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.glasgowsciencecentre.org/visit/our-opening-hours",
+      "content_sha256": "1ef5a78ce203c09747c3e36d5ed2533ede6afbd5464ff238e4bfc4c3965f8b04",
+      "relevance": 0,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: wrong entity/generic page. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://blog.sciencemuseum.org.uk/",
+      "content_sha256": "ca08e0a6a145086a8739ab27d479a81a07cbd54f56d27d54461e657ddea5aec4",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://www.wikiopeninghours.co.uk/en/sw7-2bx/london/art-culture-museum/science-museum-C2KVDNLOV01HxvgE",
+      "content_sha256": "a3787506110c117629f469156d0ca7aae01b30699e7fdb95373d4380086bf069",
+      "relevance": 2,
+      "evidence": 1,
+      "rationale": "Separate pre-rank arm: direct topic. Retained substantive supporting fact; not a complete-answer judgment."
+    },
+    {
+      "query_id": "q10",
+      "url": "https://plantriplondon.com/visit-the-science-museum/",
+      "content_sha256": "f2f81c9e40eb97e1ddc51a25bb5834b09d90f80e8f7e500f7488f5d66baf5060",
+      "relevance": 1,
+      "evidence": 0,
+      "rationale": "Separate pre-rank arm: related background. No useful requested fact in retained body."
+    }
+  ]
+}
