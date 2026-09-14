@@ -73,7 +73,7 @@ struct SearchArgs {
     #[arg(long, value_parser = positive_usize, value_name = "N")]
     provider_quorum: Option<usize>,
 
-    /// Stop fanout after N unique candidates per query (default: 5; overrides provider quorum).
+    /// Stop fanout after N unique candidates per query (default: 5).
     #[arg(long, value_parser = positive_usize, value_name = "N")]
     min_results: Option<usize>,
 
@@ -232,14 +232,13 @@ impl SearchArgs {
     }
 
     fn search_options(&self) -> SearchOptions {
-        let budgeted_default = self.mode.is_none() && self.search_budget.is_some();
         SearchOptions {
             engines: self.engines.clone(),
             mode: self.mode.unwrap_or_default(),
             region: self.region.clone(),
             time_filter: self.time_filter,
             max_concurrency: self.search_concurrency,
-            provider_quorum: self.provider_quorum.or(budgeted_default.then_some(1)),
+            provider_quorum: self.provider_quorum,
             min_results: self.min_results,
             search_budget: self.effective_search_budget(),
         }
@@ -1436,8 +1435,8 @@ mod tests {
         let _telemetry = kestrelsearch::telemetry::test_export_guard();
         for (flags, mode, quorum) in [
             (vec![], SearchMode::Fanout, None),
-            (vec!["--search-budget", "3"], SearchMode::Fanout, Some(1)),
-            (vec!["--search-budget", "0.5"], SearchMode::Fanout, Some(1)),
+            (vec!["--search-budget", "3"], SearchMode::Fanout, None),
+            (vec!["--search-budget", "0.5"], SearchMode::Fanout, None),
             (
                 vec!["--search-budget", "3", "--provider-quorum", "2"],
                 SearchMode::Fanout,
@@ -1464,7 +1463,7 @@ mod tests {
             (
                 vec!["--engine", "bing", "--search-budget", "3"],
                 SearchMode::Fanout,
-                Some(1),
+                None,
             ),
         ] {
             let cli = Cli::try_parse_from(
@@ -2069,6 +2068,9 @@ mod tests {
         let skill = generate_skill_md(&mut Cli::command());
         assert!(skill.contains("--min-results"));
         assert!(skill.contains("Provider quorum is ignored"));
+        assert!(skill.contains(
+            "Omitting the minimum still means five, regardless of quorum or search budget"
+        ));
         assert!(skill.contains("five\n  unique accepted candidates"));
         assert!(skill.contains("Query constraints apply before counting"));
         assert!(!skill.contains("selects quorum 1"));

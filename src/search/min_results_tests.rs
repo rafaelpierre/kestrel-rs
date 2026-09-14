@@ -40,8 +40,7 @@ async fn unique_threshold_ignores_duplicates_and_preserves_fusion() {
     ));
     pending.push(Box::pin(std::future::pending()));
     let signal = Arc::new(AtomicU8::new(FANOUT_RUNNING));
-    let (outcomes, cancelled) =
-        collect_fanout_signalled(pending, None, Some(5), Some(signal.clone())).await;
+    let (outcomes, cancelled) = collect_fanout_signalled(pending, 5, Some(signal.clone())).await;
     assert_eq!(cancelled, 1);
     assert_eq!(signal.load(Ordering::Relaxed), FANOUT_MIN_RESULTS);
     let fused = merge_outcomes(outcomes).unwrap();
@@ -51,7 +50,7 @@ async fn unique_threshold_ignores_duplicates_and_preserves_fusion() {
 }
 
 #[tokio::test]
-async fn minimum_overrides_quorum_without_allowing_quorum_to_stop_early() {
+async fn minimum_counts_results_independently_of_provider_count() {
     let _telemetry = crate::telemetry::test_export_guard();
     for (first, second, minimum) in [
         (vec!["a", "b", "c", "d", "e"], vec!["f"], 5),
@@ -61,8 +60,7 @@ async fn minimum_overrides_quorum_without_allowing_quorum_to_stop_early() {
         pending.push(batch(0, results(&first, Engine::Bing)));
         pending.push(batch(1, results(&second, Engine::Yahoo)));
         pending.push(batch(2, results(&["c", "d", "e"], Engine::Duckduckgo)));
-        let (outcomes, cancelled) =
-            collect_fanout_signalled(pending, Some(2), Some(minimum), None).await;
+        let (outcomes, cancelled) = collect_fanout_signalled(pending, minimum, None).await;
         if first.len() == 5 {
             assert_eq!(outcomes.len(), 1);
             assert_eq!(cancelled, 2);
@@ -85,7 +83,7 @@ async fn exhausted_providers_return_partial_results_or_existing_failure() {
             pending.push(batch(1, results(&["a"], Engine::Bing)));
             pending.push(batch(2, vec![]));
         }
-        let (outcomes, cancelled) = collect_fanout_signalled(pending, None, Some(5), None).await;
+        let (outcomes, cancelled) = collect_fanout_signalled(pending, 5, None).await;
         assert_eq!(cancelled, 0);
         let fused = merge_outcomes(outcomes);
         if has_results {
@@ -170,7 +168,7 @@ async fn threshold_cancels_http2_body_without_closing_shared_connection() {
         pending.push(batch(1, results(&["a", "b", "c", "d", "e"], Engine::Bing)));
         // An unrelated request already uses the same pool when the slow read is dropped.
         let unrelated = client.get(format!("{url}/ok")).send().await.unwrap();
-        let (_, cancelled) = collect_fanout_signalled(pending, None, Some(5), None).await;
+        let (_, cancelled) = collect_fanout_signalled(pending, 5, None).await;
         assert_eq!(cancelled, 1);
         assert_eq!(unrelated.text().await.unwrap(), "ok");
         assert_eq!(

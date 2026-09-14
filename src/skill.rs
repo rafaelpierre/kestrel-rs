@@ -464,6 +464,7 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
 - Search streams normalized results from concurrent providers and stops at five
   unique accepted candidates per query by default. `--min-results N` changes this
   minimum. Provider quorum is ignored, including explicit `--provider-quorum`.
+  Omitting the minimum still means five, regardless of quorum or search budget.
   Duplicate URLs, errors, challenges, and empty responses do not advance the count.
   Query constraints apply before counting. Remaining requests are cancelled and
   their unread results ignored; fusion preserves provenance already received.

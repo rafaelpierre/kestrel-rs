@@ -68,8 +68,7 @@ pub(super) async fn run(
                 Arc::clone(&diagnostics),
                 &options.region,
                 options.time_filter,
-                options.provider_quorum,
-                Some(options.min_results.unwrap_or(5)),
+                options.min_results.unwrap_or(5),
                 deadline,
                 progress.clone(),
             )
@@ -181,6 +180,7 @@ pub(super) mod tests {
         Recover,
         Result,
         DelayedResult,
+        Records(usize, u64),
         Empty,
         Hard,
         Challenge,
@@ -215,6 +215,24 @@ pub(super) mod tests {
             };
             record_attempt();
             match self.behavior.get(&key).copied().unwrap_or(Behavior::Empty) {
+                Behavior::Records(count, delay) => {
+                    tokio::time::sleep(Duration::from_secs(delay)).await;
+                    let results = (0..count)
+                        .map(|index| {
+                            SearchResult::parsed(
+                                format!("{engine} {index}"),
+                                format!("https://example.com/{engine}/{index}"),
+                                String::new(),
+                                "evidence".into(),
+                            )
+                        })
+                        .collect();
+                    Ok(ProviderResponse {
+                        results,
+                        raw_result_count: count,
+                        retries: 0,
+                    })
+                }
                 Behavior::Deadline => std::future::pending().await,
                 Behavior::Recover if call == 1 => std::future::pending().await,
                 Behavior::Hard => Err(KestrelError::Search(
@@ -278,6 +296,72 @@ pub(super) mod tests {
                 ),
             )
             .await
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn compatibility_quorum_neither_stops_early_nor_delays_result_minimum() {
+        // Exercise public options through production discovery, not a collector shim.
+        for quorum in [None, Some(0), Some(1), Some(2), Some(usize::MAX)] {
+            for (minimum, count, seconds, cancelled) in [
+                (None, 5, 2, 2),
+                (Some(1), 1, 1, 3),
+                (Some(5), 5, 2, 2),
+                (Some(6), 7, 3, 1),
+                (Some(8), 7, 15, 0),
+            ] {
+                let fixture = Fixture::new(&[
+                    ("q", Engine::Bing, Behavior::Records(1, 1)),
+                    ("q", Engine::Yahoo, Behavior::Records(4, 2)),
+                    ("q", Engine::Yep, Behavior::Records(2, 3)),
+                    ("q", Engine::Mojeek, Behavior::Deadline),
+                ]);
+                let options = SearchOptions {
+                    engines: vec![Engine::Bing, Engine::Yahoo, Engine::Yep, Engine::Mojeek],
+                    provider_quorum: quorum,
+                    min_results: minimum,
+                    search_budget: Some(Duration::from_secs(15)),
+                    ..Default::default()
+                };
+                let started = tokio::time::Instant::now();
+                let report = FIXTURE
+                    .scope(
+                        fixture.clone(),
+                        search_many_detailed(&["q".into()], &options),
+                    )
+                    .await
+                    .unwrap();
+                assert_eq!(
+                    report.results.len(),
+                    count,
+                    "quorum={quorum:?}, minimum={minimum:?}"
+                );
+                assert_eq!(started.elapsed(), Duration::from_secs(seconds));
+                assert_eq!(report.cancelled, cancelled);
+                assert_eq!(
+                    report
+                        .providers
+                        .iter()
+                        .filter(|p| p.outcome == "cancelled_min_results")
+                        .count(),
+                    cancelled
+                );
+                assert!(
+                    report
+                        .providers
+                        .iter()
+                        .all(|p| p.outcome != "cancelled_quorum")
+                );
+                for engine in options.engines {
+                    assert_eq!(fixture.calls("q", engine), 1);
+                }
+                assert!(
+                    report
+                        .results
+                        .iter()
+                        .all(|r| r.query.as_deref() == Some("q") && r.sources.len() == 1)
+                );
+            }
+        }
     }
 
     #[test]

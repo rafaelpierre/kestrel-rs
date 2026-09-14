@@ -6,8 +6,7 @@ one-based `discovery_attempt`; public struct literals must supply this field.
 The CLI adds a default bounded diagnostics envelope; `--no-diagnostics` restores
 the previous JSON envelope. See [caller diagnostics](structured-diagnostics.md).
 Every scheduled provider/query operation submits one `outcome-*.json`, including
-all-failed searches, deadline expiry, caller cancellation and quorum cancellation.
-Fallback providers that are never selected are not scheduled operations.
+all-failed searches, deadline expiry, caller cancellation and result-minimum cancellation.
 
 The existing outcome fields are retained. A nested `lifecycle` object has
 `schema_version: 1` and contains the logical record, attempt records and timings.
@@ -74,14 +73,15 @@ Processing includes existing tracing and bookkeeping; it is kept out of network
 and parsing samples. Backoff is not part of send latency.
 
 A censored interval records elapsed time observed before interruption, a lower
-bound rather than a completed latency sample. Deadline and caller/quorum drops
+bound rather than a completed latency sample. Deadline and caller/result-minimum drops
 censor the active phase; client timeouts censor the affected send/body phase.
 Earlier intervals and completed attempts stay complete. Cancellation in queue
 or before polling creates no send; cancellation during backoff creates no extra
 attempt. `cancellation_phase` identifies the interrupted logical phase, and
-`logical_outcome` distinguishes `deadline`, `cancelled_quorum`,
-`cancelled_min_results` (the unique-result threshold was met; quorum is ignored), and
-`cancelled_caller` from completed results, empty results and errors.
+`logical_outcome` distinguishes `deadline`, `cancelled_min_results` (the unique-result
+threshold was met), and `cancelled_caller` from completed results, empty results
+and errors. Legacy `cancelled_quorum` records remain readable and recognized by
+CLI diagnostics, but current search never emits that outcome.
 
 Do not combine censored intervals with completed latency samples. Also separate
 response, transport-failure and body-failure samples when reporting distributions.
@@ -100,7 +100,7 @@ and the CLI's one-second exit flush.
 
 Mocked tests exercise both HTTP backends, correlation, redirects, retry recovery
 and exhaustion, typed errors, challenges, interrupted bodies, backoff, queueing,
-never-polled jobs, deadlines and quorum cancellation. No live-provider availability
+never-polled jobs, deadlines and result-minimum cancellation. No live-provider availability
 claim follows from those tests.
 
 Streaming fanout can return records from a provider whose body was cancelled.

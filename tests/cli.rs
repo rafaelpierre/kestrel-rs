@@ -317,6 +317,11 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(skill.contains("--min-results"));
     assert!(skill.contains("Provider quorum is ignored"));
     assert!(
+        skill.contains(
+            "Omitting the minimum still means five, regardless of quorum or search budget"
+        )
+    );
+    assert!(
         skill
             .contains("[default: duckduckgo bing yahoo dogpile ecosia swisscows yep qwant mojeek]")
     );

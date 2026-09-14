@@ -27,7 +27,6 @@ mod streaming;
 
 // Per-query cancellation reason, shared with provider lifecycle guards.
 const FANOUT_RUNNING: u8 = 0;
-const FANOUT_QUORUM: u8 = 1;
 const FANOUT_MIN_RESULTS: u8 = 2;
 
 tokio::task_local! {
@@ -483,8 +482,7 @@ fn run_fanout_query<'a>(
     diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
     region: &'a str,
     time_filter: TimeFilter,
-    provider_quorum: Option<usize>,
-    min_results: Option<usize>,
+    min_results: usize,
     deadline: Option<tokio::time::Instant>,
     progress: Option<crate::recovery::ProgressQueue>,
 ) -> impl Future<Output = (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)> + 'a {
@@ -539,14 +537,14 @@ fn run_fanout_query<'a>(
                 recovered.len() - complete
             );
         }
-        let target_reached = min_results.is_some_and(|n| {
+        let target_reached = {
             recovered
                 .values()
                 .flat_map(|s| s.records.iter().map(result_key))
                 .collect::<HashSet<_>>()
                 .len()
-                >= n
-        });
+                >= min_results
+        };
         let pending = FuturesUnordered::new();
         let (sender, receiver) = tokio::sync::mpsc::channel(1);
         let fanout_cancelled = Arc::new(AtomicU8::new(FANOUT_RUNNING));
@@ -582,11 +580,7 @@ fn run_fanout_query<'a>(
                 query: query.to_owned(),
             };
             pending.push(async move {
-                let outcome = if min_results.is_some() {
-                    streaming::PUBLISHER.scope(publisher, job).await
-                } else {
-                    job.await
-                };
+                let outcome = streaming::PUBLISHER.scope(publisher, job).await;
                 (index, outcome)
             });
         }
@@ -595,14 +589,9 @@ fn run_fanout_query<'a>(
         async move {
             let output = streaming::collect_replaying(
                 pending,
-                provider_quorum,
                 min_results,
                 Some(fanout_cancelled),
-                if min_results.is_some() {
-                    Some(receiver)
-                } else {
-                    None
-                },
+                Some(receiver),
                 progress,
                 deadline,
                 recovered,
@@ -619,32 +608,24 @@ fn run_fanout_query<'a>(
 #[cfg(test)]
 async fn collect_fanout<F>(
     pending: FuturesUnordered<F>,
-    provider_quorum: Option<usize>,
+    min_results: usize,
 ) -> (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)
 where
     F: Future<Output = (usize, Result<Vec<SearchResult>, KestrelError>)>,
 {
-    collect_fanout_signalled(pending, provider_quorum, None, None).await
+    collect_fanout_signalled(pending, min_results, None).await
 }
 
 #[cfg(test)]
 async fn collect_fanout_signalled<F>(
     pending: FuturesUnordered<F>,
-    provider_quorum: Option<usize>,
-    min_results: Option<usize>,
+    min_results: usize,
     fanout_cancelled: Option<Arc<AtomicU8>>,
 ) -> (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)
 where
     F: Future<Output = (usize, Result<Vec<SearchResult>, KestrelError>)>,
 {
-    streaming::collect(
-        pending,
-        provider_quorum,
-        min_results,
-        fanout_cancelled,
-        None,
-    )
-    .await
+    streaming::collect(pending, min_results, fanout_cancelled, None).await
 }
 
 /// Trim query edges, drop empty queries and retain the first occurrence of each
@@ -749,7 +730,7 @@ fn run_one_job<'a>(
         });
         index
     };
-    // Also records elapsed time when a quorum drops this future mid-request.
+    // Also records elapsed time when the result minimum drops this future mid-request.
     let run_id = DIAGNOSTIC_RUN_ID
         .try_with(Clone::clone)
         .unwrap_or_else(|_| uuid::Uuid::new_v4().to_string());
@@ -879,7 +860,6 @@ impl Drop for DiagnosticTimer {
                     .map_or(FANOUT_RUNNING, |s| s.load(Ordering::Relaxed))
                 {
                     FANOUT_MIN_RESULTS => "cancelled_min_results",
-                    FANOUT_QUORUM => "cancelled_quorum",
                     _ => "cancelled_caller",
                 }
                 .into();
@@ -2789,7 +2769,7 @@ mod tests {
 
     // Native passthrough still accepts provider results without lexical checks.
     #[tokio::test]
-    async fn native_bing_unrelated_results_satisfy_quorum() {
+    async fn native_bing_unrelated_results_satisfy_explicit_minimum() {
         let _telemetry = crate::telemetry::test_export_guard();
         type Outcome = (usize, Result<Vec<SearchResult>, KestrelError>);
         let pending: FuturesUnordered<futures_util::future::BoxFuture<'static, Outcome>> =
@@ -2805,7 +2785,7 @@ mod tests {
             (0, Ok(response.results))
         }));
         pending.push(Box::pin(std::future::pending()));
-        let (completed, cancelled) = collect_fanout(pending, Some(1)).await;
+        let (completed, cancelled) = collect_fanout(pending, 1).await;
         assert_eq!(completed.len(), 1);
         assert_eq!(completed[0].as_ref().unwrap().len(), 2);
         assert_eq!(cancelled, 1);
@@ -2921,8 +2901,24 @@ mod tests {
         }
     }
 
+    #[test]
+    fn legacy_quorum_diagnostics_still_deserialize() {
+        let legacy = serde_json::json!({
+            "engine": "bing", "query": "q", "elapsed_ms": 1,
+            "result_count": 0, "retries": 0, "success": false,
+            "outcome": "cancelled_quorum", "error": null,
+            "raw_result_count": 0, "filtered_count": 0
+        });
+        let diagnostic: ProviderSearchDiagnostic = serde_json::from_value(legacy).unwrap();
+        assert_eq!(diagnostic.outcome, "cancelled_quorum");
+        assert_eq!(
+            serde_json::to_value(diagnostic).unwrap()["outcome"],
+            "cancelled_quorum"
+        );
+    }
+
     #[tokio::test]
-    async fn fanout_quorum_keeps_engine_order_and_cancels_straggler() {
+    async fn fanout_minimum_keeps_engine_order_and_cancels_straggler() {
         let _telemetry = crate::telemetry::test_export_guard();
         use std::pin::Pin;
 
@@ -2943,7 +2939,7 @@ mod tests {
             std::future::pending::<(usize, Result<Vec<SearchResult>, KestrelError>)>().await
         }));
 
-        let (outcomes, cancelled) = collect_fanout(pending, Some(2)).await;
+        let (outcomes, cancelled) = collect_fanout(pending, 2).await;
         assert_eq!(cancelled, 1);
         assert_eq!(outcomes.len(), 2);
         assert_eq!(outcomes[0].as_ref().unwrap()[0].title, "duckduckgo");
@@ -2999,7 +2995,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn fanout_quorum_ignores_empty_and_failed_providers() {
+    async fn fanout_minimum_ignores_empty_and_failed_providers() {
         let _telemetry = crate::telemetry::test_export_guard();
         let pending = FuturesUnordered::new();
         for (index, outcome) in [
@@ -3012,7 +3008,7 @@ mod tests {
         {
             pending.push(std::future::ready((index, outcome)));
         }
-        let (outcomes, cancelled) = collect_fanout(pending, Some(1)).await;
+        let (outcomes, cancelled) = collect_fanout(pending, 1).await;
         assert_eq!(outcomes.len(), 3);
         assert_eq!(cancelled, 0);
         assert_eq!(merge_outcomes(outcomes).unwrap().len(), 1);
@@ -3040,7 +3036,7 @@ mod tests {
                 });
             }
             let (outcomes, cancelled) =
-                tokio::time::timeout(Duration::from_secs(1), collect_fanout(pending, None))
+                tokio::time::timeout(Duration::from_secs(1), collect_fanout(pending, 5))
                     .await
                     .expect("all providers must be polled concurrently");
             assert_eq!(cancelled, 0);
@@ -3063,7 +3059,7 @@ mod tests {
             result_count: 0,
             retries: 0,
             success: false,
-            outcome: "cancelled_quorum".into(),
+            outcome: "cancelled_min_results".into(),
             error: None,
             raw_result_count: 0,
             filtered_count: 0,
@@ -3080,7 +3076,7 @@ mod tests {
                 recorder: Arc::clone(&task_recorder),
                 completed: false,
                 deadline: false,
-                fanout_cancelled: Some(Arc::new(AtomicU8::new(FANOUT_QUORUM))),
+                fanout_cancelled: Some(Arc::new(AtomicU8::new(FANOUT_MIN_RESULTS))),
             };
             PROVIDER_RECORDER
                 .scope(task_recorder, async {
@@ -3096,7 +3092,7 @@ mod tests {
         drop(job);
         let entries = diagnostics.lock().unwrap();
         assert_eq!(entries[0].retries, 1);
-        assert_eq!(entries[0].outcome, "cancelled_quorum");
+        assert_eq!(entries[0].outcome, "cancelled_min_results");
         let snapshot = recorder.lock().unwrap().finish(false);
         assert_eq!(snapshot.send_attempts, 2);
         assert_eq!(snapshot.cancellation_phase, Some(Phase::Backoff));
@@ -3171,7 +3167,7 @@ mod tests {
                 )
             }));
             let (outcomes, cancelled) =
-                tokio::time::timeout(Duration::from_secs(1), collect_fanout(pending, None))
+                tokio::time::timeout(Duration::from_secs(1), collect_fanout(pending, 5))
                     .await
                     .expect("fanout must finish at its deadline");
             assert_eq!(cancelled, 0);

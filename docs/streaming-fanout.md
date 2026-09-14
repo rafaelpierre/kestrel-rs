@@ -4,8 +4,8 @@ Fanout starts enabled providers concurrently, subject to `max_concurrency`. Its
 per-query minimum is **five valid, unique results** unless `--min-results N` /
 `SearchOptions::min_results` overrides it. There is no separate streaming flag.
 The collector cancels unfinished requests immediately after the minimum is met.
-It does not wait for every provider. The result minimum overrides
-`provider_quorum`, which remains accepted for compatibility. Fusion combines
+It does not wait for every provider. `provider_quorum` remains accepted and ignored
+for compatibility, including when the result minimum is omitted (five). Fusion combines
 available sources and does not require a minimum number of providers.
 
 ## One result contract
