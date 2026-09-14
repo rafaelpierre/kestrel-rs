@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.1.0](https://github.com/rafaelpierre/kestrel-rs/compare/v7.0.0...v7.1.0) - 2026-09-14
+
+### Added
+
+- define bounded semantic scoring and rank combination
+
+### Other
+
+- Merge pull request #192 from rafaelpierre/codex/112-semantic-contract
+
 ## [7.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v6.0.5...v7.0.0) - 2026-09-14
 
 ### Added
