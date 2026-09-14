@@ -26,7 +26,13 @@ pub(crate) fn bing_request(
     if !country.is_empty() {
         params.push(("cc", country));
     }
-    client.get("https://www.bing.com/search").query(&params)
+    // Serialize first so literal '+' becomes %2B before form-encoded spaces
+    // become %20. This matches browser space encoding without changing values.
+    let encoded = url::form_urlencoded::Serializer::new(String::new())
+        .extend_pairs(params)
+        .finish()
+        .replace('+', "%20");
+    client.get(format!("https://www.bing.com/search?{encoded}"))
 }
 
 pub(crate) async fn search_bing(

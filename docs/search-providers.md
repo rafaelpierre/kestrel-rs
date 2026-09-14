@@ -184,3 +184,12 @@ waits stop the request and invalid values use bounded jittered backoff.
 This is a behavior-preserving internal refactor with no new dependencies or
 public API/CLI/schema changes. Streaming publication, cancellation, parse-once
 ownership and the decompressed response-size limit remain unchanged.
+
+## Bing query encoding
+
+Bing requests use `/search?q=...` with spaces encoded as `%20`, matching the
+browser form observed in issue #200. Literal plus signs remain `%2B`; Unicode,
+percent signs and query delimiters retain their URL-encoded values. An explicit
+region adds `cc`. No `pq`, AJAX or browser session parameters are added.
+This is request-format alignment, not a demonstrated relevance improvement:
+small direct-HTTP comparisons returned relevant uv results with both encodings.

@@ -64,12 +64,12 @@ async fn isolated(
         builder = builder.query(&[("form", "QBRE")]);
     }
     let mut request = builder.build()?;
-    if variant == "bing-percent-space" {
+    if variant == "bing-plus-space" {
         let query = request
             .url()
             .query()
             .unwrap_or_default()
-            .replace('+', "%20");
+            .replace("%20", "+");
         request.url_mut().set_query(Some(&query));
     }
     let initial = request.url().clone();
@@ -220,7 +220,7 @@ async fn capture_live_matrix() {
         "fanout-passthrough-min20",
     ];
     let variants: &[&str] = if std::env::var_os("KESTREL_BING_ENCODING_ONLY").is_some() {
-        &["bing-standard", "bing-percent-space"]
+        &["bing-standard", "bing-plus-space"]
     } else if std::env::var_os("KESTREL_BING_TRANSPORT_ONLY").is_some() {
         &[
             "bing-standard",
