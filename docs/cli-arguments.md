@@ -9,7 +9,7 @@ search defaults to 2,000 extracted characters per page and fetch to 20,000.
 | --- | --- |
 | Query, `--query`, `--engine`, `--region`, `--time-filter` | Provider queries and filters; unaffected by fetching or ranking switches. |
 | `--search-concurrency` | Concurrent provider requests. |
-| `--search-budget`, `--no-search-budget` | Mutually exclusive total provider deadline controls; excludes page fetching. |
+| `--search-budget`, `--no-search-budget` | Mutually exclusive initial discovery budget / disable controls; excludes page fetching. Empty deadline-limited queries can retry within the [bounded policy](discovery-retries.md). |
 | `--mode fanout`, `--provider-quorum` | Fanout is the only mode; provider quorum is ignored by result-count stopping. |
 | `--min-results` | Provider stopping threshold per query (default five unique accepted candidates); independent of fetch and return limits, and not a guarantee. |
 | `--top-k`, `--fetch-candidates` | Returned result ceiling versus page candidate ceiling (default three times top-k). A smaller candidate ceiling can intentionally return fewer than top-k results. |

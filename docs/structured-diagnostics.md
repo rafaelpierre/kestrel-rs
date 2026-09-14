@@ -150,3 +150,15 @@ Candidate evidence is summarized before ranking; final result positions are adde
 after truncation. JSON diagnostics do not retain a duplicate set of candidate page
 bodies. A full pre-ranking snapshot is retained only when both benchmark artifact
 environment variables are present; that configuration is resolved once.
+
+## Discovery retries
+
+Provider rows now add one-based `discovery_attempt`; `retries` still counts HTTP
+retries within that attempt. Provider rows/outcome totals retain all scheduled
+attempts, in scheduling order; query completion conditions use the latest
+observation per provider/query. `rate_limited_deadline` reports an attempt
+deadline after observed HTTP 429 or Retry-After guidance, and does not authorize
+another discovery retry. Like `deadline`, it can retain streamed candidates.
+Earlier deadline rows remain even when a later attempt succeeds; they do not
+make that query's latest completion deadline-limited. Existing bounds apply.
+See [policy and compatibility](discovery-retries.md).

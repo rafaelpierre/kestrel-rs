@@ -93,7 +93,8 @@ async fn both_backends_record_status_challenge_retry_after_and_raw_correlation()
     for yahoo in [false, true] {
         for status in [200, 403, 429] {
             let server = MockServer::start().await;
-            let count = if status == 429 { 3 } else { 1 };
+            // Detected challenges never enter transport retry, regardless of status.
+            let count = 1;
             Mock::given(method("GET"))
                 .respond_with(
                     ResponseTemplate::new(status)
@@ -570,7 +571,7 @@ async fn yahoo_empty_500_redirects_preserve_recovery_and_unknown_challenge() {
                     ResponseTemplate::new(200)
                         .set_body_string("<div class='msgNoResults'>No results</div>")
                 } else {
-                    ResponseTemplate::new(500).insert_header("retry-after", "120")
+                    ResponseTemplate::new(500).insert_header("retry-after", "0")
                 }
             })
             .mount(&server)
@@ -592,7 +593,7 @@ async fn yahoo_empty_500_redirects_preserve_recovery_and_unknown_challenge() {
         for attempt in snapshot.attempts.iter().take(recover_on - 1) {
             assert_eq!(attempt.http_status, Some(500));
             assert_eq!(attempt.challenge, Challenge::Unknown);
-            assert_eq!(attempt.retry_after.as_deref(), Some("120"));
+            assert_eq!(attempt.retry_after.as_deref(), Some("0"));
             assert_eq!(attempt.outcome, Some("response"));
             assert_eq!(attempt.transport_error, None);
         }
@@ -742,7 +743,7 @@ async fn successful_http_challenge_is_one_logical_failure_without_changing_resul
             assert_eq!(entries.len(), 1);
             assert_eq!(entries[0].outcome, "challenge");
             let normal = serde_json::to_value(&entries[0]).unwrap();
-            assert_eq!(normal.as_object().unwrap().len(), 10);
+            assert_eq!(normal.as_object().unwrap().len(), 11);
             assert!(normal.get("lifecycle").is_none());
         })
         .await;

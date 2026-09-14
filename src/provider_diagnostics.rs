@@ -186,6 +186,15 @@ impl Recorder {
         self.current = Some((Phase::Send, Instant::now()));
     }
 
+    // A discovery retry must not bypass a server rate limit, even if the
+    // attempt deadline interrupts body reading or its advised backoff.
+    pub fn rate_limited(&self) -> bool {
+        self.snapshot
+            .attempts
+            .iter()
+            .any(|a| a.http_status == Some(429) || a.retry_after.is_some())
+    }
+
     pub fn headers(&mut self, status: u16, retry_after: Option<String>) {
         if let Some(attempt) = self.snapshot.attempts.last_mut() {
             attempt.http_status = Some(status);
