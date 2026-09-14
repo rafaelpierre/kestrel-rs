@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.5](https://github.com/rafaelpierre/kestrel-rs/compare/v6.0.4...v6.0.5) - 2026-09-14
+
+### Fixed
+
+- avoid candidate body copies when artifact capture is disabled
+
+### Other
+
+- Merge pull request #183 from rafaelpierre/codex/17-nonblocking-diagnostics
+- Merge pull request #181 from rafaelpierre/codex/116-completed-parse-reuse
+- Merge pull request #180 from rafaelpierre/release-plz-2026-09-14T10-35-59Z
+
 ## [6.0.4](https://github.com/rafaelpierre/kestrel-rs/compare/v6.0.3...v6.0.4) - 2026-09-14
 
 ### Fixed
