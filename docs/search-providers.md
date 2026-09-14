@@ -108,7 +108,9 @@ measures three searches through one client without confusing this with startup.
 - `--ranking-policy provider|snippet|body|hybrid|rrf` selects opt-in policies.
   Body retains legacy BM25 behavior and requires fetching. Snippet and hybrid
   retain candidates with missing content; hybrid ignores the synthetic Source
-  prefix. RRF fuses original provider ranks. Experimental scores do not replace
+  prefix. RRF fuses original provider ranks without lexical tokenization or BM25
+  scoring. Snippet/hybrid and the metadata fetch threshold precompute query-term
+  statistics once per corpus; scores and stable ties are preserved. Experimental scores do not replace
   the public content-only `bm25_score` field.
 - `KESTRELSEARCH_PROVIDER_TRACE_DIR` captures response bodies, final URL, status,
   negotiated HTTP version and generated browser profiles. Treat traces as local

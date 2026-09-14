@@ -236,3 +236,6 @@ bodies for relevance/evidence; extraction success and pool size do not imply
 quality. Keep missing judgments unknown. Record all insufficient pools and
 errors, even if no query qualifies. Use a fresh output directory for each run;
 the runner refuses to overwrite an earlier experiment.
+
+For the offline positive-BM25/RRF optimization benchmark, see
+[ranking statistics scaling](ranking-statistics.md).

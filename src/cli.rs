@@ -1893,6 +1893,14 @@ mod tests {
     }
 
     #[test]
+    fn generated_skill_documents_ranking_statistics() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("without tokenizing titles, snippets or bodies"));
+        assert!(skill.contains("precompute query-term BM25 statistics"));
+        assert!(skill.contains("scores, inclusive thresholds and stable ties are unchanged"));
+    }
+
+    #[test]
     fn generated_skill_documents_local_diagnostic_delivery() {
         let skill = generate_skill_md(&mut Cli::command());
         for contract in [
