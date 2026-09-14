@@ -214,8 +214,7 @@ async fn both_clients_stream_normalized_results_and_cancel_unfinished_bodies() {
                     }));
                 }
                 drop(sender);
-                let (outcomes, cancelled) =
-                    collect(pending, Some(2), Some(5), Some(signal), Some(receiver)).await;
+                let (outcomes, cancelled) = collect(pending, 5, Some(signal), Some(receiver)).await;
                 let results = merge_outcomes(outcomes).unwrap();
                 assert!(results.len() >= 5);
                 assert_eq!(cancelled, 2); // Neither response body ever ended.
@@ -270,7 +269,7 @@ async fn both_clients_stream_normalized_results_and_cancel_unfinished_bodies() {
 }
 
 #[tokio::test]
-async fn failed_provider_retracts_partial_results_and_does_not_satisfy_quorum() {
+async fn failed_provider_retracts_partial_results_and_does_not_satisfy_minimum() {
     let _telemetry = crate::telemetry::test_export_guard();
     let (sender, receiver) = mpsc::channel(1);
     let pending = FuturesUnordered::<Job<'_>>::new();
@@ -297,7 +296,7 @@ async fn failed_provider_retracts_partial_results_and_does_not_satisfy_quorum() 
             )),
         )
     }));
-    let (outcomes, cancelled) = collect(pending, None, Some(5), None, Some(receiver)).await;
+    let (outcomes, cancelled) = collect(pending, 5, None, Some(receiver)).await;
     assert_eq!(cancelled, 0);
     assert!(merge_outcomes(outcomes).is_err());
 }
@@ -335,7 +334,7 @@ async fn deadline_keeps_closed_records_and_releases_provider_permits() {
     pending.push(Box::pin(async move {
         (0, PUBLISHER.scope(publisher, job).await)
     }));
-    let (outcomes, _) = collect(pending, None, Some(5), None, Some(receiver)).await;
+    let (outcomes, _) = collect(pending, 5, None, Some(receiver)).await;
     let results = merge_outcomes(outcomes).unwrap();
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].title, "Café 0");
@@ -367,7 +366,7 @@ async fn simultaneous_queries_have_independent_thresholds_and_provenance() {
             };
             (0, PUBLISHER.scope(publisher, future).await)
         }));
-        let (outcomes, cancelled) = collect(pending, None, Some(count), None, Some(receiver)).await;
+        let (outcomes, cancelled) = collect(pending, count, None, Some(receiver)).await;
         assert_eq!(cancelled, 1);
         let results = merge_outcomes(outcomes).unwrap();
         assert_eq!(results.len(), count);
@@ -409,8 +408,7 @@ async fn failures_empty_responses_and_filtered_records_never_reach_the_minimum()
         PUBLISHER.scope(publisher, future).await
     }));
     let signal = Arc::new(AtomicU8::new(FANOUT_RUNNING));
-    let (outcomes, cancelled) =
-        collect(pending, None, Some(5), Some(signal.clone()), Some(receiver)).await;
+    let (outcomes, cancelled) = collect(pending, 5, Some(signal.clone()), Some(receiver)).await;
     assert_eq!(cancelled, 0);
     assert_eq!(signal.load(Ordering::Relaxed), FANOUT_RUNNING);
     assert!(merge_outcomes(outcomes).unwrap().is_empty());
@@ -458,13 +456,7 @@ async fn default_query_mode_counts_metadata_without_query_terms_and_cancels_stra
     let signal = Arc::new(AtomicU8::new(FANOUT_RUNNING));
     let (outcomes, cancelled) = tokio::time::timeout(
         Duration::from_secs(1),
-        collect(
-            pending,
-            Some(2),
-            Some(5),
-            Some(signal.clone()),
-            Some(receiver),
-        ),
+        collect(pending, 5, Some(signal.clone()), Some(receiver)),
     )
     .await
     .expect("five unique records must cancel both pending bodies without a second provider");
@@ -526,7 +518,7 @@ async fn benchmark_minimum_arms_and_fixed_pool_exercise_larger_fetch_caps() {
                 parse_provider_response(Engine::Bing, &body)
             };
             pending.push(Box::pin(async move { (0, PUBLISHER.scope(publisher, job).await) }));
-            let (outcomes, cancelled) = collect(pending, None, Some(minimum), None, Some(receiver)).await;
+            let (outcomes, cancelled) = collect(pending, minimum, None, Some(receiver)).await;
             let pool = merge_outcomes(outcomes).unwrap();
             assert_eq!(cancelled, 1); // The response deliberately never reaches EOF.
             assert!(pool.len() >= minimum);
@@ -596,8 +588,7 @@ async fn records_commit_before_eof_and_survive_caller_cancellation() {
     let (queue, writer) = crate::recovery::writer(Some(&store), None);
     let collect = collect_recording(
         pending,
-        None,
-        Some(100),
+        100,
         None,
         Some(receiver),
         Some((queue.unwrap(), vec![key.clone()])),
@@ -664,8 +655,7 @@ async fn provider_recording_child() {
     let (queue, writer) = crate::recovery::writer(Some(&store), None);
     let collect = collect_recording(
         pending,
-        None,
-        Some(100),
+        100,
         None,
         Some(receiver),
         Some((queue.unwrap(), vec![key])),

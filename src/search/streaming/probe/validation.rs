@@ -137,8 +137,7 @@ async fn measured_search(
                 diagnostics.clone(),
                 &options.region,
                 options.time_filter,
-                options.provider_quorum,
-                Some(options.min_results.unwrap_or(5)),
+                options.min_results.unwrap_or(5),
                 deadline,
                 None,
             ),
@@ -528,10 +527,7 @@ mod tests {
             }));
             let (outcomes, cancelled) = tokio::time::timeout(
                 Duration::from_secs(1),
-                POLICY.scope(
-                    policy,
-                    collect(pending, None, Some(5), None, Some(receiver)),
-                ),
+                POLICY.scope(policy, collect(pending, 5, None, Some(receiver))),
             )
             .await
             .unwrap();
@@ -550,7 +546,7 @@ mod tests {
         let pending = FuturesUnordered::<Job>::new();
         pending.push(Box::pin(async { (0, Ok(records(0, 9))) }));
         let (outcomes, cancelled) = POLICY
-            .scope(Policy::Full, collect(pending, None, Some(5), None, None))
+            .scope(Policy::Full, collect(pending, 5, None, None))
             .await;
         assert_eq!(cancelled, 0);
         assert_eq!(merge_outcomes(outcomes).unwrap().len(), 9);
@@ -566,9 +562,7 @@ mod tests {
                 tokio::task::yield_now().await;
                 (1, Err(KestrelError::SearchDeadline))
             }));
-            let (outcomes, cancelled) = POLICY
-                .scope(policy, collect(pending, None, Some(5), None, None))
-                .await;
+            let (outcomes, cancelled) = POLICY.scope(policy, collect(pending, 5, None, None)).await;
             assert_eq!(cancelled, 0);
             assert_eq!(merge_outcomes(outcomes).unwrap().len(), 7); // Overshoot is retained.
         }

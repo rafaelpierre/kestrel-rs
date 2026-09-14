@@ -28,22 +28,20 @@ pub(super) struct Batch {
 #[cfg(test)]
 pub(super) async fn collect<F>(
     pending: FuturesUnordered<F>,
-    quorum: Option<usize>,
-    minimum: Option<usize>,
+    minimum: usize,
     signal: Option<Arc<AtomicU8>>,
     receiver: Option<mpsc::Receiver<Batch>>,
 ) -> (Vec<Result<Vec<SearchResult>, KestrelError>>, usize)
 where
     F: Future<Output = (usize, Result<Vec<SearchResult>, KestrelError>)>,
 {
-    collect_recording(pending, quorum, minimum, signal, receiver, None, None).await
+    collect_recording(pending, minimum, signal, receiver, None, None).await
 }
 
 #[cfg(test)]
 pub(super) async fn collect_recording<F>(
     pending: FuturesUnordered<F>,
-    quorum: Option<usize>,
-    minimum: Option<usize>,
+    minimum: usize,
     signal: Option<Arc<AtomicU8>>,
     receiver: Option<mpsc::Receiver<Batch>>,
     progress: Option<(
@@ -57,7 +55,6 @@ where
 {
     collect_replaying(
         pending,
-        quorum,
         minimum,
         signal,
         receiver,
@@ -68,11 +65,9 @@ where
     .await
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(super) async fn collect_replaying<F>(
     mut pending: FuturesUnordered<F>,
-    quorum: Option<usize>,
-    minimum: Option<usize>,
+    minimum: usize,
     signal: Option<Arc<AtomicU8>>,
     mut receiver: Option<mpsc::Receiver<Batch>>,
     progress: Option<(
@@ -152,31 +147,19 @@ where
             .filter_map(|r| r.as_ref().ok())
             .chain(partial.values())
             .collect();
-        // A result target takes precedence: provider diversity must never delay it.
-        let reached = match minimum {
-            Some(minimum) => {
-                buckets
-                    .iter()
-                    .flat_map(|r| r.iter().map(result_key))
-                    .collect::<HashSet<_>>()
-                    .len()
-                    >= minimum
-            }
-            None => quorum.is_some_and(|n| buckets.iter().filter(|r| !r.is_empty()).count() >= n),
-        };
+        // Only unique result count controls stopping; provider diversity is irrelevant.
+        let reached = buckets
+            .iter()
+            .flat_map(|r| r.iter().map(result_key))
+            .collect::<HashSet<_>>()
+            .len()
+            >= minimum;
         #[cfg(test)]
         let reached = probe::validation::observe_collector(&buckets, reached);
         if reached {
             cancelled = pending.len();
             if let Some(signal) = &signal {
-                signal.store(
-                    if minimum.is_some() {
-                        FANOUT_MIN_RESULTS
-                    } else {
-                        FANOUT_QUORUM
-                    },
-                    Ordering::Relaxed,
-                );
+                signal.store(FANOUT_MIN_RESULTS, Ordering::Relaxed);
             }
             break;
         }

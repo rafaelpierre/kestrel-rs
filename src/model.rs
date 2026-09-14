@@ -153,7 +153,7 @@ pub struct SearchOptions {
     /// Legacy compatibility setting, ignored by result-count fanout.
     pub provider_quorum: Option<usize>,
     /// Stop fanout after this many unique candidates per query (None means 5).
-    /// Takes precedence over provider_quorum. This is not an output cap.
+    /// Independent of provider_quorum. This is not an output cap.
     pub min_results: Option<usize>,
     /// Initial discovery budget including recovery I/O, queueing and request retries.
     /// Budgets below 15s enable up to two empty-query deadline retries, adding 5s

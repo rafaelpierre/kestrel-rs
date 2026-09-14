@@ -219,7 +219,7 @@ async fn cli_replays_repeated_interruptions_and_skips_completed_work() {
     let f = Fixture::new().await;
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
-    let mut first = spawn(&f, root, "first", "99", false, &[]);
+    let mut first = spawn(&f, root, "first", "99", false, &["--provider-quorum", "1"]);
     until(
         || {
             let s = snapshots(root);
@@ -251,7 +251,7 @@ async fn cli_replays_repeated_interruptions_and_skips_completed_work() {
     .await;
     second.child.kill().unwrap();
     assert!(!second.child.wait().unwrap().success());
-    let mut small = spawn(&f, root, "small", "1", false, &[]);
+    let mut small = spawn(&f, root, "small", "1", false, &["--provider-quorum", "99"]);
     let small = finish(&mut small, 0).await.unwrap();
     assert_eq!(small["results"].as_array().unwrap().len(), 2);
     for row in small["results"].as_array().unwrap() {
@@ -259,7 +259,14 @@ async fn cli_replays_repeated_interruptions_and_skips_completed_work() {
     }
     assert_eq!((f.count("/bing"), f.count("/yahoo")), (4, 2));
     f.block_provider.store(false, Ordering::SeqCst);
-    let mut complete = spawn(&f, root, "complete", "99", false, &[]);
+    let mut complete = spawn(
+        &f,
+        root,
+        "complete",
+        "99",
+        false,
+        &["--provider-quorum", "1"],
+    );
     let complete = finish(&mut complete, 0).await.unwrap();
     assert_eq!(small["results"], complete["results"]);
     assert_eq!((f.count("/bing"), f.count("/yahoo")), (6, 2));
