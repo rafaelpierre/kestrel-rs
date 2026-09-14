@@ -167,3 +167,20 @@ its complete cross-slice acceptance evidence.
 ## BM25 score compatibility
 
 Content-only BM25 and optional pre-ranking use the `bm25` crate with positive IDF `ln(1 + (N - df + 0.5) / (df + 0.5))`, k1=1.5 and b=0.75. Matching terms remain positive even in half or all documents. Kestrel preserves its tokenization, query grouping and stable ties; titles/snippets are not added to default body ranking. Scores are computed in f32 and exposed as JSON numbers/f64, so values and ordering can differ from older releases. Scores are relative to the candidate pool, not calibrated relevance probabilities. Experimental snippet/hybrid scoring and the optional fetch-score threshold retain their existing f64 implementation.
+
+## Shared HTTP retry policy (#205)
+
+Standard and Yahoo transports share completed-response classification/extraction,
+status retry decisions, Retry-After/backoff selection and bounded streaming body
+processing. Backend adapters retain their own send-error classification: Yahoo
+retries all send errors, while standard HTTP retries timeout/connect/request
+errors only. Both allow at most three application sends per provider attempt.
+HTTP 408/429/5xx retries stop on detected non-2xx challenges; successful-status
+body failures, oversized bodies and extraction errors are terminal. Other
+error-status body failures retain the status-based retry decision and typed body
+diagnostics. Valid Retry-After guidance is honored up to 15 seconds; longer
+waits stop the request and invalid values use bounded jittered backoff.
+
+This is a behavior-preserving internal refactor with no new dependencies or
+public API/CLI/schema changes. Streaming publication, cancellation, parse-once
+ownership and the decompressed response-size limit remain unchanged.
