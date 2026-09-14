@@ -727,7 +727,10 @@ KESTRELSEARCH_PROVIDER_TRACE_DIR="$trace_dir" KESTRELSEARCH_BENCHMARK_ARTIFACT_D
 - Search artifact writing requires **both** `KESTRELSEARCH_BENCHMARK_ARTIFACT_DIR`
   and `KESTRELSEARCH_BENCHMARK_RUN_ID`. Use a simple filename label such as `lookup`.
   Successful search handling writes `<run-id>-<uuid>.json` in the chosen directory,
-  with candidate snapshots, phase timings and provider/fetch reports. This is a
+  with candidate snapshots, phase timings and provider/fetch reports. Configuration
+  is resolved once before ranking; only enabled artifact capture retains a full
+  pre-ranking candidate copy. Ordinary JSON diagnostics summarize candidate evidence
+  before ranking without retaining duplicate page bodies. This is a
   separate diagnostic schema, not the ordinary stdout JSON envelope. Each returned
   artifact result includes `content_quality` (`version`, `state`, `reasons`);
   `diagnostics.candidate_content_quality` aligns with the artifact's `candidates`

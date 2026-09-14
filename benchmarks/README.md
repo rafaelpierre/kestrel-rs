@@ -236,3 +236,24 @@ bodies for relevance/evidence; extraction success and pool size do not imply
 quality. Keep missing judgments unknown. Record all insufficient pools and
 errors, even if no query qualifies. Use a fresh output directory for each run;
 the runner refuses to overwrite an earlier experiment.
+
+## Candidate snapshot memory
+
+`candidate_memory.py` compares two fixture-enabled release binaries on macOS using
+`/usr/bin/time -l`. It serves 64 local plain-text pages of 500,000 characters each,
+fetches all of them, returns one result, and retains default JSON diagnostics.
+Ranking, cache, telemetry export and artifact capture are disabled to isolate
+candidate ownership. Five fresh-process trials alternate baseline/candidate order.
+The harness verifies all pages were extracted and ordinary results/diagnostics
+match after removing measured timing fields. It retains stdout, stderr, argv,
+binary hashes and peak RSS; medians describe this fixture only.
+
+```sh
+python3 benchmarks/candidate_memory.py --baseline /tmp/kestrel-baseline \
+  --candidate /tmp/kestrel-candidate --output /tmp/candidate-memory
+```
+
+Build each binary from its recorded revision with
+`cargo build --release --locked --features test-fixtures`. Preserve the baseline
+binary before rebuilding another revision in a shared target directory. No live
+provider latency or typical-workload memory claim follows from this experiment.

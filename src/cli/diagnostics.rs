@@ -173,21 +173,15 @@ impl SearchDiagnostics {
         }
     }
 
-    pub(super) fn finish(
+    pub(super) fn prepare(
         mut self,
         candidates: &[SearchResult],
-        results: &[SearchResult],
         fetch: Option<&FetchReport>,
         no_fetch: bool,
         counts: &BTreeMap<String, usize>,
         byte_cap: usize,
-    ) -> Value {
+    ) -> PreparedDiagnostics {
         let selected: HashMap<_, _> = candidates.iter().map(|r| (r.url.as_str(), r)).collect();
-        let returned: HashMap<_, _> = results
-            .iter()
-            .enumerate()
-            .map(|(i, r)| (r.url.as_str(), i))
-            .collect();
         let fetched: HashMap<_, _> = fetch
             .into_iter()
             .flat_map(|r| &r.pages)
@@ -220,7 +214,7 @@ impl SearchDiagnostics {
         for (url, row) in &mut self.pages {
             let candidate = selected.get(url.as_str()).copied();
             let page = fetched.get(url.as_str()).copied();
-            row["returned_index"] = json!(returned.get(url.as_str()));
+            row["returned_index"] = Value::Null;
             row["state"] = json!(evidence_state(no_fetch, candidate, page, fetch));
             row["quality"] = json!(
                 candidate
@@ -230,14 +224,14 @@ impl SearchDiagnostics {
             row["timing"] = page_timing(page);
             row["byte_cap_reached"] = json!(page.map(|p| p.response_bytes >= byte_cap));
         }
-        json!({
+        let value = json!({
             "schema_version": 1, "search": self.search,
             "candidates": {
                 "unique_accepted": self.unique,
                 "fetch_score_rejected": counts.get("fetch_score_rejected").copied().unwrap_or(0),
                 "after_fetch_score": counts.get("after_fetch_score").copied().unwrap_or(self.unique),
                 "after_selection": candidates.len(), "not_selected": not_selected,
-                "after_ranking": counts.get("after_ranking").copied().unwrap_or(0), "returned": results.len(),
+                "after_ranking": counts.get("after_ranking").copied().unwrap_or(0), "returned": 0,
             },
             "evidence": {
                 "enabled": !no_fetch, "selected": if no_fetch { 0 } else { candidates.len() },
@@ -248,9 +242,55 @@ impl SearchDiagnostics {
                 "budget_exhausted": fetch.is_some_and(|r| r.budget_exhausted),
                 "cancelled": fetch.map_or(0, |r| r.cancelled), "cache_hits": fetch.map_or(0, |r| r.cache_hits),
             },
-            "pages": self.pages.into_iter().map(|(_, row)| row).collect::<Vec<_>>(),
+            "pages": self.pages.iter_mut().map(|(_, row)| row.take()).collect::<Vec<_>>(),
             "pages_omitted": self.unique.saturating_sub(PAGE_LIMIT),
-        })
+        });
+        PreparedDiagnostics {
+            value,
+            urls: self.pages.into_iter().map(|(url, _)| url).collect(),
+        }
+    }
+
+    #[cfg(test)]
+    pub(super) fn finish(
+        self,
+        candidates: &[SearchResult],
+        results: &[SearchResult],
+        fetch: Option<&FetchReport>,
+        no_fetch: bool,
+        counts: &BTreeMap<String, usize>,
+        byte_cap: usize,
+    ) -> Value {
+        self.prepare(candidates, fetch, no_fetch, counts, byte_cap)
+            .finish(results, counts)
+    }
+}
+
+/// Body-dependent evidence is computed before ranking. Only bounded page URLs
+/// survive to connect diagnostic rows to the final result positions.
+pub(super) struct PreparedDiagnostics {
+    value: Value,
+    urls: Vec<String>,
+}
+
+impl PreparedDiagnostics {
+    pub(super) fn finish(
+        mut self,
+        results: &[SearchResult],
+        counts: &BTreeMap<String, usize>,
+    ) -> Value {
+        self.value["candidates"]["after_ranking"] =
+            json!(counts.get("after_ranking").copied().unwrap_or(0));
+        self.value["candidates"]["returned"] = json!(results.len());
+        let returned: HashMap<_, _> = results
+            .iter()
+            .enumerate()
+            .map(|(index, result)| (result.url.as_str(), index))
+            .collect();
+        for (index, url) in self.urls.iter().enumerate() {
+            self.value["pages"][index]["returned_index"] = json!(returned.get(url.as_str()));
+        }
+        self.value
     }
 }
 
@@ -350,6 +390,37 @@ mod tests {
             providers,
             cancelled: 0,
         }
+    }
+
+    #[test]
+    fn prepared_evidence_survives_body_drop_and_result_reordering() {
+        let mut original = report(
+            vec![
+                candidate("https://a.test", &["q"]),
+                candidate("https://b.test", &["q"]),
+            ],
+            vec![],
+        );
+        original.results[0].content = Some("Useful original page evidence.".repeat(1000));
+        original.results[1].content = Some("Second original page evidence.".into());
+        let counts = BTreeMap::from([("after_ranking".into(), 2)]);
+        let prepared = SearchDiagnostics::new(&original, &["q".into()], 1).prepare(
+            &original.results,
+            None,
+            false,
+            &counts,
+            1_000_000,
+        );
+        let mut returned = original.results.pop().unwrap();
+        drop(original);
+        returned.content = None;
+        let value = prepared.finish(&[returned], &counts);
+        assert_eq!(value["evidence"]["extracted"], 2);
+        assert_eq!(value["candidates"]["after_ranking"], 2);
+        assert_eq!(value["candidates"]["returned"], 1);
+        assert_eq!(value["pages"][0]["returned_index"], Value::Null);
+        assert_eq!(value["pages"][1]["returned_index"], 0);
+        assert!(!value.to_string().contains("original page"));
     }
 
     #[test]
