@@ -39,7 +39,7 @@ enum Commands {
     Install(crate::install::InstallArgs),
     /// Search one or more engines and return ranked results.
     Search(Box<SearchArgs>),
-    /// Fetch a URL directly and extract its page text without searching.
+    /// Fetch HTML, plain text, or Markdown from a URL without searching.
     Fetch(FetchArgs),
     /// Manage the Kestrel agent skill (SKILL.md).
     Skill {
@@ -374,7 +374,7 @@ async fn run_fetch(arguments: FetchArgs) -> ExitCode {
         use kestrelsearch::FetchOutcome;
         let reason = match report.pages.first().map(|page| page.outcome) {
             Some(FetchOutcome::UnsupportedContentType) => {
-                "unsupported content type (expected HTML or text)"
+                "unsupported content type (expected HTML, plain text, or Markdown)"
             }
             Some(FetchOutcome::ResponseTooLarge) => "response exceeds --max-response-bytes",
             Some(FetchOutcome::RequestFailed) => "HTTP request failed or timed out",
@@ -1738,6 +1738,12 @@ mod tests {
                 .await;
         }
         let plain = "  Source: literal\n<p>&amp;</p>\n";
+        let markdown = "# Heading\n\n- [link](https://example.org)\n```html\n<p>&amp;</p>\n```\n";
+        Mock::given(path("/markdown"))
+            .respond_with(ResponseTemplate::new(200).set_body_raw(markdown, "text/markdown"))
+            .expect(1)
+            .mount(&server)
+            .await;
         Mock::given(path("/plain"))
             .respond_with(
                 ResponseTemplate::new(200)
@@ -1776,7 +1782,7 @@ mod tests {
             sources: Vec::new(),
         };
         for expected_hits in [0, 1] {
-            let mut results: Vec<_> = ["/short", "/capped", "/empty", "/plain"]
+            let mut results: Vec<_> = ["/short", "/capped", "/empty", "/plain", "/markdown"]
                 .into_iter()
                 .map(candidate)
                 .collect();
@@ -1788,7 +1794,11 @@ mod tests {
             assert!(diagnostics.contains("1 fetched page(s) reached --max-response-bytes"));
             assert!(diagnostics.contains("search results may contain incomplete page content"));
             assert!(!diagnostics.contains("2 fetched page(s)"));
-            assert_eq!(report.cache_hits, expected_hits * 2);
+            assert_eq!(report.cache_hits, expected_hits * 3);
+            assert_eq!(
+                results[4].content.as_deref(),
+                Some(format!("Source: {}/markdown\n\n{markdown}", server.uri()).as_str())
+            );
             assert!(results[0].content.is_some());
             assert!(results[1].content.is_some());
             assert!(results[2].content.is_none());

@@ -15,7 +15,12 @@ use crate::model::{FetchOptions, FetchOutcome, FetchReport, PageFetchDiagnostic}
 use crate::search::KestrelError;
 
 pub const DEFAULT_MAX_RESPONSE_BYTES: usize = 1_000_000;
-const SUPPORTED_CONTENT_TYPES: &[&str] = &["text/html", "application/xhtml+xml", "text/plain"];
+const SUPPORTED_CONTENT_TYPES: &[&str] = &[
+    "text/html",
+    "application/xhtml+xml",
+    "text/plain",
+    "text/markdown",
+];
 // Whole attribute names only: arbitrary substrings (especially "ad") can
 // identify article containers such as "download" and "thread".
 const CLUTTER_MARKERS: &[&str] = &[
@@ -394,10 +399,11 @@ async fn fetch_one_inner(
             .and_then(|value| value.to_str().ok())
             .unwrap_or_default()
             .to_ascii_lowercase();
+        let parsed_type = content_type.parse::<mime::Mime>().ok();
         if !content_type.is_empty()
-            && !SUPPORTED_CONTENT_TYPES
-                .iter()
-                .any(|supported| content_type.starts_with(supported))
+            && !parsed_type
+                .as_ref()
+                .is_some_and(|value| SUPPORTED_CONTENT_TYPES.contains(&value.essence_str()))
         {
             crate::log_event!(
                 "fetch_skipped",
@@ -431,11 +437,10 @@ async fn fetch_one_inner(
                     .map_err(|error| KestrelError::Search(error.to_string()))
             })
             .transpose()?;
-        let parsed_type = content_type.parse::<mime::Mime>().ok();
         let encoding = response_encoding(parsed_type.as_ref());
         let content_kind = if parsed_type
             .as_ref()
-            .is_some_and(|value| value.essence_str() == "text/plain")
+            .is_some_and(|value| matches!(value.essence_str(), "text/plain" | "text/markdown"))
         {
             ContentKind::PlainText
         } else {
