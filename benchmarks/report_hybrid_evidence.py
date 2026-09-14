@@ -21,6 +21,7 @@ def main():
               for j in read(args.judgments)['judgments']}
     rows = []
     selection_rows = []
+    arms = []
     for q in read(args.study / 'manifest.json')['queries']:
         folder = args.study / q['id']
         if (folder / 'blocked.json').exists():
@@ -42,20 +43,21 @@ def main():
                 key = (q['id'], r['url'], hashlib.sha256((r.get('content') or '').encode()).hexdigest())
                 judgments[r['url']] = labels.get(key)
             for mode, data in [('metadata', metadata), ('fetch', fetched)]:
+                report = data['fetch_report'] or {}
+                arms.append(dict(query_id=q['id'], round=round_, mode=mode,
+                    process_seconds=read(folder / f'{round_}-{mode}/receipt.json')['seconds'],
+                    fetch_seconds=data['fetch_seconds'],
+                    page_attempts=len(report.get('pages', [])),
+                    response_bytes=sum(r.get('response_bytes', 0) for r in report.get('pages', [])),
+                    extracted=sum(bool(r.get('content')) for r in data['candidates'])))
                 for ordering in data['orderings']:
                     selected = ordering['results'][:5]
                     known = all(judgments[r['url']] is not None for r in selected)
-                    report = data['fetch_report'] or {}
                     rows.append(dict(query_id=q['id'], round=round_, mode=mode, policy=ordering['policy'],
                         urls=[r['url'] for r in selected],
                         precision_at_5=sum(judgments[r['url']]['relevance'] == 2 for r in selected)/5 if known else None,
-                        evidence_at_5=sum(judgments[r['url']]['evidence'] for r in selected)/5 if known and mode == 'fetch' else 0 if known else None,
-                        process_seconds=read(folder / f'{round_}-{mode}/receipt.json')['seconds'],
-                        fetch_seconds=data['fetch_seconds'],
-                        page_attempts=len(report.get('pages', [])),
-                        response_bytes=sum(r.get('response_bytes', 0) for r in report.get('pages', [])),
-                        extracted=sum(bool(r.get('content')) for r in data['candidates'])))
-    print(json.dumps({'rows': rows, 'separate_pre_rank': selection_rows, 'timing_convention': 'Nearest-rank; process excludes discovery; each process replays all four policies, so timing is shared, not independent per policy.'}, indent=2))
+                        evidence_at_5=sum(judgments[r['url']]['evidence'] for r in selected)/5 if known and mode == 'fetch' else 0 if known else None))
+    print(json.dumps({'schema_version': 2, 'arms': arms, 'rows': rows, 'separate_pre_rank': selection_rows, 'timing_convention': 'Nearest-rank; process excludes discovery; costs occur once in arms, keyed by query_id/round/mode; rows contain policy quality only. Each arm replays all four policies.'}, indent=2))
 
 
 if __name__ == '__main__':

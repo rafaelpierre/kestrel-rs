@@ -22,7 +22,13 @@ KESTREL_HYBRID_REPLAY="$PWD/target/release/examples/hybrid_evidence" \
 
 Use judgments for the exact captured content hashes; this committed judgment set
 is for the retained September 14 run, not automatically for a new live run.
-Unknown judgments remain null. Full artifacts are local at
+Unknown judgments remain null. Report schema version 2 places process/fetch
+seconds, page attempts, response bytes and extraction counts in `arms`, once per
+`(query_id, round, mode)`. Policy `rows` retain quality scores and URLs and join to
+`arms` through those three keys. Consumers of the original unversioned report
+must aggregate costs from `arms` instead of policy rows. These costs cover the
+matched metadata/fetch arms only; the separate pre-ranking experiment remains
+excluded. Summing fetched `arms` reproduces the 240-attempt study total. Full artifacts are local at
 `/tmp/kestrel-78-study-v3/` and `/tmp/kestrel-78-ablation/`. Failed pilot attempts
 `/tmp/kestrel-78-study/` and `-v2/` are retained: the former omitted the artifact
 run ID, the latter used the wrong filename glob. Neither contributes measurements.
