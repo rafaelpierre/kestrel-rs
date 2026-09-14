@@ -31,7 +31,7 @@ use crate::search::{
 #[derive(Clone)]
 pub struct KestrelClient {
     pub(crate) search: SearchClients,
-    pub(crate) fetch: reqwest::Client,
+    pub(crate) fetch: crate::http_client::Client,
     recovery: Option<crate::SearchRecovery>,
     pub(crate) parsing: Arc<ParserPool>,
 }

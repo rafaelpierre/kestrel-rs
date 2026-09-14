@@ -58,7 +58,7 @@ async fn isolated(
     } else {
         ""
     };
-    let mut builder = bing_request(standard, query, region);
+    let mut builder = bing_request(&standard.clone().into(), query, region);
     if variant == "bing-browser-form" {
         // Observed on the browser's search-box submission, not an invented parameter.
         builder = builder.query(&[("form", "QBRE")]);
@@ -209,7 +209,7 @@ async fn capture_live_matrix() {
     *impersonated.headers_mut() = profile.headers();
     let clients = SearchClients {
         parsers: parsing::ParserPool::default(),
-        standard: standard.clone(),
+        standard: standard.clone().into(),
         yahoo: Some(impersonated.clone()),
     };
     let mut rows = vec![];

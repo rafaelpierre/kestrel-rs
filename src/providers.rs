@@ -41,7 +41,7 @@ pub fn search_url(engine: Engine, query: &str) -> Option<Url> {
 }
 
 pub(crate) fn request(
-    client: &reqwest::Client,
+    client: &crate::http_client::Client,
     engine: Engine,
     query: &str,
     region: &str,
@@ -519,7 +519,7 @@ pub(crate) async fn search_additional(
     engine: Engine,
     region: &str,
     time_filter: TimeFilter,
-    client: &reqwest::Client,
+    client: &crate::http_client::Client,
 ) -> Result<ProviderResponse, ProviderFailure> {
     // Validate before entering retry machinery; builders below cannot fail validation.
     let _ = crate::providers::request(client, engine, query, region, time_filter)?;
@@ -598,7 +598,7 @@ mod tests {
     #[test]
     fn exact_queries_survive_browser_and_transport_encoding() {
         let _telemetry = crate::telemetry::test_export_guard();
-        let client = reqwest::Client::new();
+        let client: crate::http_client::Client = reqwest::Client::new().into();
         for query in [
             "\"machine learning\"",
             "machine AND learning",
@@ -743,7 +743,7 @@ mod tests {
     #[test]
     fn region_and_time_filters_are_explicit() {
         let _telemetry = crate::telemetry::test_export_guard();
-        let client = reqwest::Client::new();
+        let client: crate::http_client::Client = reqwest::Client::new().into();
         let req = request(&client, Engine::Swisscows, "query", "uk-en", TimeFilter::W)
             .unwrap()
             .build()

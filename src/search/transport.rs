@@ -140,7 +140,16 @@ where
     F: Fn() -> primp::RequestBuilder,
 {
     request_with_retries(Engine::Yahoo, query, extract, || async {
-        build()
+        let request = build();
+        if let Some(copy) = request.try_clone() {
+            let (client, built) = copy.build_split();
+            if let Ok(built) = built {
+                let mut headers = client.headers().clone();
+                headers.extend(built.headers().clone());
+                observe(|recorder| recorder.request_headers(&headers));
+            }
+        }
+        request
             .send()
             .await
             .map(ProviderHttpResponse::Yahoo)
@@ -155,7 +164,7 @@ where
 }
 
 pub(crate) async fn request_standard_with_retries<F, T: Send + 'static>(
-    _client: &reqwest::Client,
+    client: &crate::http_client::Client,
     engine: Engine,
     query: &str,
     extract: fn(Engine, &str, &ParsedResponse) -> T,
@@ -165,7 +174,13 @@ where
     F: Fn() -> reqwest::RequestBuilder,
 {
     request_with_retries(engine, query, extract, || async {
-        build()
+        let request = build();
+        if let Some(copy) = request.try_clone()
+            && let Ok(built) = copy.build()
+        {
+            observe(|recorder| recorder.request_headers(&client.request_headers(built.headers())));
+        }
+        request
             .send()
             .await
             .map(ProviderHttpResponse::Standard)

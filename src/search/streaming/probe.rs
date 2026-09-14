@@ -191,7 +191,7 @@ async fn live_fusion_latency_evidence() {
         *yahoo.headers_mut() = profile.headers();
         SearchClients {
             parsers: parsing::ParserPool::default(),
-            standard,
+            standard: standard.into(),
             yahoo: Some(yahoo),
         }
     };

@@ -144,6 +144,12 @@ impl Recorder {
         self.current = Some((phase, Instant::now()));
     }
 
+    pub(crate) fn request_headers(&self, headers: &reqwest::header::HeaderMap) {
+        if let Some(span) = &self.telemetry_attempt {
+            span.request_headers(headers);
+        }
+    }
+
     pub fn start_attempt(&mut self) {
         // Close backoff/queue before assigning the next attempt ID.
         self.close(false);

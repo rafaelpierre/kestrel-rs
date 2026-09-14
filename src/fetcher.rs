@@ -95,23 +95,23 @@ pub async fn fetch_all_detailed(
     fetch_all_reusing_client_with_diagnostics(urls, options, &client, None).await
 }
 
-pub(crate) fn build_client() -> Result<reqwest::Client, KestrelError> {
+pub(crate) fn build_client() -> Result<crate::http_client::Client, KestrelError> {
     build_client_with_transport(&crate::TransportOptions::default())
 }
 
 pub(crate) fn build_client_with_transport(
     transport: &crate::TransportOptions,
-) -> Result<reqwest::Client, KestrelError> {
+) -> Result<crate::http_client::Client, KestrelError> {
     transport.validate()?;
     let profile = crate::http_client::BrowserProfile::random();
     crate::benchmarking::capture_headers("fetch", &profile.headers());
-    Ok(crate::http_client::standard_builder(profile, transport).build()?)
+    Ok(crate::http_client::Client::new(profile, transport, None)?)
 }
 
 pub(crate) async fn fetch_all_reusing_client(
     urls: &[String],
     options: &FetchOptions,
-    client: &reqwest::Client,
+    client: &crate::http_client::Client,
 ) -> Result<Vec<Option<String>>, KestrelError> {
     Ok(
         fetch_all_reusing_client_with_diagnostics(urls, options, client, None)
@@ -123,7 +123,7 @@ pub(crate) async fn fetch_all_reusing_client(
 pub(crate) async fn fetch_all_reusing_client_with_diagnostics(
     urls: &[String],
     options: &FetchOptions,
-    client: &reqwest::Client,
+    client: &crate::http_client::Client,
     budget: Option<Duration>,
 ) -> Result<FetchReport, KestrelError> {
     fetch_all_with_parser_pool(urls, options, client, budget, None).await
@@ -132,7 +132,7 @@ pub(crate) async fn fetch_all_reusing_client_with_diagnostics(
 pub(crate) async fn fetch_all_with_parser_pool(
     urls: &[String],
     options: &FetchOptions,
-    client: &reqwest::Client,
+    client: &crate::http_client::Client,
     budget: Option<Duration>,
     shared: Option<&Arc<ParserPool>>,
 ) -> Result<FetchReport, KestrelError> {
@@ -145,7 +145,7 @@ pub(crate) async fn fetch_all_with_parser_pool(
 pub(crate) async fn fetch_all_reusing_client_with_cache(
     urls: &[String],
     options: &FetchOptions,
-    client: &reqwest::Client,
+    client: &crate::http_client::Client,
     deadline: Option<tokio::time::Instant>,
     cache: Option<&crate::cache::PageCache>,
     cancellation: Option<&crate::SearchRecovery>,
@@ -299,7 +299,7 @@ struct FetchItem {
 
 async fn fetch_one_detailed(
     url: &str,
-    client: &reqwest::Client,
+    client: &crate::http_client::Client,
     network: Arc<Semaphore>,
     parsing: Parsing,
     options: &FetchOptions,
@@ -362,7 +362,7 @@ async fn fetch_one_detailed(
 
 async fn fetch_one_inner(
     url: &str,
-    client: &reqwest::Client,
+    client: &crate::http_client::Client,
     network: Arc<Semaphore>,
     parsing: Parsing,
     options: &FetchOptions,
@@ -380,12 +380,11 @@ async fn fetch_one_inner(
         let queue_ms = elapsed_millis(queue_started);
         let request_started = Instant::now();
         use opentelemetry::trace::FutureExt;
-        let response = crate::telemetry::scope(
-            "kestrel.send",
-            client.get(url).timeout(options.timeout).send(),
-        )
-        .with_context(attempt.context())
-        .await?;
+        let request = client.get(url).timeout(options.timeout).build()?;
+        attempt.request_headers(&client.request_headers(request.headers()));
+        let response = crate::telemetry::scope("kestrel.send", client.execute(request))
+            .with_context(attempt.context())
+            .await?;
         attempt.attribute(
             "http.response.status_code",
             i64::from(response.status().as_u16()),
@@ -900,7 +899,11 @@ mod tests {
             use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
             let server = MockServer::start().await;
-            let client = reqwest::Client::builder().no_proxy().build().unwrap();
+            let client: crate::http_client::Client = reqwest::Client::builder()
+                .no_proxy()
+                .build()
+                .unwrap()
+                .into();
             let options = FetchOptions {
                 max_concurrency: 5,
                 parse_concurrency: 2,
@@ -1027,7 +1030,11 @@ mod tests {
                 .mount(&server)
                 .await;
             let mut client = crate::KestrelClient::with_parser_capacity(2).unwrap();
-            client.fetch = reqwest::Client::builder().no_proxy().build().unwrap();
+            client.fetch = reqwest::Client::builder()
+                .no_proxy()
+                .build()
+                .unwrap()
+                .into();
             let started = Arc::new(AtomicUsize::new(0));
             let (release, gate) = std::sync::mpsc::channel::<()>();
             let gate = Arc::new(Mutex::new(gate));
@@ -1157,7 +1164,11 @@ mod tests {
                 .mount(&server)
                 .await;
             let mut client = crate::KestrelClient::with_parser_capacity(2).unwrap();
-            client.fetch = reqwest::Client::builder().no_proxy().build().unwrap();
+            client.fetch = reqwest::Client::builder()
+                .no_proxy()
+                .build()
+                .unwrap()
+                .into();
             let (release, gate) = std::sync::mpsc::channel::<()>();
             let (entered, ready) = tokio::sync::oneshot::channel();
             let blocker = tokio::task::spawn_blocking(move || {

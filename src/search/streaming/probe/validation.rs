@@ -164,7 +164,7 @@ fn validation_clients() -> SearchClients {
         .unwrap();
     *yahoo.headers_mut() = profile.headers();
     SearchClients {
-        standard,
+        standard: standard.into(),
         yahoo: Some(yahoo),
         parsers: parsing::ParserPool::default(),
     }
@@ -212,7 +212,7 @@ async fn live_streaming_validation() {
         *yahoo.headers_mut() = profile.headers();
         SearchClients {
             parsers: parsing::ParserPool::default(),
-            standard,
+            standard: standard.into(),
             yahoo: Some(yahoo),
         }
     };

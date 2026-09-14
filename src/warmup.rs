@@ -176,7 +176,7 @@ mod tests {
     #[test]
     fn additional_provider_warmup_matches_actual_request_origin() {
         let _telemetry = crate::telemetry::test_export_guard();
-        let client = reqwest::Client::new();
+        let client: crate::http_client::Client = reqwest::Client::new().into();
         for engine in [
             Engine::Dogpile,
             Engine::Ecosia,

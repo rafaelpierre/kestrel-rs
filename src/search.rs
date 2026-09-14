@@ -115,7 +115,7 @@ pub(crate) fn current_correlation() -> Option<serde_json::Value> {
 
 #[derive(Clone)]
 pub(crate) struct SearchClients {
-    pub(crate) standard: reqwest::Client,
+    pub(crate) standard: crate::http_client::Client,
     pub(crate) yahoo: Option<primp::Client>,
     pub(crate) parsers: parsing::ParserPool,
 }
@@ -140,9 +140,7 @@ impl SearchClients {
     ) -> Result<Self, KestrelError> {
         transport.validate()?;
         let profile = crate::http_client::BrowserProfile::random();
-        let standard = crate::http_client::standard_builder(profile, transport)
-            .timeout(SEARCH_TIMEOUT)
-            .build()?;
+        let standard = crate::http_client::Client::new(profile, transport, Some(SEARCH_TIMEOUT))?;
         let yahoo = engines.contains(&Engine::Yahoo).then(|| {
             let mut client = crate::http_client::impersonated_builder(profile, transport)
                 .timeout(SEARCH_TIMEOUT)
@@ -991,7 +989,11 @@ mod tests {
                     let client = primp::Client::builder().no_proxy().build().unwrap();
                     request_yahoo_with_retries("test", retain_body, || client.get(&url)).await
                 } else {
-                    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+                    let client: crate::http_client::Client = reqwest::Client::builder()
+                        .no_proxy()
+                        .build()
+                        .unwrap()
+                        .into();
                     request_standard_with_retries(
                         &client,
                         Engine::Bing,
@@ -1183,7 +1185,11 @@ mod tests {
                     request_yahoo_with_retries("test", retain_body, || client.get(server.uri()))
                         .await
                 } else {
-                    let client = reqwest::Client::builder().no_proxy().build().unwrap();
+                    let client: crate::http_client::Client = reqwest::Client::builder()
+                        .no_proxy()
+                        .build()
+                        .unwrap()
+                        .into();
                     request_standard_with_retries(
                         &client,
                         Engine::Bing,
@@ -1253,7 +1259,11 @@ mod tests {
                             })
                             .await
                         } else {
-                            let client = reqwest::Client::builder().no_proxy().build().unwrap();
+                            let client: crate::http_client::Client = reqwest::Client::builder()
+                                .no_proxy()
+                                .build()
+                                .unwrap()
+                                .into();
                             request_standard_with_retries(
                                 &client,
                                 Engine::Bing,
@@ -1356,7 +1366,7 @@ mod tests {
                 .expect(1)
                 .mount(&server)
                 .await;
-            let client = reqwest::Client::new();
+            let client: crate::http_client::Client = reqwest::Client::new().into();
             let (html, retries) = request_standard_with_retries(
                 &client,
                 Engine::Duckduckgo,
@@ -1386,7 +1396,7 @@ mod tests {
                 .expect(1)
                 .mount(&server)
                 .await;
-            let client = reqwest::Client::new();
+            let client: crate::http_client::Client = reqwest::Client::new().into();
             let response =
                 request_standard_with_retries(&client, Engine::Mojeek, "test", retain_body, || {
                     client.get(server.uri())
@@ -1442,7 +1452,7 @@ mod tests {
     #[test]
     fn provider_requests_preserve_query_text() {
         let _telemetry = crate::telemetry::test_export_guard();
-        let standard = reqwest::Client::new();
+        let standard: crate::http_client::Client = reqwest::Client::new().into();
         let yahoo = primp::Client::builder().build().unwrap();
         for query in [
             r#""machine learning""#,
@@ -1511,7 +1521,7 @@ mod tests {
     #[test]
     fn bing_request_preserves_complete_query_and_region() {
         let _telemetry = crate::telemetry::test_export_guard();
-        let client = reqwest::Client::new();
+        let client: crate::http_client::Client = reqwest::Client::new().into();
         for query in [
             "\"machine learning\"",
             "machine AND learning",

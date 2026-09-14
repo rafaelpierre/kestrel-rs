@@ -340,6 +340,42 @@ impl Span {
     pub fn attribute(&self, key: &'static str, value: impl Into<opentelemetry::Value>) {
         self.context.span().set_attribute(KeyValue::new(key, value));
     }
+    /// Export only bounded, non-sensitive browser negotiation headers. Never dump a map.
+    pub(crate) fn request_headers(&self, headers: &reqwest::header::HeaderMap) {
+        for (name, key) in [
+            ("user-agent", "http.request.header.user_agent"),
+            ("accept", "http.request.header.accept"),
+            ("accept-language", "http.request.header.accept_language"),
+            ("accept-encoding", "http.request.header.accept_encoding"),
+            ("content-type", "http.request.header.content_type"),
+            ("sec-ch-ua", "http.request.header.sec_ch_ua"),
+            ("sec-ch-ua-mobile", "http.request.header.sec_ch_ua_mobile"),
+            (
+                "sec-ch-ua-platform",
+                "http.request.header.sec_ch_ua_platform",
+            ),
+            ("sec-fetch-dest", "http.request.header.sec_fetch_dest"),
+            ("sec-fetch-mode", "http.request.header.sec_fetch_mode"),
+            ("sec-fetch-site", "http.request.header.sec_fetch_site"),
+            ("sec-fetch-user", "http.request.header.sec_fetch_user"),
+            (
+                "upgrade-insecure-requests",
+                "http.request.header.upgrade_insecure_requests",
+            ),
+        ] {
+            if let Some(value) = headers
+                .get(name)
+                .filter(|v| !v.is_sensitive())
+                .and_then(|v| v.to_str().ok())
+            {
+                let value: String = value.chars().take(512).collect();
+                self.attribute(key, value.clone());
+                if name == "user-agent" {
+                    self.attribute("user_agent.original", value);
+                }
+            }
+        }
+    }
     /// Propagate W3C context without mutating process-global environment.
     pub fn inject(&self, command: &mut std::process::Command) {
         let mut headers = HashMap::new();
@@ -624,4 +660,82 @@ pub async fn scope_exit(
         output
     })
     .await
+}
+
+#[cfg(test)]
+mod header_tests {
+    use super::*;
+    #[derive(Debug, Clone, Default)]
+    struct Capture(Arc<std::sync::Mutex<Vec<SpanData>>>);
+    impl SpanExporter for Capture {
+        async fn export(&self, batch: Vec<SpanData>) -> opentelemetry_sdk::error::OTelSdkResult {
+            self.0.lock().unwrap().extend(batch);
+            Ok(())
+        }
+    }
+    #[test]
+    fn request_header_allowlist_bounds_and_sensitive_values() {
+        let _telemetry = test_export_guard();
+        let capture = Capture::default();
+        let provider = SdkTracerProvider::builder()
+            .with_simple_exporter(capture.clone())
+            .build();
+        let context = Context::new().with_span(provider.tracer("header-test").start("headers"));
+        let mut span = Span {
+            context,
+            complete: false,
+        };
+        let mut headers = reqwest::header::HeaderMap::new();
+        for name in [
+            "authorization",
+            "cookie",
+            "set-cookie",
+            "proxy-authorization",
+            "referer",
+            "origin",
+            "x-api-key",
+        ] {
+            headers.insert(name, "secret-canary".parse().unwrap());
+        }
+        headers.insert("user-agent", "x".repeat(600).parse().unwrap());
+        headers.insert("accept", "application/json".parse().unwrap());
+        let mut sensitive = reqwest::header::HeaderValue::from_static("secret-canary");
+        sensitive.set_sensitive(true);
+        headers.insert("accept-language", sensitive);
+        headers.insert(
+            "sec-ch-ua",
+            reqwest::header::HeaderValue::from_bytes(&[0xff]).unwrap(),
+        );
+        span.request_headers(&headers);
+        span.finish();
+        drop(span);
+        provider.force_flush().unwrap();
+        let data = capture.0.lock().unwrap();
+        let attrs = &data[0].attributes;
+        assert_eq!(attrs.len(), 3);
+        assert!(
+            attrs
+                .iter()
+                .all(|a| !a.value.to_string().contains("secret-canary"))
+        );
+        assert_eq!(
+            attrs
+                .iter()
+                .find(|a| a.key.as_str() == "user_agent.original")
+                .unwrap()
+                .value
+                .to_string()
+                .len(),
+            512
+        );
+        assert_eq!(
+            attrs
+                .iter()
+                .find(|a| a.key.as_str() == "http.request.header.accept")
+                .unwrap()
+                .value
+                .to_string(),
+            "application/json"
+        );
+    }
 }

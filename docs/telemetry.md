@@ -174,3 +174,22 @@ release build and the required evidence gate before claiming readiness. Measure
 disabled/enabled overhead following `benchmarks/README.md`; no latency improvement
 or negligible-overhead claim follows from instrumentation tests. Actual Honeycomb
 ingestion and a complete credentialed evidence run require a configured account.
+
+## HTTP request headers
+
+Each provider send attempt and page fetch attempt exports `user_agent.original`
+and `http.request.header.user_agent`, plus present allowlisted headers under
+`http.request.header.*`: `accept`, `accept_language`, `accept_encoding`,
+`content_type`, `sec_ch_ua`, `sec_ch_ua_mobile`, `sec_ch_ua_platform`,
+`sec_fetch_dest`, `sec_fetch_mode`, `sec_fetch_site`, `sec_fetch_user`, and
+`upgrade_insecure_requests`. Values are limited to 512 Unicode characters each;
+non-text and explicitly sensitive values are omitted. These metadata attributes
+are available with content capture disabled and use the existing OTLP/Honeycomb
+export configuration. No exporter endpoint means no remote storage.
+
+Generated defaults remain attached to pooled clients and provider overrides win.
+The attributes describe the initial application request, including failed sends
+and retries; they do not claim to capture redirected requests or headers added
+by the transport or a proxy. Cookies, authorization, arbitrary headers, Origin,
+Referer and response headers are never included in this allowlist. Browser
+profiles are restricted to Firefox 146/Windows and Chrome 146/macOS.
