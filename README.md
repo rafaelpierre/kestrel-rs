@@ -306,12 +306,17 @@ before requests. Remove redundant or inactive settings from existing scripts.
 
 ### Defaults and opt-in tradeoffs
 
-CLI fanout searches have a five-second total search budget, including provider
-queueing and retries. Completed results are retained when the deadline expires.
-Use `--search-budget SECS` to change it or `--no-search-budget` to disable the total deadline
+CLI fanout searches start with a five-second discovery budget, including provider
+queueing and request retries. Empty deadline-limited queries retry only exhausted
+providers, with 10s then 15s budgets and bounded backoff (32s overall discovery
+allowance by default). Any retained candidate stops recovery for its query.
+Completed results are retained when the deadline expires.
+Use `--search-budget SECS` to set the first budget or `--no-search-budget` to disable the deadline and discovery retries
 while retaining result-count early stopping. The library has no total search deadline
 unless one is supplied. Per-request timeouts still apply.
-This budget does not include page fetching or ranking.
+This budget does not include page fetching or ranking. Explicit budgets below 15s
+increase by 5s per retry, capped at 15s; budgets of 15s or more use one attempt.
+See [retry bounds, diagnostics and compatibility](docs/discovery-retries.md).
 
 Search requests, page fetching, and HTML parsing each default to a maximum
 concurrency of 10 in both the CLI and library. Override them with
@@ -579,3 +584,8 @@ Library callers can explicitly load a validated HTTP/CONNECT proxy list with
 This is the discovery slice of #9; it does not enable automatic proxy routing
 for search or fetch. See [HProxy discovery](docs/hproxy-discovery.md) for the API,
 filters, limits, failure behavior and contract-verification limitations.
+
+The library also exposes [semantic scoring building blocks](docs/semantic-scoring.md)
+for bounded backend adapters and deterministic lexical/semantic rank combination.
+These primitives ship without a production backend or semantic CLI mode; the
+existing experimental `hybrid` ranking policy remains lexical.

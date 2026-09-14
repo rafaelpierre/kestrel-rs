@@ -112,7 +112,10 @@ page text is unavailable, including searches with `--no-fetch`.
 - CLI searches that exclude Yahoo skip Yahoo transport and root-store initialization. Initialization remains outside the search budget; default all-provider searches and TLS/proxy policies are unchanged. Library `KestrelClient::with_engines_and_parser_capacity(engines, n)` selects transports: non-Yahoo providers share a standard client and remain available; Yahoo must be selected at construction or later Yahoo searches return `KestrelError::InvalidRequest` before requests. Clones preserve this policy. Existing constructors remain unrestricted.
 - Provider failures, bot challenges, and unsupported region/recency filters retain results from successful providers; including an engine does not guarantee results.
 - Completed transport challenge diagnostics and HTML/JSON extraction share one worker-local representation. JSON snapshots likewise reuse their value for classification and extraction; structural prefix probes, evolving snapshots, decoded envelopes and result-field HTML fragments remain distinct parsing inputs. JSON result descriptions are data: embedded CAPTCHA markup does not by itself indicate a page challenge; Qwant's top-level challenge URL remains an error. HTML error responses still receive HTML challenge diagnostics.
-- Fanout defaults to a five-second search budget, including queueing and retries. Use --search-budget to change it or --no-search-budget to disable the total deadline.
+- Fanout defaults to a five-second initial discovery budget, including queueing and request retries. Empty deadline-limited queries automatically retry eligible providers with 10s then 15s budgets. Backoff is 250–500 ms then 500–1,000 ms; the default overall discovery allowance is 32s. Recovery can exceed one attempt's budget. Any accepted candidate prevents recovery for that query, even below the collection minimum; successful queries, completed empty providers, challenges and hard failures are not retried by discovery recovery. No fetch/ranking result triggers recovery.
+- --search-budget B sets the first attempt. For B <15s, at most two retries add 5s each, capped at 15s; total allowance is B + min(B+5,15) + min(B+10,15) + 2 seconds. B >=15s uses one attempt, with budget B. --no-search-budget disables discovery retries and the shared deadline; per-request timeouts/retries and result-count stopping remain. Library SearchOptions follows the same policy when a budget is supplied; its default None is unchanged.
+- Each provider/query has at most three discovery attempts, with at most three application sends each (nine total, excluding transport-internal retries/redirect hops). Request Retry-After delta-seconds/HTTP dates are honored when valid; waits over 15s stop request retries rather than retrying early; deadline interruption after rate-limit/retry guidance prevents further discovery retries for that provider. Stderr reports retry attempt, delay, next budget and eligible count. Dropping the search future cancels backoff and active async work; blocking parsers retain their existing bounded cancellation behavior.
+- JSON provider diagnostics add discovery_attempt (one-based, distinct from request retries) and rate_limited_deadline. Provider outcome totals/rows include every attempt; query completion uses the latest observation per provider. Grouped final errors count latest provider/query outcomes, not cumulative attempts. Runtime failures still exit 1 with stderr and no JSON error envelope; completed empty searches can still exit 0. --no-diagnostics retains the previous successful envelope. Regenerate installed skills for this changed budget contract.
 - Search, page fetching, and parsing concurrency each default to 10.
 - `--parse-concurrency` bounds queued/running page extraction jobs for the CLI. Library `KestrelClient` clones share an aggregate parser capacity (default 10), configurable with `with_parser_capacity(n)` or `with_transport_and_parser_capacity(transport, n)`. Each batch also obeys its own `FetchOptions::parse_concurrency`; larger per-call limits do not raise the shared cap. Free fetch functions and separately constructed clients own independent capacity. Download limits remain per call. Cancellation/budget expiry returns without waiting for blocking parsers, whose capacity remains occupied until body/DOM release; runtime shutdown may still wait for them. Provider parsing is separate.
 - Search/fetch clients select random browser headers and reuse HTTP/2 or HTTP/1.1 connections within the process.
@@ -464,9 +467,10 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
   Query constraints apply before counting. Remaining requests are cancelled and
   their unread results ignored; fusion preserves provenance already received.
   The minimum may be met by one provider; provider diversity is not guaranteed.
-- Search defaults to a five-second total deadline and can return fewer results if
-  providers finish or the deadline expires. `--no-search-budget` disables this
-  deadline but keeps result-count early stopping and individual request timeouts.
+- Search starts with a five-second discovery deadline and can return fewer results
+  if providers finish or that deadline expires. Empty deadline-limited queries may
+  use the bounded recovery policy above. `--no-search-budget` disables discovery
+  recovery and its deadline but keeps result-count stopping and request timeouts.
 - Provider HTML/JSON parsing, including incremental records and completed envelopes,
   uses at most ten queued/running blocking workers per retained client, shared by
   its clones and calls. Cancellation retains capacity until the worker exits.
@@ -644,6 +648,9 @@ be slow. Pre-ranking has no effect if the pool is no larger than the fetch limit
 ```bash
 kestrel search '"machine learning"' -k 5 --min-results 15 --fetch-candidates 15 --ranking-policy hybrid --content-limit 3000 --fetch-budget 5
 ```
+
+Hybrid is lexical, not semantic search. The library semantic scoring primitives
+have no production backend or CLI mode.
 
 Hybrid uses title, snippet and available body evidence and retains candidates
 without bodies. It may return five items even when fewer than five pages were

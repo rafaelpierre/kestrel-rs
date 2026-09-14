@@ -258,10 +258,10 @@ Build each binary from its recorded revision with
 binary before rebuilding another revision in a shared target directory. No live
 provider latency or typical-workload memory claim follows from this experiment.
 
-## Lexical hybrid evidence pilot (#78)
+## Complete-answer workflow preparation (#84)
 
-The [September 14 fixed-input pilot](hybrid-evidence-20260914/README.md) compares
-all four lexical policies, body interventions, and a separate pre-ranking arm at
-the current two-second fetch budget. It includes content-keyed judgments,
-reproduction commands and the failed 9/10 evidence gate; production ranking is
-unchanged.
+The [workflow evaluation protocol](workflow-evaluation.md) prepares blinded task
+packets and a counterbalanced bundled/selective/adaptive schedule, with offline
+trajectory and separate answer-dimension validation. Synthetic tests require no
+model calls. Full isolated agent trials remain subject to retrieval readiness;
+no workflow-superiority or default-change claim is made.

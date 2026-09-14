@@ -1,5 +1,7 @@
 //! Python-compatible BM25 ranking and fair multi-query interleaving.
 
+pub mod semantic;
+
 use std::collections::{HashMap, HashSet};
 
 use once_cell::sync::Lazy;

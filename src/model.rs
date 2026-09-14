@@ -155,7 +155,10 @@ pub struct SearchOptions {
     /// Stop fanout after this many unique candidates per query (None means 5).
     /// Takes precedence over provider_quorum. This is not an output cap.
     pub min_results: Option<usize>,
-    /// Total search budget including enabled recovery I/O, queueing and retries; disabled by default.
+    /// Initial discovery budget including recovery I/O, queueing and request retries.
+    /// Budgets below 15s enable up to two empty-query deadline retries, adding 5s
+    /// per attempt up to 15s, with up to 2s total backoff allowance. Budgets >=15s
+    /// use one attempt. None (default) disables both deadline and discovery retries.
     pub search_budget: Option<Duration>,
 }
 
@@ -266,6 +269,9 @@ impl FetchReport {
 /// Timing and outcome for one provider/query request.
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct ProviderSearchDiagnostic {
+    /// One-based discovery attempt for this query (distinct from HTTP retries).
+    #[serde(default = "first_discovery_attempt")]
+    pub discovery_attempt: usize,
     pub engine: Engine,
     pub query: String,
     pub elapsed_ms: u64,
@@ -280,6 +286,10 @@ pub struct ProviderSearchDiagnostic {
     pub raw_result_count: usize,
     #[serde(default)]
     pub filtered_count: usize,
+}
+
+fn first_discovery_attempt() -> usize {
+    1
 }
 
 /// Search results plus the provider requests that produced them.
