@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.4](https://github.com/rafaelpierre/kestrel-rs/compare/v6.0.3...v6.0.4) - 2026-09-14
+
+### Fixed
+
+- skip Yahoo transport setup for non-Yahoo CLI searches
+
+### Other
+
+- Merge pull request #179 from rafaelpierre/codex/93-engine-scoped-client
+- Merge pull request #177 from rafaelpierre/codex/174-markdown-fetch
+
 ## [6.0.3](https://github.com/rafaelpierre/kestrel-rs/compare/v6.0.2...v6.0.3) - 2026-09-14
 
 ### Fixed
