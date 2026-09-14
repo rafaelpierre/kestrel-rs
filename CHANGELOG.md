@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.3](https://github.com/rafaelpierre/kestrel-rs/compare/v6.0.2...v6.0.3) - 2026-09-14
+
+### Fixed
+
+- make recovery queue regression independent of disk timing
+
+### Other
+
+- configure Dependabot security updates and MSRV checks
+
 ## [6.0.2](https://github.com/rafaelpierre/kestrel-rs/compare/v6.0.1...v6.0.2) - 2026-09-13
 
 ### Fixed
