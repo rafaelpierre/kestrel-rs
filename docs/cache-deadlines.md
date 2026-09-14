@@ -3,8 +3,9 @@
 `fetch_all_cached` and `fetch_all_cached_detailed` share one absolute deadline
 created at cached-operation entry when a budget is supplied. The deadline covers
 cache reads, the remaining network phase, page writes, and foreground maintenance.
-The CLI's `--fetch-budget` uses this path when `--cache-ttl` is enabled. Without a
-fetch budget, storage admission is bounded but there is no total deadline.
+The CLI's `--fetch-budget` (default two seconds) uses this path when `--cache-ttl`
+is enabled. Library calls without a fetch budget retain bounded storage admission
+but have no total deadline.
 Provider search, ranking, command initialization/output and runtime shutdown are
 separate; this is a cooperative stage deadline, not a hard real-time process cap.
 

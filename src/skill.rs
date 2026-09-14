@@ -241,9 +241,9 @@ scans at most 4,096 directory entries, so capacity is best effort in oversized
 or concurrently written directories. On cancellation, already-running blocking I/O may finish
 later, within the fixed admission bound; no late commit is guaranteed. These
 cooperative stage deadlines exclude command initialization, output, and runtime
-shutdown. No total fetch deadline applies when `--fetch-budget` is omitted; in that case each
-write/maintenance wait and the final queue drain are bounded to 250 ms. With a
-fetch budget, the writer uses the remaining absolute budget. The writer queue holds
+shutdown. Search uses a two-second fetch deadline by default; the writer uses the
+remaining absolute budget. Library calls that explicitly omit a budget still bound
+each write/maintenance wait and the final queue drain to 250 ms. The writer queue holds
 at most 16 entries and 16 MiB of URL/text, with one additional worker copy; larger
 entries are skipped with a diagnostic. Atomic checksummed entries use a 250 ms
 cross-process lock wait; committed means replacement and file sync succeeded
@@ -474,14 +474,25 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
   still bounds each call's requests; `--parse-concurrency` controls page extraction,
   not provider workers. Parser queueing is included in the search budget.
 - The search budget excludes page fetching. `--fetch-budget` separately bounds the
-  candidate-fetch stage, including enabled cache I/O, and retains completed pages; it is unset by default.
-  `--timeout` controls individual page requests, not the total search duration.
+  candidate-fetch stage, including enabled cache I/O, to two seconds by default and retains completed pages.
+  Override with a positive `--fetch-budget SECS` (for example `--fetch-budget 10`)
+  when more page evidence is needed. Previously omitting this flag meant no total
+  fetch deadline; this default change can leave fewer fetched pages or different rankings.
+  When budget exhaustion cancels unfinished page work, stderr reports the count
+  and suggests `kestrel fetch "URL"` for individual pages. This notice also appears
+  in JSON mode and with `--no-diagnostics`; stdout and exit status are unchanged.
+  Persistence-only exhaustion does not claim page cancellation.
+  `--timeout` still defaults to ten seconds per page request. Standalone `fetch`
+  and library budget defaults are unchanged; `--no-fetch` bypasses the fetch stage.
 - Search page caching is disabled unless `--cache-ttl` is set. Both `--cache-dir`
   and `--cache-max-entries` require `--cache-ttl`. With caching enabled, defaults are
   `~/.cache/kestrel/pages` and 1,000 entries. Standalone `fetch` does not use this cache.
 - Search extracts up to 2,000 characters per page by default; standalone `fetch`
   defaults to 20,000. `--content-limit` sets characters; `--max-response-bytes`
-  independently caps downloaded bytes.
+  independently caps downloaded bytes. A smaller character limit does not stop the
+  download earlier or guarantee a faster command; HTML is parsed before text
+  extraction, and discovery/network time varies between calls. Changing the
+  character limit also changes page-cache identity.
 
 ## Fetch output
 
