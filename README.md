@@ -559,3 +559,11 @@ Provider work can be recovered independently with `--recovery-ttl 300`,
 metadata-only searches. Repeat the same command and directory after interruption to replay committed records
 and request only necessary incomplete units.
 See [provider progress storage](docs/provider-progress.md) for initial/retry recipes, commit boundaries and graceful shutdown.
+
+## Standalone proxy discovery
+
+Library callers can explicitly load a validated HTTP/CONNECT proxy list with
+`proxy::hproxy::HProxyDiscovery`. Clones share bounded discovery and its result.
+This is the discovery slice of #9; it does not enable automatic proxy routing
+for search or fetch. See [HProxy discovery](docs/hproxy-discovery.md) for the API,
+filters, limits, failure behavior and contract-verification limitations.

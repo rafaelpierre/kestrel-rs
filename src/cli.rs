@@ -1893,6 +1893,15 @@ mod tests {
     }
 
     #[test]
+    fn generated_skill_scopes_hproxy_to_standalone_discovery() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("library-only `proxy::hproxy::HProxyDiscovery`"));
+        assert!(skill.contains("does not change search/fetch routing"));
+        assert!(skill.contains("SOCKS discovery selection is unsupported"));
+        assert!(Cli::try_parse_from(["kestrel", "search", "test", "--auto-proxy"]).is_err());
+    }
+
+    #[test]
     fn generated_skill_documents_local_diagnostic_delivery() {
         let skill = generate_skill_md(&mut Cli::command());
         for contract in [
