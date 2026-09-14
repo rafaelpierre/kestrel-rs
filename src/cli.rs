@@ -466,7 +466,7 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
 
     let mut timings = BTreeMap::new();
     let initialize_started = Instant::now();
-    let client = match KestrelClient::with_parser_capacity(arguments.parse_concurrency) {
+    let client = match KestrelClient::with_engines_and_parser_capacity(&arguments.engines, arguments.parse_concurrency) {
         Ok(client) => client,
         Err(error) => {
             eprintln!("[kestrel] Failed to initialize HTTP clients: {error}");

@@ -191,6 +191,15 @@ pub(crate) struct SearchClients {
 }
 
 impl SearchClients {
+    fn validate_engines(&self, engines: &[Engine]) -> Result<(), KestrelError> {
+        if engines.contains(&Engine::Yahoo) && self.yahoo.is_none() {
+            return Err(KestrelError::InvalidRequest(
+                "Yahoo transport was not enabled when constructing this client".into(),
+            ));
+        }
+        Ok(())
+    }
+
     pub(crate) fn new(engines: &[Engine]) -> Result<Self, KestrelError> {
         Self::with_transport(engines, &crate::TransportOptions::default())
     }
@@ -250,6 +259,7 @@ pub(crate) async fn search_with_clients(
 ) -> Result<Vec<SearchResult>, KestrelError> {
     crate::telemetry::scope_result("kestrel.search", async {
         validate_query(query)?;
+        clients.validate_engines(&[engine])?;
         DIAGNOSTIC_RUN_ID
             .scope(uuid::Uuid::new_v4().to_string(), async {
                 run_one_job(
@@ -333,6 +343,7 @@ pub(crate) async fn search_many_reusing_clients_detailed(
 ) -> Result<SearchReport, KestrelError> {
     crate::telemetry::scope_result("kestrel.search", async {
         let (queries, engines) = validate_request(queries, options)?;
+        clients.validate_engines(&engines)?;
         search_many_with_clients_detailed(queries, engines, options, clients, recovery).await
     })
     .await
