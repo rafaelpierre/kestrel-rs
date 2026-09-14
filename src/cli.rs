@@ -14,7 +14,7 @@ use kestrelsearch::fetcher::DEFAULT_MAX_RESPONSE_BYTES;
 use kestrelsearch::skill::generate_skill_md;
 use kestrelsearch::{
     Engine, FetchOptions, FetchReport, KestrelClient, PageCache, SearchMode, SearchOptions,
-    SearchResult, TimeFilter, pre_rank_candidates, rank_results_by_query,
+    SearchResult, TimeFilter, pre_rank_candidates,
 };
 
 mod diagnostics;
@@ -109,7 +109,7 @@ struct SearchArgs {
     #[arg(long, conflicts_with = "no_fetch")]
     fetch: bool,
 
-    /// Skip page retrieval and default BM25; conflicts with explicit fetch-stage options.
+    /// Skip page retrieval; hybrid ranks titles/snippets. Conflicts with explicit fetch-stage options.
     #[arg(long, conflicts_with_all = [
         "fetch", "rank", "fetch_candidates", "min_fetch_score", "pre_rank", "content_limit",
         "max_response_bytes", "timeout", "fetch_budget", "cache_ttl", "cache_dir",
@@ -117,7 +117,7 @@ struct SearchArgs {
     ])]
     no_fetch: bool,
 
-    /// Explicitly enable default BM25; requires fetching and no explicit ranking policy.
+    /// Explicitly enable default hybrid ranking; requires fetching and no explicit ranking policy.
     #[arg(long, conflicts_with_all = ["no_rank", "ranking_policy"])]
     rank: bool,
 
@@ -125,7 +125,7 @@ struct SearchArgs {
     #[arg(long, conflicts_with = "rank")]
     no_rank: bool,
 
-    /// Experimental final ordering (body requires page fetching).
+    /// Final ordering (default: hybrid; body requires page fetching).
     #[arg(long, value_enum, conflicts_with = "no_rank")]
     ranking_policy: Option<kestrelsearch::ranking::RankingPolicy>,
 
@@ -451,7 +451,7 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
     kestrelsearch::telemetry::payload("input.queries", &queries);
     kestrelsearch::telemetry::attribute("kestrel.top_k", arguments.top_k as i64);
     kestrelsearch::telemetry::attribute("kestrel.fetch_enabled", !arguments.no_fetch);
-    kestrelsearch::telemetry::attribute("kestrel.rank_enabled", !arguments.no_rank && (!arguments.no_fetch || arguments.ranking_policy.is_some()));
+    kestrelsearch::telemetry::attribute("kestrel.rank_enabled", !arguments.no_rank);
     let query_label = queries.join(" | ");
     let options = arguments.search_options();
     eprintln!(
@@ -621,14 +621,11 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
             arguments.max_response_bytes,
         )
     });
-    if let Some(policy) = arguments.ranking_policy {
+    if should_rank {
+        let policy = arguments.ranking_policy.unwrap_or(kestrelsearch::ranking::RankingPolicy::Hybrid);
+        eprintln!("[kestrel] Ranking with {policy:?}...");
         let rank_started = Instant::now();
         results = kestrelsearch::ranking::rank_with_policy(results, &queries, policy);
-        timings.insert("rank".into(), elapsed_millis(rank_started));
-    } else if should_fetch && should_rank {
-        eprintln!("[kestrel] Ranking with BM25...");
-        let rank_started = Instant::now();
-        results = rank_results_by_query(results, &queries);
         timings.insert("rank".into(), elapsed_millis(rank_started));
     }
 
@@ -2035,6 +2032,11 @@ mod tests {
     fn generated_skill_distinguishes_semantic_primitives_from_cli() {
         let skill = generate_skill_md(&mut Cli::command());
         assert!(skill.contains("Hybrid is lexical, not semantic search"));
+        assert!(skill.contains("Final ordering (default: hybrid"));
+        assert!(skill.contains("`--no-fetch` ranks metadata alone"));
+        assert!(
+            skill.contains("Hybrid scores stay internal and `bm25_score` is absent under hybrid")
+        );
         assert!(skill.contains("have no production backend or CLI mode"));
     }
 

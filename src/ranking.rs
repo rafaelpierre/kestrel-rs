@@ -30,7 +30,7 @@ fn evidence_tokens(text: &str) -> Vec<String> {
         .collect()
 }
 
-/// Experimental policies; content-only BM25 remains the default.
+/// Final ranking policies; the CLI defaults to lexical hybrid ranking.
 #[derive(Clone, Copy, Debug, clap::ValueEnum)]
 pub enum RankingPolicy {
     Provider,

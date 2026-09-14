@@ -105,12 +105,12 @@ measures three searches through one client without confusing this with startup.
 - `--search-budget SECS` covers provider queueing and retries, retaining completed
   providers. CLI fanout defaults to five seconds; `--no-search-budget` disables
   that deadline. It is separate from `--fetch-budget`.
-- `--ranking-policy provider|snippet|body|hybrid|rrf` selects opt-in policies.
+- `--ranking-policy provider|snippet|body|hybrid|rrf` overrides the default lexical hybrid policy.
   Body uses positive-IDF content BM25 and requires fetching. Snippet and hybrid
   retain candidates with missing content; hybrid ignores the synthetic Source
   prefix. RRF fuses original provider ranks without lexical tokenization or BM25
   scoring. Snippet/hybrid and the metadata fetch threshold precompute query-term
-  statistics once per corpus; scores and stable ties are preserved. Experimental scores do not replace
+  statistics once per corpus; scores and stable ties are preserved. Hybrid also ranks metadata with `--no-fetch`; `--no-rank` preserves candidate order. Composite scores do not replace
   the public content-only `bm25_score` field.
 - `KESTRELSEARCH_PROVIDER_TRACE_DIR` captures response bodies, final URL, status,
   negotiated HTTP version and generated browser profiles. Treat traces as local

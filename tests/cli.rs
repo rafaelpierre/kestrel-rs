@@ -1057,3 +1057,96 @@ async fn ordered_html_fetch_matches_golden_in_text_and_json() {
     .await
     .unwrap();
 }
+
+#[cfg(feature = "test-fixtures")]
+#[tokio::test(flavor = "multi_thread")]
+async fn default_hybrid_matches_explicit_policy_with_and_without_fetching() {
+    use wiremock::{
+        Mock, MockServer, ResponseTemplate,
+        matchers::{method, path},
+    };
+    let server = MockServer::start().await;
+    let base = server.uri();
+    Mock::given(method("GET")).and(path("/bing"))
+        .respond_with(ResponseTemplate::new(200).set_body_string(format!(
+            r#"<ol id="b_results"><li class="b_algo"><h2><a href="{base}/generic">Python home</a></h2><div class="b_caption"><p>Python downloads</p></div></li><li class="b_algo"><h2><a href="{base}/guide">uv guide</a></h2><div class="b_caption"><p>uv package management guide</p></div></li></ol>"#)))
+        .mount(&server).await;
+    Mock::given(method("GET"))
+        .and(path("/generic"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .insert_header("content-type", "text/plain")
+                .set_body_string("uv guide"),
+        )
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/guide"))
+        .respond_with(ResponseTemplate::new(404))
+        .mount(&server)
+        .await;
+    let mut fetch_requests = 0;
+    for no_fetch in [true, false] {
+        let mut outputs = Vec::new();
+        let controls: &[&[&str]] = if no_fetch {
+            &[
+                &[],
+                &["--ranking-policy", "hybrid"],
+                &["--no-rank"],
+                &["--ranking-policy", "provider"],
+            ]
+        } else {
+            &[
+                &[],
+                &["--ranking-policy", "hybrid"],
+                &["--no-rank"],
+                &["--ranking-policy", "provider"],
+                &["--rank"],
+                &["--ranking-policy", "body"],
+            ]
+        };
+        for control in controls {
+            let mut command = Command::cargo_bin("kestrel").unwrap();
+            command
+                .env("KESTREL_TEST_PROVIDER_ENDPOINT", format!("{base}/bing"))
+                .args([
+                    "search",
+                    "uv guide",
+                    "-e",
+                    "bing",
+                    "--search-budget",
+                    "15",
+                    "--output",
+                    "json",
+                ])
+                .args(*control);
+            if no_fetch {
+                command.arg("--no-fetch");
+            }
+            let output = command.assert().success().get_output().stdout.clone();
+            let value: serde_json::Value = serde_json::from_slice(&output).unwrap();
+            outputs.push(value["results"].clone());
+            if !no_fetch {
+                fetch_requests += 2;
+            }
+        }
+        assert_eq!(outputs[0], outputs[1]);
+        assert_eq!(outputs[0][0]["url"], format!("{base}/guide"));
+        assert_eq!(outputs[0].as_array().unwrap().len(), 2);
+        assert!(outputs[0][0]["content"].is_null());
+        assert!(outputs[0][0]["bm25_score"].is_null());
+        assert_eq!(outputs[2], outputs[3]);
+        assert_eq!(outputs[2][0]["url"], format!("{base}/generic"));
+        if !no_fetch {
+            assert_eq!(outputs[0], outputs[4]);
+            assert_eq!(outputs[5].as_array().unwrap().len(), 1);
+            assert_eq!(outputs[5][0]["url"], format!("{base}/generic"));
+            assert!(outputs[5][0]["bm25_score"].as_f64().unwrap() > 0.0);
+        }
+        let requests = server.received_requests().await.unwrap();
+        assert_eq!(
+            requests.iter().filter(|r| r.url.path() != "/bing").count(),
+            fetch_requests
+        );
+    }
+}
