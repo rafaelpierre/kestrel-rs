@@ -843,3 +843,96 @@ fn mojeek_challenge_observation_matches_provider_parser() {
         Challenge::NotDetected
     );
 }
+
+#[tokio::test]
+async fn shared_http_policy_status_and_retry_after_matrix() {
+    let _telemetry = crate::telemetry::test_export_guard();
+    for yahoo in [false, true] {
+        for status in [408, 429, 500, 503, 400, 404] {
+            for header in ["0", "invalid", "16", "18446744073709551616"] {
+                let server = MockServer::start().await;
+                let retryable = matches!(status, 408 | 429 | 500 | 503);
+                let count = if retryable && header != "16" { 3 } else { 1 };
+                Mock::given(method("GET"))
+                    .respond_with(
+                        ResponseTemplate::new(status).insert_header("retry-after", header),
+                    )
+                    .expect(count)
+                    .mount(&server)
+                    .await;
+                let (result, snapshot) = recorded(yahoo, &server.uri()).await;
+                assert!(
+                    result
+                        .unwrap_err()
+                        .to_string()
+                        .contains(&format!("HTTP {status}"))
+                );
+                assert_eq!(snapshot.send_attempts, count as usize);
+                for attempt in snapshot.attempts {
+                    assert_eq!(attempt.http_status, Some(status));
+                    assert_eq!(attempt.retry_after.as_deref(), Some(header));
+                    assert_eq!(attempt.outcome, Some("response"));
+                }
+            }
+        }
+    }
+}
+
+#[tokio::test]
+async fn error_status_body_failures_keep_status_retry_policy() {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    let _telemetry = crate::telemetry::test_export_guard();
+    for yahoo in [false, true] {
+        for status in [408, 429, 500, 404] {
+            let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let url = format!("http://{}", listener.local_addr().unwrap());
+            let count = if status == 404 { 1 } else { 3 };
+            let server = tokio::spawn(async move {
+                for _ in 0..count {
+                    let (mut stream, _) = listener.accept().await.unwrap();
+                    let mut request = [0; 4096];
+                    assert!(stream.read(&mut request).await.unwrap() > 0);
+                    stream.write_all(format!("HTTP/1.1 {status} Error\r\nContent-Length: 100\r\nRetry-After: 0\r\nConnection: close\r\n\r\nshort").as_bytes()).await.unwrap();
+                }
+            });
+            let (result, snapshot) =
+                tokio::time::timeout(Duration::from_secs(10), recorded(yahoo, &url))
+                    .await
+                    .unwrap();
+            server.await.unwrap();
+            assert!(
+                result
+                    .unwrap_err()
+                    .to_string()
+                    .contains(&format!("HTTP {status}"))
+            );
+            assert_eq!(snapshot.send_attempts, count);
+            for attempt in snapshot.attempts {
+                assert_eq!(attempt.http_status, Some(status));
+                assert_eq!(attempt.outcome, Some("body_error"));
+                assert!(matches!(
+                    attempt.transport_error,
+                    Some(TransportKind::Body | TransportKind::Decode)
+                ));
+            }
+        }
+    }
+}
+
+#[tokio::test]
+async fn builder_errors_preserve_backend_retry_eligibility() {
+    let _telemetry = crate::telemetry::test_export_guard();
+    // A malformed URL fails before sending. Yahoo deliberately retries every
+    // send error; standard transport excludes builder errors.
+    for yahoo in [false, true] {
+        let (result, snapshot) = recorded(yahoo, "http://[").await;
+        assert!(result.is_err());
+        assert_eq!(snapshot.send_attempts, if yahoo { 3 } else { 1 });
+        assert!(
+            snapshot
+                .attempts
+                .iter()
+                .all(|attempt| attempt.http_status.is_none())
+        );
+    }
+}

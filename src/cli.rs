@@ -2075,6 +2075,24 @@ mod tests {
     }
 
     #[test]
+    fn generated_skill_documents_shared_http_retry_policy() {
+        let skill = generate_skill_md(&mut Cli::command());
+        for contract in [
+            "both HTTP backends retry HTTP 408/429/5xx",
+            "Yahoo retries all send errors",
+            "standard backend retries only timeout/connect/request errors",
+            "Successful-status body failures, oversized responses and extraction failures do not retry",
+            "Other error-status body failures retain status-based retries",
+            "Invalid Retry-After values use bounded jittered backoff",
+        ] {
+            assert!(
+                skill.contains(contract),
+                "missing retry contract: {contract}"
+            );
+        }
+    }
+
+    #[test]
     fn generated_skill_documents_provider_worker_ownership() {
         let skill = generate_skill_md(&mut Cli::command());
         assert!(skill.contains("ten queued/running blocking workers per retained client"));

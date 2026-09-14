@@ -1230,6 +1230,61 @@ fn retain_body(_engine: Engine, text: &str, _parsed: &ParsedResponse) -> String 
     text.to_owned()
 }
 
+// Keep backend-specific send-error eligibility explicit. Completed responses and
+// body failures use the same policy regardless of the HTTP implementation.
+struct SendFailure {
+    timeout: bool,
+    retryable: bool,
+    kind: TransportKind,
+    error: KestrelError,
+}
+
+enum ProviderHttpResponse {
+    Standard(reqwest::Response),
+    Yahoo(primp::Response),
+}
+
+struct ResponseHead {
+    status: u16,
+    retry_after: Option<String>,
+    final_url: String,
+    http_version: String,
+}
+
+impl ProviderHttpResponse {
+    fn head(&self) -> ResponseHead {
+        match self {
+            Self::Standard(response) => ResponseHead {
+                status: response.status().as_u16(),
+                retry_after: response
+                    .headers()
+                    .get("retry-after")
+                    .and_then(|value| value.to_str().ok())
+                    .map(str::to_owned),
+                final_url: response.url().to_string(),
+                http_version: format!("{:?}", response.version()),
+            },
+            Self::Yahoo(response) => ResponseHead {
+                status: response.status().as_u16(),
+                retry_after: response
+                    .headers()
+                    .get("retry-after")
+                    .and_then(|value| value.to_str().ok())
+                    .map(str::to_owned),
+                final_url: response.url().to_string(),
+                http_version: format!("{:?}", response.version()),
+            },
+        }
+    }
+
+    async fn read(self, engine: Engine) -> Result<String, KestrelError> {
+        match self {
+            Self::Standard(response) => read_standard_body(response, engine).await,
+            Self::Yahoo(response) => read_yahoo_body(response).await,
+        }
+    }
+}
+
 async fn request_yahoo_with_retries<F, T: Send + 'static>(
     query: &str,
     extract: fn(Engine, &str, &ParsedResponse) -> T,
@@ -1238,123 +1293,21 @@ async fn request_yahoo_with_retries<F, T: Send + 'static>(
 where
     F: Fn() -> primp::RequestBuilder,
 {
-    let engine = Engine::Yahoo;
-    let mut last_error = None;
-    for attempt in 1..=3 {
-        let mut server_delay = None;
-        record_attempt();
-        let response = build().send().await;
-        observe(|r| {
-            r.transition_censored(
-                Phase::Processing,
-                response.as_ref().err().is_some_and(|e| e.is_timeout()),
-            )
-        });
-        match response {
-            Ok(response) => {
-                let status = response.status().as_u16();
-                let retry_after = response
-                    .headers()
-                    .get("retry-after")
-                    .and_then(|v| v.to_str().ok())
-                    .map(str::to_owned);
-                server_delay = retry_after.as_deref().and_then(discovery::retry_after);
-                observe(|r| r.headers(status, retry_after));
-                let final_url = response.url().to_string();
-                let http_version = format!("{:?}", response.version());
-                record_phase(Phase::Body);
-                let body = read_yahoo_body(response).await;
-                observe(|r| {
-                    r.transition_censored(
-                        Phase::Processing,
-                        body.as_ref().err().is_some_and(body_read_censored),
-                    )
-                });
-                match body {
-                    Ok(html) => {
-                        record_phase(Phase::Parse);
-                        let (html, challenge, results) = parsing::run(move || {
-                            let (challenge, results) = process_completed(
-                                engine,
-                                &html,
-                                (200..300).contains(&status),
-                                extract,
-                            );
-                            (html, challenge, results)
-                        })
-                        .await?;
-                        observe(|r| r.response(challenge));
-                        record_phase(Phase::Processing);
-                        crate::benchmarking::capture_provider(
-                            engine,
-                            query,
-                            &final_url,
-                            status,
-                            &http_version,
-                            attempt,
-                            &html,
-                        );
-                        if challenge == Challenge::Detected && !(200..300).contains(&status) {
-                            return Err(KestrelError::Search(format!(
-                                "{engine} returned a bot challenge (HTTP {status})"
-                            )));
-                        }
-                        if (200..300).contains(&status) {
-                            record_phase(Phase::Parse);
-                            return results.map(|results| (results, attempt - 1)).ok_or_else(
-                                || {
-                                    KestrelError::Search(
-                                        "successful response missing extraction".into(),
-                                    )
-                                },
-                            );
-                        }
-                    }
-                    Err(error) => {
-                        record_body_error(&error);
-                        // Preserve the successful-status body failure policy. For error
-                        // statuses retain status-based retries, while keeping the body error.
-                        if (200..300).contains(&status)
-                            || matches!(error, KestrelError::ProviderResponseTooLarge { .. })
-                        {
-                            return Err(error);
-                        }
-                    }
-                }
-                let retryable = status == 408 || status == 429 || status >= 500;
-                let error = KestrelError::Search(format!("{engine} returned HTTP {status}"));
-                if !retryable || attempt == 3 {
-                    return Err(error);
-                }
-                last_error = Some(error);
-            }
-            Err(error) => {
-                observe(|r| r.error(yahoo_transport(&error), false));
-                if attempt == 3 {
-                    return Err(error.into());
-                }
-                last_error = Some(error.into());
-            }
-        }
-        log_retry(engine, query, attempt, last_error.as_ref());
-        if let Some(delay) = server_delay {
-            // Do not shorten server guidance or permit an unbounded wait when
-            // callers disable the discovery deadline. End this request instead.
-            if delay > SEARCH_TIMEOUT {
-                return Err(last_error.unwrap_or_else(|| {
-                    KestrelError::Search(
-                        "server retry delay exceeds 15s request retry allowance".into(),
-                    )
-                }));
-            }
-            record_phase(Phase::Backoff);
-            tokio::time::sleep(delay).await;
-        } else {
-            retry_delay(attempt).await;
-        }
-    }
-    Err(last_error.unwrap_or_else(|| KestrelError::Search("request failed".into())))
+    request_with_retries(Engine::Yahoo, query, extract, || async {
+        build()
+            .send()
+            .await
+            .map(ProviderHttpResponse::Yahoo)
+            .map_err(|error| SendFailure {
+                timeout: error.is_timeout(),
+                retryable: true,
+                kind: yahoo_transport(&error),
+                error: error.into(),
+            })
+    })
+    .await
 }
+
 async fn request_standard_with_retries<F, T: Send + 'static>(
     _client: &reqwest::Client,
     engine: Engine,
@@ -1365,31 +1318,54 @@ async fn request_standard_with_retries<F, T: Send + 'static>(
 where
     F: Fn() -> reqwest::RequestBuilder,
 {
+    request_with_retries(engine, query, extract, || async {
+        build()
+            .send()
+            .await
+            .map(ProviderHttpResponse::Standard)
+            .map_err(|error| SendFailure {
+                timeout: error.is_timeout(),
+                retryable: error.is_timeout() || error.is_connect() || error.is_request(),
+                kind: standard_transport(&error),
+                error: error.into(),
+            })
+    })
+    .await
+}
+
+async fn request_with_retries<F, Fut, T: Send + 'static>(
+    engine: Engine,
+    query: &str,
+    extract: fn(Engine, &str, &ParsedResponse) -> T,
+    send: F,
+) -> Result<(T, usize), KestrelError>
+where
+    F: Fn() -> Fut,
+    Fut: Future<Output = Result<ProviderHttpResponse, SendFailure>>,
+{
     let mut last_error = None;
     for attempt in 1..=3 {
         let mut server_delay = None;
         record_attempt();
-        let response = build().send().await;
+        let response = send().await;
         observe(|r| {
             r.transition_censored(
                 Phase::Processing,
-                response.as_ref().err().is_some_and(|e| e.is_timeout()),
+                response.as_ref().err().is_some_and(|e| e.timeout),
             )
         });
         match response {
             Ok(response) => {
-                let status = response.status().as_u16();
-                let retry_after = response
-                    .headers()
-                    .get("retry-after")
-                    .and_then(|v| v.to_str().ok())
-                    .map(str::to_owned);
+                let ResponseHead {
+                    status,
+                    retry_after,
+                    final_url,
+                    http_version,
+                } = response.head();
                 server_delay = retry_after.as_deref().and_then(discovery::retry_after);
                 observe(|r| r.headers(status, retry_after));
-                let final_url = response.url().to_string();
-                let http_version = format!("{:?}", response.version());
                 record_phase(Phase::Body);
-                let body = read_standard_body(response, engine).await;
+                let body = response.read(engine).await;
                 observe(|r| {
                     r.transition_censored(
                         Phase::Processing,
@@ -1455,12 +1431,11 @@ where
                 last_error = Some(error);
             }
             Err(error) => {
-                observe(|r| r.error(standard_transport(&error), false));
-                let retryable = error.is_timeout() || error.is_connect() || error.is_request();
-                if !retryable || attempt == 3 {
-                    return Err(error.into());
+                observe(|r| r.error(error.kind, false));
+                if !error.retryable || attempt == 3 {
+                    return Err(error.error);
                 }
-                last_error = Some(error.into());
+                last_error = Some(error.error);
             }
         }
         log_retry(engine, query, attempt, last_error.as_ref());
@@ -1504,10 +1479,10 @@ fn record_body_error(error: &KestrelError) {
 // Both transports expose decompressed chunks. Check before appending, including
 // when Content-Length is absent (chunked transfer or automatic decompression).
 async fn read_standard_body(
-    mut response: reqwest::Response,
+    response: reqwest::Response,
     engine: Engine,
 ) -> Result<String, KestrelError> {
-    let mut body = ProviderBody::new(
+    let body = ProviderBody::new(
         engine,
         response.status().as_u16(),
         response.content_length(),
@@ -1526,24 +1501,18 @@ async fn read_standard_body(
             .get("content-type")
             .and_then(|v| v.to_str().ok()),
     );
-    let mut incremental = streaming::Incremental::for_body(&body);
-    while let Some(chunk) = response.chunk().await? {
-        body.push(&chunk)?;
-        #[cfg(test)]
-        streaming::probe::bytes(body.engine, chunk.len());
-        if let Some(parser) = &mut incremental {
-            parser.push(&chunk).await?;
-        }
-    }
-    #[cfg(test)]
-    streaming::probe::eof(body.engine);
-    // Release the persistent stream worker before waiting for completed-body capacity.
-    drop(incremental);
-    parsing::run(move || body.text()).await
+    let chunks = futures_util::stream::try_unfold(response, |mut response| async {
+        response
+            .chunk()
+            .await
+            .map(|chunk| chunk.map(|chunk| (chunk, response)))
+            .map_err(KestrelError::from)
+    });
+    read_provider_chunks(body, chunks).await
 }
 
-async fn read_yahoo_body(mut response: primp::Response) -> Result<String, KestrelError> {
-    let mut body = ProviderBody::new(
+async fn read_yahoo_body(response: primp::Response) -> Result<String, KestrelError> {
+    let body = ProviderBody::new(
         Engine::Yahoo,
         response.status().as_u16(),
         response.content_length(),
@@ -1562,13 +1531,34 @@ async fn read_yahoo_body(mut response: primp::Response) -> Result<String, Kestre
             .get("content-type")
             .and_then(|v| v.to_str().ok()),
     );
+    let chunks = futures_util::stream::try_unfold(response, |mut response| async {
+        response
+            .chunk()
+            .await
+            .map(|chunk| chunk.map(|chunk| (chunk, response)))
+            .map_err(KestrelError::from)
+    });
+    read_provider_chunks(body, chunks).await
+}
+
+async fn read_provider_chunks<S, B>(
+    mut body: ProviderBody,
+    chunks: S,
+) -> Result<String, KestrelError>
+where
+    S: futures_util::Stream<Item = Result<B, KestrelError>>,
+    B: AsRef<[u8]>,
+{
     let mut incremental = streaming::Incremental::for_body(&body);
-    while let Some(chunk) = response.chunk().await? {
-        body.push(&chunk)?;
+    let mut chunks = std::pin::pin!(chunks);
+    while let Some(chunk) = chunks.next().await {
+        let chunk = chunk?;
+        let chunk = chunk.as_ref();
+        body.push(chunk)?;
         #[cfg(test)]
         streaming::probe::bytes(body.engine, chunk.len());
         if let Some(parser) = &mut incremental {
-            parser.push(&chunk).await?;
+            parser.push(chunk).await?;
         }
     }
     #[cfg(test)]
