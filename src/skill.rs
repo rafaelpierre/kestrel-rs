@@ -451,7 +451,10 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
 - Experimental `--ranking-policy` choices: `provider` preserves candidate order;
   `snippet` uses titles/snippets; `body` uses content-only BM25 and requires fetching;
   `hybrid` combines title/snippet/body evidence and retains results without bodies;
-  `rrf` combines provider ranks. Snippet, hybrid, and RRF also work with `--no-fetch`.
+  `rrf` combines provider ranks without tokenizing titles, snippets or bodies.
+  Snippet/hybrid and `--min-fetch-score` precompute query-term BM25 statistics;
+  scores, inclusive thresholds and stable ties are unchanged.
+  Snippet, hybrid, and RRF also work with `--no-fetch`.
 - Search streams normalized results from concurrent providers and stops at five
   unique accepted candidates per query by default. `--min-results N` changes this
   minimum. Provider quorum is ignored, including explicit `--provider-quorum`.

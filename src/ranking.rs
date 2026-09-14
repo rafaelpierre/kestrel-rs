@@ -66,40 +66,45 @@ pub fn rank_with_policy(
                 .get(index)
                 .cloned()
                 .unwrap_or_else(|| queries.join(" "));
-            let terms = evidence_tokens(
-                &query
-                    .split_whitespace()
-                    .filter(|term| !term.contains(':'))
-                    .collect::<Vec<_>>()
-                    .join(" "),
-            );
-            let documents: Vec<_> = group
-                .iter()
-                .map(|r| {
-                    let body = if matches!(policy, RankingPolicy::Hybrid) {
-                        let body = r.content.as_deref().unwrap_or_default();
-                        body.strip_prefix("Source: ")
-                            .and_then(|_| body.split_once("\n\n").map(|(_, text)| text))
-                            .unwrap_or(body)
-                    } else {
-                        ""
-                    };
-                    evidence_tokens(&format!("{} {} {} {}", r.title, r.title, r.snippet, body))
-                })
-                .collect();
-            let scores = positive_bm25_scores(&documents, &terms);
+            // RRF uses only provenance; do not construct lexical documents or scores.
+            let scores = if matches!(policy, RankingPolicy::Rrf) {
+                group
+                    .iter()
+                    .map(|result| {
+                        let mut seen = HashSet::new();
+                        result
+                            .sources
+                            .iter()
+                            .filter(|source| source.query == query && seen.insert(source.engine))
+                            .map(|source| 1.0 / (60.0 + source.rank as f64))
+                            .sum()
+                    })
+                    .collect()
+            } else {
+                let terms = evidence_tokens(
+                    &query
+                        .split_whitespace()
+                        .filter(|term| !term.contains(':'))
+                        .collect::<Vec<_>>()
+                        .join(" "),
+                );
+                let documents: Vec<_> = group
+                    .iter()
+                    .map(|r| {
+                        let body = if matches!(policy, RankingPolicy::Hybrid) {
+                            let body = r.content.as_deref().unwrap_or_default();
+                            body.strip_prefix("Source: ")
+                                .and_then(|_| body.split_once("\n\n").map(|(_, text)| text))
+                                .unwrap_or(body)
+                        } else {
+                            ""
+                        };
+                        evidence_tokens(&format!("{} {} {} {}", r.title, r.title, r.snippet, body))
+                    })
+                    .collect();
+                positive_bm25_scores(&documents, &terms)
+            };
             let mut scored: Vec<_> = group.drain(..).zip(scores).collect();
-            if matches!(policy, RankingPolicy::Rrf) {
-                for (result, score) in &mut scored {
-                    let mut seen = HashSet::new();
-                    *score = result
-                        .sources
-                        .iter()
-                        .filter(|source| source.query == query && seen.insert(source.engine))
-                        .map(|source| 1.0 / (60.0 + source.rank as f64))
-                        .sum();
-                }
-            }
             scored.sort_by(|a, b| b.1.total_cmp(&a.1));
             *group = scored.into_iter().map(|(result, _)| result).collect();
         }
@@ -111,18 +116,55 @@ fn positive_bm25_scores(corpus: &[Vec<String>], query: &[String]) -> Vec<f64> {
     if corpus.is_empty() {
         return Vec::new();
     }
+    if query.is_empty() {
+        // Match the signed zero produced by an empty f64 iterator sum.
+        return vec![std::iter::empty::<f64>().sum(); corpus.len()];
+    }
     let average =
         (corpus.iter().map(Vec::len).sum::<usize>() as f64 / corpus.len() as f64).max(1.0);
-    corpus
+    // Index only query terms: unrelated vocabulary needs no stored statistics.
+    // Retain query order and multiplicity so floating-point sums stay identical.
+    let mut term_indexes = HashMap::new();
+    let query_indexes: Vec<usize> = query
+        .iter()
+        .map(|term| {
+            let next = term_indexes.len();
+            *term_indexes.entry(term.as_str()).or_insert(next)
+        })
+        .collect();
+    let mut document_frequency = vec![0usize; term_indexes.len()];
+    let frequencies: Vec<Vec<usize>> = corpus
         .iter()
         .map(|document| {
-            query
+            let mut counts = vec![0usize; term_indexes.len()];
+            for token in document {
+                if let Some(&index) = term_indexes.get(token.as_str()) {
+                    counts[index] += 1;
+                }
+            }
+            for (index, &count) in counts.iter().enumerate() {
+                document_frequency[index] += usize::from(count != 0);
+            }
+            counts
+        })
+        .collect();
+    let idfs: Vec<f64> = document_frequency
+        .iter()
+        .map(|&df| {
+            let df = df as f64;
+            (1.0 + (corpus.len() as f64 - df + 0.5) / (df + 0.5)).ln()
+        })
+        .collect();
+    corpus
+        .iter()
+        .zip(frequencies)
+        .map(|(document, counts)| {
+            query_indexes
                 .iter()
-                .map(|term| {
-                    let tf = document.iter().filter(|t| *t == term).count() as f64;
-                    let df = corpus.iter().filter(|d| d.contains(term)).count() as f64;
-                    let idf = (1.0 + (corpus.len() as f64 - df + 0.5) / (df + 0.5)).ln();
-                    idf * tf * 2.5 / (tf + 1.5 * (0.25 + 0.75 * document.len() as f64 / average))
+                .map(|&index| {
+                    let tf = counts[index] as f64;
+                    idfs[index] * tf * 2.5
+                        / (tf + 1.5 * (0.25 + 0.75 * document.len() as f64 / average))
                 })
                 .sum()
         })
@@ -512,6 +554,136 @@ mod tests {
         result.query = query.map(str::to_owned);
         result.content = content.map(str::to_owned);
         result
+    }
+
+    // Original quadratic scorer is retained only as an independent equivalence oracle.
+    fn reference_positive_scores(corpus: &[Vec<String>], query: &[String]) -> Vec<f64> {
+        if corpus.is_empty() {
+            return Vec::new();
+        }
+        let average =
+            (corpus.iter().map(Vec::len).sum::<usize>() as f64 / corpus.len() as f64).max(1.0);
+        corpus
+            .iter()
+            .map(|document| {
+                query
+                    .iter()
+                    .map(|term| {
+                        let tf = document.iter().filter(|t| *t == term).count() as f64;
+                        let df = corpus.iter().filter(|d| d.contains(term)).count() as f64;
+                        let idf = (1.0 + (corpus.len() as f64 - df + 0.5) / (df + 0.5)).ln();
+                        idf * tf * 2.5
+                            / (tf + 1.5 * (0.25 + 0.75 * document.len() as f64 / average))
+                    })
+                    .sum()
+            })
+            .collect()
+    }
+
+    #[test]
+    fn positive_statistics_match_reference_exactly() {
+        // Empty documents, absent/repeated terms, Unicode, and variable lengths.
+        for size in 0..25 {
+            let corpus: Vec<Vec<String>> = (0..size)
+                .map(|i| {
+                    (0..(i * 13 % 37))
+                        .map(|j| ["rust", "café", "3.0", "日本語", "other"][(i + j * j) % 5].into())
+                        .collect()
+                })
+                .collect();
+            for query in [
+                vec![],
+                vec!["missing"],
+                vec!["rust", "café", "rust", "3.0", "missing"],
+                vec!["日本語", "other"],
+            ] {
+                let query = query.into_iter().map(str::to_owned).collect::<Vec<_>>();
+                let actual = positive_bm25_scores(&corpus, &query);
+                let expected = reference_positive_scores(&corpus, &query);
+                assert_eq!(
+                    actual.iter().map(|s| s.to_bits()).collect::<Vec<_>>(),
+                    expected.iter().map(|s| s.to_bits()).collect::<Vec<_>>()
+                );
+            }
+        }
+        assert_eq!(
+            positive_bm25_scores(&[vec![], vec![]], &["rust".into()]),
+            [0.0, 0.0]
+        );
+    }
+
+    #[test]
+    fn optimized_metadata_threshold_matches_reference_boundaries() {
+        let _telemetry = crate::telemetry::test_export_guard();
+        let input = vec![
+            result("rust", None, None),
+            result("café rust", None, None),
+            result("", None, None),
+        ];
+        let corpus: Vec<_> = input
+            .iter()
+            .map(|r| evidence_tokens(&format!("{} {} {}", r.title, r.title, r.snippet)))
+            .collect();
+        let query = "rust rust café";
+        let scores = reference_positive_scores(&corpus, &evidence_tokens(query));
+        for minimum in scores.iter().copied().chain([0.0, f64::MAX]) {
+            let mut actual = input.clone();
+            filter_fetch_candidates(&mut actual, &[query.into()], minimum).unwrap();
+            let expected: Vec<_> = input
+                .iter()
+                .zip(&scores)
+                .filter(|(_, score)| **score >= minimum)
+                .map(|(hit, _)| hit.clone())
+                .collect();
+            assert_eq!(actual, expected);
+        }
+    }
+
+    #[test]
+    fn rrf_preserves_provenance_scoring_ties_and_query_interleaving() {
+        let _telemetry = crate::telemetry::test_export_guard();
+        use crate::SourceOccurrence;
+        let make = |title: &str, query: Option<&str>, ranks: &[(Engine, &str, usize)]| {
+            let mut hit = result(
+                title,
+                query,
+                Some("Source: irrelevant\n\nlarge irrelevant body"),
+            );
+            hit.sources = ranks
+                .iter()
+                .map(|&(engine, query, rank)| SourceOccurrence {
+                    engine,
+                    query: query.into(),
+                    rank,
+                })
+                .collect();
+            hit.bm25_score = Some(7.0);
+            hit
+        };
+        let input = vec![
+            make("tie-first", Some("a"), &[(Engine::Bing, "a", 2)]),
+            make(
+                "winner",
+                Some("a"),
+                &[
+                    (Engine::Bing, "a", 1),
+                    (Engine::Bing, "a", 0),
+                    (Engine::Yahoo, "a", 1),
+                    (Engine::Yep, "b", 0),
+                ],
+            ),
+            make("tie-second", Some("a"), &[(Engine::Yahoo, "a", 2)]),
+            make("other-query", Some("b"), &[(Engine::Bing, "b", 1)]),
+            make("unassigned", None, &[(Engine::Bing, "a b", 1)]),
+            make("no-sources", Some("a"), &[]),
+        ];
+        let actual = rank_with_policy(input.clone(), &["a".into(), "b".into()], RankingPolicy::Rrf);
+        let expected: Vec<_> = [1, 3, 4, 0, 2, 5]
+            .iter()
+            .map(|&i| input[i].clone())
+            .collect();
+        assert_eq!(actual, expected);
+        assert!(rank_with_policy(vec![], &[], RankingPolicy::Rrf).is_empty());
     }
 
     #[test]
