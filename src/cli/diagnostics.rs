@@ -2,6 +2,7 @@
 //! queries, URLs, bodies or transport records into the diagnostic extension.
 use std::collections::{BTreeMap, HashMap};
 
+use kestrelsearch::ProviderOutcome;
 use kestrelsearch::{FetchOutcome, FetchReport, PageFetchDiagnostic, SearchReport, SearchResult};
 use serde_json::{Value, json};
 
@@ -14,37 +15,6 @@ pub(super) struct SearchDiagnostics {
     // Only the bounded detail rows retain identities, never page content.
     pages: Vec<(String, Value)>,
     unique: usize,
-}
-
-fn retained(outcome: &str) -> bool {
-    matches!(
-        outcome,
-        "results"
-            | "empty"
-            | "filtered_empty"
-            | "rate_limited_deadline"
-            | "deadline"
-            | "cancelled_min_results"
-            | "cancelled_quorum"
-    )
-}
-
-fn outcome(value: &str) -> &str {
-    match value {
-        "results"
-        | "empty"
-        | "filtered_empty"
-        | "rate_limited_deadline"
-        | "deadline"
-        | "cancelled_min_results"
-        | "cancelled_quorum"
-        | "cancelled_caller"
-        | "response_too_large"
-        | "challenge"
-        | "unrecognized"
-        | "request_error" => value,
-        _ => "unknown",
-    }
 }
 
 impl SearchDiagnostics {
@@ -89,11 +59,11 @@ impl SearchDiagnostics {
         }
         for (provider_index, provider) in report.providers.iter().enumerate() {
             *outcome_counts
-                .entry(outcome(&provider.outcome))
+                .entry(ProviderOutcome::from_report(&provider.outcome).as_str())
                 .or_default() += 1;
             raw += provider.raw_result_count;
             rejected += provider.filtered_count;
-            if retained(&provider.outcome) {
+            if ProviderOutcome::from_report(&provider.outcome).retains_snapshot() {
                 accepted_snapshot += provider.result_count;
             } else {
                 rejected_response_snapshot += provider.result_count;
@@ -108,18 +78,10 @@ impl SearchDiagnostics {
                 per_query[index].push(provider);
             }
             if provider_rows.len() < PROVIDER_LIMIT {
-                let censored = match provider.outcome.as_str() {
-                    "deadline"
-                    | "rate_limited_deadline"
-                    | "cancelled_min_results"
-                    | "cancelled_quorum"
-                    | "cancelled_caller" => Some(true),
-                    "results" | "empty" | "filtered_empty" => Some(false),
-                    _ => None,
-                };
+                let censored = ProviderOutcome::from_report(&provider.outcome).timing_censored();
                 provider_rows.push(json!({
                     "query_index": index, "engine": provider.engine,
-                    "outcome": outcome(&provider.outcome), "response_completed_successfully": provider.success,
+                    "outcome": ProviderOutcome::from_report(&provider.outcome).as_str(), "response_completed_successfully": provider.success,
                     "raw": provider.raw_result_count, "rejected": provider.filtered_count,
                     "accepted_snapshot": provider.result_count,
                     "retained_occurrences": if latest_indices.get(&(provider.engine, provider.query.as_str())) == Some(&provider_index) {
@@ -139,17 +101,10 @@ impl SearchDiagnostics {
             let minimum_reached = unique[index] >= minimum;
             let deadline = providers
                 .iter()
-                .any(|p| matches!(p.outcome.as_str(), "deadline" | "rate_limited_deadline"));
+                .any(|p| ProviderOutcome::from_report(&p.outcome).is_deadline());
             let exhausted = !providers.is_empty()
                 && providers.iter().all(|p| {
-                    !matches!(
-                        p.outcome.as_str(),
-                        "deadline"
-                            | "rate_limited_deadline"
-                            | "cancelled_min_results"
-                            | "cancelled_quorum"
-                            | "cancelled_caller"
-                    )
+                    ProviderOutcome::from_report(&p.outcome).timing_censored() != Some(true)
                 });
             let all_failed =
                 unique[index] == 0 && !providers.is_empty() && providers.iter().all(|p| !p.success);
@@ -408,6 +363,18 @@ mod tests {
             providers,
             cancelled: 0,
         }
+    }
+
+    #[test]
+    fn future_report_outcome_is_explicitly_unknown_and_does_not_leak_text() {
+        let _telemetry = kestrelsearch::telemetry::test_export_guard();
+        let report = report(vec![], vec![provider("q", "future private outcome", 0, 0)]);
+        let value = SearchDiagnostics::new(&report, &["q".into()], 5).search;
+        assert_eq!(value["providers"][0]["outcome"], "unknown");
+        assert_eq!(value["provider_outcomes"]["unknown"], 1);
+        assert_eq!(value["queries"][0]["deadline"], false);
+        assert!(value["providers"][0]["timing_censored"].is_null());
+        assert!(!value.to_string().contains("private"));
     }
 
     #[test]

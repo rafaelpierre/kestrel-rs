@@ -59,6 +59,7 @@ pub(super) async fn run(
             let end = tokio::time::Instant::now() + b;
             overall.map_or(end, |cap| end.min(cap))
         });
+        let states = Arc::new(Mutex::new(HashMap::new()));
         let job = async {
             run_fanout_query(
                 query,
@@ -74,7 +75,9 @@ pub(super) async fn run(
             )
             .await
         };
-        let (outcomes, dropped) = DISCOVERY_ATTEMPT.scope(attempt, job).await;
+        let (outcomes, dropped) = DISCOVERY_ATTEMPT
+            .scope(attempt, ATTEMPT_STATES.scope(Arc::clone(&states), job))
+            .await;
         cancelled += dropped;
         let has_results = outcomes
             .iter()
@@ -87,13 +90,11 @@ pub(super) async fn run(
             break;
         };
         pending.retain(|engine| {
-            diagnostics
+            states
                 .lock()
-                .expect("diagnostic lock")
-                .iter()
-                .rev()
-                .find(|d| d.query == query && d.engine == *engine)
-                .is_some_and(|d| d.discovery_attempt == attempt && d.outcome == "deadline")
+                .expect("attempt state lock")
+                .get(engine)
+                .is_some_and(|state| state.retryable())
         });
         if pending.is_empty() {
             break;
@@ -134,13 +135,15 @@ pub(super) fn failure(providers: &[ProviderSearchDiagnostic]) -> KestrelError {
     }
     let mut counts = std::collections::BTreeMap::<&str, usize>::new();
     for p in latest.values() {
-        let cause = match p.outcome.as_str() {
-            "deadline" => "exceeded their budgets",
-            "rate_limited_deadline" => "hit a deadline after rate-limit/retry guidance",
-            "challenge" => "returned a bot challenge",
-            "response_too_large" => "exceeded the response-size limit",
-            "unrecognized" => "returned an unrecognized search page",
-            "cancelled_caller" => "were cancelled",
+        let cause = match ProviderOutcome::from_report(&p.outcome) {
+            ProviderOutcome::Deadline => "exceeded their budgets",
+            ProviderOutcome::RateLimitedDeadline => {
+                "hit a deadline after rate-limit/retry guidance"
+            }
+            ProviderOutcome::Challenge => "returned a bot challenge",
+            ProviderOutcome::ResponseTooLarge => "exceeded the response-size limit",
+            ProviderOutcome::Unrecognized => "returned an unrecognized search page",
+            ProviderOutcome::CancelledCaller => "were cancelled",
             _ => "failed with request errors",
         };
         *counts.entry(cause).or_default() += 1;
@@ -205,7 +208,7 @@ pub(super) mod tests {
             &self,
             query: &str,
             engine: Engine,
-        ) -> Result<ProviderResponse, KestrelError> {
+        ) -> Result<ProviderResponse, ProviderFailure> {
             let key = (query.to_owned(), engine);
             let call = {
                 let mut calls = self.calls.lock().unwrap();
@@ -236,13 +239,15 @@ pub(super) mod tests {
                 Behavior::Deadline => std::future::pending().await,
                 Behavior::Recover if call == 1 => std::future::pending().await,
                 Behavior::Hard => Err(KestrelError::Search(
-                    "request failed: deadline exceeded in unrelated text".into(),
-                )),
-                Behavior::Challenge => Err(KestrelError::Search(
+                    "request failed: bot challenge and unrecognized search page in unrelated text"
+                        .into(),
+                )
+                .into()),
+                Behavior::Challenge => Err(ProviderFailure::challenge(
                     "provider returned a bot challenge".into(),
                 )),
                 Behavior::RateLimit => {
-                    observe(|r| r.headers(429, Some("60".into())));
+                    record_headers(429, Some("60".into()));
                     std::future::pending().await
                 }
                 behavior => {

@@ -136,7 +136,7 @@ fn completed_fixtures() -> Vec<(Engine, &'static str)> {
     ]
 }
 
-fn old_completed(engine: Engine, body: &str) -> Result<Vec<SearchResult>, KestrelError> {
+fn old_completed(engine: Engine, body: &str) -> Result<Vec<SearchResult>, ProviderFailure> {
     match engine {
         Engine::Duckduckgo => parse_duckduckgo_response(body),
         Engine::Bing | Engine::Yahoo => parse_provider_response(engine, body),

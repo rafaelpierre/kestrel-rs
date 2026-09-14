@@ -237,6 +237,8 @@ fn skill_install_and_uninstall_use_compatible_paths() {
             "missing parser capacity guidance: {guidance}"
         );
     }
+    assert!(skill.contains("Only ordinary deadline outcomes are eligible"));
+    assert!(skill.contains("unknown report outcomes must not be treated as retryable deadlines"));
     assert!(skill.contains("retained prefix"));
     assert!(skill.contains("Completed transport challenge diagnostics and HTML/JSON extraction share one worker-local representation"));
     assert!(skill.contains("JSON snapshots likewise reuse their value"));
