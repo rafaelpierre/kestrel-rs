@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [9.0.1](https://github.com/rafaelpierre/kestrel-rs/compare/v9.0.0...v9.0.1) - 2026-09-14
+
+### Fixed
+
+- encode Bing query spaces as percent-20
+
+### Other
+
+- separate search adapters, transport, and result processing
+- use typed provider outcomes for discovery recovery
+- Merge pull request #214 from rafaelpierre/codex/205-shared-provider-retries
+- Merge pull request #215 from rafaelpierre/release-plz-2026-09-14T15-57-25Z
+
 ## [9.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v8.0.0...v9.0.0) - 2026-09-14
 
 ### Added
