@@ -537,6 +537,9 @@ Network-facing tests use local mock servers. Live provider checks are manual
 because provider markup, availability, and anti-bot behavior can change
 independently of the crate.
 
+See [search module ownership](docs/search-architecture.md) for the internal
+adapter, transport, parser and result-processing boundaries.
+
 ### HTTP/2 connection tuning
 
 Retain and clone `KestrelClient` to reuse connections across calls. Shared transport

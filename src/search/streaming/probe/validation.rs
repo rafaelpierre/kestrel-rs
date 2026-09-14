@@ -1,5 +1,9 @@
 //! Current-contract experiments. This entire module and its collector hook are test-only.
 use super::*;
+use crate::search::{
+    DIAGNOSTIC_RUN_ID, ProviderSearchDiagnostic, Semaphore, merge_outcomes, run_fanout_query,
+    validate_request,
+};
 use serde::Deserialize;
 use std::io::Write;
 
@@ -395,6 +399,8 @@ async fn live_streaming_provider_probes() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::search::{ProviderResponse, filter_response};
+
     use std::pin::Pin;
     type Job = Pin<Box<dyn Future<Output = (usize, Result<Vec<SearchResult>, KestrelError>)>>>;
     fn records(start: usize, count: usize) -> Vec<SearchResult> {

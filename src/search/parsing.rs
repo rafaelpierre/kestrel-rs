@@ -1,6 +1,8 @@
 //! Provider parsing capacity is retained by workers, not their async callers.
-use super::*;
+use crate::error::KestrelError;
+use std::sync::Arc;
 use tokio::sync::OwnedSemaphorePermit;
+use tokio::sync::Semaphore;
 
 /// Fixed aggregate capacity for a retained search client and all its clones.
 /// Per-call search concurrency still bounds admitted provider requests; page
@@ -16,11 +18,11 @@ impl Default for ParserPool {
 
 impl ParserPool {
     #[cfg(test)]
-    pub(super) fn with_capacity(capacity: usize) -> Self {
+    pub(crate) fn with_capacity(capacity: usize) -> Self {
         Self(Arc::new(Semaphore::new(capacity)))
     }
 
-    pub(super) async fn acquire(&self) -> Result<OwnedSemaphorePermit, KestrelError> {
+    pub(crate) async fn acquire(&self) -> Result<OwnedSemaphorePermit, KestrelError> {
         self.0
             .clone()
             .acquire_owned()
@@ -30,10 +32,10 @@ impl ParserPool {
 }
 
 tokio::task_local! {
-    pub(super) static POOL: ParserPool;
+    pub(crate) static POOL: ParserPool;
 }
 
-pub(super) fn current_pool() -> ParserPool {
+pub(crate) fn current_pool() -> ParserPool {
     // Production entry points always scope the retained client's pool. The
     // fallback also bounds internal transport/fixture entry points without one.
     static FALLBACK: std::sync::LazyLock<ParserPool> =
@@ -42,7 +44,7 @@ pub(super) fn current_pool() -> ParserPool {
         .unwrap_or_else(|_| FALLBACK.clone())
 }
 
-pub(super) async fn run<T: Send + 'static>(
+pub(crate) async fn run<T: Send + 'static>(
     work: impl FnOnce() -> T + Send + 'static,
 ) -> Result<T, KestrelError> {
     let permit = current_pool().acquire().await?;
@@ -51,7 +53,7 @@ pub(super) async fn run<T: Send + 'static>(
         .map_err(|error| KestrelError::Search(format!("provider parser worker failed: {error}")))
 }
 
-pub(super) fn spawn<T: Send + 'static>(
+pub(crate) fn spawn<T: Send + 'static>(
     permit: OwnedSemaphorePermit,
     work: impl FnOnce() -> T + Send + 'static,
 ) -> tokio::task::JoinHandle<T> {
@@ -68,7 +70,15 @@ pub(super) fn spawn<T: Send + 'static>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::atomic::AtomicUsize;
+    use crate::{
+        model::Engine, providers::response::parse_provider_response,
+        search::MAX_PROVIDER_RESPONSE_BYTES,
+    };
+    use base64::Engine as _;
+    use std::{
+        sync::atomic::{AtomicUsize, Ordering},
+        time::{Duration, Instant},
+    };
 
     #[tokio::test(flavor = "current_thread")]
     async fn cancelled_started_work_bounds_repeated_calls_and_client_clones() {

@@ -1,5 +1,5 @@
 //! Opt-in, bounded persistence of accepted provider snapshots.
-use crate::search::KestrelError;
+use crate::error::KestrelError;
 use crate::{
     Engine, SearchResult, TimeFilter,
     cache::{PageCache, atomic_json},

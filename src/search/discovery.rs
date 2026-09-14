@@ -1,5 +1,17 @@
 //! Bounded recovery of empty queries. Completed providers are never rescheduled.
-use super::*;
+#[cfg(test)]
+use super::ProviderResponse;
+use super::{ATTEMPT_STATES, DISCOVERY_ATTEMPT, ProviderOutcome, SearchClients, run_fanout_query};
+use crate::{
+    error::KestrelError,
+    model::{Engine, ProviderSearchDiagnostic, SearchOptions, SearchResult},
+};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
+use tokio::sync::Semaphore;
 
 #[derive(Clone, Copy)]
 pub(super) struct Policy {
@@ -176,6 +188,9 @@ pub(super) fn retry_after(value: &str) -> Option<Duration> {
 #[cfg(test)]
 pub(super) mod tests {
     use super::*;
+    use crate::search::{
+        ProviderFailure, SearchReport, record_attempt, record_headers, search_many_detailed,
+    };
 
     #[derive(Clone, Copy)]
     enum Behavior {

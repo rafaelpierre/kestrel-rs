@@ -11,8 +11,8 @@ use reqwest::header::{CONTENT_LENGTH, CONTENT_TYPE};
 use scraper::{ElementRef, Html, Selector};
 use tokio::sync::Semaphore;
 
+use crate::error::KestrelError;
 use crate::model::{FetchOptions, FetchOutcome, FetchReport, PageFetchDiagnostic};
-use crate::search::KestrelError;
 
 pub const DEFAULT_MAX_RESPONSE_BYTES: usize = 1_000_000;
 const SUPPORTED_CONTENT_TYPES: &[&str] = &[

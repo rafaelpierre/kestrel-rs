@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use crate::search::KestrelError;
+use crate::error::KestrelError;
 
 /// Settings applied to independent search and page-download pools.
 #[derive(Clone, Debug)]

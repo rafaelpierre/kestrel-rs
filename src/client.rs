@@ -6,6 +6,7 @@ use std::time::Duration;
 use futures_util::{StreamExt, stream};
 
 use crate::cache::PageCache;
+use crate::error::KestrelError;
 use crate::fetcher::{
     ParserPool, build_client_with_transport, fetch_all_reusing_client_with_cache,
     fetch_all_with_parser_pool,
@@ -13,7 +14,7 @@ use crate::fetcher::{
 use crate::model::{Engine, FetchOptions, FetchReport, SearchOptions, SearchResult, TimeFilter};
 use crate::numeric::before_deadline;
 use crate::search::{
-    KestrelError, SearchClients, search_many_reusing_clients, search_many_reusing_clients_detailed,
+    SearchClients, search_many_reusing_clients, search_many_reusing_clients_detailed,
     search_with_clients,
 };
 

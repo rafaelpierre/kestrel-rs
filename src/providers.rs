@@ -1,4 +1,4 @@
-//! Opt-in provider adapters. Wire formats are isolated from orchestration.
+//! Provider wire contracts and adapters, isolated from search orchestration.
 
 use std::collections::BTreeMap;
 
@@ -8,8 +8,18 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 use url::Url;
 
+use crate::error::KestrelError;
 use crate::model::{Engine, SearchResult, TimeFilter};
-use crate::search::{KestrelError, ProviderFailure};
+use crate::search::ProviderFailure;
+use crate::search::{ProviderResponse, transport::request_standard_with_retries};
+use response::extract_completed;
+
+pub(crate) mod bing;
+pub(crate) mod duckduckgo;
+pub(crate) mod html;
+pub(crate) mod records;
+pub(crate) mod response;
+pub(crate) mod yahoo;
 
 /// Browser-facing URL, useful for inspecting the exact query independently.
 pub fn search_url(engine: Engine, query: &str) -> Option<Url> {
@@ -331,7 +341,7 @@ fn parsed(title: &str, value: &str, snippet: &str) -> Option<SearchResult> {
 }
 
 fn parse_ecosia(doc: &Html) -> Result<Vec<SearchResult>, ProviderFailure> {
-    let selector = crate::search::selector;
+    let selector = html::selector;
     if doc
         .select(&selector(
             "#challenge-form, #cf-challenge-running, .g-recaptcha",
@@ -435,7 +445,7 @@ fn parse_qwant(data: &Value) -> Result<Vec<SearchResult>, ProviderFailure> {
 }
 
 pub(crate) fn mojeek_challenge(doc: &Html) -> bool {
-    let select = crate::search::selector;
+    let select = html::selector;
     // The observed challenge has both a page-level title and a dedicated wrapper.
     // Never classify CAPTCHA mentions in ordinary result titles/snippets as blocking.
     let captcha_title = doc.select(&select("head > title")).any(|title| {
@@ -458,7 +468,7 @@ pub(crate) fn mojeek_challenge(doc: &Html) -> bool {
 }
 
 fn parse_mojeek(doc: &Html) -> Result<Vec<SearchResult>, ProviderFailure> {
-    let select = crate::search::selector;
+    let select = html::selector;
     if mojeek_challenge(doc) {
         return Err(ProviderFailure::challenge(
             "mojeek returned a bot challenge".into(),
@@ -502,6 +512,28 @@ fn parse_mojeek(doc: &Html) -> Result<Vec<SearchResult>, ProviderFailure> {
         }
     }
     Ok(results)
+}
+
+pub(crate) async fn search_additional(
+    query: &str,
+    engine: Engine,
+    region: &str,
+    time_filter: TimeFilter,
+    client: &reqwest::Client,
+) -> Result<ProviderResponse, ProviderFailure> {
+    // Validate before entering retry machinery; builders below cannot fail validation.
+    let _ = crate::providers::request(client, engine, query, region, time_filter)?;
+    let (results, retries) =
+        request_standard_with_retries(client, engine, query, extract_completed, || {
+            crate::providers::request(client, engine, query, region, time_filter)
+                .expect("validated provider request")
+        })
+        .await?;
+    Ok(ProviderResponse {
+        results: results?,
+        retries,
+        raw_result_count: 0,
+    })
 }
 
 #[cfg(test)]

@@ -1,6 +1,9 @@
 //! Opt-in live feasibility measurement; never runs in the ordinary test suite.
 use super::*;
 use crate::model::SearchMode;
+use crate::search::{
+    SEARCH_TIMEOUT, elapsed_millis, parsing, search_many_reusing_clients_detailed,
+};
 use serde::Serialize;
 
 pub(super) mod validation;

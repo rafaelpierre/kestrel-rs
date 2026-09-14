@@ -1,5 +1,11 @@
 //! Frame boundaries are irrelevant: adapters yield only closed HTML cards or JSON items.
-use super::super::*;
+use crate::{
+    error::KestrelError,
+    model::{Engine, SearchResult},
+    provider_diagnostics::Challenge,
+    providers::response::{ParsedResponse, extract_dispatched, parse_provider_response},
+    search::parsing,
+};
 use html5ever::tokenizer::{
     BufferQueue, TagKind, Token, TokenSink, TokenSinkResult, Tokenizer, states::RawKind,
 };
@@ -8,7 +14,7 @@ use std::cell::RefCell;
 const MAX_PASSES: usize = 256;
 const MAX_DEPTH: usize = 128;
 
-pub(super) struct Records {
+pub(crate) struct Records {
     engine: Engine,
     worker: Option<RecordWorker>,
 }
@@ -489,6 +495,8 @@ impl TokenSink for HtmlSink {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{providers::response::RESPONSE_PARSES, search::MAX_PROVIDER_RESPONSE_BYTES};
+    use std::time::{Duration, Instant};
 
     fn fixtures() -> Vec<(Engine, &'static str)> {
         vec![
@@ -506,27 +514,27 @@ mod tests {
             ),
             (
                 Engine::Ecosia,
-                include_str!("../../../tests/fixtures/providers/ecosia.html"),
+                include_str!("../../tests/fixtures/providers/ecosia.html"),
             ),
             (
                 Engine::Mojeek,
-                include_str!("../../../tests/fixtures/providers/mojeek.html"),
+                include_str!("../../tests/fixtures/providers/mojeek.html"),
             ),
             (
                 Engine::Dogpile,
-                include_str!("../../../tests/fixtures/providers/dogpile.json"),
+                include_str!("../../tests/fixtures/providers/dogpile.json"),
             ),
             (
                 Engine::Swisscows,
-                include_str!("../../../tests/fixtures/providers/swisscows.json"),
+                include_str!("../../tests/fixtures/providers/swisscows.json"),
             ),
             (
                 Engine::Yep,
-                include_str!("../../../tests/fixtures/providers/yep.json"),
+                include_str!("../../tests/fixtures/providers/yep.json"),
             ),
             (
                 Engine::Qwant,
-                include_str!("../../../tests/fixtures/providers/qwant.json"),
+                include_str!("../../tests/fixtures/providers/qwant.json"),
             ),
         ]
     }

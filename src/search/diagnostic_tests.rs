@@ -1,6 +1,7 @@
 use super::*;
 use crate::benchmarking::TEST_TRACE_DIRECTORY;
 use crate::provider_diagnostics::Lifecycle;
+use crate::provider_diagnostics::{Challenge, TransportKind};
 use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
 async fn request(yahoo: bool, url: &str) -> Result<(String, usize), ProviderFailure> {
