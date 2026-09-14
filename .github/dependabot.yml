@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: daily
+    # Security PRs are triggered by the repository's high/critical auto-triage
+    # rule, not this version-update schedule. See docs/dependency-security.md.
+    open-pull-requests-limit: 0
+    commit-message:
+      prefix: fix
+    labels:
+      - area:security
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+    commit-message:
+      prefix: ci
+    labels:
+      - area:security

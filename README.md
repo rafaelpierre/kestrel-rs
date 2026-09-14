@@ -475,6 +475,13 @@ cargo test --all-features
 cargo build --release
 ```
 
+### Dependency security
+
+Dependabot configuration supports security-only Cargo and GitHub Actions PRs.
+The high/critical severity policy also requires a native repository auto-triage
+rule; see [setup, coverage limits and validation](docs/dependency-security.md).
+CI checks dependency compatibility with Rust 1.89.
+
 ### Releases
 
 Releases use Conventional Commit messages to select the next semantic version:
