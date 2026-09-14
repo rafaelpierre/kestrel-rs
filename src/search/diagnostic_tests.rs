@@ -13,6 +13,51 @@ async fn request(yahoo: bool, url: &str) -> Result<(String, usize), KestrelError
     }
 }
 
+// Keep real time running for socket I/O and client setup. Only advance Tokio's
+// clock after the actual request is pending in the phase this test exercises.
+async fn expire_in_phase(yahoo: bool, url: &str, phase: Phase) {
+    use std::task::Poll;
+
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(3600);
+    let provider = async {
+        let mut request = std::pin::pin!(request(yahoo, url));
+        let reached = std::future::poll_fn(|cx| {
+            if let Poll::Ready(result) = request.as_mut().poll(cx) {
+                panic!("request completed before pending in {phase:?}: {result:?}");
+            }
+            let current = PROVIDER_RECORDER.with(|state| state.lock().unwrap().current_phase());
+            if current == Some(phase) {
+                Poll::Ready(())
+            } else {
+                Poll::Pending
+            }
+        });
+        // This watchdog expires in real time, independently of the deadline
+        // advanced below, and fails explicitly if the target phase is not reached.
+        tokio::time::timeout(Duration::from_secs(10), reached)
+            .await
+            .unwrap_or_else(|_| panic!("request did not reach {phase:?} within setup watchdog"));
+        tokio::time::pause();
+        tokio::time::advance(deadline.saturating_duration_since(tokio::time::Instant::now())).await;
+        // Retain the pending request without polling it again: cancellation must
+        // drop it in this phase, even if advancing time also readies a retry timer.
+        std::future::pending::<()>().await;
+        unreachable!()
+    };
+    let result = run_one_job(
+        "test",
+        Engine::Bing,
+        Arc::new(Semaphore::new(1)),
+        Arc::new(Mutex::new(Vec::new())),
+        Some(deadline),
+        None,
+        provider,
+    )
+    .await;
+    tokio::time::resume();
+    assert!(matches!(result, Err(KestrelError::SearchDeadline)));
+}
+
 async fn recorded(yahoo: bool, url: &str) -> (Result<(String, usize), KestrelError>, Lifecycle) {
     let recorder = Arc::new(Mutex::new(Recorder::with_run("mock-run".into())));
     let result = PROVIDER_RECORDER
@@ -207,8 +252,13 @@ async fn deadline_during_backoff_keeps_completed_attempt() {
     let _telemetry = crate::telemetry::test_export_guard();
     for yahoo in [false, true] {
         let server = MockServer::start().await;
+        // Exceed the former 200 ms deadline before the request can reach backoff.
         Mock::given(method("GET"))
-            .respond_with(ResponseTemplate::new(500).set_body_string("failed"))
+            .respond_with(
+                ResponseTemplate::new(500)
+                    .set_body_string("failed")
+                    .set_delay(Duration::from_millis(300)),
+            )
             .expect(1)
             .mount(&server)
             .await;
@@ -217,22 +267,7 @@ async fn deadline_during_backoff_keeps_completed_attempt() {
             .scope(Some(directory.path().to_owned()), async {
                 TEST_RETRY_DELAY
                     .scope(Duration::from_secs(60), async {
-                        let diagnostics = Arc::new(Mutex::new(Vec::new()));
-                        let provider = async {
-                            request(yahoo, &server.uri()).await?;
-                            unreachable!()
-                        };
-                        let result = run_one_job(
-                            "test",
-                            Engine::Bing,
-                            Arc::new(Semaphore::new(1)),
-                            diagnostics,
-                            Some(tokio::time::Instant::now() + Duration::from_millis(200)),
-                            None,
-                            provider,
-                        )
-                        .await;
-                        assert!(result.is_err());
+                        expire_in_phase(yahoo, &server.uri(), Phase::Backoff).await;
                     })
                     .await;
             })
@@ -430,6 +465,8 @@ async fn deadline_during_body_preserves_headers_and_censors_only_active_phase() 
             let (mut stream, _) = listener.accept().await.unwrap();
             let mut request = [0; 4096];
             assert!(stream.read(&mut request).await.unwrap() > 0);
+            // Exceed the former deadline while still waiting for headers.
+            tokio::time::sleep(Duration::from_millis(300)).await;
             stream
                 .write_all(b"HTTP/1.1 403 Forbidden\r\nContent-Length: 100\r\n\r\n")
                 .await
@@ -439,21 +476,7 @@ async fn deadline_during_body_preserves_headers_and_censors_only_active_phase() 
         let directory = tempfile::tempdir().unwrap();
         TEST_TRACE_DIRECTORY
             .scope(Some(directory.path().to_owned()), async {
-                let provider = async {
-                    request(yahoo, &url).await?;
-                    unreachable!()
-                };
-                let result = run_one_job(
-                    "test",
-                    Engine::Bing,
-                    Arc::new(Semaphore::new(1)),
-                    Arc::new(Mutex::new(Vec::new())),
-                    Some(tokio::time::Instant::now() + Duration::from_millis(200)),
-                    None,
-                    provider,
-                )
-                .await;
-                assert!(result.is_err());
+                expire_in_phase(yahoo, &url, Phase::Body).await;
             })
             .await;
         server.abort();

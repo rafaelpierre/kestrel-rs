@@ -110,6 +110,11 @@ impl Recorder {
         }
     }
 
+    #[cfg(test)]
+    pub(crate) fn current_phase(&self) -> Option<Phase> {
+        self.current.map(|(phase, _)| phase)
+    }
+
     pub fn transition(&mut self, phase: Phase) {
         self.transition_censored(phase, false);
     }
