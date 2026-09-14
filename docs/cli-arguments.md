@@ -17,7 +17,7 @@ search defaults to 2,000 extracted characters per page and fetch to 20,000.
 | `--pre-rank` | Orders titles/snippets before limiting fetch candidates, only when candidates exceed the limit. Independent of final ranking. |
 | `--fetch`, `--no-fetch` | Enable switch (already the default) versus disabling page retrieval and default body ranking. Mutually exclusive. |
 | `--rank`, `--no-rank`, `--ranking-policy` | Choose at most one explicit final-ranking control. Default is content BM25 with fetching. Provider policy preserves candidate order, like no-rank. |
-| `--timeout`, `--fetch-budget` | Individual page-request timeout versus total candidate-fetch budget, including enabled cache I/O. Both may apply; standalone fetch only needs the request timeout. Neither sets provider-request timeouts. |
+| `--timeout`, `--fetch-budget` | Individual page-request timeout (default 10 seconds) versus total candidate-fetch budget (default 2 seconds), including enabled cache I/O. Both may apply; standalone fetch only needs the request timeout. Neither sets provider-request timeouts. |
 | `--content-limit`, `--max-response-bytes` | Extracted character ceiling versus downloaded byte ceiling. Neither implies the other. |
 | `--concurrency`, `--parse-concurrency` | Concurrent page requests versus HTML parsing jobs. Standalone fetch reads one URL, so exposes neither. |
 | `--cache-ttl`, `--cache-dir`, `--cache-max-entries` | Search page-cache lifetime, location, and capacity. Directory/capacity require TTL; standalone fetch does not use the cache. |
@@ -51,6 +51,27 @@ such as `text/markdown-extra` are rejected.
 
 The character cap applies to the decoded body before the CLI adds its `Source:`
 prefix. Byte limits, timeouts, and partial-response diagnostics apply as usual.
+
+## Search fetch budget and migration
+
+Search applies a two-second fetch-stage budget even when `--fetch-budget` is omitted.
+Use a positive explicit duration such as `--fetch-budget 10` for more evidence;
+omission previously meant no total fetch deadline. Completed content survives;
+uncompleted pages may have no content and final rankings can differ. Budget expiry
+with cancelled page work emits a stderr notice with a count and `kestrel fetch "URL"`
+guidance, also in JSON mode and with `--no-diagnostics`. Persistence-only expiry
+does not trigger the page-cancellation notice. JSON schemas and success status
+are unchanged. This stage deadline excludes provider search, initialization,
+ranking, output and runtime shutdown. Standalone fetch and library defaults are
+unchanged.
+
+`--content-limit` caps retained text after body download; it does not stop HTTP
+retrieval after that many characters. HTML is parsed before text extraction.
+A smaller limit may reduce extraction/ranking/output work, but does not guarantee
+a faster command: discovery, downloaded pages and network timings can differ
+between calls. `--max-response-bytes` bounds downloaded body bytes; the fetch
+budget bounds the page stage. Changing the character limit also changes page-cache
+identity, so a previously warm entry may become a miss.
 
 ## Invalid combinations and migration
 

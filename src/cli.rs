@@ -151,8 +151,8 @@ struct SearchArgs {
     /// Total seconds for candidate fetches, including enabled cache reads/writes/maintenance.
     /// Eligible pages commit while other fetches run; completed text survives storage timeout.
     /// Must round to at least 1 ns and fit a monotonic clock deadline.
-    #[arg(long, value_parser = positive_f64, value_name = "SECS")]
-    fetch_budget: Option<f64>,
+    #[arg(long, default_value_t = 2.0, value_parser = positive_f64, value_name = "SECS")]
+    fetch_budget: f64,
 
     /// Cache extracted page text for this many seconds (disabled by default).
     /// Keys preserve request URL distinctions; legacy unversioned entries are misses.
@@ -814,7 +814,7 @@ async fn attach_page_content(
         max_response_bytes: arguments.max_response_bytes,
     };
     let urls: Vec<String> = fetchable.iter().map(|(_, url)| url.clone()).collect();
-    let budget = arguments.fetch_budget.map(Duration::from_secs_f64);
+    let budget = Some(Duration::from_secs_f64(arguments.fetch_budget));
     let mut report = if let Some(ttl) = arguments.cache_ttl {
         let directory = arguments
             .cache_dir
@@ -828,6 +828,7 @@ async fn attach_page_content(
     } else {
         client.fetch_all_detailed(&urls, &options, budget).await?
     };
+    write_fetch_budget_notice(&report, arguments.fetch_budget, diagnostics);
     let capped_count = report
         .pages
         .iter()
@@ -858,6 +859,20 @@ async fn attach_page_content(
     );
     Ok(report)
     }).await
+}
+
+fn write_fetch_budget_notice(
+    report: &kestrelsearch::FetchReport,
+    budget_seconds: f64,
+    diagnostics: &mut impl Write,
+) {
+    if report.budget_exhausted && report.cancelled > 0 {
+        let _ = writeln!(
+            diagnostics,
+            "[kestrel] Fetch budget exhausted ({budget_seconds}s); cancelled {} unfinished page fetch(es). Completed content was retained. Fetch individual pages with `kestrel fetch \"URL\"`, or allow more time with `--fetch-budget SECS`.",
+            report.cancelled
+        );
+    }
 }
 
 fn render_text_results(results: &[SearchResult], query: &str) {
@@ -1157,6 +1172,61 @@ fn positive_f64(value: &str) -> Result<f64, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn search_fetch_budget_defaults_overrides_and_notice() {
+        for (extra, expected) in [
+            (vec![], 2.0),
+            (vec!["--no-fetch"], 2.0),
+            (vec!["--fetch-budget", "0.5"], 0.5),
+            (vec!["--fetch-budget", "10"], 10.0),
+        ] {
+            let Commands::Search(args) =
+                Cli::try_parse_from(["kestrel", "search", "test"].into_iter().chain(extra))
+                    .unwrap()
+                    .command
+            else {
+                panic!("expected search")
+            };
+            assert_eq!(args.fetch_budget, expected);
+        }
+        let Commands::Fetch(args) =
+            Cli::try_parse_from(["kestrel", "fetch", "https://example.org"])
+                .unwrap()
+                .command
+        else {
+            panic!("expected fetch")
+        };
+        assert_eq!(args.timeout, 10.0);
+        for (exhausted, cancelled, notice) in [
+            (false, 0, false),
+            (true, 0, false),
+            (false, 1, false),
+            (true, 1, true),
+        ] {
+            let report = kestrelsearch::FetchReport {
+                contents: vec![],
+                pages: vec![],
+                budget_exhausted: exhausted,
+                cancelled,
+                cache_hits: 0,
+                cache_misses: 0,
+            };
+            let mut output = Vec::new();
+            write_fetch_budget_notice(&report, 2.0, &mut output);
+            let output = String::from_utf8(output).unwrap();
+            assert_eq!(!output.is_empty(), notice);
+            if notice {
+                assert!(output.contains("cancelled 1 unfinished page fetch(es)"));
+                assert!(output.contains("kestrel fetch \"URL\""));
+            }
+        }
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("two seconds by default"));
+        assert!(skill.contains("kestrel fetch \"URL\""));
+        assert!(!skill.contains("it is unset by default"));
+        assert!(!skill.contains("No total fetch deadline applies when"));
+    }
 
     #[test]
     fn numeric_boundaries_and_candidate_defaults() {

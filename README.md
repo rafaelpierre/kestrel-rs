@@ -351,7 +351,19 @@ and ranking apply to the retained candidates.
 fanout mode. External struct literals must add the field or use
 `..Default::default()`. See [streaming behavior and measurements](docs/streaming-fanout.md).
 
-`--fetch-budget` is likewise an explicit latency/coverage tradeoff: pages that
+Search now defaults to a **two-second total fetch budget**, including enabled cache
+I/O. Previously, omission of `--fetch-budget` meant no total fetch deadline. Use
+`--fetch-budget 10` (or another positive duration) to allow more page work; the
+shorter default may leave fewer fetched pages and change rankings. The per-page
+`--timeout` remains ten seconds; standalone `fetch` and library defaults are unchanged.
+
+When budget expiry cancels unfinished page work, stderr reports the cancelled count
+and suggests `kestrel fetch "URL"` to retrieve individual pages separately. The
+notice appears in text and JSON modes, including with `--no-diagnostics`; JSON
+stdout and success exit status are unchanged. Cache persistence timing out after
+all pages finish does not claim that page fetches were cancelled.
+
+`--fetch-budget` is a latency/coverage tradeoff: pages that
 finish within the total budget are retained and outstanding fetches are
 cancelled. With caching enabled, the same absolute deadline includes cache reads,
 writes and bounded maintenance; returned text survives a persistence timeout.
