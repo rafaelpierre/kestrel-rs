@@ -6,7 +6,7 @@ use std::process::ExitCode;
 use std::time::{Duration, Instant};
 
 use clap::{ArgAction, CommandFactory, Parser, Subcommand, ValueEnum};
-use kestrelsearch::benchmarking::{ArtifactDiagnostics, write_artifact};
+use kestrelsearch::benchmarking::{ArtifactConfig, ArtifactDiagnostics};
 use kestrelsearch::config::{
     config_path, get_installations, record_installation, remove_installation,
 };
@@ -531,32 +531,30 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
         );
     }
 
+    let artifact_config = ArtifactConfig::from_env();
     if results.is_empty() {
         kestrelsearch::telemetry::results("output", &results);
-        write_benchmark_artifact(
-            &query_label,
-            &results,
-            &timings,
-            &queries,
-            &options,
-            ArtifactDiagnostics {
-                providers: &provider_diagnostics,
-                provider_cancellations,
-                fetch: None,
-                candidates: &results,
-                candidate_counts: Some(&candidate_counts),
-            },
-        );
+        if let Some(config) = &artifact_config {
+            write_benchmark_artifact(
+                config,
+                &query_label,
+                &results,
+                &timings,
+                &queries,
+                &options,
+                ArtifactDiagnostics {
+                    providers: &provider_diagnostics,
+                    provider_cancellations,
+                    fetch: None,
+                    candidates: &results,
+                    candidate_counts: Some(&candidate_counts),
+                },
+            );
+        }
         eprintln!("[kestrel] No results found.");
         let diagnostic = structured.map(|d| {
-            d.finish(
-                &results,
-                &results,
-                None,
-                arguments.no_fetch,
-                &candidate_counts,
-                arguments.max_response_bytes,
-            )
+            d.prepare(&results, None, arguments.no_fetch, &candidate_counts, arguments.max_response_bytes)
+                .finish(&results, &candidate_counts)
         });
         match arguments.output {
             Output::Json => match search_json(&results, command_started, diagnostic.as_ref()) {
@@ -611,7 +609,16 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
         "with_content".into(),
         results.iter().filter(|r| r.content.is_some()).count(),
     );
-    let candidates = results.clone();
+    let candidates = artifact_config.as_ref().map(|_| results.clone());
+    let structured = structured.map(|d| {
+        d.prepare(
+            &results,
+            fetch_diagnostics.as_ref(),
+            arguments.no_fetch,
+            &candidate_counts,
+            arguments.max_response_bytes,
+        )
+    });
     if let Some(policy) = arguments.ranking_policy {
         let rank_started = Instant::now();
         results = kestrelsearch::ranking::rank_with_policy(results, &queries, policy);
@@ -626,32 +633,28 @@ async fn run_search(arguments: SearchArgs) -> ExitCode {
     candidate_counts.insert("after_ranking".into(), results.len());
     results.truncate(arguments.top_k);
     candidate_counts.insert("returned".into(), results.len());
-    write_benchmark_artifact(
-        &query_label,
-        &results,
-        &timings,
-        &queries,
-        &options,
-        ArtifactDiagnostics {
-            providers: &provider_diagnostics,
-            provider_cancellations,
-            fetch: fetch_diagnostics.as_ref(),
-            candidates: &candidates,
-            candidate_counts: Some(&candidate_counts),
-        },
-    );
+    if let (Some(config), Some(candidates)) = (&artifact_config, &candidates) {
+        write_benchmark_artifact(
+            config,
+            &query_label,
+            &results,
+            &timings,
+            &queries,
+            &options,
+            ArtifactDiagnostics {
+                providers: &provider_diagnostics,
+                provider_cancellations,
+                fetch: fetch_diagnostics.as_ref(),
+                candidates,
+                candidate_counts: Some(&candidate_counts),
+            },
+        );
+    }
+    // Release the optional full snapshot before serializing ordinary output.
+    drop(candidates);
     kestrelsearch::telemetry::results("output", &results);
     eprintln!("[kestrel] Returning top {} results.", results.len());
-    let diagnostic = structured.map(|d| {
-        d.finish(
-            &candidates,
-            &results,
-            fetch_diagnostics.as_ref(),
-            arguments.no_fetch,
-            &candidate_counts,
-            arguments.max_response_bytes,
-        )
-    });
+    let diagnostic = structured.map(|d| d.finish(&results, &candidate_counts));
     match arguments.output {
         Output::Json => match search_json(&results, command_started, diagnostic.as_ref()) {
             Ok(json) => println!("{json}"),
@@ -883,6 +886,7 @@ fn render_text_results(results: &[SearchResult], query: &str) {
 }
 
 fn write_benchmark_artifact(
+    config: &ArtifactConfig,
     query: &str,
     results: &[SearchResult],
     timings: &BTreeMap<String, u64>,
@@ -890,7 +894,7 @@ fn write_benchmark_artifact(
     options: &SearchOptions,
     diagnostics: ArtifactDiagnostics<'_>,
 ) {
-    if let Err(error) = write_artifact(
+    if let Err(error) = config.write(
         query,
         results,
         timings,
@@ -1893,12 +1897,11 @@ mod tests {
     }
 
     #[test]
-    fn generated_skill_scopes_hproxy_to_standalone_discovery() {
+    fn generated_skill_documents_ranking_statistics() {
         let skill = generate_skill_md(&mut Cli::command());
-        assert!(skill.contains("library-only `proxy::hproxy::HProxyDiscovery`"));
-        assert!(skill.contains("does not change search/fetch routing"));
-        assert!(skill.contains("SOCKS discovery selection is unsupported"));
-        assert!(Cli::try_parse_from(["kestrel", "search", "test", "--auto-proxy"]).is_err());
+        assert!(skill.contains("without tokenizing titles, snippets or bodies"));
+        assert!(skill.contains("precompute query-term BM25 statistics"));
+        assert!(skill.contains("scores, inclusive thresholds and stable ties are unchanged"));
     }
 
     #[test]
@@ -1918,6 +1921,14 @@ mod tests {
                 "missing diagnostic contract: {contract}"
             );
         }
+    }
+
+    #[test]
+    fn generated_skill_documents_conditional_candidate_capture() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("only enabled artifact capture retains a full"));
+        assert!(skill.contains("without retaining duplicate page bodies"));
+        assert!(skill.contains("KESTRELSEARCH_BENCHMARK_RUN_ID"));
     }
 
     #[test]

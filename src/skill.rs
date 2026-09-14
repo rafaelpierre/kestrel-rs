@@ -453,7 +453,10 @@ kestrel search "rust async" --search-concurrency 3 --concurrency 5 --parse-concu
 - Experimental `--ranking-policy` choices: `provider` preserves candidate order;
   `snippet` uses titles/snippets; `body` uses content-only BM25 and requires fetching;
   `hybrid` combines title/snippet/body evidence and retains results without bodies;
-  `rrf` combines provider ranks. Snippet, hybrid, and RRF also work with `--no-fetch`.
+  `rrf` combines provider ranks without tokenizing titles, snippets or bodies.
+  Snippet/hybrid and `--min-fetch-score` precompute query-term BM25 statistics;
+  scores, inclusive thresholds and stable ties are unchanged.
+  Snippet, hybrid, and RRF also work with `--no-fetch`.
 - Search streams normalized results from concurrent providers and stops at five
   unique accepted candidates per query by default. `--min-results N` changes this
   minimum. Provider quorum is ignored, including explicit `--provider-quorum`.
@@ -729,7 +732,10 @@ KESTRELSEARCH_PROVIDER_TRACE_DIR="$trace_dir" KESTRELSEARCH_BENCHMARK_ARTIFACT_D
 - Search artifact writing requires **both** `KESTRELSEARCH_BENCHMARK_ARTIFACT_DIR`
   and `KESTRELSEARCH_BENCHMARK_RUN_ID`. Use a simple filename label such as `lookup`.
   Successful search handling writes `<run-id>-<uuid>.json` in the chosen directory,
-  with candidate snapshots, phase timings and provider/fetch reports. This is a
+  with candidate snapshots, phase timings and provider/fetch reports. Configuration
+  is resolved once before ranking; only enabled artifact capture retains a full
+  pre-ranking candidate copy. Ordinary JSON diagnostics summarize candidate evidence
+  before ranking without retaining duplicate page bodies. This is a
   separate diagnostic schema, not the ordinary stdout JSON envelope. Each returned
   artifact result includes `content_quality` (`version`, `state`, `reasons`);
   `diagnostics.candidate_content_quality` aligns with the artifact's `candidates`
