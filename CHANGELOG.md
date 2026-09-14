@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [6.0.2](https://github.com/rafaelpierre/kestrel-rs/compare/v6.0.1...v6.0.2) - 2026-09-13
+
+### Fixed
+
+- reconcile cache deadlines and search recovery with main
+
+### Other
+
+- Merge pull request #155 from rafaelpierre/release-plz-2026-09-13T16-48-23Z
+- Merge branch 'main' into codex/46-streaming-evidence
+
 ## [6.0.1](https://github.com/rafaelpierre/kestrel-rs/compare/v6.0.0...v6.0.1) - 2026-09-13
 
 ### Fixed
