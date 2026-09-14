@@ -257,3 +257,9 @@ Build each binary from its recorded revision with
 `cargo build --release --locked --features test-fixtures`. Preserve the baseline
 binary before rebuilding another revision in a shared target directory. No live
 provider latency or typical-workload memory claim follows from this experiment.
+
+## Bounded empty-discovery recovery
+
+The [issue #79 policy experiment](empty-discovery/README.md) compares short and
+long discovery with fresh-process and retained-client retries, retaining local
+fixture requests and matched live outcomes. It changes no production behavior.
