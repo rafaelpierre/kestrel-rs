@@ -188,7 +188,7 @@ async fn both_clients_stream_normalized_results_and_cancel_unfinished_bodies() {
                         Some(signal.clone()),
                         async move {
                             let (text, retries) = if engine == Engine::Yahoo {
-                                request_yahoo_with_retries("test", || {
+                                request_yahoo_with_retries("test", retain_body, || {
                                     clients.yahoo.as_ref().unwrap().get(&endpoint)
                                 })
                                 .await?
@@ -197,6 +197,7 @@ async fn both_clients_stream_normalized_results_and_cancel_unfinished_bodies() {
                                     &clients.standard,
                                     engine,
                                     "test",
+                                    retain_body,
                                     || clients.standard.get(&endpoint),
                                 )
                                 .await?
@@ -520,7 +521,7 @@ async fn benchmark_minimum_arms_and_fixed_pool_exercise_larger_fetch_caps() {
             let pending = FuturesUnordered::<Job<'_>>::new();
             let job = async {
                 let (body, _) = request_standard_with_retries(
-                    &client, Engine::Bing, "Café", || client.get(&endpoint),
+                    &client, Engine::Bing, "Café", retain_body, || client.get(&endpoint),
                 ).await?;
                 parse_provider_response(Engine::Bing, &body)
             };
@@ -574,11 +575,14 @@ async fn records_commit_before_eof_and_survive_caller_cancellation() {
     pending.push(Box::pin(async move {
         let result = PUBLISHER
             .scope(publisher, async {
-                let (body, retries) =
-                    request_standard_with_retries(&client, Engine::Bing, "fixture", || {
-                        client.get(&endpoint)
-                    })
-                    .await?;
+                let (body, retries) = request_standard_with_retries(
+                    &client,
+                    Engine::Bing,
+                    "fixture",
+                    retain_body,
+                    || client.get(&endpoint),
+                )
+                .await?;
                 let _ = retries;
                 Ok(with_provenance(
                     parse_provider_response(Engine::Bing, &body)?,
@@ -639,11 +643,14 @@ async fn provider_recording_child() {
     pending.push(Box::pin(async move {
         let outcome = PUBLISHER
             .scope(publisher, async {
-                let (body, _) =
-                    request_standard_with_retries(&client, Engine::Bing, "fixture", || {
-                        client.get(&endpoint)
-                    })
-                    .await?;
+                let (body, _) = request_standard_with_retries(
+                    &client,
+                    Engine::Bing,
+                    "fixture",
+                    retain_body,
+                    || client.get(&endpoint),
+                )
+                .await?;
                 Ok(with_provenance(
                     parse_provider_response(Engine::Bing, &body)?,
                     Engine::Bing,

@@ -143,8 +143,21 @@ these are distinct wire representations. HTML fragments in JSON titles/snippets
 still require text extraction. Streaming frame recognition, ranks, metadata and
 result-count stopping remain unchanged.
 
-Transport challenge diagnostics and incremental JSON probes/snapshots remain
-separate parsing work. This slice does not establish a global worker limit or
-claim that every transport response is parsed only once across diagnostics and
-extraction. Worker lifetime/cancellation work belongs to #117; #16 remains open
-until cross-slice validation is complete.
+Transport challenge diagnostics and completed extraction now share one worker-local
+HTML/JSON representation, including EOF fallbacks. The same bounded worker both
+classifies and extracts; only owned results leave it, and the DOM is dropped before
+its capacity is released. HTTP error bodies are classified without extracting
+results. Extraction failures after successful HTTP responses do not cause retries.
+The broader diagnostic markers and narrower adapter-specific rejection rules remain
+separate decisions over the shared document.
+
+Incremental JSON snapshots share their parsed value between challenge detection
+and extraction (removing Qwant's duplicate snapshot decode). Array-path probes
+are synthetic prefixes with a sentinel; snapshots contain closed items plus
+synthetic closing delimiters; EOF contains the complete response. These are distinct
+inputs and are still validated independently. Reusing a partial snapshot at EOF
+would skip validation of the trailing response. This change does not replace
+streaming framing, change incremental acceptance, or remove its existing bounded
+probe/snapshot passes. See the [nine-adapter inventory and validation methodology](provider-parse-reuse.md).
+Worker capacity and cancellation belong to #117 / PR #159; #16 still requires
+its complete cross-slice acceptance evidence.

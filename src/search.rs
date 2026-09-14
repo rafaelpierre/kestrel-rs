@@ -56,30 +56,63 @@ pub(crate) fn current_correlation() -> Option<serde_json::Value> {
         .flatten()
 }
 
-fn classify_challenge(engine: Engine, text: &str) -> Challenge {
-    if text.trim().is_empty() {
-        return Challenge::Unknown;
-    }
-    if matches!(
-        engine,
-        Engine::Dogpile | Engine::Yep | Engine::Swisscows | Engine::Qwant
-    ) && matches!(text.trim_start().as_bytes().first(), Some(b'{' | b'['))
-    {
-        return if engine == Engine::Qwant
-            && serde_json::from_str::<serde_json::Value>(text)
-                .ok()
-                .is_some_and(|v| v.get("url").and_then(|v| v.as_str()).is_some())
+#[cfg(test)]
+thread_local! {
+    static RESPONSE_PARSES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
+}
+
+/// Worker-local representation: scraper DOMs never cross an async boundary.
+enum ParsedResponse {
+    Html(Html),
+    Json(Option<serde_json::Value>),
+}
+
+impl ParsedResponse {
+    fn new(engine: Engine, text: &str) -> Self {
+        #[cfg(test)]
+        RESPONSE_PARSES.with(|count| count.set(count.get() + 1));
+        if matches!(
+            engine,
+            Engine::Dogpile | Engine::Yep | Engine::Swisscows | Engine::Qwant
+        ) && matches!(text.trim_start().as_bytes().first(), Some(b'{' | b'['))
         {
-            Challenge::Detected
+            Self::Json(serde_json::from_str(text).ok())
         } else {
-            Challenge::NotDetected
-        };
+            Self::Html(Html::parse_document(text))
+        }
     }
-    let document = Html::parse_document(text);
+
+    fn challenge(&self, engine: Engine, text: &str) -> Challenge {
+        if text.trim().is_empty() {
+            return Challenge::Unknown;
+        }
+        match self {
+            Self::Json(data) => {
+                if engine == Engine::Qwant
+                    && data
+                        .as_ref()
+                        .is_some_and(|v| v.get("url").and_then(|v| v.as_str()).is_some())
+                {
+                    Challenge::Detected
+                } else {
+                    Challenge::NotDetected
+                }
+            }
+            Self::Html(document) => classify_html_challenge(engine, document),
+        }
+    }
+}
+
+#[cfg(test)]
+fn classify_challenge(engine: Engine, text: &str) -> Challenge {
+    ParsedResponse::new(engine, text).challenge(engine, text)
+}
+
+fn classify_html_challenge(engine: Engine, document: &Html) -> Challenge {
     if document.select(&selector("#b_captcha, #captcha, form[action*='captcha'], .g-recaptcha, #challenge-form, #cf-challenge-running, form[action*='anomaly.js'], .anomaly-modal")).next().is_some() {
         return Challenge::Detected;
     }
-    if engine == Engine::Mojeek && crate::providers::mojeek_challenge(&document) {
+    if engine == Engine::Mojeek && crate::providers::mojeek_challenge(document) {
         return Challenge::Detected;
     }
     if engine == Engine::Ecosia
@@ -891,8 +924,8 @@ async fn run_provider_inner(
             ));
         }
         endpoint.set_path(&format!("/{engine}"));
-        let (body, retries) = if engine == Engine::Yahoo {
-            request_yahoo_with_retries(query, || {
+        let (results, retries) = if engine == Engine::Yahoo {
+            request_yahoo_with_retries(query, extract_dispatched, || {
                 clients
                     .yahoo
                     .as_ref()
@@ -902,16 +935,22 @@ async fn run_provider_inner(
             })
             .await?
         } else {
-            request_standard_with_retries(&clients.standard, engine, query, || {
-                clients
-                    .standard
-                    .get(endpoint.as_str())
-                    .query(&[("q", query)])
-            })
+            request_standard_with_retries(
+                &clients.standard,
+                engine,
+                query,
+                extract_dispatched,
+                || {
+                    clients
+                        .standard
+                        .get(endpoint.as_str())
+                        .query(&[("q", query)])
+                },
+            )
             .await?
         };
         let mut response = ProviderResponse {
-            results: parsing::run(move || parse_provider_response(engine, &body)).await??,
+            results: results?,
             retries,
             raw_result_count: 0,
         };
@@ -988,13 +1027,14 @@ async fn search_additional(
 ) -> Result<ProviderResponse, KestrelError> {
     // Validate before entering retry machinery; builders below cannot fail validation.
     let _ = crate::providers::request(client, engine, query, region, time_filter)?;
-    let (text, retries) = request_standard_with_retries(client, engine, query, || {
-        crate::providers::request(client, engine, query, region, time_filter)
-            .expect("validated provider request")
-    })
-    .await?;
+    let (results, retries) =
+        request_standard_with_retries(client, engine, query, extract_completed, || {
+            crate::providers::request(client, engine, query, region, time_filter)
+                .expect("validated provider request")
+        })
+        .await?;
     Ok(ProviderResponse {
-        results: parsing::run(move || crate::providers::parse(engine, &text)).await??,
+        results: results?,
         retries,
         raw_result_count: 0,
     })
@@ -1022,12 +1062,13 @@ async fn search_duckduckgo(
     time_filter: TimeFilter,
     client: &reqwest::Client,
 ) -> Result<ProviderResponse, KestrelError> {
-    let (text, retries) = request_standard_with_retries(client, Engine::Duckduckgo, query, || {
-        duckduckgo_request(client, query, region, time_filter)
-    })
-    .await?;
+    let (results, retries) =
+        request_standard_with_retries(client, Engine::Duckduckgo, query, extract_completed, || {
+            duckduckgo_request(client, query, region, time_filter)
+        })
+        .await?;
     Ok(ProviderResponse {
-        results: parsing::run(move || parse_duckduckgo_response(&text)).await??,
+        results: results?,
         retries,
         raw_result_count: 0,
     })
@@ -1060,12 +1101,13 @@ async fn search_bing(
             "value" => time_filter.as_str(),
         );
     }
-    let (text, retries) = request_standard_with_retries(client, Engine::Bing, query, || {
-        bing_request(client, query, region)
-    })
-    .await?;
+    let (results, retries) =
+        request_standard_with_retries(client, Engine::Bing, query, extract_completed, || {
+            bing_request(client, query, region)
+        })
+        .await?;
     Ok(ProviderResponse {
-        results: parsing::run(move || parse_provider_response(Engine::Bing, &text)).await??,
+        results: results?,
         retries,
         raw_result_count: 0,
     })
@@ -1096,20 +1138,76 @@ async fn search_yahoo(
     time_filter: TimeFilter,
     client: &primp::Client,
 ) -> Result<ProviderResponse, KestrelError> {
-    let (html, retries) =
-        request_yahoo_with_retries(query, || yahoo_request(client, query, region, time_filter))
-            .await?;
+    let (results, retries) = request_yahoo_with_retries(query, extract_completed, || {
+        yahoo_request(client, query, region, time_filter)
+    })
+    .await?;
     Ok(ProviderResponse {
-        results: parsing::run(move || parse_provider_response(Engine::Yahoo, &html)).await??,
+        results: results?,
         retries,
         raw_result_count: 0,
     })
 }
 
-async fn request_yahoo_with_retries<F>(
+fn extract_completed(
+    engine: Engine,
+    _text: &str,
+    parsed: &ParsedResponse,
+) -> Result<Vec<SearchResult>, KestrelError> {
+    match (engine, parsed) {
+        (Engine::Duckduckgo, ParsedResponse::Html(doc)) => parse_duckduckgo_document(doc),
+        (Engine::Ecosia | Engine::Mojeek, ParsedResponse::Html(doc)) => {
+            crate::providers::parse_html(engine, doc)
+        }
+        _ => extract_dispatched(engine, _text, parsed),
+    }
+}
+
+fn extract_dispatched(
+    engine: Engine,
+    _text: &str,
+    parsed: &ParsedResponse,
+) -> Result<Vec<SearchResult>, KestrelError> {
+    if matches!(
+        engine,
+        Engine::Dogpile | Engine::Yep | Engine::Swisscows | Engine::Qwant
+    ) {
+        return match parsed {
+            ParsedResponse::Json(Some(data)) => crate::providers::parse_json(engine, data),
+            _ => Err(crate::providers::unrecognized(engine)),
+        };
+    }
+    match parsed {
+        ParsedResponse::Html(doc) => parse_provider_document(engine, doc),
+        _ => Err(crate::providers::unrecognized(engine)),
+    }
+}
+
+/// Run classification and the caller's extraction in one bounded worker. The
+/// returned value is Send, so the worker-local DOM cannot escape its permit.
+/// HTTP failures need diagnostics only; extraction failures on successful HTTP
+/// responses stay inside T and do not enter the transport retry policy.
+fn process_completed<T>(
+    engine: Engine,
+    text: &str,
+    success: bool,
+    extract: fn(Engine, &str, &ParsedResponse) -> T,
+) -> (Challenge, Option<T>) {
+    let document = ParsedResponse::new(engine, text);
+    let challenge = document.challenge(engine, text);
+    (challenge, success.then(|| extract(engine, text, &document)))
+}
+
+#[cfg(test)]
+fn retain_body(_engine: Engine, text: &str, _parsed: &ParsedResponse) -> String {
+    text.to_owned()
+}
+
+async fn request_yahoo_with_retries<F, T: Send + 'static>(
     query: &str,
+    extract: fn(Engine, &str, &ParsedResponse) -> T,
     build: F,
-) -> Result<(String, usize), KestrelError>
+) -> Result<(T, usize), KestrelError>
 where
     F: Fn() -> primp::RequestBuilder,
 {
@@ -1146,9 +1244,14 @@ where
                 match body {
                     Ok(html) => {
                         record_phase(Phase::Parse);
-                        let (html, challenge) = parsing::run(move || {
-                            let challenge = classify_challenge(engine, &html);
-                            (html, challenge)
+                        let (html, challenge, results) = parsing::run(move || {
+                            let (challenge, results) = process_completed(
+                                engine,
+                                &html,
+                                (200..300).contains(&status),
+                                extract,
+                            );
+                            (html, challenge, results)
                         })
                         .await?;
                         observe(|r| r.response(challenge));
@@ -1164,7 +1267,13 @@ where
                         );
                         if (200..300).contains(&status) {
                             record_phase(Phase::Parse);
-                            return Ok((html, attempt - 1));
+                            return results.map(|results| (results, attempt - 1)).ok_or_else(
+                                || {
+                                    KestrelError::Search(
+                                        "successful response missing extraction".into(),
+                                    )
+                                },
+                            );
                         }
                     }
                     Err(error) => {
@@ -1198,12 +1307,13 @@ where
     }
     Err(last_error.unwrap_or_else(|| KestrelError::Search("request failed".into())))
 }
-async fn request_standard_with_retries<F>(
+async fn request_standard_with_retries<F, T: Send + 'static>(
     _client: &reqwest::Client,
     engine: Engine,
     query: &str,
+    extract: fn(Engine, &str, &ParsedResponse) -> T,
     build: F,
-) -> Result<(String, usize), KestrelError>
+) -> Result<(T, usize), KestrelError>
 where
     F: Fn() -> reqwest::RequestBuilder,
 {
@@ -1239,9 +1349,14 @@ where
                 match body {
                     Ok(html) => {
                         record_phase(Phase::Parse);
-                        let (html, challenge) = parsing::run(move || {
-                            let challenge = classify_challenge(engine, &html);
-                            (html, challenge)
+                        let (html, challenge, results) = parsing::run(move || {
+                            let (challenge, results) = process_completed(
+                                engine,
+                                &html,
+                                (200..300).contains(&status),
+                                extract,
+                            );
+                            (html, challenge, results)
                         })
                         .await?;
                         observe(|r| r.response(challenge));
@@ -1257,7 +1372,13 @@ where
                         );
                         if (200..300).contains(&status) {
                             record_phase(Phase::Parse);
-                            return Ok((html, attempt - 1));
+                            return results.map(|results| (results, attempt - 1)).ok_or_else(
+                                || {
+                                    KestrelError::Search(
+                                        "successful response missing extraction".into(),
+                                    )
+                                },
+                            );
                         }
                     }
                     Err(error) => {
@@ -1679,13 +1800,13 @@ fn result_allowed(query: &str, value: &str) -> bool {
 }
 
 fn parse_provider_response(engine: Engine, html: &str) -> Result<Vec<SearchResult>, KestrelError> {
-    if matches!(
-        engine,
-        Engine::Dogpile | Engine::Yep | Engine::Swisscows | Engine::Qwant
-    ) {
-        return crate::providers::parse(engine, html);
-    }
-    let document = Html::parse_document(html);
+    extract_dispatched(engine, html, &ParsedResponse::new(engine, html))
+}
+
+fn parse_provider_document(
+    engine: Engine,
+    document: &Html,
+) -> Result<Vec<SearchResult>, KestrelError> {
     if document
         .select(&selector(
             "#b_captcha, #captcha, form[action*='captcha'], .g-recaptcha",
@@ -1698,10 +1819,10 @@ fn parse_provider_response(engine: Engine, html: &str) -> Result<Vec<SearchResul
         )));
     }
     let results = match engine {
-        Engine::Bing => parse_bing_document(&document),
-        Engine::Yahoo => parse_yahoo_document(&document),
-        Engine::Duckduckgo => return parse_duckduckgo_document(&document),
-        _ => return crate::providers::parse_html(engine, &document),
+        Engine::Bing => parse_bing_document(document),
+        Engine::Yahoo => parse_yahoo_document(document),
+        Engine::Duckduckgo => return parse_duckduckgo_document(document),
+        _ => return crate::providers::parse_html(engine, document),
     };
     let empty_marker = match engine {
         Engine::Bing => "li.b_no, .b_no",
@@ -1716,6 +1837,7 @@ fn parse_provider_response(engine: Engine, html: &str) -> Result<Vec<SearchResul
     Ok(results)
 }
 
+#[cfg(test)]
 fn parse_duckduckgo_response(html: &str) -> Result<Vec<SearchResult>, KestrelError> {
     parse_duckduckgo_document(&Html::parse_document(html))
 }
@@ -2032,12 +2154,16 @@ mod tests {
             PROVIDER_RECORDER.scope(Arc::clone(&attempts), async {
                 if yahoo {
                     let client = primp::Client::builder().no_proxy().build().unwrap();
-                    request_yahoo_with_retries("test", || client.get(&url)).await
+                    request_yahoo_with_retries("test", retain_body, || client.get(&url)).await
                 } else {
                     let client = reqwest::Client::builder().no_proxy().build().unwrap();
-                    request_standard_with_retries(&client, Engine::Bing, "test", || {
-                        client.get(&url)
-                    })
+                    request_standard_with_retries(
+                        &client,
+                        Engine::Bing,
+                        "test",
+                        retain_body,
+                        || client.get(&url),
+                    )
                     .await
                 }
             }),
@@ -2161,12 +2287,17 @@ mod tests {
                     .await;
                 let result = if yahoo {
                     let client = primp::Client::builder().no_proxy().build().unwrap();
-                    request_yahoo_with_retries("test", || client.get(server.uri())).await
+                    request_yahoo_with_retries("test", retain_body, || client.get(server.uri()))
+                        .await
                 } else {
                     let client = reqwest::Client::builder().no_proxy().build().unwrap();
-                    request_standard_with_retries(&client, Engine::Bing, "test", || {
-                        client.get(server.uri())
-                    })
+                    request_standard_with_retries(
+                        &client,
+                        Engine::Bing,
+                        "test",
+                        retain_body,
+                        || client.get(server.uri()),
+                    )
                     .await
                 };
                 if status == 403 {
@@ -2224,15 +2355,19 @@ mod tests {
                     let result = tokio::time::timeout(Duration::from_secs(5), async {
                         if yahoo {
                             let client = primp::Client::builder().no_proxy().build().unwrap();
-                            request_yahoo_with_retries("test", || {
+                            request_yahoo_with_retries("test", retain_body, || {
                                 client.get(&url).timeout(Duration::from_millis(300))
                             })
                             .await
                         } else {
                             let client = reqwest::Client::builder().no_proxy().build().unwrap();
-                            request_standard_with_retries(&client, Engine::Bing, "test", || {
-                                client.get(&url).timeout(Duration::from_millis(300))
-                            })
+                            request_standard_with_retries(
+                                &client,
+                                Engine::Bing,
+                                "test",
+                                retain_body,
+                                || client.get(&url).timeout(Duration::from_millis(300)),
+                            )
                             .await
                         }
                     })
@@ -2329,12 +2464,15 @@ mod tests {
                 .mount(&server)
                 .await;
             let client = reqwest::Client::new();
-            let (html, retries) =
-                request_standard_with_retries(&client, Engine::Duckduckgo, "test", || {
-                    client.post(server.uri())
-                })
-                .await
-                .unwrap();
+            let (html, retries) = request_standard_with_retries(
+                &client,
+                Engine::Duckduckgo,
+                "test",
+                retain_body,
+                || client.post(server.uri()),
+            )
+            .await
+            .unwrap();
             assert_eq!(retries, 0);
             let error = parse_duckduckgo_response(&html).unwrap_err();
             assert!(error.to_string().contains("bot challenge"));
@@ -2356,10 +2494,11 @@ mod tests {
                 .mount(&server)
                 .await;
             let client = reqwest::Client::new();
-            let response = request_standard_with_retries(&client, Engine::Mojeek, "test", || {
-                client.get(server.uri())
-            })
-            .await;
+            let response =
+                request_standard_with_retries(&client, Engine::Mojeek, "test", retain_body, || {
+                    client.get(server.uri())
+                })
+                .await;
             let error = if status == 200 {
                 let (html, retries) = response.unwrap();
                 assert_eq!(retries, 0);

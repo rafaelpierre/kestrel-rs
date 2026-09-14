@@ -238,7 +238,9 @@ fn skill_install_and_uninstall_use_compatible_paths() {
         );
     }
     assert!(skill.contains("retained prefix"));
-    assert!(skill.contains("Completed HTML validation and extraction share one document"));
+    assert!(skill.contains("Completed transport challenge diagnostics and HTML/JSON extraction share one worker-local representation"));
+    assert!(skill.contains("JSON snapshots likewise reuse their value"));
+    assert!(skill.contains("remain distinct parsing inputs"));
     assert!(skill.contains("embedded CAPTCHA markup does not by itself"));
     assert!(skill.contains("round to at least one nanosecond"));
     assert!(skill.contains("Semaphore::MAX_PERMITS"));
