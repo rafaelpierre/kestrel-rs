@@ -109,3 +109,23 @@ cargo test --manifest-path target/budget-probe/Cargo.toml --all-features
 
 See [the investigation report](../../docs/issue-80-budget-overhead.md) for the
 recorded environment, distributions, interpretation and limitations.
+
+## Engine-scoped startup comparison (#93)
+
+`startup.py` reuses this harness's subprocess capture and distribution helpers
+with uninstrumented before/after release binaries. It runs 20 seeded, interleaved
+blocks of six fresh processes (Bing only, Yahoo only, default providers, each
+before/after). A one-nanosecond search budget expires before requests; fetching,
+ranking, caches and remote telemetry are disabled. TLS and proxy policy remain
+unchanged. It captures complete commands, exit status, stdout/stderr, hashes and
+launch/reap timestamps. Each run must exit 1 with empty stdout and the expected
+all-provider deadline failure diagnostic. Report median and nearest-rank p95 process wall time;
+this isolates startup overhead, not provider latency or a total-command deadline.
+Run without concurrent builds/tests. Preserve source identities for both binaries.
+
+```sh
+python3 benchmarks/budget-overhead/startup.py \
+  --before /absolute/path/to/baseline/kestrel \
+  --after target/release/kestrel --trials 20 \
+  --output benchmarks/results/issue-93-startup
+```

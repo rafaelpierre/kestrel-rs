@@ -62,14 +62,32 @@ impl KestrelClient {
         transport: crate::TransportOptions,
         capacity: usize,
     ) -> Result<Self, KestrelError> {
+        Self::build_for_engines(&[Engine::Yahoo], transport, capacity)
+    }
+
+    /// Build only the transports needed by `engines`, with shared page parser capacity.
+    /// All non-Yahoo providers share one transport and remain available. Yahoo is
+    /// available only when included here; requesting it otherwise returns
+    /// `KestrelError::InvalidRequest` before starting a search. Clones retain this
+    /// policy and share pools. Initialization completes before any search budget.
+    /// Use `new` or `with_parser_capacity` for unrestricted reusable clients.
+    pub fn with_engines_and_parser_capacity(
+        engines: &[Engine],
+        capacity: usize,
+    ) -> Result<Self, KestrelError> {
+        Self::build_for_engines(engines, crate::TransportOptions::default(), capacity)
+    }
+
+    fn build_for_engines(
+        engines: &[Engine],
+        transport: crate::TransportOptions,
+        capacity: usize,
+    ) -> Result<Self, KestrelError> {
         crate::numeric::concurrency("parser capacity", capacity)?;
         crate::telemetry::scope_sync("kestrel.initialize", || {
             transport.validate()?;
             Ok(Self {
-                search: SearchClients::with_transport(
-                    &[Engine::Duckduckgo, Engine::Bing, Engine::Yahoo],
-                    &transport,
-                )?,
+                search: SearchClients::with_transport(engines, &transport)?,
                 fetch: build_client_with_transport(&transport)?,
                 recovery: None,
                 parsing: Arc::new(ParserPool::new(capacity)),
@@ -275,5 +293,71 @@ impl KestrelClient {
             Ok(report)
         })
         .await
+    }
+}
+
+#[cfg(test)]
+mod construction_tests {
+    use super::*;
+
+    #[test]
+    fn scoped_clients_only_construct_yahoo_when_selected() {
+        let _telemetry = crate::telemetry::test_export_guard();
+        for engines in [
+            vec![],
+            vec![Engine::Bing],
+            vec![Engine::Qwant, Engine::Mojeek],
+        ] {
+            let client = KestrelClient::with_engines_and_parser_capacity(&engines, 2).unwrap();
+            assert!(client.search.yahoo.is_none());
+            assert!(client.clone().search.yahoo.is_none());
+        }
+        let client = KestrelClient::with_engines_and_parser_capacity(&[Engine::Yahoo], 2).unwrap();
+        assert!(client.search.yahoo.is_some());
+        assert!(client.clone().search.yahoo.is_some());
+        assert!(KestrelClient::with_engines_and_parser_capacity(&[Engine::Bing], 0).is_err());
+    }
+
+    #[test]
+    fn existing_constructors_keep_all_provider_transports() {
+        let _telemetry = crate::telemetry::test_export_guard();
+        for client in [
+            KestrelClient::new(),
+            KestrelClient::with_parser_capacity(2),
+            KestrelClient::with_transport(crate::TransportOptions::default()),
+            KestrelClient::with_transport_and_parser_capacity(
+                crate::TransportOptions::default(),
+                2,
+            ),
+        ] {
+            assert!(client.unwrap().search.yahoo.is_some());
+        }
+    }
+
+    #[tokio::test]
+    async fn scoped_client_rejects_uninitialized_yahoo_before_any_requests() {
+        let _telemetry = crate::telemetry::test_export_guard();
+        let client = KestrelClient::with_engines_and_parser_capacity(&[Engine::Bing], 2).unwrap();
+        for client in [client.clone(), client] {
+            assert!(matches!(
+                client
+                    .search("test", Engine::Yahoo, "wt-wt", TimeFilter::Any)
+                    .await,
+                Err(KestrelError::InvalidRequest(_))
+            ));
+            let queries = vec!["test".to_owned()];
+            let options = SearchOptions {
+                engines: vec![Engine::Bing, Engine::Yahoo],
+                ..Default::default()
+            };
+            assert!(matches!(
+                client.search_many(&queries, &options).await,
+                Err(KestrelError::InvalidRequest(_))
+            ));
+            assert!(matches!(
+                client.search_many_detailed(&queries, &options).await,
+                Err(KestrelError::InvalidRequest(_))
+            ));
+        }
     }
 }
