@@ -579,3 +579,8 @@ Library callers can explicitly load a validated HTTP/CONNECT proxy list with
 This is the discovery slice of #9; it does not enable automatic proxy routing
 for search or fetch. See [HProxy discovery](docs/hproxy-discovery.md) for the API,
 filters, limits, failure behavior and contract-verification limitations.
+
+The library also exposes [semantic scoring building blocks](docs/semantic-scoring.md)
+for bounded backend adapters and deterministic lexical/semantic rank combination.
+These primitives ship without a production backend or semantic CLI mode; the
+existing experimental `hybrid` ranking policy remains lexical.

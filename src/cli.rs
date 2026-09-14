@@ -1994,6 +1994,13 @@ mod tests {
     }
 
     #[test]
+    fn generated_skill_distinguishes_semantic_primitives_from_cli() {
+        let skill = generate_skill_md(&mut Cli::command());
+        assert!(skill.contains("Hybrid is lexical, not semantic search"));
+        assert!(skill.contains("have no production backend or CLI mode"));
+    }
+
+    #[test]
     fn generated_skill_documents_conditional_candidate_capture() {
         let skill = generate_skill_md(&mut Cli::command());
         assert!(skill.contains("only enabled artifact capture retains a full"));

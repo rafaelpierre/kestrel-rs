@@ -645,6 +645,9 @@ be slow. Pre-ranking has no effect if the pool is no larger than the fetch limit
 kestrel search '"machine learning"' -k 5 --min-results 15 --fetch-candidates 15 --ranking-policy hybrid --content-limit 3000 --fetch-budget 5
 ```
 
+Hybrid is lexical, not semantic search. The library semantic scoring primitives
+have no production backend or CLI mode.
+
 Hybrid uses title, snippet and available body evidence and retains candidates
 without bodies. It may return five items even when fewer than five pages were
 read; inspect `content` before treating a result as fetched evidence. It neither
