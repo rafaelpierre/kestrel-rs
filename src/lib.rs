@@ -12,6 +12,8 @@ pub mod logging;
 pub mod model;
 mod numeric;
 mod provider_diagnostics;
+mod provider_outcome;
+pub use provider_outcome::ProviderOutcome;
 pub mod providers;
 pub mod proxy;
 pub mod ranking;

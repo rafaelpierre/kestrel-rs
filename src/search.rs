@@ -22,6 +22,9 @@ use crate::model::{
 use crate::provider_diagnostics::{Challenge, Phase, Recorder, TransportKind};
 
 mod discovery;
+mod failure;
+use crate::ProviderOutcome;
+pub(crate) use failure::ProviderFailure;
 mod parsing;
 mod streaming;
 
@@ -31,10 +34,19 @@ const FANOUT_MIN_RESULTS: u8 = 2;
 
 tokio::task_local! {
     static DISCOVERY_ATTEMPT: usize;
+    static ATTEMPT_STATES: Arc<Mutex<HashMap<Engine, ProviderOutcome>>>;
+    static RATE_LIMITED: Arc<std::sync::atomic::AtomicBool>;
     static DISCOVERY_SEQUENCE: std::sync::atomic::AtomicU64;
     static PROVIDER_RECORDER: Arc<Mutex<Recorder>>;
     static DIAGNOSTIC_RUN_ID: String;
     static PROVIDER_DIAGNOSTIC: (Arc<Mutex<Vec<ProviderSearchDiagnostic>>>, usize);
+}
+
+fn record_headers(status: u16, retry_after: Option<String>) {
+    if status == 429 || retry_after.is_some() {
+        let _ = RATE_LIMITED.try_with(|state| state.store(true, Ordering::Relaxed));
+    }
+    observe(|r| r.headers(status, retry_after));
 }
 
 fn record_attempt() {
@@ -709,7 +721,7 @@ fn run_one_job<'a>(
     diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
     deadline: Option<tokio::time::Instant>,
     fanout_cancelled: Option<Arc<AtomicU8>>,
-    provider: impl Future<Output = Result<ProviderResponse, KestrelError>> + 'a,
+    provider: impl Future<Output = Result<ProviderResponse, ProviderFailure>> + 'a,
 ) -> impl Future<Output = Result<Vec<SearchResult>, KestrelError>> + 'a {
     let started = Instant::now();
     let index = {
@@ -723,7 +735,7 @@ fn run_one_job<'a>(
             result_count: 0,
             retries: 0,
             success: false,
-            outcome: "cancelled_caller".into(),
+            outcome: ProviderOutcome::CancelledCaller.as_str().into(),
             error: None,
             raw_result_count: 0,
             filtered_count: 0,
@@ -742,7 +754,11 @@ fn run_one_job<'a>(
         crate::telemetry::payload("input", &query);
         Arc::new(Mutex::new(Recorder::with_run(run_id)))
     };
+    let rate_limited = Arc::new(std::sync::atomic::AtomicBool::new(false));
     let timer = DiagnosticTimer {
+        engine,
+        state: ProviderOutcome::CancelledCaller,
+        states: ATTEMPT_STATES.try_with(Arc::clone).ok(),
         diagnostics: Arc::clone(&diagnostics),
         index,
         started,
@@ -758,23 +774,26 @@ fn run_one_job<'a>(
             .lock()
             .expect("recorder lock")
             .transition(Phase::Queue);
-        let job = PROVIDER_RECORDER.scope(Arc::clone(&recorder), async {
-            let _permit = semaphore.acquire().await.expect("semaphore remains open");
-            record_phase(Phase::Processing);
-            PROVIDER_DIAGNOSTIC
-                .scope((Arc::clone(&diagnostics), index), provider)
-                .await
-        });
+        let job = RATE_LIMITED.scope(
+            Arc::clone(&rate_limited),
+            PROVIDER_RECORDER.scope(Arc::clone(&recorder), async {
+                let _permit = semaphore.acquire().await.expect("semaphore remains open");
+                record_phase(Phase::Processing);
+                PROVIDER_DIAGNOSTIC
+                    .scope((Arc::clone(&diagnostics), index), provider)
+                    .await
+            }),
+        );
         let outcome = match deadline {
             Some(deadline) if deadline <= tokio::time::Instant::now() => {
                 timer.deadline = true;
-                Err(KestrelError::SearchDeadline)
+                Err(KestrelError::SearchDeadline.into())
             }
             Some(deadline) => tokio::time::timeout_at(deadline, job)
                 .await
                 .unwrap_or_else(|_| {
                     timer.deadline = true;
-                    Err(KestrelError::SearchDeadline)
+                    Err(KestrelError::SearchDeadline.into())
                 }),
             None => job.await,
         };
@@ -790,54 +809,44 @@ fn run_one_job<'a>(
                     entry.raw_result_count = response.raw_result_count;
                     entry.filtered_count = response.raw_result_count - response.results.len();
                     entry.retries = response.retries;
-                    entry.outcome = if response.results.is_empty() {
-                        if entry.filtered_count > 0 {
-                            "filtered_empty"
+                    timer.state = if response.results.is_empty() {
+                        if response.raw_result_count > response.results.len() {
+                            ProviderOutcome::FilteredEmpty
                         } else {
-                            "empty"
+                            ProviderOutcome::Empty
                         }
                     } else {
-                        "results"
-                    }
-                    .into();
+                        ProviderOutcome::Results
+                    };
                 }
                 Err(error) => {
                     let message = error.to_string();
-                    entry.outcome = if matches!(error, KestrelError::SearchDeadline) {
-                        if recorder.lock().expect("recorder lock").rate_limited() {
-                            "rate_limited_deadline"
-                        } else {
-                            "deadline"
-                        }
-                    } else if matches!(error, KestrelError::ProviderResponseTooLarge { .. }) {
-                        "response_too_large"
+                    timer.state = if error.kind == ProviderOutcome::Deadline
+                        && rate_limited.load(Ordering::Relaxed)
+                    {
+                        ProviderOutcome::RateLimitedDeadline
                     } else {
-                        provider_error_outcome(&message)
-                    }
-                    .into();
+                        error.kind
+                    };
                     entry.error = Some(message);
                 }
             }
+            entry.outcome = timer.state.as_str().into();
         }
         if let Ok(response) = &outcome {
             crate::telemetry::results("provider.results", &response.results);
         }
-        outcome.map(|response| response.results)
+        outcome
+            .map(|response| response.results)
+            .map_err(ProviderFailure::into_public)
     }
     .with_context(context)
 }
 
-fn provider_error_outcome(message: &str) -> &'static str {
-    if message.contains("bot challenge") {
-        "challenge"
-    } else if message.contains("unrecognized search page") {
-        "unrecognized"
-    } else {
-        "request_error"
-    }
-}
-
 struct DiagnosticTimer {
+    engine: Engine,
+    state: ProviderOutcome,
+    states: Option<Arc<Mutex<HashMap<Engine, ProviderOutcome>>>>,
     diagnostics: Arc<Mutex<Vec<ProviderSearchDiagnostic>>>,
     index: usize,
     started: Instant,
@@ -854,21 +863,27 @@ impl Drop for DiagnosticTimer {
             let entry = &mut entries[self.index];
             entry.elapsed_ms = elapsed_millis(self.started);
             if !self.completed {
-                entry.outcome = match self
+                self.state = match self
                     .fanout_cancelled
                     .as_ref()
                     .map_or(FANOUT_RUNNING, |s| s.load(Ordering::Relaxed))
                 {
-                    FANOUT_MIN_RESULTS => "cancelled_min_results",
-                    _ => "cancelled_caller",
-                }
-                .into();
+                    FANOUT_MIN_RESULTS => ProviderOutcome::CancelledMinResults,
+                    _ => ProviderOutcome::CancelledCaller,
+                };
+                entry.outcome = self.state.as_str().into();
             }
             if let Ok(recorder) = self.recorder.lock() {
                 entry.retries = recorder.retries();
             }
             entry.clone()
         });
+        if let Some(states) = &self.states {
+            states
+                .lock()
+                .expect("attempt state lock")
+                .insert(self.engine, self.state);
+        }
         if let Some(diagnostic) = diagnostic {
             let _context = self.telemetry.context().attach();
             self.telemetry
@@ -899,7 +914,7 @@ async fn run_provider(
     region: &str,
     time_filter: TimeFilter,
     clients: &SearchClients,
-) -> Result<ProviderResponse, KestrelError> {
+) -> Result<ProviderResponse, ProviderFailure> {
     parsing::POOL
         .scope(
             clients.parsers.clone(),
@@ -914,7 +929,7 @@ async fn run_provider_inner(
     region: &str,
     time_filter: TimeFilter,
     clients: &SearchClients,
-) -> Result<ProviderResponse, KestrelError> {
+) -> Result<ProviderResponse, ProviderFailure> {
     #[cfg(test)]
     if let Ok(fixture) = discovery::tests::FIXTURE.try_with(Clone::clone) {
         return fixture.respond(query, engine).await;
@@ -928,7 +943,8 @@ async fn run_provider_inner(
         {
             return Err(KestrelError::InvalidRequest(
                 "test fixture endpoint must be loopback HTTP".into(),
-            ));
+            )
+            .into());
         }
         endpoint.set_path(&format!("/{engine}"));
         let (results, retries) = if engine == Engine::Yahoo {
@@ -1031,7 +1047,7 @@ async fn search_additional(
     region: &str,
     time_filter: TimeFilter,
     client: &reqwest::Client,
-) -> Result<ProviderResponse, KestrelError> {
+) -> Result<ProviderResponse, ProviderFailure> {
     // Validate before entering retry machinery; builders below cannot fail validation.
     let _ = crate::providers::request(client, engine, query, region, time_filter)?;
     let (results, retries) =
@@ -1068,7 +1084,7 @@ async fn search_duckduckgo(
     region: &str,
     time_filter: TimeFilter,
     client: &reqwest::Client,
-) -> Result<ProviderResponse, KestrelError> {
+) -> Result<ProviderResponse, ProviderFailure> {
     let (results, retries) =
         request_standard_with_retries(client, Engine::Duckduckgo, query, extract_completed, || {
             duckduckgo_request(client, query, region, time_filter)
@@ -1098,7 +1114,7 @@ async fn search_bing(
     region: &str,
     time_filter: TimeFilter,
     client: &reqwest::Client,
-) -> Result<ProviderResponse, KestrelError> {
+) -> Result<ProviderResponse, ProviderFailure> {
     if time_filter != TimeFilter::Any {
         crate::log_event!(
             "search_filter_unsupported",
@@ -1144,7 +1160,7 @@ async fn search_yahoo(
     region: &str,
     time_filter: TimeFilter,
     client: &primp::Client,
-) -> Result<ProviderResponse, KestrelError> {
+) -> Result<ProviderResponse, ProviderFailure> {
     let (results, retries) = request_yahoo_with_retries(query, extract_completed, || {
         yahoo_request(client, query, region, time_filter)
     })
@@ -1160,7 +1176,7 @@ fn extract_completed(
     engine: Engine,
     _text: &str,
     parsed: &ParsedResponse,
-) -> Result<Vec<SearchResult>, KestrelError> {
+) -> Result<Vec<SearchResult>, ProviderFailure> {
     match (engine, parsed) {
         (Engine::Duckduckgo, ParsedResponse::Html(doc)) => parse_duckduckgo_document(doc),
         (Engine::Ecosia | Engine::Mojeek, ParsedResponse::Html(doc)) => {
@@ -1174,7 +1190,7 @@ fn extract_dispatched(
     engine: Engine,
     _text: &str,
     parsed: &ParsedResponse,
-) -> Result<Vec<SearchResult>, KestrelError> {
+) -> Result<Vec<SearchResult>, ProviderFailure> {
     if matches!(
         engine,
         Engine::Dogpile | Engine::Yep | Engine::Swisscows | Engine::Qwant
@@ -1269,7 +1285,7 @@ async fn request_yahoo_with_retries<F, T: Send + 'static>(
     query: &str,
     extract: fn(Engine, &str, &ParsedResponse) -> T,
     build: F,
-) -> Result<(T, usize), KestrelError>
+) -> Result<(T, usize), ProviderFailure>
 where
     F: Fn() -> primp::RequestBuilder,
 {
@@ -1294,7 +1310,7 @@ async fn request_standard_with_retries<F, T: Send + 'static>(
     query: &str,
     extract: fn(Engine, &str, &ParsedResponse) -> T,
     build: F,
-) -> Result<(T, usize), KestrelError>
+) -> Result<(T, usize), ProviderFailure>
 where
     F: Fn() -> reqwest::RequestBuilder,
 {
@@ -1318,7 +1334,7 @@ async fn request_with_retries<F, Fut, T: Send + 'static>(
     query: &str,
     extract: fn(Engine, &str, &ParsedResponse) -> T,
     send: F,
-) -> Result<(T, usize), KestrelError>
+) -> Result<(T, usize), ProviderFailure>
 where
     F: Fn() -> Fut,
     Fut: Future<Output = Result<ProviderHttpResponse, SendFailure>>,
@@ -1343,7 +1359,7 @@ where
                     http_version,
                 } = response.head();
                 server_delay = retry_after.as_deref().and_then(discovery::retry_after);
-                observe(|r| r.headers(status, retry_after));
+                record_headers(status, retry_after);
                 record_phase(Phase::Body);
                 let body = response.read(engine).await;
                 observe(|r| {
@@ -1377,7 +1393,7 @@ where
                             &html,
                         );
                         if challenge == Challenge::Detected && !(200..300).contains(&status) {
-                            return Err(KestrelError::Search(format!(
+                            return Err(ProviderFailure::challenge(format!(
                                 "{engine} returned a bot challenge (HTTP {status})"
                             )));
                         }
@@ -1388,6 +1404,7 @@ where
                                     KestrelError::Search(
                                         "successful response missing extraction".into(),
                                     )
+                                    .into()
                                 },
                             );
                         }
@@ -1399,21 +1416,21 @@ where
                         if (200..300).contains(&status)
                             || matches!(error, KestrelError::ProviderResponseTooLarge { .. })
                         {
-                            return Err(error);
+                            return Err(error.into());
                         }
                     }
                 }
                 let retryable = status == 408 || status == 429 || status >= 500;
                 let error = KestrelError::Search(format!("{engine} returned HTTP {status}"));
                 if !retryable || attempt == 3 {
-                    return Err(error);
+                    return Err(error.into());
                 }
                 last_error = Some(error);
             }
             Err(error) => {
                 observe(|r| r.error(error.kind, false));
                 if !error.retryable || attempt == 3 {
-                    return Err(error.error);
+                    return Err(error.error.into());
                 }
                 last_error = Some(error.error);
             }
@@ -1423,11 +1440,13 @@ where
             // Do not shorten server guidance or permit an unbounded wait when
             // callers disable the discovery deadline. End this request instead.
             if delay > SEARCH_TIMEOUT {
-                return Err(last_error.unwrap_or_else(|| {
-                    KestrelError::Search(
-                        "server retry delay exceeds 15s request retry allowance".into(),
-                    )
-                }));
+                return Err(last_error
+                    .unwrap_or_else(|| {
+                        KestrelError::Search(
+                            "server retry delay exceeds 15s request retry allowance".into(),
+                        )
+                    })
+                    .into());
             }
             record_phase(Phase::Backoff);
             tokio::time::sleep(delay).await;
@@ -1435,7 +1454,9 @@ where
             retry_delay(attempt).await;
         }
     }
-    Err(last_error.unwrap_or_else(|| KestrelError::Search("request failed".into())))
+    Err(last_error
+        .unwrap_or_else(|| KestrelError::Search("request failed".into()))
+        .into())
 }
 
 fn body_read_censored(error: &KestrelError) -> bool {
@@ -1838,14 +1859,17 @@ fn result_allowed(query: &str, value: &str) -> bool {
     site_domain(query).is_none_or(|domain| host == domain || host.ends_with(&format!(".{domain}")))
 }
 
-fn parse_provider_response(engine: Engine, html: &str) -> Result<Vec<SearchResult>, KestrelError> {
+fn parse_provider_response(
+    engine: Engine,
+    html: &str,
+) -> Result<Vec<SearchResult>, ProviderFailure> {
     extract_dispatched(engine, html, &ParsedResponse::new(engine, html))
 }
 
 fn parse_provider_document(
     engine: Engine,
     document: &Html,
-) -> Result<Vec<SearchResult>, KestrelError> {
+) -> Result<Vec<SearchResult>, ProviderFailure> {
     if document
         .select(&selector(
             "#b_captcha, #captcha, form[action*='captcha'], .g-recaptcha",
@@ -1853,7 +1877,7 @@ fn parse_provider_document(
         .next()
         .is_some()
     {
-        return Err(KestrelError::Search(format!(
+        return Err(ProviderFailure::challenge(format!(
             "{engine} returned a bot challenge"
         )));
     }
@@ -1869,7 +1893,7 @@ fn parse_provider_document(
         _ => unreachable!(),
     };
     if results.is_empty() && document.select(&selector(empty_marker)).next().is_none() {
-        return Err(KestrelError::Search(format!(
+        return Err(ProviderFailure::unrecognized(format!(
             "{engine} returned an unrecognized search page"
         )));
     }
@@ -1877,11 +1901,11 @@ fn parse_provider_document(
 }
 
 #[cfg(test)]
-fn parse_duckduckgo_response(html: &str) -> Result<Vec<SearchResult>, KestrelError> {
+fn parse_duckduckgo_response(html: &str) -> Result<Vec<SearchResult>, ProviderFailure> {
     parse_duckduckgo_document(&Html::parse_document(html))
 }
 
-fn parse_duckduckgo_document(document: &Html) -> Result<Vec<SearchResult>, KestrelError> {
+fn parse_duckduckgo_document(document: &Html) -> Result<Vec<SearchResult>, ProviderFailure> {
     if document
         .select(&selector(
             "form#challenge-form, form[action*='anomaly.js'], .anomaly-modal",
@@ -1889,13 +1913,13 @@ fn parse_duckduckgo_document(document: &Html) -> Result<Vec<SearchResult>, Kestr
         .next()
         .is_some()
     {
-        return Err(KestrelError::Search(
+        return Err(ProviderFailure::challenge(
             "DuckDuckGo returned a bot challenge; try --engine bing or --engine yahoo".into(),
         ));
     }
     let results = parse_duckduckgo_document_results(document);
     if results.is_empty() && document.select(&selector(".no-results")).next().is_none() {
-        return Err(KestrelError::Search(
+        return Err(ProviderFailure::unrecognized(
             "DuckDuckGo returned an unrecognized search page; try --engine bing or --engine yahoo"
                 .into(),
         ));
@@ -2121,7 +2145,8 @@ mod tests {
       <a class="result__url">example.com</a><a class="result__snippet">A useful result</a>
     </div><div class="result results_links results_links_deep web-result"><h2></h2></div>"#;
 
-    fn assert_oversized(error: KestrelError, engine: Engine, expected_status: u16) {
+    fn assert_oversized(error: impl Into<ProviderFailure>, engine: Engine, expected_status: u16) {
+        let error = error.into().into_public();
         assert!(
             matches!(
                 error,
@@ -2168,7 +2193,7 @@ mod tests {
         yahoo: bool,
         response: Vec<u8>,
         hold_open: bool,
-    ) -> Result<(String, usize), KestrelError> {
+    ) -> Result<(String, usize), ProviderFailure> {
         use tokio::io::{AsyncReadExt, AsyncWriteExt};
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let url = format!("http://{}/", listener.local_addr().unwrap());
@@ -2488,7 +2513,7 @@ mod tests {
                         assert_eq!(result.unwrap(), ("ok".into(), 1));
                     } else if status == 200 {
                         assert!(matches!(
-                            result.unwrap_err(),
+                            result.unwrap_err().into_public(),
                             KestrelError::Http(_) | KestrelError::Yahoo(_)
                         ));
                     } else {
@@ -2604,7 +2629,7 @@ mod tests {
                 response.unwrap_err()
             };
             let message = error.to_string();
-            assert_eq!(provider_error_outcome(&message), "challenge");
+            assert_eq!(error.kind, ProviderOutcome::Challenge);
             if status == 403 {
                 assert!(message.contains("HTTP 403"));
                 assert!(message.contains("bot challenge"));
@@ -3059,6 +3084,9 @@ mod tests {
         let task_diagnostics = Arc::clone(&diagnostics);
         let mut job = Box::pin(async move {
             let _timer = DiagnosticTimer {
+                engine: Engine::Bing,
+                state: ProviderOutcome::CancelledCaller,
+                states: None,
                 telemetry: crate::telemetry::Span::new("kestrel.provider"),
                 diagnostics: task_diagnostics,
                 index: 0,

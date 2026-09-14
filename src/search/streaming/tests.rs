@@ -328,7 +328,7 @@ async fn deadline_keeps_closed_records_and_releases_provider_permits() {
             for byte in cards(Engine::Bing, 1).bytes() {
                 incremental.push(&[byte]).await.unwrap();
             }
-            std::future::pending::<Result<ProviderResponse, KestrelError>>().await
+            std::future::pending::<Result<ProviderResponse, ProviderFailure>>().await
         },
     );
     pending.push(Box::pin(async move {
@@ -517,7 +517,7 @@ async fn benchmark_minimum_arms_and_fixed_pool_exercise_larger_fetch_caps() {
                 ).await?;
                 parse_provider_response(Engine::Bing, &body)
             };
-            pending.push(Box::pin(async move { (0, PUBLISHER.scope(publisher, job).await) }));
+            pending.push(Box::pin(async move { (0, PUBLISHER.scope(publisher, job).await.map_err(ProviderFailure::into_public)) }));
             let (outcomes, cancelled) = collect(pending, minimum, None, Some(receiver)).await;
             let pool = merge_outcomes(outcomes).unwrap();
             assert_eq!(cancelled, 1); // The response deliberately never reaches EOF.
@@ -574,10 +574,12 @@ async fn records_commit_before_eof_and_survive_caller_cancellation() {
                     retain_body,
                     || client.get(&endpoint),
                 )
-                .await?;
+                .await
+                .map_err(ProviderFailure::into_public)?;
                 let _ = retries;
                 Ok(with_provenance(
-                    parse_provider_response(Engine::Bing, &body)?,
+                    parse_provider_response(Engine::Bing, &body)
+                        .map_err(ProviderFailure::into_public)?,
                     Engine::Bing,
                     "fixture",
                 ))
@@ -641,9 +643,11 @@ async fn provider_recording_child() {
                     retain_body,
                     || client.get(&endpoint),
                 )
-                .await?;
+                .await
+                .map_err(ProviderFailure::into_public)?;
                 Ok(with_provenance(
-                    parse_provider_response(Engine::Bing, &body)?,
+                    parse_provider_response(Engine::Bing, &body)
+                        .map_err(ProviderFailure::into_public)?,
                     Engine::Bing,
                     "fixture",
                 ))

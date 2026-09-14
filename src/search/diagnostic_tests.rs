@@ -3,7 +3,7 @@ use crate::benchmarking::TEST_TRACE_DIRECTORY;
 use crate::provider_diagnostics::Lifecycle;
 use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
 
-async fn request(yahoo: bool, url: &str) -> Result<(String, usize), KestrelError> {
+async fn request(yahoo: bool, url: &str) -> Result<(String, usize), ProviderFailure> {
     if yahoo {
         let client = primp::Client::builder().no_proxy().build().unwrap();
         request_yahoo_with_retries("test", retain_body, || client.get(url)).await
@@ -61,7 +61,7 @@ async fn expire_in_phase(yahoo: bool, url: &str, phase: Phase) {
     assert!(matches!(result, Err(KestrelError::SearchDeadline)));
 }
 
-async fn recorded(yahoo: bool, url: &str) -> (Result<(String, usize), KestrelError>, Lifecycle) {
+async fn recorded(yahoo: bool, url: &str) -> (Result<(String, usize), ProviderFailure>, Lifecycle) {
     let recorder = Arc::new(Mutex::new(Recorder::with_run("mock-run".into())));
     let result = PROVIDER_RECORDER
         .scope(Arc::clone(&recorder), request(yahoo, url))
@@ -322,7 +322,8 @@ async fn threshold_drops_inflight_send(min_results: usize, expected: &str) {
                         Some(Arc::clone(&signal)),
                         async {
                             record_attempt();
-                            std::future::pending::<Result<ProviderResponse, KestrelError>>().await
+                            std::future::pending::<Result<ProviderResponse, ProviderFailure>>()
+                                .await
                         },
                     );
                     let fast = run_one_job(

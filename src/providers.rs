@@ -9,7 +9,7 @@ use sha2::{Digest, Sha256};
 use url::Url;
 
 use crate::model::{Engine, SearchResult, TimeFilter};
-use crate::search::KestrelError;
+use crate::search::{KestrelError, ProviderFailure};
 
 /// Browser-facing URL, useful for inspecting the exact query independently.
 pub fn search_url(engine: Engine, query: &str) -> Option<Url> {
@@ -206,18 +206,16 @@ fn swiss_signature(path: &str, params: &BTreeMap<&str, &str>, nonce: &str) -> St
 }
 
 /// Reuse the completed HTML document for provider validation and extraction.
-pub(crate) fn parse_html(engine: Engine, doc: &Html) -> Result<Vec<SearchResult>, KestrelError> {
+pub(crate) fn parse_html(engine: Engine, doc: &Html) -> Result<Vec<SearchResult>, ProviderFailure> {
     match engine {
         Engine::Ecosia => parse_ecosia(doc),
         Engine::Mojeek => parse_mojeek(doc),
-        _ => Err(KestrelError::Search(format!(
-            "{engine} is not an HTML adapter"
-        ))),
+        _ => Err(KestrelError::Search(format!("{engine} is not an HTML adapter")).into()),
     }
 }
 
 #[cfg(test)]
-pub(crate) fn parse(engine: Engine, text: &str) -> Result<Vec<SearchResult>, KestrelError> {
+pub(crate) fn parse(engine: Engine, text: &str) -> Result<Vec<SearchResult>, ProviderFailure> {
     if engine == Engine::Mojeek {
         return parse_mojeek(&Html::parse_document(text));
     }
@@ -228,14 +226,17 @@ pub(crate) fn parse(engine: Engine, text: &str) -> Result<Vec<SearchResult>, Kes
     parse_json(engine, &data)
 }
 
-pub(crate) fn unrecognized(engine: Engine) -> KestrelError {
-    KestrelError::Search(format!(
+pub(crate) fn unrecognized(engine: Engine) -> ProviderFailure {
+    ProviderFailure::unrecognized(format!(
         "{engine} returned an unrecognized search page or response"
     ))
 }
 
 /// Extract from the same JSON value used for response-level classification.
-pub(crate) fn parse_json(engine: Engine, data: &Value) -> Result<Vec<SearchResult>, KestrelError> {
+pub(crate) fn parse_json(
+    engine: Engine,
+    data: &Value,
+) -> Result<Vec<SearchResult>, ProviderFailure> {
     if engine == Engine::Qwant {
         return parse_qwant(data);
     }
@@ -329,7 +330,7 @@ fn parsed(title: &str, value: &str, snippet: &str) -> Option<SearchResult> {
     ))
 }
 
-fn parse_ecosia(doc: &Html) -> Result<Vec<SearchResult>, KestrelError> {
+fn parse_ecosia(doc: &Html) -> Result<Vec<SearchResult>, ProviderFailure> {
     let selector = crate::search::selector;
     if doc
         .select(&selector(
@@ -341,7 +342,7 @@ fn parse_ecosia(doc: &Html) -> Result<Vec<SearchResult>, KestrelError> {
             .select(&selector("title"))
             .any(|e| e.text().collect::<String>().contains("Firewall"))
     {
-        return Err(KestrelError::Search(
+        return Err(ProviderFailure::challenge(
             "ecosia returned a bot challenge or firewall".into(),
         ));
     }
@@ -381,18 +382,21 @@ fn parse_ecosia(doc: &Html) -> Result<Vec<SearchResult>, KestrelError> {
             .next()
             .is_none()
     {
-        return Err(KestrelError::Search(
+        return Err(ProviderFailure::unrecognized(
             "ecosia returned an unrecognized search page".into(),
         ));
     }
     Ok(results)
 }
 
-fn parse_qwant(data: &Value) -> Result<Vec<SearchResult>, KestrelError> {
-    let bad =
-        || KestrelError::Search("qwant returned an unrecognized search page or response".into());
+fn parse_qwant(data: &Value) -> Result<Vec<SearchResult>, ProviderFailure> {
+    let bad = || {
+        ProviderFailure::unrecognized(
+            "qwant returned an unrecognized search page or response".into(),
+        )
+    };
     if data.get("url").and_then(Value::as_str).is_some() {
-        return Err(KestrelError::Search(
+        return Err(ProviderFailure::challenge(
             "qwant returned a bot challenge".into(),
         ));
     }
@@ -453,10 +457,10 @@ pub(crate) fn mojeek_challenge(doc: &Html) -> bool {
     captcha_title && challenge_message
 }
 
-fn parse_mojeek(doc: &Html) -> Result<Vec<SearchResult>, KestrelError> {
+fn parse_mojeek(doc: &Html) -> Result<Vec<SearchResult>, ProviderFailure> {
     let select = crate::search::selector;
     if mojeek_challenge(doc) {
-        return Err(KestrelError::Search(
+        return Err(ProviderFailure::challenge(
             "mojeek returned a bot challenge".into(),
         ));
     }
@@ -492,7 +496,7 @@ fn parse_mojeek(doc: &Html) -> Result<Vec<SearchResult>, KestrelError> {
                 .contains("no results")
         });
         if !no_results {
-            return Err(KestrelError::Search(
+            return Err(ProviderFailure::unrecognized(
                 "mojeek returned an unrecognized search page".into(),
             ));
         }

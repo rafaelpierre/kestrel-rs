@@ -89,3 +89,18 @@ Recovery helps a transient stalled request but costs an extra request and about
 coverage for persistent stalls. This supports a strictly empty/deadline trigger
 and finite caps, not a claim that retries are generally faster than a longer
 attempt. The broader matched live policy/relevance study remains in #79.
+
+## Typed outcome compatibility (#206)
+
+Recovery reads per-attempt typed state, not mutable diagnostic strings or error
+message text. Parser challenge and unrecognized-page failures retain their type
+through transport and are converted to the existing public `KestrelError` at the
+provider orchestration boundary. Rate-limit observations are independent of the
+diagnostic recorder, including an observed but invalid Retry-After value.
+
+Public report fields, serialized outcome strings, error messages, exit behavior,
+budgets and snapshot retention rules are unchanged. The additive
+`ProviderOutcome::from_report` adapter interprets existing reports for display;
+unrecognized or missing outcome values map to `Unknown`, never a retryable
+deadline. Deserializing and reserializing reports preserves their original string.
+The generated skill describes the same retry exclusions.
