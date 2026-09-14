@@ -127,9 +127,17 @@ async fn fetch_reports_http_and_unsupported_content_failures() {
         )
         .mount(&server)
         .await;
+    Mock::given(path("/empty.md"))
+        .respond_with(ResponseTemplate::new(200).set_body_raw(" \r\n\t", "text/markdown"))
+        .mount(&server)
+        .await;
     let base = server.uri();
     tokio::task::spawn_blocking(move || {
-        for path in ["/missing", "/document.pdf"] {
+        for (path, reason) in [
+            ("/missing", "HTTP request failed"),
+            ("/document.pdf", "expected HTML, plain text, or Markdown"),
+            ("/empty.md", "no extractable page text"),
+        ] {
             Command::cargo_bin("kestrel")
                 .unwrap()
                 .args(["fetch", &format!("{base}{path}"), "--output", "json"])
@@ -137,6 +145,7 @@ async fn fetch_reports_http_and_unsupported_content_failures() {
                 .failure()
                 .stdout("")
                 .stderr(predicate::str::contains("Fetch failed"))
+                .stderr(predicate::str::contains(reason))
                 .stderr(predicate::str::contains("completed in").not());
         }
     })
@@ -256,6 +265,9 @@ fn skill_install_and_uninstall_use_compatible_paths() {
     assert!(skill.contains("support `text/plain`"));
     assert!(skill.contains("literal markup/entities"));
     assert!(skill.contains("whitespace-only retained plain text"));
+    assert!(skill.contains("`text/markdown`"));
+    assert!(skill.contains("Markdown is returned as source"));
+    assert!(skill.contains("text/markdown-extra"));
     assert!(skill.contains("decode with replacement characters"));
     assert!(skill.contains("download`, `reader`, `shadow`, and `thread"));
     assert!(skill.contains("not cached"));
@@ -734,46 +746,58 @@ async fn installed_skill_reading_recipe_handles_evidence_and_capture() {
 }
 
 #[tokio::test]
-async fn fetch_plain_text_preserves_body_in_text_and_json() {
+async fn fetch_plain_text_and_markdown_preserve_body_in_text_and_json() {
     let _telemetry = kestrelsearch::telemetry::test_export_guard();
     use wiremock::{Mock, MockServer, ResponseTemplate, matchers::path};
     let server = MockServer::start().await;
-    let body = "  fn main() {\n\tprintln!(\"<p>&amp; 日本 🦀</p>\");\n}\n";
-    Mock::given(path("/source.txt"))
-        .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_bytes(body)
-                .insert_header("content-type", "text/plain; charset=utf-8"),
-        )
-        .expect(2)
-        .mount(&server)
-        .await;
-    let url = format!("{}/source.txt", server.uri());
-    tokio::task::spawn_blocking(move || {
-        for format in ["text", "json"] {
-            let output = Command::cargo_bin("kestrel")
-                .unwrap()
-                .args(["fetch", &url, "--output", format])
-                .assert()
-                .success()
-                .get_output()
-                .clone();
-            let expected = format!("Source: {url}\n\n{body}");
-            if format == "json" {
-                let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
-                assert_eq!(value["content"], expected);
-                assert_eq!(value["url"], url);
-            } else {
-                assert_eq!(
-                    String::from_utf8(output.stdout).unwrap(),
-                    format!("{expected}\n")
-                );
+    for (route, content_type, body) in [
+        (
+            "/source.txt",
+            "text/plain; charset=utf-8",
+            "  fn main() {\n\tprintln!(\"<p>&amp; 日本 🦀</p>\");\n}\n",
+        ),
+        (
+            "/source.md",
+            "Text/Markdown; charset=UTF-8",
+            "# Heading\n\n- [link](https://example.org)\n```html\n\t<p>&amp; 日本 🦀</p>\n```\n",
+        ),
+    ] {
+        Mock::given(path(route))
+            .respond_with(
+                ResponseTemplate::new(200)
+                    .set_body_bytes(body)
+                    .insert_header("content-type", content_type),
+            )
+            .expect(2)
+            .mount(&server)
+            .await;
+        let url = format!("{}{route}", server.uri());
+        tokio::task::spawn_blocking(move || {
+            for format in ["text", "json"] {
+                let output = Command::cargo_bin("kestrel")
+                    .unwrap()
+                    .args(["fetch", &url, "--output", format])
+                    .assert()
+                    .success()
+                    .get_output()
+                    .clone();
+                let expected = format!("Source: {url}\n\n{body}");
+                if format == "json" {
+                    let value: serde_json::Value = serde_json::from_slice(&output.stdout).unwrap();
+                    assert_eq!(value["content"], expected);
+                    assert_eq!(value["url"], url);
+                } else {
+                    assert_eq!(
+                        String::from_utf8(output.stdout).unwrap(),
+                        format!("{expected}\n")
+                    );
+                }
+                completion_seconds(&output.stderr, "Fetch");
             }
-            completion_seconds(&output.stderr, "Fetch");
-        }
-    })
-    .await
-    .unwrap();
+        })
+        .await
+        .unwrap();
+    }
 }
 
 #[test]

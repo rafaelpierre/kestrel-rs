@@ -333,7 +333,7 @@ async fn decoded_prefix_handles_compression_boundaries_and_empty_content() {
 }
 
 #[tokio::test]
-async fn plain_text_preserves_charset_whitespace_and_literal_markup() {
+async fn plain_text_and_markdown_preserves_charset_whitespace_and_literal_markup() {
     let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let server = MockServer::start().await;
     let utf8 = "  Source: literal metadata\r\nfn main() {\n\tif x < 2 && y > 0 {\n        println!(\"<p>&amp; café 日本 🦀</p>\");\n    }\n}\nrepeat\nrepeat\n\n";
@@ -348,7 +348,27 @@ async fn plain_text_preserves_charset_whitespace_and_literal_markup() {
         ("text/plain; charset=unknown", "café".as_bytes(), "café"),
         ("text/plain; charset=utf-8", b"a\xffb", "a�b"),
     ];
-    for (index, (content_type, body, expected)) in cases.into_iter().enumerate() {
+    let markdown =
+        "# Heading\n\n- [link](https://example.org)\n\n```html\n  <div>&amp; 日本 🦀</div>\n```\n";
+    let cases = cases
+        .into_iter()
+        .flat_map(|(kind, body, expected)| {
+            [
+                (kind.to_owned(), body, expected),
+                (
+                    kind.to_ascii_lowercase()
+                        .replace("text/plain", "Text/Markdown"),
+                    body,
+                    expected,
+                ),
+            ]
+        })
+        .chain([(
+            "text/markdown; variant=CommonMark".to_owned(),
+            markdown.as_bytes(),
+            markdown,
+        )]);
+    for (index, (content_type, body, expected)) in cases.enumerate() {
         let route = format!("/plain-{index}");
         Mock::given(path(route.clone()))
             .respond_with(
@@ -372,57 +392,27 @@ async fn plain_text_preserves_charset_whitespace_and_literal_markup() {
 }
 
 #[tokio::test]
-async fn plain_text_limits_characters_and_decodes_capped_bytes() {
+async fn plain_text_and_markdown_limits_characters_and_decodes_capped_bytes() {
     let _telemetry = kestrelsearch::telemetry::test_export_guard();
     let server = MockServer::start().await;
     let body = "é日🦀 &amp; trailing text";
-    Mock::given(path("/plain"))
-        .respond_with(
-            ResponseTemplate::new(200)
-                .set_body_bytes(body)
-                .insert_header("content-type", "text/plain; charset=utf-8"),
-        )
-        .mount(&server)
-        .await;
-    for (content_limit, max_response_bytes, expected) in [
-        (3, 100, "é日🦀"),
-        (100, 5, "é日"),
-        (100, 6, "é日�"),
-        (2, 6, "é日"),
-        (100, body.len(), body),
-    ] {
-        let options = FetchOptions {
-            content_limit,
-            max_response_bytes,
-            ..FetchOptions::default()
-        };
-        let report = fetch_all_detailed(&[format!("{}/plain", server.uri())], &options)
-            .await
-            .unwrap();
-        assert_eq!(report.contents[0].as_deref(), Some(expected));
-        assert_eq!(report.pages[0].outcome, FetchOutcome::Success);
-        assert_eq!(
-            report.pages[0].response_bytes,
-            body.len().min(max_response_bytes)
-        );
-    }
-}
-
-#[tokio::test]
-async fn plain_text_empty_or_whitespace_only_prefix_has_no_content() {
-    let _telemetry = kestrelsearch::telemetry::test_export_guard();
-    let server = MockServer::start().await;
-    for (index, body) in ["", " \r\n\t", "    useful text"].into_iter().enumerate() {
-        let route = format!("/empty-{index}");
+    for (index, content_type) in ["text/plain", "text/markdown"].into_iter().enumerate() {
+        let route = format!("/source-{index}");
         Mock::given(path(route.clone()))
             .respond_with(
                 ResponseTemplate::new(200)
                     .set_body_bytes(body)
-                    .insert_header("content-type", "text/plain"),
+                    .insert_header("content-type", content_type),
             )
             .mount(&server)
             .await;
-        for (content_limit, max_response_bytes) in [(4, 100), (100, 4)] {
+        for (content_limit, max_response_bytes, expected) in [
+            (3, 100, "é日🦀"),
+            (100, 5, "é日"),
+            (100, 6, "é日�"),
+            (2, 6, "é日"),
+            (100, body.len(), body),
+        ] {
             let options = FetchOptions {
                 content_limit,
                 max_response_bytes,
@@ -431,8 +421,43 @@ async fn plain_text_empty_or_whitespace_only_prefix_has_no_content() {
             let report = fetch_all_detailed(&[format!("{}{route}", server.uri())], &options)
                 .await
                 .unwrap();
-            assert_eq!(report.contents[0], None);
-            assert_eq!(report.pages[0].outcome, FetchOutcome::NoContent);
+            assert_eq!(report.contents[0].as_deref(), Some(expected));
+            assert_eq!(report.pages[0].outcome, FetchOutcome::Success);
+            assert_eq!(
+                report.pages[0].response_bytes,
+                body.len().min(max_response_bytes)
+            );
+        }
+    }
+}
+
+#[tokio::test]
+async fn plain_text_and_markdown_empty_or_whitespace_only_prefix_has_no_content() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
+    let server = MockServer::start().await;
+    for (kind, content_type) in ["text/plain", "text/markdown"].into_iter().enumerate() {
+        for (index, body) in ["", " \r\n\t", "    useful text"].into_iter().enumerate() {
+            let route = format!("/empty-{kind}-{index}");
+            Mock::given(path(route.clone()))
+                .respond_with(
+                    ResponseTemplate::new(200)
+                        .set_body_bytes(body)
+                        .insert_header("content-type", content_type),
+                )
+                .mount(&server)
+                .await;
+            for (content_limit, max_response_bytes) in [(4, 100), (100, 4)] {
+                let options = FetchOptions {
+                    content_limit,
+                    max_response_bytes,
+                    ..FetchOptions::default()
+                };
+                let report = fetch_all_detailed(&[format!("{}{route}", server.uri())], &options)
+                    .await
+                    .unwrap();
+                assert_eq!(report.contents[0], None);
+                assert_eq!(report.pages[0].outcome, FetchOutcome::NoContent);
+            }
         }
     }
 }
@@ -536,5 +561,36 @@ async fn persistent_cache_keeps_distinct_http_resources_separate() {
             assert_eq!(report.cache_hits, expected_hits);
             assert_eq!(report.contents[0].as_deref(), Some(text));
         }
+    }
+}
+
+#[tokio::test]
+async fn rejects_markdown_media_type_lookalikes() {
+    let _telemetry = kestrelsearch::telemetry::test_export_guard();
+    let server = MockServer::start().await;
+    for (index, kind) in [
+        "text/markdown-extra",
+        "text/markdownish",
+        "application/markdown",
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let route = format!("/unsupported-{index}");
+        Mock::given(path(route.clone()))
+            .respond_with(ResponseTemplate::new(200).set_body_raw("# Heading", kind))
+            .mount(&server)
+            .await;
+        let report = fetch_all_detailed(
+            &[format!("{}{route}", server.uri())],
+            &FetchOptions::default(),
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            report.pages[0].outcome,
+            FetchOutcome::UnsupportedContentType
+        );
+        assert_eq!(report.contents[0], None);
     }
 }

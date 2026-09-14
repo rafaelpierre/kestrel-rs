@@ -36,14 +36,18 @@ and CLI flags are unchanged. See [ordered extraction and ranking implications](p
 
 ## Plain-text responses
 
-Direct fetch and search candidate fetching support `text/plain` as well as
-HTML/XHTML. Plain text is decoded using the declared supported charset (UTF-8
+Direct fetch and search candidate fetching support `text/plain` and `text/markdown` as well as
+HTML/XHTML. Both text formats are decoded using the declared supported charset (UTF-8
 when absent or unrecognized) and limited by Unicode characters, preserving line
 breaks, indentation, repeated lines, and literal markup/entities such as `<p>`
 and `&amp;`. HTML cleanup applies only to HTML/XHTML; responses without a content
 type retain the HTML fallback. Invalid byte sequences, including a multibyte
 character split by the byte cap, decode with replacement characters. Empty or
-whitespace-only retained plain text has no extractable content.
+whitespace-only retained plain text or Markdown has no extractable content.
+Markdown is returned as source, preserving headings, lists, links, fenced code,
+and embedded HTML without rendering or HTML cleanup. Media types must match a
+supported type exactly (parameters such as `charset` are accepted); lookalikes
+such as `text/markdown-extra` are rejected.
 
 The character cap applies to the decoded body before the CLI adds its `Source:`
 prefix. Byte limits, timeouts, and partial-response diagnostics apply as usual.
