@@ -1,7 +1,8 @@
 # Provider diagnostic records
 
 Set `KESTRELSEARCH_PROVIDER_TRACE_DIR` to opt into diagnostic files. Normal CLI
-result fields and public `SearchReport` fields retain their existing shapes.
+result fields retain their existing shapes. Provider diagnostic rows now add
+one-based `discovery_attempt`; public struct literals must supply this field.
 The CLI adds a default bounded diagnostics envelope; `--no-diagnostics` restores
 the previous JSON envelope. See [caller diagnostics](structured-diagnostics.md).
 Every scheduled provider/query operation submits one `outcome-*.json`, including
@@ -42,8 +43,10 @@ is one completed HTTP attempt and one cancelled logical search.
 ## Status, errors and challenges
 
 An attempt retains `http_status` and the verbatim `retry_after` header as soon as
-headers arrive, even if reading the body later fails or is cancelled. Recording
-Retry-After does not change the existing retry policy. Bodies remain subject to
+headers arrive, even if reading the body later fails or is cancelled. Advised waits over 15s stop request retries without shortening the wait. Valid delta-seconds or HTTP-date
+Retry-After now sets request backoff. A deadline after a 429 or Retry-After
+observation is `rate_limited_deadline`, preventing discovery recovery from
+bypassing server guidance. Bodies remain subject to
 the provider response-size limit, including HTTP error bodies. An oversized body
 ends the attempt and logical search as `response_too_large` without retries or
 raw capture; observed status is retained, challenge classification stays unknown,

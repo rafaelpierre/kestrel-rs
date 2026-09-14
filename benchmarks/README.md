@@ -258,8 +258,10 @@ Build each binary from its recorded revision with
 binary before rebuilding another revision in a shared target directory. No live
 provider latency or typical-workload memory claim follows from this experiment.
 
-## Bounded empty-discovery recovery
+## Complete-answer workflow preparation (#84)
 
-The [issue #79 policy experiment](empty-discovery/README.md) compares short and
-long discovery with fresh-process and retained-client retries, retaining local
-fixture requests and matched live outcomes. It changes no production behavior.
+The [workflow evaluation protocol](workflow-evaluation.md) prepares blinded task
+packets and a counterbalanced bundled/selective/adaptive schedule, with offline
+trajectory and separate answer-dimension validation. Synthetic tests require no
+model calls. Full isolated agent trials remain subject to retrieval readiness;
+no workflow-superiority or default-change claim is made.

@@ -22,6 +22,7 @@ fn retained(outcome: &str) -> bool {
         "results"
             | "empty"
             | "filtered_empty"
+            | "rate_limited_deadline"
             | "deadline"
             | "cancelled_min_results"
             | "cancelled_quorum"
@@ -33,6 +34,7 @@ fn outcome(value: &str) -> &str {
         "results"
         | "empty"
         | "filtered_empty"
+        | "rate_limited_deadline"
         | "deadline"
         | "cancelled_min_results"
         | "cancelled_quorum"
@@ -81,7 +83,11 @@ impl SearchDiagnostics {
         let mut provider_rows = Vec::new();
         let mut outcome_counts = BTreeMap::<&str, usize>::new();
         let mut per_query = vec![Vec::new(); queries.len()];
-        for provider in &report.providers {
+        let mut latest_indices = HashMap::new();
+        for (index, provider) in report.providers.iter().enumerate() {
+            latest_indices.insert((provider.engine, provider.query.as_str()), index);
+        }
+        for (provider_index, provider) in report.providers.iter().enumerate() {
             *outcome_counts
                 .entry(outcome(&provider.outcome))
                 .or_default() += 1;
@@ -94,11 +100,17 @@ impl SearchDiagnostics {
             }
             let index = indices.get(provider.query.as_str()).copied();
             if let Some(index) = index {
+                // Completion conditions use the latest observation per provider;
+                // outcome totals and detail rows retain every discovery attempt.
+                per_query[index].retain(|p: &&kestrelsearch::ProviderSearchDiagnostic| {
+                    p.engine != provider.engine
+                });
                 per_query[index].push(provider);
             }
             if provider_rows.len() < PROVIDER_LIMIT {
                 let censored = match provider.outcome.as_str() {
                     "deadline"
+                    | "rate_limited_deadline"
                     | "cancelled_min_results"
                     | "cancelled_quorum"
                     | "cancelled_caller" => Some(true),
@@ -110,8 +122,10 @@ impl SearchDiagnostics {
                     "outcome": outcome(&provider.outcome), "response_completed_successfully": provider.success,
                     "raw": provider.raw_result_count, "rejected": provider.filtered_count,
                     "accepted_snapshot": provider.result_count,
-                    "retained_occurrences": occurrences.get(&(provider.engine, provider.query.as_str())).copied().unwrap_or(0),
-                    "retries": provider.retries, "elapsed_ms": provider.elapsed_ms,
+                    "retained_occurrences": if latest_indices.get(&(provider.engine, provider.query.as_str())) == Some(&provider_index) {
+                        occurrences.get(&(provider.engine, provider.query.as_str())).copied().unwrap_or(0)
+                    } else { 0 },
+                    "discovery_attempt": provider.discovery_attempt, "retries": provider.retries, "elapsed_ms": provider.elapsed_ms,
                     "timing_censored": censored,
                 }));
             }
@@ -123,12 +137,15 @@ impl SearchDiagnostics {
         let mut failed_count = 0;
         for (index, providers) in per_query.iter().enumerate() {
             let minimum_reached = unique[index] >= minimum;
-            let deadline = providers.iter().any(|p| p.outcome == "deadline");
+            let deadline = providers
+                .iter()
+                .any(|p| matches!(p.outcome.as_str(), "deadline" | "rate_limited_deadline"));
             let exhausted = !providers.is_empty()
                 && providers.iter().all(|p| {
                     !matches!(
                         p.outcome.as_str(),
                         "deadline"
+                            | "rate_limited_deadline"
                             | "cancelled_min_results"
                             | "cancelled_quorum"
                             | "cancelled_caller"
@@ -368,6 +385,7 @@ mod tests {
         rejected: usize,
     ) -> ProviderSearchDiagnostic {
         ProviderSearchDiagnostic {
+            discovery_attempt: 1,
             engine: Engine::Bing,
             query: query.into(),
             outcome: outcome.into(),

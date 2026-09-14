@@ -385,25 +385,36 @@ fn removed_query_syntax_option_fails_before_requests() {
     }
 }
 
-#[test]
-fn passthrough_accepts_provider_syntax_without_local_parser_errors() {
-    let _telemetry = kestrelsearch::telemetry::test_export_guard();
+#[cfg(feature = "test-fixtures")]
+#[tokio::test(flavor = "multi_thread")]
+async fn passthrough_accepts_provider_syntax_without_local_parser_errors() {
+    use wiremock::{Mock, MockServer, ResponseTemplate, matchers::method};
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_string("<li class=\"b_no\">No results</li>"),
+        )
+        .mount(&server)
+        .await;
     for query in ["filetype:pdf", "learning AND", "\"machine", "a|b"] {
         Command::cargo_bin("kestrel")
             .unwrap()
+            .env("KESTREL_TEST_PROVIDER_ENDPOINT", server.uri())
             .args([
                 "search",
                 query,
+                "--engine",
+                "bing",
                 "--no-fetch",
                 "--search-budget",
-                "0.000000001",
+                "15",
                 "--output",
                 "json",
             ])
             .assert()
-            .failure()
-            .stderr(predicate::str::contains("search deadline exceeded"));
+            .success();
     }
+    assert_eq!(server.received_requests().await.unwrap().len(), 4);
 }
 
 #[test]
@@ -476,13 +487,13 @@ fn search_min_results_is_documented_and_validated() {
 #[test]
 fn failed_search_has_no_success_completion_line() {
     let _telemetry = kestrelsearch::telemetry::test_export_guard();
-    // A one-nanosecond deadline expires before provider jobs start, avoiding live requests.
+    // Runtime validation failure is deterministic and performs no provider work.
     for output in ["text", "json"] {
         Command::cargo_bin("kestrel")
             .unwrap()
             .args([
                 "search",
-                "query",
+                " ",
                 "--no-fetch",
                 "--search-budget",
                 "0.000000001",
@@ -492,7 +503,7 @@ fn failed_search_has_no_success_completion_line() {
             .assert()
             .failure()
             .stdout("")
-            .stderr(predicate::str::contains("Every search failed"))
+            .stderr(predicate::str::contains("At least one non-empty query"))
             .stderr(predicate::str::contains("completed in").not());
     }
 }

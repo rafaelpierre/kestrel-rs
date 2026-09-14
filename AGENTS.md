@@ -49,6 +49,11 @@ with these instructions rather than guessing its contents.
   an arbitrary severity.
 - Split independent features into linked issues. Record meaningful scope changes
   and newly discovered follow-up work in GitHub rather than burying them in a PR.
+- For issues of type `investigation`, create an investigation summary report
+  and save it in the appropriate Notion folder for the project or topic. Give
+  the report a descriptive title, such as `Investigation #<issue>: <subject>`,
+  summarize the findings, supporting evidence, conclusions, and next steps,
+  and link the report from the GitHub issue.
 
 ## Feature branches and isolated worktrees
 
