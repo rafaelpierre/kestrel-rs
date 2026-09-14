@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [7.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v6.0.5...v7.0.0) - 2026-09-14
+
+### Added
+
+- [**breaking**] default search fetching to a two-second budget
+
+### Other
+
+- Merge pull request #190 from rafaelpierre/codex/188-default-fetch-budget
+- Merge branch 'main' into codex/102-hproxy-discovery
+- Merge branch 'main' into codex/23-ranking-statistics
+- precompute positive BM25 statistics and skip lexical work for RRF
+
 ## [6.0.5](https://github.com/rafaelpierre/kestrel-rs/compare/v6.0.4...v6.0.5) - 2026-09-14
 
 ### Fixed
