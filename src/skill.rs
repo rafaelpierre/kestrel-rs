@@ -738,6 +738,15 @@ KESTRELSEARCH_PROVIDER_TRACE_DIR="$trace_dir" KESTRELSEARCH_BENCHMARK_ARTIFACT_D
   they are not anonymized. Inspect and redact sensitive data before sharing. Trace
   metadata omits response cookies/authorization headers, but bodies may be sensitive.
   Capture adds I/O overhead; do not treat instrumented timings as free of that cost.
+- Provider traces and ordinary local events share one dedicated writer: 64
+  queued/preparing records, 16 MiB retained payload bytes (including active writes),
+  and 8 MiB per record. Overflow or oversized records drop the new record;
+  persistence failures can lose files. CLI exit allows a one-second flush outside
+  search/fetch budgets and JSON `elapsed_seconds`, then reports losses/timeouts on
+  stderr without changing stdout or exit status. Process exit can lose pending
+  records. Library callers can configure/disable `diagnostic_sink::Config` before
+  first use and must quiesce producers then await `diagnostic_sink::flush` before
+  reading captures. Explicit benchmark artifacts retain synchronous writes.
 - Independently, best-effort local event logging writes selected search/fetch
   events to `~/.kestrel/logs/YYYY-MM-DD/events.jsonl` (UTC date). This is an existing
   side effect, not opt-in provider tracing, a complete report or a reliable resume

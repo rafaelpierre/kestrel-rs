@@ -403,6 +403,10 @@ Page keys preserve trailing slashes, encoded paths and every query parameter
 unversioned entries are misses and are not migrated. Search deduplication is
 unchanged. See [page-cache identity](docs/page-cache-identity.md).
 
+Local event logs and opt-in provider traces use a bounded dedicated writer.
+The CLI allows a one-second exit flush; library callers can configure or disable
+persistence before first use. See [local diagnostic limits and lifecycle](docs/local-diagnostics.md).
+
 ## OpenTelemetry / Honeycomb
 
 Set an OTLP endpoint to export hierarchical search/fetch traces. The maintained

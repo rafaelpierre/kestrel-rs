@@ -2978,3 +2978,24 @@ mod diagnostic_tests;
 
 #[cfg(test)]
 mod min_results_tests;
+
+#[cfg(test)]
+pub(crate) async fn test_cancel_with_blocked_diagnostics(engine: Engine) {
+    let diagnostics = Arc::new(Mutex::new(Vec::new()));
+    let result = run_one_job(
+        "slow sink",
+        engine,
+        Arc::new(Semaphore::new(1)),
+        Arc::clone(&diagnostics),
+        Some(tokio::time::Instant::now() + Duration::from_millis(20)),
+        None,
+        std::future::pending(),
+    );
+    let result = tokio::time::timeout(Duration::from_secs(2), result)
+        .await
+        .unwrap();
+    assert!(result.is_err());
+    let entries = diagnostics.lock().unwrap();
+    assert_eq!(entries.len(), 1);
+    assert_eq!(entries[0].outcome, "deadline");
+}
