@@ -163,6 +163,7 @@ fn validation_clients() -> SearchClients {
     SearchClients {
         standard,
         yahoo: Some(yahoo),
+        parsers: parsing::ParserPool::default(),
     }
 }
 
