@@ -1991,6 +1991,20 @@ mod tests {
     }
 
     #[test]
+    fn generated_skill_documents_positive_body_bm25() {
+        let skill = generate_skill_md(&mut Cli::command());
+        for contract in [
+            "`bm25` crate",
+            "positive IDF",
+            "k1=1.5",
+            "computed in f32",
+            "stable ties",
+        ] {
+            assert!(skill.contains(contract), "missing {contract}");
+        }
+    }
+
+    #[test]
     fn generated_skill_documents_ranking_statistics() {
         let skill = generate_skill_md(&mut Cli::command());
         assert!(skill.contains("without tokenizing titles, snippets or bodies"));

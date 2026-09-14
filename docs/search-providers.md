@@ -106,7 +106,7 @@ measures three searches through one client without confusing this with startup.
   providers. CLI fanout defaults to five seconds; `--no-search-budget` disables
   that deadline. It is separate from `--fetch-budget`.
 - `--ranking-policy provider|snippet|body|hybrid|rrf` selects opt-in policies.
-  Body retains legacy BM25 behavior and requires fetching. Snippet and hybrid
+  Body uses positive-IDF content BM25 and requires fetching. Snippet and hybrid
   retain candidates with missing content; hybrid ignores the synthetic Source
   prefix. RRF fuses original provider ranks without lexical tokenization or BM25
   scoring. Snippet/hybrid and the metadata fetch threshold precompute query-term
@@ -163,3 +163,7 @@ streaming framing, change incremental acceptance, or remove its existing bounded
 probe/snapshot passes. See the [nine-adapter inventory and validation methodology](provider-parse-reuse.md).
 Worker capacity and cancellation belong to #117 / PR #159; #16 still requires
 its complete cross-slice acceptance evidence.
+
+## BM25 score compatibility
+
+Content-only BM25 and optional pre-ranking use the `bm25` crate with positive IDF `ln(1 + (N - df + 0.5) / (df + 0.5))`, k1=1.5 and b=0.75. Matching terms remain positive even in half or all documents. Kestrel preserves its tokenization, query grouping and stable ties; titles/snippets are not added to default body ranking. Scores are computed in f32 and exposed as JSON numbers/f64, so values and ordering can differ from older releases. Scores are relative to the candidate pool, not calibrated relevance probabilities. Experimental snippet/hybrid scoring and the optional fetch-score threshold retain their existing f64 implementation.
