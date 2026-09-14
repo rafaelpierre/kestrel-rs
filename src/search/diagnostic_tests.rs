@@ -77,7 +77,8 @@ async fn recorded(yahoo: bool, url: &str) -> (Result<(String, usize), KestrelErr
     (result, snapshot)
 }
 
-fn json_files(directory: &std::path::Path) -> Vec<serde_json::Value> {
+async fn json_files(directory: &std::path::Path) -> Vec<serde_json::Value> {
+    assert!(crate::diagnostic_sink::flush(Duration::from_secs(5)).await);
     std::fs::read_dir(directory)
         .unwrap()
         .map(|e| e.unwrap().path())
@@ -124,7 +125,7 @@ async fn both_backends_record_status_challenge_retry_after_and_raw_correlation()
                 assert_eq!(attempt.outcome, Some("response"));
                 assert_eq!(attempt.transport_error, None);
             }
-            let captures = json_files(directory.path());
+            let captures = json_files(directory.path()).await;
             assert_eq!(captures.len(), count as usize);
             for capture in captures {
                 assert!(ids.contains(capture["correlation"]["attempt_id"].as_str().unwrap()));
@@ -229,7 +230,7 @@ async fn queued_and_never_polled_jobs_finalize_on_drop() {
                     assert_eq!(diagnostics.lock().unwrap()[0].retries, 0);
                 })
                 .await;
-            let records = json_files(directory.path());
+            let records = json_files(directory.path()).await;
             assert_eq!(records.len(), 1);
             let record = &records[0];
             assert_eq!(
@@ -275,7 +276,7 @@ async fn deadline_during_backoff_keeps_completed_attempt() {
                     .await;
             })
             .await;
-        let records = json_files(directory.path());
+        let records = json_files(directory.path()).await;
         let lifecycle = &records
             .iter()
             .find(|r| r.get("lifecycle").is_some())
@@ -362,7 +363,7 @@ async fn threshold_drops_inflight_send(min_results: Option<usize>, expected: &st
                 .await;
         })
         .await;
-    let records = json_files(directory.path());
+    let records = json_files(directory.path()).await;
     assert_eq!(records.len(), 2);
     let slow = &records.iter().find(|r| r["engine"] == "bing").unwrap()["lifecycle"];
     assert_eq!(slow["logical_outcome"], expected);
@@ -487,7 +488,7 @@ async fn deadline_during_body_preserves_headers_and_censors_only_active_phase() 
             })
             .await;
         server.abort();
-        let records = json_files(directory.path());
+        let records = json_files(directory.path()).await;
         let lifecycle = &records[0]["lifecycle"];
         assert_eq!(lifecycle["logical_outcome"], "deadline");
         assert_eq!(lifecycle["cancellation_phase"], "body");
@@ -606,7 +607,7 @@ async fn yahoo_empty_500_redirects_preserve_recovery_and_unknown_challenge() {
         } else {
             assert!(result.unwrap_err().to_string().contains("HTTP 500"));
         }
-        let captures = json_files(directory.path());
+        let captures = json_files(directory.path()).await;
         assert_eq!(captures.len(), attempts);
         let failures: Vec<_> = captures
             .iter()
@@ -692,7 +693,7 @@ async fn quorum_during_real_retry_backoff_does_not_cancel_completed_response() {
                 ),
             )
             .await;
-        let records = json_files(directory.path());
+        let records = json_files(directory.path()).await;
         let lifecycle = &records
             .iter()
             .find(|r| r.get("lifecycle").is_some())
@@ -745,7 +746,7 @@ async fn successful_http_challenge_is_one_logical_failure_without_changing_resul
             assert!(normal.get("lifecycle").is_none());
         })
         .await;
-    let records = json_files(directory.path());
+    let records = json_files(directory.path()).await;
     let logical: Vec<_> = records
         .iter()
         .filter(|r| r.get("lifecycle").is_some())
@@ -796,7 +797,7 @@ async fn oversized_responses_preserve_status_and_stop_retries() {
                     ));
                 })
                 .await;
-            let records = json_files(directory.path());
+            let records = json_files(directory.path()).await;
             assert_eq!(records.len(), 1, "oversized bodies must not be captured");
             let lifecycle = &records[0]["lifecycle"];
             assert_eq!(records[0]["outcome"], "response_too_large");

@@ -1893,6 +1893,25 @@ mod tests {
     }
 
     #[test]
+    fn generated_skill_documents_local_diagnostic_delivery() {
+        let skill = generate_skill_md(&mut Cli::command());
+        for contract in [
+            "64\n  queued/preparing records",
+            "16 MiB",
+            "8 MiB per record",
+            "one-second flush",
+            "diagnostic_sink::Config",
+            "diagnostic_sink::flush",
+            "Explicit benchmark artifacts retain synchronous writes",
+        ] {
+            assert!(
+                skill.contains(contract),
+                "missing diagnostic contract: {contract}"
+            );
+        }
+    }
+
+    #[test]
     fn generated_skill_documents_cache_deadline_and_limits() {
         let skill = generate_skill_md(&mut Cli::command());
         assert!(skill.contains("cache reads, page requests, writes and maintenance"));

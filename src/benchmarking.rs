@@ -171,22 +171,19 @@ pub(crate) fn capture_provider(
         return;
     };
     let id = format!("{}-{}", engine, uuid::Uuid::new_v4().simple());
-    let write = || -> io::Result<()> {
-        fs::create_dir_all(&directory)?;
-        fs::write(directory.join(format!("{id}.html")), html)?;
-        fs::write(
-            directory.join(format!("{id}.json")),
-            serde_json::to_vec_pretty(&json!({
+    crate::diagnostic_sink::submit(|record| {
+        record.file(directory.join(format!("{id}.html")), false, |writer| {
+            writer.write_all(html.as_bytes())
+        })?;
+        record.file(directory.join(format!("{id}.json")), false, |writer| {
+            serde_json::to_writer_pretty(writer, &json!({
                 "engine": engine, "query": query, "final_url": url, "http_status": status, "http_version": http_version,
                 "attempt": attempt, "html_file": format!("{id}.html"),
                 "captured_at": chrono::Utc::now().to_rfc3339(),
                 "correlation": crate::search::current_correlation(),
-            }))?,
-        )
-    };
-    if let Err(error) = write() {
-        eprintln!("[kestrel] Provider trace failed: {error}");
-    }
+            })).map_err(io::Error::other)
+        })
+    });
 }
 
 /// Record only generated browser headers, never credentials or response cookies.
@@ -198,19 +195,19 @@ pub(crate) fn capture_headers(client: &str, headers: &reqwest::header::HeaderMap
         .iter()
         .filter_map(|(name, value)| value.to_str().ok().map(|value| (name.as_str(), value)))
         .collect();
-    let write = || -> io::Result<()> {
-        fs::create_dir_all(&directory)?;
-        fs::write(
+    crate::diagnostic_sink::submit(|record| {
+        record.file(
             directory.join(format!(
                 "headers-{client}-{}.json",
                 uuid::Uuid::new_v4().simple()
             )),
-            serde_json::to_vec_pretty(&json!({"client": client, "headers": values}))?,
+            false,
+            |writer| {
+                serde_json::to_writer_pretty(writer, &json!({"client": client, "headers": values}))
+                    .map_err(io::Error::other)
+            },
         )
-    };
-    if let Err(error) = write() {
-        eprintln!("[kestrel] Header trace failed: {error}");
-    }
+    });
 }
 
 /// Preserve diagnostics even when all providers fail and no SearchReport is returned.
@@ -221,26 +218,23 @@ pub(crate) fn capture_provider_lifecycle(
     let Some(directory) = trace_directory() else {
         return;
     };
-    let write = || -> io::Result<()> {
-        fs::create_dir_all(&directory)?;
-        fs::write(
+    crate::diagnostic_sink::submit(|record| {
+        record.file(
             directory.join(format!(
                 "outcome-{}-{}.json",
                 diagnostic.engine,
                 uuid::Uuid::new_v4().simple()
             )),
-            serde_json::to_vec_pretty(&{
+            false,
+            |writer| {
                 let mut value = serde_json::to_value(diagnostic)?;
                 if let Some(lifecycle) = lifecycle {
                     value["lifecycle"] = serde_json::to_value(lifecycle)?;
                 }
-                value
-            })?,
+                serde_json::to_writer_pretty(writer, &value).map_err(io::Error::other)
+            },
         )
-    };
-    if let Err(error) = write() {
-        eprintln!("[kestrel] Diagnostic trace failed: {error}");
-    }
+    });
 }
 
 #[cfg(test)]

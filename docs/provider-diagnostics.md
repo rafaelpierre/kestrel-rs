@@ -4,7 +4,7 @@ Set `KESTRELSEARCH_PROVIDER_TRACE_DIR` to opt into diagnostic files. Normal CLI
 result fields and public `SearchReport` fields retain their existing shapes.
 The CLI adds a default bounded diagnostics envelope; `--no-diagnostics` restores
 the previous JSON envelope. See [caller diagnostics](structured-diagnostics.md).
-Every scheduled provider/query operation produces one `outcome-*.json`, including
+Every scheduled provider/query operation submits one `outcome-*.json`, including
 all-failed searches, deadline expiry, caller cancellation and quorum cancellation.
 Fallback providers that are never selected are not scheduled operations.
 
@@ -89,9 +89,11 @@ The legacy `elapsed_ms` field remains total logical elapsed time.
 The guard finalizes the record once and releases diagnostics/recorder locks
 before passing snapshots to `capture_provider_lifecycle`. This change defines
 record semantics; it does not introduce a second persistence implementation.
-Writes still use the existing synchronous, best-effort opt-in sink. Issue #17
-owns nonblocking persistence, overflow handling and shutdown/flush behavior.
-Process termination or persistence failures can still lose files.
+Writes use the bounded, best-effort dedicated writer shared with ordinary event
+logging. Queue/byte overflow drops new records; filesystem errors and process
+termination can lose files. Library readers must flush before inspecting files.
+See [local diagnostics](local-diagnostics.md) for limits, counters, library policy,
+and the CLI's one-second exit flush.
 
 Mocked tests exercise both HTTP backends, correlation, redirects, retry recovery
 and exhaustion, typed errors, challenges, interrupted bodies, backoff, queueing,

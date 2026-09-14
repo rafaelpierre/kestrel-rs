@@ -5,6 +5,7 @@ pub mod cache;
 pub mod client;
 pub mod config;
 pub mod content_quality;
+pub mod diagnostic_sink;
 pub mod fetcher;
 mod http_client;
 pub mod logging;
