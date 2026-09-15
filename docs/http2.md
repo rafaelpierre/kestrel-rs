@@ -29,8 +29,9 @@ let shared = client.clone();
 
 Warm-up is opt-in and performs HEAD requests. Fetch URLs are deduplicated by
 scheme/host/port and reduced to `/`; credentials, paths and queries are discarded.
-Search warm-up uses the actual provider origin (including Yahoo's impersonated
-pool and the API origins for Swisscows, Yep and Qwant). Up to four requests run concurrently, each with its own timeout. Results
+Search warm-up uses the actual provider origin (including Bing's fixed-profile
+and Yahoo's impersonated pools and the API origins for Swisscows, Yep and
+Qwant). Up to four requests run concurrently, each with its own timeout. Results
 preserve origin order and include status, protocol, elapsed time and any error.
 Normal redirects apply, so a redirect may warm a different final origin. A HEAD
 405 still establishes a transport; an origin may close it afterward. Warm-up is
@@ -79,7 +80,10 @@ does not enable 0-RTT, persist tickets across processes, force TLS 1.3 on old
 origins, or rebuild TLS configuration on each request. Resumption depends on the
 server and TLS backend. Search and page-download pools stay separate so bulk
 pages do not share the search connection. Browser impersonation is retained for
-Yahoo, with flow-control settings overridden by the transport policy.
+Yahoo and enabled by default for Bing with a fixed Chrome/macOS profile.
+`TransportOptions::bing_transport` can select the ordinary reqwest Bing backend
+as an immediate rollback; it does not affect Yahoo or other providers.
+Flow-control settings remain overridden by the transport policy.
 
 ## Diagnostics
 

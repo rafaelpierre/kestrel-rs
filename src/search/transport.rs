@@ -87,7 +87,10 @@ struct SendFailure {
 
 enum ProviderHttpResponse {
     Standard(reqwest::Response),
-    Yahoo(primp::Response),
+    Impersonated {
+        engine: Engine,
+        response: primp::Response,
+    },
 }
 
 struct ResponseHead {
@@ -110,7 +113,7 @@ impl ProviderHttpResponse {
                 final_url: response.url().to_string(),
                 http_version: format!("{:?}", response.version()),
             },
-            Self::Yahoo(response) => ResponseHead {
+            Self::Impersonated { response, .. } => ResponseHead {
                 status: response.status().as_u16(),
                 retry_after: response
                     .headers()
@@ -126,8 +129,18 @@ impl ProviderHttpResponse {
     async fn read(self, engine: Engine) -> Result<String, KestrelError> {
         match self {
             Self::Standard(response) => read_standard_body(response, engine).await,
-            Self::Yahoo(response) => read_yahoo_body(response).await,
+            Self::Impersonated { engine, response } => {
+                read_impersonated_body(response, engine).await
+            }
         }
+    }
+}
+
+fn impersonated_error(engine: Engine, error: primp::Error) -> KestrelError {
+    match engine {
+        Engine::Yahoo => KestrelError::Yahoo(error),
+        Engine::Bing => KestrelError::Bing(error),
+        _ => KestrelError::Search(format!("{engine} impersonated request failed: {error}")),
     }
 }
 
@@ -139,7 +152,19 @@ pub(crate) async fn request_yahoo_with_retries<F, T: Send + 'static>(
 where
     F: Fn() -> primp::RequestBuilder,
 {
-    request_with_retries(Engine::Yahoo, query, extract, || async {
+    request_impersonated_with_retries(Engine::Yahoo, query, extract, build).await
+}
+
+pub(crate) async fn request_impersonated_with_retries<F, T: Send + 'static>(
+    engine: Engine,
+    query: &str,
+    extract: fn(Engine, &str, &ParsedResponse) -> T,
+    build: F,
+) -> Result<(T, usize), ProviderFailure>
+where
+    F: Fn() -> primp::RequestBuilder,
+{
+    request_with_retries(engine, query, extract, || async {
         let request = build();
         if let Some(copy) = request.try_clone() {
             let (client, built) = copy.build_split();
@@ -152,12 +177,12 @@ where
         request
             .send()
             .await
-            .map(ProviderHttpResponse::Yahoo)
+            .map(|response| ProviderHttpResponse::Impersonated { engine, response })
             .map_err(|error| SendFailure {
                 timeout: error.is_timeout(),
                 retryable: true,
                 kind: yahoo_transport(&error),
-                error: error.into(),
+                error: impersonated_error(engine, error),
             })
     })
     .await
@@ -328,6 +353,7 @@ fn body_read_censored(error: &KestrelError) -> bool {
     match error {
         KestrelError::Http(error) => error.is_timeout(),
         KestrelError::Yahoo(error) => error.is_timeout(),
+        KestrelError::Bing(error) => error.is_timeout(),
         KestrelError::ProviderResponseTooLarge { .. } => true,
         _ => false,
     }
@@ -337,6 +363,7 @@ fn record_body_error(error: &KestrelError) {
     observe(|recorder| match error {
         KestrelError::Http(error) => recorder.error(standard_transport(error), true),
         KestrelError::Yahoo(error) => recorder.error(yahoo_transport(error), true),
+        KestrelError::Bing(error) => recorder.error(yahoo_transport(error), true),
         KestrelError::ProviderResponseTooLarge { .. } => recorder.response_too_large(),
         _ => recorder.error(TransportKind::Unknown, true),
     });
@@ -377,9 +404,12 @@ pub(crate) async fn read_standard_body(
     read_provider_chunks(body, chunks).await
 }
 
-async fn read_yahoo_body(response: primp::Response) -> Result<String, KestrelError> {
+async fn read_impersonated_body(
+    response: primp::Response,
+    engine: Engine,
+) -> Result<String, KestrelError> {
     let body = ProviderBody::new(
-        Engine::Yahoo,
+        engine,
         response.status().as_u16(),
         response.content_length(),
         response
@@ -402,7 +432,7 @@ async fn read_yahoo_body(response: primp::Response) -> Result<String, KestrelErr
             .chunk()
             .await
             .map(|chunk| chunk.map(|chunk| (chunk, response)))
-            .map_err(KestrelError::from)
+            .map_err(|error| impersonated_error(engine, error))
     });
     read_provider_chunks(body, chunks).await
 }

@@ -328,7 +328,7 @@ fn skill_install_and_uninstall_use_compatible_paths() {
             .contains("[default: duckduckgo bing yahoo dogpile ecosia swisscows yep qwant mojeek]")
     );
     assert!(skill.contains("All nine supported engines are selected by default"));
-    assert!(skill.contains("exclude Yahoo skip Yahoo transport and root-store initialization"));
+    assert!(skill.contains("exclude Bing and Yahoo skip their impersonated transports"));
     assert!(!skill.contains("Additional opt-in engines"));
     for subcommand in ["search", "fetch"] {
         let help = Command::cargo_bin("kestrel")

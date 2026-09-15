@@ -15,8 +15,8 @@ pub(crate) struct BrowserProfile {
 }
 
 impl BrowserProfile {
-    #[cfg(test)]
-    pub(crate) fn bing_experiment() -> Self {
+    /// Stable profile used for Bing's browser-impersonated transport.
+    pub(crate) fn bing() -> Self {
         Self {
             browser: Impersonate::ChromeV146,
             os: ImpersonateOS::MacOS,
@@ -153,10 +153,21 @@ mod tests {
     }
 
     #[test]
+    fn bing_profile_is_fixed_to_the_validated_chrome_macos_pair() {
+        let _telemetry = crate::telemetry::test_export_guard();
+        let profile = BrowserProfile::bing();
+        assert!(matches!(
+            (profile.browser, profile.os),
+            (Impersonate::ChromeV146, ImpersonateOS::MacOS)
+        ));
+        assert_eq!(profile.headers()["accept-language"], "en-GB,en;q=0.9");
+    }
+
+    #[test]
     fn retained_defaults_respect_provider_overrides_and_clone() {
         let _telemetry = crate::telemetry::test_export_guard();
         let client = Client::new(
-            BrowserProfile::bing_experiment(),
+            BrowserProfile::bing(),
             &crate::TransportOptions::default(),
             None,
         )
@@ -171,7 +182,7 @@ mod tests {
         assert_eq!(headers.get_all("accept").iter().count(), 1);
         assert_eq!(
             headers["user-agent"],
-            BrowserProfile::bing_experiment().headers()["user-agent"]
+            BrowserProfile::bing().headers()["user-agent"]
         );
     }
 

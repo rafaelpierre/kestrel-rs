@@ -2,7 +2,23 @@ import unittest
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from bing_fidelity import judgment_key, judgment_template, score, load_runs
+from bing_fidelity import ROOT, judgment_key, judgment_template, score, load_runs, resolve_query_manifest
+
+
+class ManifestTests(unittest.TestCase):
+    def test_accepts_repository_manifest_and_returns_stable_relative_path(self):
+        manifest, relative = resolve_query_manifest(Path('benchmarks/bing-fidelity/queries.json'))
+        self.assertEqual(manifest, ROOT / 'benchmarks/bing-fidelity/queries.json')
+        self.assertEqual(relative, Path('benchmarks/bing-fidelity/queries.json'))
+
+    def test_rejects_missing_and_outside_manifests(self):
+        with self.assertRaisesRegex(ValueError, 'does not exist'):
+            resolve_query_manifest(Path('benchmarks/bing-fidelity/missing.json'))
+        with TemporaryDirectory() as directory:
+            outside = Path(directory) / 'queries.json'
+            outside.write_text('[]')
+            with self.assertRaisesRegex(ValueError, 'within the repository'):
+                resolve_query_manifest(outside)
 
 class ScoringTests(unittest.TestCase):
     def row(self, results, **kw):

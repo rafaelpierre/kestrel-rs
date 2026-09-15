@@ -171,10 +171,11 @@ Content-only BM25 and optional pre-ranking use the `bm25` crate with positive ID
 
 ## Shared HTTP retry policy (#205)
 
-Standard and Yahoo transports share completed-response classification/extraction,
-status retry decisions, Retry-After/backoff selection and bounded streaming body
-processing. Backend adapters retain their own send-error classification: Yahoo
-retries all send errors, while standard HTTP retries timeout/connect/request
+Standard, Bing impersonated and Yahoo transports share completed-response
+classification/extraction, status retry decisions, Retry-After/backoff selection
+and bounded streaming body processing. Backend adapters retain their own
+send-error classification: Bing's fixed-profile impersonated transport and Yahoo
+retry all send errors, while standard HTTP retries timeout/connect/request
 errors only. Both allow at most three application sends per provider attempt.
 HTTP 408/429/5xx retries stop on detected non-2xx challenges; successful-status
 body failures, oversized bodies and extraction errors are terminal. Other

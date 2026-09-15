@@ -63,12 +63,12 @@ impl KestrelClient {
         transport: crate::TransportOptions,
         capacity: usize,
     ) -> Result<Self, KestrelError> {
-        Self::build_for_engines(&[Engine::Yahoo], transport, capacity)
+        Self::build_for_engines(&[Engine::Bing, Engine::Yahoo], transport, capacity)
     }
 
     /// Build only the transports needed by `engines`, with shared page parser capacity.
-    /// All non-Yahoo providers share one transport and remain available. Yahoo is
-    /// available only when included here; requesting it otherwise returns
+    /// Providers using an impersonated transport must be included here; requesting
+    /// Bing or Yahoo without its required transport returns
     /// `KestrelError::InvalidRequest` before starting a search. Clones retain this
     /// policy and share pools. Initialization completes before any search budget.
     /// Use `new` or `with_parser_capacity` for unrestricted reusable clients.
@@ -302,7 +302,7 @@ mod construction_tests {
     use super::*;
 
     #[test]
-    fn scoped_clients_only_construct_yahoo_when_selected() {
+    fn scoped_clients_only_construct_impersonated_transports_when_selected() {
         let _telemetry = crate::telemetry::test_export_guard();
         for engines in [
             vec![],
@@ -312,10 +312,19 @@ mod construction_tests {
             let client = KestrelClient::with_engines_and_parser_capacity(&engines, 2).unwrap();
             assert!(client.search.yahoo.is_none());
             assert!(client.clone().search.yahoo.is_none());
+            assert_eq!(
+                client.search.bing.is_some(),
+                engines.contains(&Engine::Bing)
+            );
+            assert_eq!(
+                client.clone().search.bing.is_some(),
+                engines.contains(&Engine::Bing)
+            );
         }
         let client = KestrelClient::with_engines_and_parser_capacity(&[Engine::Yahoo], 2).unwrap();
         assert!(client.search.yahoo.is_some());
         assert!(client.clone().search.yahoo.is_some());
+        assert!(client.search.bing.is_none());
         assert!(KestrelClient::with_engines_and_parser_capacity(&[Engine::Bing], 0).is_err());
     }
 
@@ -331,8 +340,22 @@ mod construction_tests {
                 2,
             ),
         ] {
-            assert!(client.unwrap().search.yahoo.is_some());
+            let client = client.unwrap();
+            assert!(client.search.yahoo.is_some());
+            assert!(client.search.bing.is_some());
         }
+    }
+
+    #[test]
+    fn standard_bing_transport_is_an_explicit_rollback() {
+        let _telemetry = crate::telemetry::test_export_guard();
+        let options = crate::TransportOptions {
+            bing_transport: crate::BingTransport::Standard,
+            ..Default::default()
+        };
+        let client = KestrelClient::with_transport(options).unwrap();
+        assert!(client.search.bing.is_none());
+        assert_eq!(client.search.bing_transport, crate::BingTransport::Standard);
     }
 
     #[tokio::test]

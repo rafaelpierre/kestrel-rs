@@ -25,7 +25,7 @@ pub mod skill;
 pub mod telemetry;
 pub mod transport;
 mod warmup;
-pub use transport::TransportOptions;
+pub use transport::{BingTransport, TransportOptions};
 pub use warmup::WarmupResult;
 
 pub use cache::PageCache;
