@@ -1,5 +1,6 @@
 //! Opt-in live experiment. No production configuration or relevance heuristics.
 use super::*;
+use reqwest::header::HeaderMap;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::{fs, path::Path};
@@ -51,6 +52,7 @@ async fn isolated(
     query: &str,
     standard: &reqwest::Client,
     impersonated: &primp::Client,
+    headers: &HeaderMap,
     variant: &str,
 ) -> Result<Value, Box<dyn std::error::Error>> {
     let region = if variant == "bing-gb-region" {
@@ -73,9 +75,16 @@ async fn isolated(
         request.url_mut().set_query(Some(&query));
     }
     let initial = request.url().clone();
+    let mut span = crate::telemetry::Span::new("kestrel.bing_fidelity.request");
+    span.attribute("search.engine", "bing");
+    span.attribute("kestrel.bing_fidelity.variant", variant.to_owned());
+    span.request_headers(headers);
     // The candidate changes transport only; query serialization and headers match.
     let (status, final_url, version, cache_headers, html) = if variant != "bing-impersonated" {
-        let response = standard.execute(request).await?;
+        let response = standard
+            .execute(request)
+            .with_context(span.context())
+            .await?;
         let headers: std::collections::BTreeMap<_, _> = ["age", "cache-control", "via", "x-cache"]
             .into_iter()
             .filter_map(|k| {
@@ -95,7 +104,11 @@ async fn isolated(
         let html = read_standard_body(response, Engine::Bing).await?;
         (meta.0, meta.1, meta.2, meta.3, html)
     } else {
-        let mut response = impersonated.get(initial.as_str()).send().await?;
+        let mut response = impersonated
+            .get(initial.as_str())
+            .send()
+            .with_context(span.context())
+            .await?;
         let headers: std::collections::BTreeMap<_, _> = ["age", "cache-control", "via", "x-cache"]
             .into_iter()
             .filter_map(|k| {
@@ -126,6 +139,7 @@ async fn isolated(
         }
         (meta.0, meta.1, meta.2, meta.3, body.text())
     };
+    span.finish();
     if let Ok(directory) = std::env::var("KESTREL_BING_RAW_DIR") {
         fs::create_dir_all(&directory)?;
         let key = format!("{variant}-{:x}", Sha256::digest(query));
@@ -174,10 +188,20 @@ fn fanout_options(variant: &str, budget: Duration) -> SearchOptions {
     }
 }
 
+fn rotated_variant<'a>(
+    variants: &'a [&str],
+    query_index: usize,
+    window_offset: usize,
+    variant_offset: usize,
+) -> &'a str {
+    variants[(query_index + window_offset + variant_offset) % variants.len()]
+}
+
 #[tokio::test]
 #[ignore = "live network experiment; set KESTREL_BING_EXPERIMENT_DIR to a new directory"]
 async fn capture_live_matrix() {
     let _telemetry = crate::telemetry::test_export_guard();
+    let mut capture_span = crate::telemetry::Span::new("kestrel.bing_fidelity.capture");
     let directory =
         std::env::var("KESTREL_BING_EXPERIMENT_DIR").expect("explicit output directory required");
     let directory = Path::new(&directory);
@@ -187,9 +211,14 @@ async fn capture_live_matrix() {
         !output.exists(),
         "use a new directory to preserve earlier evidence"
     );
+    let manifest = std::env::var("KESTREL_BING_EXPERIMENT_QUERY_MANIFEST").map_or_else(
+        |_| include_str!("../../benchmarks/bing-fidelity/queries.json").to_owned(),
+        |path| fs::read_to_string(path).expect("query manifest must be readable"),
+    );
     let cases: Vec<Value> =
-        serde_json::from_str(include_str!("../../benchmarks/bing-fidelity/queries.json")).unwrap();
-    let profile = crate::http_client::BrowserProfile::bing_experiment();
+        serde_json::from_str(&manifest).expect("query manifest must be valid JSON");
+    capture_span.attribute("kestrel.bing_fidelity.query_count", cases.len() as i64);
+    let profile = crate::http_client::BrowserProfile::bing();
     let headers: std::collections::BTreeMap<_, _> = profile
         .headers()
         .iter()
@@ -210,6 +239,8 @@ async fn capture_live_matrix() {
     let clients = SearchClients {
         parsers: parsing::ParserPool::default(),
         standard: standard.clone().into(),
+        bing_transport: crate::BingTransport::Impersonated,
+        bing: Some(impersonated.clone()),
         yahoo: Some(impersonated.clone()),
     };
     let mut rows = vec![];
@@ -231,16 +262,24 @@ async fn capture_live_matrix() {
     } else {
         &normal_variants
     };
+    let window_offset = std::env::var("KESTREL_BING_EXPERIMENT_VARIANT_OFFSET")
+        .map(|value| {
+            value
+                .parse::<usize>()
+                .expect("variant offset must be an integer")
+        })
+        .unwrap_or(0);
     for (index, case) in cases.iter().enumerate() {
         let query = case["query"].as_str().unwrap();
         for offset in 0..variants.len() {
-            let variant = variants[(offset + index) % variants.len()];
+            let variant = rotated_variant(variants, index, window_offset, offset);
             let started = Instant::now();
             let timestamp = chrono::Utc::now().to_rfc3339();
             let mut row = if variant.starts_with("bing-") {
                 match tokio::time::timeout(
                     budget,
-                    isolated(query, &standard, &impersonated, variant),
+                    isolated(query, &standard, &impersonated, &profile.headers(), variant)
+                        .with_context(capture_span.context()),
                 )
                 .await
                 {
@@ -256,6 +295,7 @@ async fn capture_live_matrix() {
                     &clients,
                     None,
                 )
+                .with_context(capture_span.context())
                 .await
                 {
                     Ok(mut report) => {
@@ -285,6 +325,7 @@ async fn capture_live_matrix() {
             row["elapsed_ms"] = json!(started.elapsed().as_millis() as u64);
             row["budget_ms"] = json!(budget.as_millis() as u64);
             row["observation_kind"] = json!("network");
+            row["variant_order_offset"] = json!(window_offset);
             if !variant.starts_with("bing-") {
                 let options = fanout_options(variant, budget);
                 row["query_syntax"] = json!("passthrough");
@@ -313,6 +354,7 @@ async fn capture_live_matrix() {
             })).unwrap()).unwrap();
         }
     }
+    capture_span.finish();
 }
 
 #[test]
@@ -371,6 +413,15 @@ fn current_matrix_uses_result_minima_and_matched_budgets() {
         assert!(options.region.is_empty());
         assert_eq!(options.engines.len(), 9);
     }
+}
+
+#[test]
+fn variant_order_rotates_across_queries_and_windows() {
+    let variants = ["baseline", "candidate", "locale", "form"];
+    assert_eq!(rotated_variant(&variants, 0, 0, 0), "baseline");
+    assert_eq!(rotated_variant(&variants, 0, 1, 0), "candidate");
+    assert_eq!(rotated_variant(&variants, 1, 0, 0), "candidate");
+    assert_eq!(rotated_variant(&variants, 0, 1, 3), "baseline");
 }
 
 #[test]

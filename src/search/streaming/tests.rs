@@ -120,10 +120,13 @@ async fn both_clients_stream_normalized_results_and_cancel_unfinished_bodies() {
                     standard = standard.http2_prior_knowledge();
                     yahoo = yahoo.http2_prior_knowledge();
                 }
+                let yahoo = yahoo.build().unwrap();
                 let clients = SearchClients {
                     parsers: parsing::ParserPool::default(),
                     standard: standard.build().unwrap().into(),
-                    yahoo: Some(yahoo.build().unwrap()),
+                    bing_transport: crate::BingTransport::Impersonated,
+                    bing: Some(yahoo.clone()),
+                    yahoo: Some(yahoo),
                 };
                 // Prewarm both pools, then create unrelated in-flight responses.
                 assert_eq!(

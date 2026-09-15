@@ -171,13 +171,16 @@ Search runs all nine default providers concurrently. Use
 `kestrel search "test" --engine bing --no-fetch` searches only Bing.
 Use `-e duckduckgo -e bing -e yahoo` to retain the previous default provider set.
 The library’s `SearchOptions::default()` uses the same nine-engine order.
-CLI searches that exclude Yahoo skip its transport and root-store initialization,
-before the search budget begins. Default all-provider searches and TLS/proxy
-policies are unchanged. Existing reusable client constructors retain all-provider
-support. The additive `KestrelClient::with_engines_and_parser_capacity(engines, n)`
-constructor selects transports: all non-Yahoo providers remain available through
-the shared standard client; Yahoo must be included at construction or subsequent
-Yahoo searches return `KestrelError::InvalidRequest` before starting requests.
+CLI searches that exclude Bing and Yahoo skip their impersonated transports and
+root-store initialization before the search budget begins. Bing uses a fixed
+Chrome/macOS impersonated transport by default, matching the documented
+transport-fidelity experiment; set `TransportOptions { bing_transport:
+BingTransport::Standard, ..Default::default() }` for an immediate reqwest
+rollback. Other providers retain their existing transport. Existing reusable
+client constructors retain all-provider support. The additive
+`KestrelClient::with_engines_and_parser_capacity(engines, n)` constructor selects
+the impersonated transports: Bing and Yahoo must be included at construction or
+a later search for either returns `KestrelError::InvalidRequest` before requests.
 Clones preserve this policy and share pools.
 
 More engines increase provider requests; existing budgets and concurrency limits

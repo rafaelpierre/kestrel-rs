@@ -6,7 +6,10 @@ use super::{
 use crate::search::ProviderFailure;
 use crate::{
     model::{Engine, SearchResult, TimeFilter},
-    search::{ProviderResponse, transport::request_standard_with_retries},
+    search::{
+        ProviderResponse,
+        transport::{request_impersonated_with_retries, request_standard_with_retries},
+    },
 };
 use base64::Engine as _;
 use scraper::Html;
@@ -19,6 +22,18 @@ pub(crate) fn bing_request(
     query: &str,
     region: &str,
 ) -> reqwest::RequestBuilder {
+    client.get(bing_url(query, region))
+}
+
+pub(crate) fn bing_impersonated_request(
+    client: &primp::Client,
+    query: &str,
+    region: &str,
+) -> primp::RequestBuilder {
+    client.get(bing_url(query, region))
+}
+
+fn bing_url(query: &str, region: &str) -> String {
     let mut params = vec![("q", query)];
     let country = region
         .split_once('-')
@@ -32,14 +47,15 @@ pub(crate) fn bing_request(
         .extend_pairs(params)
         .finish()
         .replace('+', "%20");
-    client.get(format!("https://www.bing.com/search?{encoded}"))
+    format!("https://www.bing.com/search?{encoded}")
 }
 
 pub(crate) async fn search_bing(
     query: &str,
     region: &str,
     time_filter: TimeFilter,
-    client: &crate::http_client::Client,
+    standard: &crate::http_client::Client,
+    impersonated: Option<&primp::Client>,
 ) -> Result<ProviderResponse, ProviderFailure> {
     if time_filter != TimeFilter::Any {
         crate::log_event!(
@@ -50,11 +66,20 @@ pub(crate) async fn search_bing(
             "value" => time_filter.as_str(),
         );
     }
-    let (results, retries) =
-        request_standard_with_retries(client, Engine::Bing, query, extract_completed, || {
-            bing_request(client, query, region)
-        })
-        .await?;
+    let (results, retries) = match impersonated {
+        Some(client) => {
+            request_impersonated_with_retries(Engine::Bing, query, extract_completed, || {
+                bing_impersonated_request(client, query, region)
+            })
+            .await?
+        }
+        None => {
+            request_standard_with_retries(standard, Engine::Bing, query, extract_completed, || {
+                bing_request(standard, query, region)
+            })
+            .await?
+        }
+    };
     Ok(ProviderResponse {
         results: results?,
         retries,

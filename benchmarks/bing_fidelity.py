@@ -14,6 +14,19 @@ import shutil
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_QUERY_MANIFEST = Path('benchmarks/bing-fidelity/queries.json')
+
+
+def resolve_query_manifest(path):
+    candidate = path if path.is_absolute() else ROOT / path
+    candidate = candidate.resolve()
+    try:
+        relative = candidate.relative_to(ROOT)
+    except ValueError as error:
+        raise ValueError('--query-manifest must be within the repository') from error
+    if not candidate.is_file():
+        raise ValueError(f'{relative}: query manifest does not exist')
+    return candidate, relative
 
 
 def load_runs(paths):
@@ -142,11 +155,12 @@ def score(runs, judgments):
 def run(args):
     if args.windows < 1 or args.interval < 0:
         raise ValueError('windows must be positive and interval nonnegative')
+    manifest, manifest_relative = resolve_query_manifest(args.query_manifest)
     args.output.mkdir(parents=True, exist_ok=False)
     start = time.monotonic()
     schedule = {'created_at': datetime.now(timezone.utc).isoformat(),
                 'windows': args.windows, 'interval_seconds': args.interval,
-                'query_manifest': 'benchmarks/bing-fidelity/queries.json', 'executions': [],
+                'query_manifest': str(manifest_relative), 'executions': [],
                 'completed': False, 'environment_label': args.environment,
                 'platform': dict(system=platform.system(), release=platform.release(),
                                  machine=platform.machine()),
@@ -168,8 +182,7 @@ def run(args):
     binary = (args.output / 'experiment-test').resolve()
     shutil.copy2(executable, binary)
     schedule['executable_sha256'] = hashlib.sha256(binary.read_bytes()).hexdigest()
-    schedule['query_manifest_sha256'] = hashlib.sha256(
-        (ROOT / schedule['query_manifest']).read_bytes()).hexdigest()
+    schedule['query_manifest_sha256'] = hashlib.sha256(manifest.read_bytes()).hexdigest()
     schedule['encoding_only'] = args.encodings
     schedule['transport_only'] = args.transports
     schedule_path.write_text(json.dumps(schedule, indent=2))
@@ -179,7 +192,9 @@ def run(args):
         time.sleep(max(0, target - time.monotonic()))
         output = (args.output / f'window-{window + 1}').resolve()
         env = dict(os.environ, KESTREL_BING_EXPERIMENT_DIR=str(output),
-                   KESTREL_BING_ENVIRONMENT=args.environment)
+                   KESTREL_BING_ENVIRONMENT=args.environment,
+                   KESTREL_BING_EXPERIMENT_QUERY_MANIFEST=str(manifest_relative),
+                   KESTREL_BING_EXPERIMENT_VARIANT_OFFSET=str(window))
         if args.raw:
             env['KESTREL_BING_RAW_DIR'] = str(output / 'raw')
         else:
@@ -213,6 +228,8 @@ def main():
     live.add_argument('--output', required=True, type=Path)
     live.add_argument('--windows', type=int, default=1)
     live.add_argument('--interval', type=float, default=300)
+    live.add_argument('--query-manifest', type=Path, default=DEFAULT_QUERY_MANIFEST,
+                      help='repository-relative JSON query manifest (default: %(default)s)')
     matrix = live.add_mutually_exclusive_group()
     matrix.add_argument('--encodings', action='store_true', help='compare + and %%20 spaces only')
     matrix.add_argument('--transports', action='store_true', help='compare standard, impersonated, region and form variants')

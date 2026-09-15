@@ -18,10 +18,23 @@ finish. An existing output directory is rejected. Windows run sequentially; if a
 window exceeds its interval, the next begins immediately after it completes.
 There is no background automation after the command exits.
 
+Use `--query-manifest path/to/queries.json` for an issue-specific, repository-tracked
+set of query intents. The runner rejects paths outside the checkout, records the
+repository-relative path and SHA-256 in `schedule.json`, and passes that exact
+manifest to the frozen test executable. This keeps the default #32 baseline
+unchanged while making follow-up reproductions auditable.
+
+Every capture invocation emits a `kestrel.bing_fidelity.capture` span and each
+isolated request emits `kestrel.bing_fidelity.request`. These spans carry the
+existing run ID and only the established safe request-header allowlist; they do
+not export cookies, credentials, arbitrary headers, raw bodies or redirect
+chains. Confirm run delivery through Honeycomb before using the telemetry as
+evidence.
+
 The default matrix uses six declared query intents, Chrome 146/macOS/en-GB
 headers, no explicit region, a five-second search budget and reused clients
 without a cookie jar. The profile is fixed for reproducibility; production CLI
-profiles can vary. It alternates variant order across queries:
+profiles can vary. It rotates variant order across queries and successive windows:
 
 - `bing-standard`: one complete raw Bing response, before query filtering.
 - `fanout-passthrough-min5`: all nine providers, five-result minimum.

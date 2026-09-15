@@ -192,6 +192,8 @@ async fn live_fusion_latency_evidence() {
         SearchClients {
             parsers: parsing::ParserPool::default(),
             standard: standard.into(),
+            bing_transport: crate::BingTransport::Impersonated,
+            bing: Some(yahoo.clone()),
             yahoo: Some(yahoo),
         }
     };

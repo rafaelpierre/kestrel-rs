@@ -11,7 +11,7 @@ use std::time::{Duration, Instant};
 use futures_util::StreamExt;
 use futures_util::{future::join_all, stream::FuturesUnordered};
 use tokio::sync::Semaphore;
-#[cfg(feature = "test-fixtures")]
+#[cfg(any(test, feature = "test-fixtures"))]
 use url::Url;
 
 use crate::model::{
@@ -47,10 +47,14 @@ use results::{merge_round_robin, site_domain};
 pub use transport::MAX_PROVIDER_RESPONSE_BYTES;
 use transport::SEARCH_TIMEOUT;
 #[cfg(any(test, feature = "test-fixtures"))]
-use transport::{request_standard_with_retries, request_yahoo_with_retries};
+use transport::{
+    request_impersonated_with_retries, request_standard_with_retries, request_yahoo_with_retries,
+};
 
 #[cfg(test)]
-use crate::providers::bing::{bing_request, parse_bing_document, parse_bing_results};
+use crate::providers::bing::{
+    bing_impersonated_request, bing_request, parse_bing_document, parse_bing_results,
+};
 #[cfg(test)]
 use crate::providers::duckduckgo::{
     duckduckgo_request, parse_duckduckgo_response, parse_duckduckgo_results,
@@ -116,12 +120,22 @@ pub(crate) fn current_correlation() -> Option<serde_json::Value> {
 #[derive(Clone)]
 pub(crate) struct SearchClients {
     pub(crate) standard: crate::http_client::Client,
+    pub(crate) bing_transport: crate::BingTransport,
+    pub(crate) bing: Option<primp::Client>,
     pub(crate) yahoo: Option<primp::Client>,
     pub(crate) parsers: parsing::ParserPool,
 }
 
 impl SearchClients {
     fn validate_engines(&self, engines: &[Engine]) -> Result<(), KestrelError> {
+        if engines.contains(&Engine::Bing)
+            && self.bing.is_none()
+            && matches!(self.bing_transport, crate::BingTransport::Impersonated)
+        {
+            return Err(KestrelError::InvalidRequest(
+                "Bing impersonated transport was not enabled when constructing this client".into(),
+            ));
+        }
         if engines.contains(&Engine::Yahoo) && self.yahoo.is_none() {
             return Err(KestrelError::InvalidRequest(
                 "Yahoo transport was not enabled when constructing this client".into(),
@@ -141,20 +155,32 @@ impl SearchClients {
         transport.validate()?;
         let profile = crate::http_client::BrowserProfile::random();
         let standard = crate::http_client::Client::new(profile, transport, Some(SEARCH_TIMEOUT))?;
-        let yahoo = engines.contains(&Engine::Yahoo).then(|| {
-            let mut client = crate::http_client::impersonated_builder(profile, transport)
-                .timeout(SEARCH_TIMEOUT)
-                .build()?;
-            *client.headers_mut() = profile.headers();
-            Ok::<_, primp::Error>(client)
-        });
+        let bing = (engines.contains(&Engine::Bing)
+            && matches!(transport.bing_transport, crate::BingTransport::Impersonated))
+        .then(|| impersonated_search_client(crate::http_client::BrowserProfile::bing(), transport));
+        let yahoo = engines
+            .contains(&Engine::Yahoo)
+            .then(|| impersonated_search_client(profile, transport));
         crate::benchmarking::capture_headers("search", &profile.headers());
         Ok(Self {
             standard,
+            bing_transport: transport.bing_transport,
+            bing: bing.transpose()?,
             yahoo: yahoo.transpose()?,
             parsers: parsing::ParserPool::default(),
         })
     }
+}
+
+fn impersonated_search_client(
+    profile: crate::http_client::BrowserProfile,
+    transport: &crate::TransportOptions,
+) -> Result<primp::Client, primp::Error> {
+    let mut client = crate::http_client::impersonated_builder(profile, transport)
+        .timeout(SEARCH_TIMEOUT)
+        .build()?;
+    *client.headers_mut() = profile.headers();
+    Ok(client)
 }
 
 fn validate_query(query: &str) -> Result<(), KestrelError> {
@@ -838,6 +864,16 @@ async fn run_provider_inner(
                     .query(&[("q", query)])
             })
             .await?
+        } else if engine == Engine::Bing && clients.bing.is_some() {
+            request_impersonated_with_retries(engine, query, extract_dispatched, || {
+                clients
+                    .bing
+                    .as_ref()
+                    .expect("Bing impersonated client requested")
+                    .get(endpoint.as_str())
+                    .query(&[("q", query)])
+            })
+            .await?
         } else {
             request_standard_with_retries(
                 &clients.standard,
@@ -865,7 +901,16 @@ async fn run_provider_inner(
         Engine::Duckduckgo => {
             search_duckduckgo(query, region, time_filter, &clients.standard).await
         }
-        Engine::Bing => search_bing(query, region, time_filter, &clients.standard).await,
+        Engine::Bing => {
+            search_bing(
+                query,
+                region,
+                time_filter,
+                &clients.standard,
+                clients.bing.as_ref(),
+            )
+            .await
+        }
         Engine::Yahoo => {
             search_yahoo(
                 query,
@@ -1522,6 +1567,7 @@ mod tests {
     fn bing_request_preserves_complete_query_and_region() {
         let _telemetry = crate::telemetry::test_export_guard();
         let client: crate::http_client::Client = reqwest::Client::new().into();
+        let impersonated = primp::Client::builder().no_proxy().build().unwrap();
         for query in [
             "python uv guide",
             "literal %20 + repeated  spaces",
@@ -1537,7 +1583,11 @@ mod tests {
         ] {
             for (region, country) in [("", None), ("gb-en", Some("gb")), ("us", Some("us"))] {
                 let request = bing_request(&client, query, region).build().unwrap();
+                let browser_request = bing_impersonated_request(&impersonated, query, region)
+                    .build()
+                    .unwrap();
                 assert_eq!(request.method(), reqwest::Method::GET);
+                assert_eq!(browser_request.url(), request.url());
                 assert_eq!(request.url().scheme(), "https");
                 assert_eq!(request.url().host_str(), Some("www.bing.com"));
                 assert_eq!(request.url().path(), "/search");

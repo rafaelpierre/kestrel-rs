@@ -1,0 +1,7 @@
+[
+  {
+    "id": "asyncio-threadpool",
+    "query": "python asyncio versus threadpool",
+    "intent": "Compares Python asyncio with thread pools, including appropriate workloads or trade-offs; generic Python cards do not satisfy this intent."
+  }
+]

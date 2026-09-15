@@ -66,8 +66,16 @@ impl KestrelClient {
         Ok(stream::iter(selected.into_iter().map(|engine| async move {
             let origin = search_origin(engine);
             let started = Instant::now();
-            let result = if engine == Engine::Yahoo {
-                self.search
+            let result = match (engine, self.search.bing.as_ref()) {
+                (Engine::Bing, Some(client)) => client
+                    .head(origin)
+                    .timeout(timeout)
+                    .send()
+                    .await
+                    .map(|r| (r.status().as_u16(), format!("{:?}", r.version())))
+                    .map_err(|e| e.to_string()),
+                (Engine::Yahoo, _) => self
+                    .search
                     .yahoo
                     .as_ref()
                     .expect("KestrelClient builds Yahoo")
@@ -76,16 +84,16 @@ impl KestrelClient {
                     .send()
                     .await
                     .map(|r| (r.status().as_u16(), format!("{:?}", r.version())))
-                    .map_err(|e| e.to_string())
-            } else {
-                self.search
+                    .map_err(|e| e.to_string()),
+                _ => self
+                    .search
                     .standard
                     .head(origin)
                     .timeout(timeout)
                     .send()
                     .await
                     .map(|r| (r.status().as_u16(), format!("{:?}", r.version())))
-                    .map_err(|e| e.to_string())
+                    .map_err(|e| e.to_string()),
             };
             outcome(origin.to_owned(), started, result)
         }))

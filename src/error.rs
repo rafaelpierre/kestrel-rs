@@ -21,6 +21,8 @@ pub enum KestrelError {
     Http(#[from] reqwest::Error),
     #[error("Yahoo request failed: {0}")]
     Yahoo(#[from] primp::Error),
+    #[error("Bing request failed: {0}")]
+    Bing(primp::Error),
     #[error("failed to initialize HTTP client: {0}")]
     Client(String),
     #[error("I/O failed: {0}")]

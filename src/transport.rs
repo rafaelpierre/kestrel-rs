@@ -6,9 +6,24 @@ use std::time::{Duration, Instant};
 
 use crate::error::KestrelError;
 
+/// HTTP backend used for Bing searches.
+///
+/// `Impersonated` uses the fixed Chrome/macOS transport profile validated against
+/// Bing. `Standard` retains the ordinary reqwest backend as an immediate rollback.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum BingTransport {
+    /// Use the stable browser-impersonated transport profile (the default).
+    #[default]
+    Impersonated,
+    /// Use Kestrel's ordinary reqwest transport for Bing.
+    Standard,
+}
+
 /// Settings applied to independent search and page-download pools.
 #[derive(Clone, Debug)]
 pub struct TransportOptions {
+    /// Selects Bing's request backend. Other providers are unaffected.
+    pub bing_transport: BingTransport,
     pub pool_idle_timeout: Duration,
     /// Retained idle connections, not a limit on active connections or H2 streams.
     pub max_idle_per_host: usize,
@@ -29,6 +44,7 @@ pub struct TransportOptions {
 impl Default for TransportOptions {
     fn default() -> Self {
         Self {
+            bing_transport: BingTransport::Impersonated,
             pool_idle_timeout: Duration::from_secs(300),
             max_idle_per_host: 2,
             connect_timeout: Duration::from_secs(10),

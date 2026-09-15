@@ -2091,7 +2091,7 @@ mod tests {
         let skill = generate_skill_md(&mut Cli::command());
         for contract in [
             "both HTTP backends retry HTTP 408/429/5xx",
-            "Yahoo retries all send errors",
+            "Bing's default impersonated transport and Yahoo retry all send errors",
             "standard backend retries only timeout/connect/request errors",
             "Successful-status body failures, oversized responses and extraction failures do not retry",
             "Other error-status body failures retain status-based retries",

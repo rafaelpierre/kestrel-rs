@@ -152,7 +152,7 @@ async fn measured_search(
 }
 
 fn validation_clients() -> SearchClients {
-    let profile = crate::http_client::BrowserProfile::bing_experiment();
+    let profile = crate::http_client::BrowserProfile::bing();
     let transport = crate::TransportOptions::default();
     let standard = crate::http_client::standard_builder(profile, &transport)
         .timeout(SEARCH_TIMEOUT)
@@ -165,6 +165,8 @@ fn validation_clients() -> SearchClients {
     *yahoo.headers_mut() = profile.headers();
     SearchClients {
         standard: standard.into(),
+        bing_transport: crate::BingTransport::Impersonated,
+        bing: Some(yahoo.clone()),
         yahoo: Some(yahoo),
         parsers: parsing::ParserPool::default(),
     }
@@ -198,7 +200,7 @@ async fn live_streaming_validation() {
         .unwrap();
     let options = validation_options(Duration::from_secs(budget_seconds as u64));
     let engines = &options.engines;
-    let profile = crate::http_client::BrowserProfile::bing_experiment();
+    let profile = crate::http_client::BrowserProfile::bing();
     let build = || {
         let transport = crate::TransportOptions::default();
         let standard = crate::http_client::standard_builder(profile, &transport)
@@ -213,6 +215,8 @@ async fn live_streaming_validation() {
         SearchClients {
             parsers: parsing::ParserPool::default(),
             standard: standard.into(),
+            bing_transport: crate::BingTransport::Impersonated,
+            bing: Some(yahoo.clone()),
             yahoo: Some(yahoo),
         }
     };
@@ -344,7 +348,7 @@ async fn live_streaming_provider_probes() {
         "test_binary_sha256": format!("{:x}", Sha256::digest(std::fs::read(executable).unwrap())),
         "rustc": command("rustc", &["--version"]), "context": context,
         "corpus": corpus, "providers": engines, "deadline_seconds": budget,
-        "profile": format!("{:?}", crate::http_client::BrowserProfile::bing_experiment()),
+        "profile": format!("{:?}", crate::http_client::BrowserProfile::bing()),
         "policy": "full; one provider per call; fresh client; no target cancellation",
         "pacing_ms": 250, "query_syntax": "passthrough",
         "limitations": "logical-search timing aggregates retries; compression and server buffering not observable; parser worker elapsed is not CPU; absent timings are unknown"
