@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [10.0.0](https://github.com/rafaelpierre/kestrel-rs/compare/v9.0.1...v10.0.0) - 2026-09-15
+
+### Added
+
+- restrict browser profiles and trace safe request headers
+
+### Fixed
+
+- use verified browser transport for Bing
+
+### Other
+
+- Merge pull request #220 from rafaelpierre/release-plz-2026-09-14T16-44-59Z
+- Merge pull request #221 from rafaelpierre/codex/219-browser-header-telemetry
+
 ## [9.0.1](https://github.com/rafaelpierre/kestrel-rs/compare/v9.0.0...v9.0.1) - 2026-09-14
 
 ### Fixed
